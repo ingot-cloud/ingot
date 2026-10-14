@@ -1,5 +1,6 @@
 package com.ingot.cloud.iam.role;
 
+import java.util.Collection;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -111,6 +112,12 @@ final class PlatformRoleApplicationDomainSupport implements RoleApplicationDomai
     @Override
     public IamRoleRevisionEntity findRevision(long revisionId) {
         return roleStore.findRevision(revisionId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<IamRoleRevisionEntity> findRevisions(Collection<BigInteger> revisionIds) {
+        return roleStore.findRevisions(revisionIds);
     }
 
     /** {@inheritDoc} */

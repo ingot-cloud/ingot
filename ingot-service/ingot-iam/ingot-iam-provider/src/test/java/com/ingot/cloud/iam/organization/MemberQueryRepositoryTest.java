@@ -1,5 +1,21 @@
 package com.ingot.cloud.iam.organization;
 
+import java.util.stream.LongStream;
+import java.util.Map;
+import java.time.Instant;
+import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
+import com.ingot.cloud.iam.persistence.DepartmentQueryRepository;
+import com.ingot.cloud.iam.evaluation.ResourceAccess;
+import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
+import com.ingot.cloud.iam.evaluation.DepartmentClosure;
+import com.ingot.cloud.iam.evaluation.ObjectScopeCompiler;
+import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
+import com.ingot.cloud.iam.evaluation.ScopeClause;
+import com.ingot.cloud.iam.evaluation.ResolvedActionScope;
+import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.cloud.iam.persistence.QueryCountingDataSource;
 import java.util.List;
 import java.math.BigInteger;
 import java.util.UUID;
@@ -13,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
+import static org.mockito.Mockito.mock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -25,11 +42,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class MemberQueryRepositoryTest {
     private MemberQueryRepository members;
     private JdbcTemplate jdbc;
+    private QueryCountingDataSource counting;
 
     @BeforeEach
     void database() {
         var dataSource = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
-        jdbc = new JdbcTemplate(dataSource);
+        counting = new QueryCountingDataSource(dataSource);
+        jdbc = new JdbcTemplate(counting);
         jdbc.execute("""
                 CREATE TABLE iam_account(id BIGINT PRIMARY KEY, username VARCHAR(64), phone VARCHAR(32),
                   email VARCHAR(128), deleted_at TIMESTAMP)
@@ -46,7 +65,7 @@ class MemberQueryRepositoryTest {
         jdbc.update("INSERT INTO iam_platform_member(id,account_id,display_name,avatar,status,version,created_at,updated_at) VALUES (1001,1,'池鑫',NULL,'ACTIVE',0,NULL,NULL),"
                 + "(1002,2,'杨紫微',NULL,'ACTIVE',0,NULL,NULL)");
         jdbc.update("INSERT INTO iam_platform_group_member VALUES (9,1002),(9,1001)");
-        members = IamMybatisTestAccess.memberQueries(dataSource);
+        members = IamMybatisTestAccess.memberQueries(counting);
     }
 
     @Test
@@ -107,4 +126,43 @@ class MemberQueryRepositoryTest {
         assertNull(members.findPlatform(1001).getPhone());
         assertNull(members.findPlatform(1001).getEmail());
     }
+    @Test
+    void batchCapabilitiesMatchSingleObjectChecksAndRemainConstantAtTwentyRows() {
+        for (long id = 1003; id <= 1020; id++) jdbc.update("INSERT INTO iam_platform_member(id,account_id,status) VALUES (?,1,'ACTIVE')", id);
+        jdbc.update("UPDATE iam_platform_member SET status='REMOVED' WHERE id=1020");
+        var actor = new AuthorizationContext(
+                AuthorizationDomain.PLATFORM, null, "1", "1001");
+        var update = IamAction.PLATFORM_MEMBER_UPDATE;
+        var status = IamAction.PLATFORM_MEMBER_STATUS;
+        var remove = IamAction.PLATFORM_MEMBER_REMOVE;
+        var restricted = new ResolvedActionScope(List.of(
+                new ScopeClause(false, false, false, false, List.of(), false, List.of("1001", "1002"))));
+        var view = new AuthorizationEvaluator.AuthorizationView(
+                List.of(update.getCode(), status.getCode(), remove.getCode()), List.of(), Map.of(
+                    update.getCode(), restricted,
+                    status.getCode(), new ResolvedActionScope(List.of(ScopeClause.universe())),
+                    remove.getCode(), new ResolvedActionScope(List.of())),
+                "test", Instant.now().plusSeconds(30));
+        var evaluator = mock(AuthorizationEvaluator.class);
+        var compiler = new ObjectScopeCompiler(
+                mock(DepartmentClosure.class),
+                mock(IamMemberDepartmentMapper.class));
+        var resources = new ResourceAccess(evaluator, compiler, members,
+                mock(DepartmentQueryRepository.class));
+        var capabilities = new ObjectCapabilities(evaluator, resources);
+        var snapshot = new ObjectCapabilities.Snapshot(actor, view);
+        var ids = LongStream.rangeClosed(1001, 1020).mapToObj(BigInteger::valueOf).toList();
+        counting.reset();
+        capabilities.platformMembers(snapshot, ids.subList(0, 1));
+        int one = counting.count();
+        counting.reset();
+        var batch = capabilities.platformMembers(snapshot, ids);
+        assertEquals(one, counting.count());
+        org.junit.jupiter.api.Assertions.assertTrue(counting.count() <= 3);
+        for (var id : ids) assertEquals(capabilities.platformMember(snapshot, id.toString()), batch.get(id.toString()));
+        org.junit.jupiter.api.Assertions.assertFalse(batch.get("1020").get(status.getCode()).allowed());
+        org.junit.jupiter.api.Assertions.assertFalse(batch.get("1003").get(update.getCode()).allowed());
+        org.junit.jupiter.api.Assertions.assertFalse(batch.get("1001").get(remove.getCode()).allowed());
+    }
+
 }

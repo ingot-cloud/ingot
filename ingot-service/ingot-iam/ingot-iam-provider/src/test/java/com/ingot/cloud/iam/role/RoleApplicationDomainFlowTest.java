@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.role;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.Map;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -118,6 +120,40 @@ class RoleApplicationDomainFlowTest {
         verify(domain, never()).apply(any(), any());
         verify(domain, never()).admit();
         verifyNoInteractions(access, events);
+    }
+
+    @Test
+    void listBatchKeepsTaskOrderTotalsAndVersionMetadataWithoutPerTaskQueries() {
+        var records = new java.util.ArrayList<IamRoleApplicationTaskEntity>();
+        var counts = new java.util.LinkedHashMap<BigInteger, Map<RoleApplicationItemStatus, Long>>();
+        for (int id = 1; id <= 20; id++) {
+            var row = new IamRoleApplicationTaskEntity();
+            row.setId(BigInteger.valueOf(id)); row.setRoleId(roleId); row.setTargetRevisionId(revisionId);
+            row.setStatus(RoleApplicationStatus.READY); row.setVersion(BigInteger.ZERO);
+            row.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC)); row.setUpdatedAt(row.getCreatedAt());
+            records.add(row); counts.put(row.getId(), Map.of(RoleApplicationItemStatus.PENDING, (long) id));
+        }
+        var page = new Page<IamRoleApplicationTaskEntity>(1,20,25);
+        page.setRecords(records);
+        when(store.pageTasks(10, 1, 20)).thenReturn(page);
+        var revision = new IamRoleRevisionEntity(); revision.setId(revisionId);
+        revision.setRevision(BigInteger.valueOf(4)); revision.setVersionName("当前名称");
+        when(domain.findRevisions(List.of(revisionId))).thenReturn(List.of(revision));
+        when(store.counts(anyCollection(), any())).thenReturn(counts);
+        var result = service.list("10", 1, 20);
+        assertEquals(25, result.total()); assertEquals(20, result.items().size());
+        assertEquals("1", result.items().getFirst().id()); assertEquals("20", result.items().getLast().id());
+        assertEquals("当前名称", result.items().getFirst().targetVersionName());
+        verify(domain, times(1)).findRevisions(List.of(revisionId));
+        verify(store, times(1)).counts(anyCollection(), any());
+        verify(domain, never()).findRevision(anyLong()); verify(store, never()).counts(anyLong(), any());
+    }
+
+    @Test
+    void emptyTaskPageDoesNotLoadVersionsOrCounts() {
+        when(store.pageTasks(10, 1, 20)).thenReturn(new Page<>(1,20,0));
+        assertTrue(service.list("10", 1, 20).items().isEmpty());
+        verify(domain, never()).findRevisions(anyCollection()); verify(store, never()).counts(anyCollection(), any());
     }
 
     private IamRoleApplicationTaskEntity running() {

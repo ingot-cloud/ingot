@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
+
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.commons.model.iam.IamAction;
 
@@ -106,6 +108,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 授权页
      */
     @Operation(summary = "授权列表")
+    @IamReadOnlyRequest
     @GetMapping
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_READ)
     public R<PageResponse<ResourceDetail<AssignmentRecord>>> list(

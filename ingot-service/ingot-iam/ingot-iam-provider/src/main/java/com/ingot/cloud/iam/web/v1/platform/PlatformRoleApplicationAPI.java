@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
+
 import com.ingot.cloud.iam.role.RoleApplicationService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.*;
@@ -43,6 +45,7 @@ public class PlatformRoleApplicationAPI implements RShortcuts {
     /** 分页列出当前角色的应用记录。 */
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_UPGRADE)
     @Operation(summary = "版本应用任务记录")
+    @IamReadOnlyRequest
     @GetMapping
     public R<PageResponse<RoleApplicationTask>> list(@PathVariable String roleId,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -63,6 +66,7 @@ public class PlatformRoleApplicationAPI implements RShortcuts {
     /** 有效分配版本分布使用与候选一致的治理范围。 */
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_UPGRADE)
     @Operation(summary = "角色分配版本分布")
+    @IamReadOnlyRequest
     @GetMapping("/distribution")
     public R<java.util.List<RoleRevisionDistribution>> distribution(@PathVariable String roleId) {
         return ok(applications.distribution(roleId));

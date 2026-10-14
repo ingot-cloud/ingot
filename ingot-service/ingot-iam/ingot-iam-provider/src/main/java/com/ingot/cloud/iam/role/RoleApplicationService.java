@@ -113,7 +113,14 @@ public class RoleApplicationService implements RoleApplicationWork {
         var admission = governed(); requireRole(roleId, admission);
         var rows = store.pageTasks(IamIds.require(roleId), page, pageSize);
         var scope = readScope(admission);
-        return IamPages.of(rows.getRecords().stream().map(r -> view(r, scope)).toList(), rows.getTotal(), page, pageSize);
+        var records = rows.getRecords();
+        if (records.isEmpty()) return IamPages.of(List.of(), rows.getTotal(), page, pageSize);
+        Map<BigInteger, IamRoleRevisionEntity> targets = new LinkedHashMap<>();
+        domain.findRevisions(records.stream().map(IamRoleApplicationTaskEntity::getTargetRevisionId).distinct().toList())
+                .forEach(row -> targets.put(row.getId(), row));
+        var counts = store.counts(records.stream().map(IamRoleApplicationTaskEntity::getId).toList(), scope);
+        return IamPages.of(records.stream().map(row -> view(row, targets.get(row.getTargetRevisionId()),
+                counts.get(row.getId()))).toList(), rows.getTotal(), page, pageSize);
     }
 
     /**
@@ -525,9 +532,13 @@ public class RoleApplicationService implements RoleApplicationWork {
                 row.getFailureReason());
     }
     private RoleApplicationTask view(IamRoleApplicationTaskEntity task, ObjectScope scope) {
-        var target = domain.findRevision(task.getTargetRevisionId().longValueExact());
+        return view(task, domain.findRevision(task.getTargetRevisionId().longValueExact()),
+                store.counts(task.getId().longValueExact(), scope));
+    }
+    private RoleApplicationTask view(IamRoleApplicationTaskEntity task, IamRoleRevisionEntity target,
+            Map<RoleApplicationItemStatus, Long> counts) {
         return new RoleApplicationTask(task.getId().toString(), task.getRoleId().toString(), task.getTargetRevisionId().toString(),
-                task.getStatus(), task.getVersion().toString(), store.counts(task.getId().longValueExact(), scope),
+                task.getStatus(), task.getVersion().toString(), counts,
                 task.getFailureReason(), task.getCreatedAt().toInstant(ZoneOffset.UTC), task.getUpdatedAt().toInstant(ZoneOffset.UTC),
                 target.getRevision().toString(), target.getVersionName());
     }

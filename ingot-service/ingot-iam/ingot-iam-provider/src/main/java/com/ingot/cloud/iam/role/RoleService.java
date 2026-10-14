@@ -1,5 +1,6 @@
 package com.ingot.cloud.iam.role;
 
+import java.util.stream.Collectors;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -220,19 +221,23 @@ public class RoleService {
     public RoleGrantList listCurrentGrants(AuthorizationDomain domain, boolean shared, String id) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.READ));
         long roleId = IamIds.require(id);
-        loadSummary(domain, shared, actor, roleId);
+        requireDefinition(domain, shared, actor, roleId);
         IamRoleRevisionEntity latest = roles.latestRevision(roleId);
         if (latest == null || latest.getId() == null) {
             return new RoleGrantList(List.of());
         }
-        RevisionData data = loadRevision(latest);
-        List<ActionGrant> grants = data.grants();
-        if (grants.isEmpty() && based(data.baseRevisionId())) {
-            grants = synthesizedGrants(latest.getId().longValue());
+        List<ActionGrant> grants = grantRows(roles.listGrants(latest.getId().longValueExact()));
+        if (grants.isEmpty() && based(text(latest.getBaseRevisionId()))) {
+            var base = roles.findRevision(latest.getBaseRevisionId().longValueExact());
+            if (base == null) throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+            grants = synthesis.grants(new RoleRevisionSnapshot(latest.getId().longValueExact(),
+                    base.getId().longValueExact(), grantRows(roles.listGrants(base.getId().longValueExact())),
+                    deltaRows(roles.listDeltas(latest.getId().longValueExact()))));
         }
         var summary = new RoleRevisionSummary(text(latest.getId()), version(latest.getRevision()),
                 normalizeName(latest.getVersionName(), latest.getRevision().longValueExact()));
-        return new RoleGrantList(toGrantRecords(grants, data.fields()), summary);
+        return new RoleGrantList(toGrantRecords(grants, com.ingot.cloud.iam.extension.RoleFieldPermissionService
+                .snapshot(latest.getResourceFieldPermissions())), summary);
     }
 
     /**
@@ -400,12 +405,16 @@ public class RoleService {
             String id, int page, int pageSize) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.READ));
         long roleId = IamIds.require(id);
-        loadSummary(domain, shared, actor, roleId);
+        requireDefinition(domain, shared, actor, roleId);
         IamPages.require(page, pageSize);
         Page<IamRoleRevisionEntity> rows = roles.pageRevisions(roleId, page, pageSize);
         List<IamRoleRevisionEntity> records = rows.getRecords();
-        List<RoleRevision> revisions = records.stream().map(this::revision).toList();
-        RoleRevision older = olderRevision(roleId, records);
+        IamRoleRevisionEntity previousRow = olderRevisionRow(roleId, records);
+        List<IamRoleRevisionEntity> all = new ArrayList<>(records);
+        if (previousRow != null) all.add(previousRow);
+        var data = loadRevisions(all);
+        List<RoleRevision> revisions = records.stream().map(row -> revision(row, data.get(row.getId()))).toList();
+        RoleRevision older = previousRow == null ? null : revision(previousRow, data.get(previousRow.getId()));
         Set<String> actionIds = new LinkedHashSet<>();
         for (int index = 0; index < revisions.size(); index++) {
             RoleRevision current = revisions.get(index);
@@ -850,11 +859,23 @@ public class RoleService {
 
     private ResourceDetail<RoleSummary> loadSummary(AuthorizationDomain domain, boolean shared, ActiveIdentity actor,
             long id) {
+        return summaryDetail(domain, shared, requireDefinition(domain, shared, actor, id),
+                summaryCapabilities(domain, shared, actor));
+    }
+
+    /**
+     * 读取当前入口的角色定义，不装配展示能力；调用方仍须完成操作准入和原有对象范围门禁。
+     * @param domain 可信接口域
+     * @param shared 是否共享入口
+     * @param actor 已准入身份
+     * @param id 角色 ID
+     * @return 同域同租户角色定义
+     */
+    public IamRoleDefinitionEntity requireDefinition(AuthorizationDomain domain, boolean shared, ActiveIdentity actor,
+            long id) {
         IamRoleDefinitionEntity row = roles.findDefinition(domain, shared, tenantId(domain, actor), id);
-        if (row == null) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        }
-        return summaryDetail(domain, shared, row, summaryCapabilities(domain, shared, actor));
+        if (row == null) throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        return row;
     }
 
     private IamCapabilities summaryCapabilities(AuthorizationDomain domain, boolean shared, ActiveIdentity actor) {
@@ -913,27 +934,51 @@ public class RoleService {
     }
 
     private RevisionData loadRevision(IamRoleRevisionEntity row) {
-        long revisionId = row.getId().longValueExact();
-        List<ActionGrant> grantRows = roles.listGrants(revisionId)
-            .stream()
-            .map(item -> new ActionGrant(text(item.getActionId()), IamJson.read(item.getScopes(), SCOPES)))
-            .toList();
-        List<RoleDelta> deltaRows = roles.listDeltas(revisionId)
-            .stream()
-            .map(item -> new RoleDelta(text(item.getActionId()), item.getOperation(),
-                    IamJson.read(item.getScopes(), SCOPES)))
-            .toList();
-        List<RoleParameterDefinition> parameterRows = roles.listParameters(revisionId)
-            .stream()
-            .map(item -> new RoleParameterDefinition(item.getParameterKey(), item.getBindingKind()))
-            .toList();
-        return new RevisionData(text(row.getId()), text(row.getBaseRevisionId()), grantRows, deltaRows, parameterRows,
-                IamJson.read(row.getMetadataOverrides(), METADATA),
+        long id = row.getId().longValueExact();
+        return revisionData(row, roles.listGrants(id), roles.listDeltas(id), roles.listParameters(id));
+    }
+
+    private Map<BigInteger, RevisionData> loadRevisions(List<IamRoleRevisionEntity> rows) {
+        if (rows.isEmpty()) return Map.of();
+        var ids = rows.stream().map(IamRoleRevisionEntity::getId).distinct().toList();
+        var grants = roles.listGrants(ids).stream().collect(Collectors.groupingBy(
+                IamRoleGrantEntity::getRevisionId));
+        var deltas = roles.listDeltas(ids).stream().collect(Collectors.groupingBy(
+                IamRoleDeltaEntity::getRevisionId));
+        var parameters = roles.listParameters(ids).stream().collect(Collectors.groupingBy(
+                IamRoleParameterEntity::getRevisionId));
+        Map<BigInteger, RevisionData> result = new LinkedHashMap<>();
+        rows.forEach(row -> result.put(row.getId(), revisionData(row, grants.getOrDefault(row.getId(), List.of()),
+                deltas.getOrDefault(row.getId(), List.of()), parameters.getOrDefault(row.getId(), List.of()))));
+        return result;
+    }
+
+    private RevisionData revisionData(IamRoleRevisionEntity row,
+            List<IamRoleGrantEntity> grants,
+            List<IamRoleDeltaEntity> deltas,
+            List<IamRoleParameterEntity> parameters) {
+        var parameterRows = parameters.stream()
+                .map(item -> new RoleParameterDefinition(item.getParameterKey(), item.getBindingKind())).toList();
+        return new RevisionData(text(row.getId()), text(row.getBaseRevisionId()), grantRows(grants), deltaRows(deltas),
+                parameterRows, IamJson.read(row.getMetadataOverrides(), METADATA),
                 com.ingot.cloud.iam.extension.RoleFieldPermissionService.snapshot(row.getResourceFieldPermissions()));
     }
 
+    private List<ActionGrant> grantRows(List<IamRoleGrantEntity> rows) {
+        return rows.stream().map(item -> new ActionGrant(text(item.getActionId()),
+                IamJson.read(item.getScopes(), SCOPES))).toList();
+    }
+
+    private List<RoleDelta> deltaRows(List<IamRoleDeltaEntity> rows) {
+        return rows.stream().map(item -> new RoleDelta(text(item.getActionId()), item.getOperation(),
+                IamJson.read(item.getScopes(), SCOPES))).toList();
+    }
+
     private RoleRevision revision(IamRoleRevisionEntity row) {
-        RevisionData data = loadRevision(row.getId().longValue());
+        return revision(row, loadRevision(row.getId().longValue()));
+    }
+
+    private RoleRevision revision(IamRoleRevisionEntity row, RevisionData data) {
         return new RoleRevision(text(row.getId()), text(row.getRoleId()), version(row.getRevision()), row.getKind(),
                 text(row.getBaseRevisionId()), data.grants(), data.deltas(), data.parameters(), data.metadata(),
                 List.of(), data.fields(), null, normalizeName(row.getVersionName(), row.getRevision().longValueExact()),
@@ -941,13 +986,13 @@ public class RoleService {
                 row.getPublishedAt() == null ? null : row.getPublishedAt() == null ? null : row.getPublishedAt().toInstant(ZoneOffset.UTC));
     }
 
-    private RoleRevision olderRevision(long roleId, List<IamRoleRevisionEntity> records) {
+    private IamRoleRevisionEntity olderRevisionRow(long roleId, List<IamRoleRevisionEntity> records) {
         IamRoleRevisionEntity last = records.isEmpty() ? null : records.getLast();
         if (last == null || last.getRevision() == null || last.getRevision().longValue() <= 1) {
             return null;
         }
         IamRoleRevisionEntity previous = roles.findPreviousRevision(roleId, last.getRevision().longValue());
-        return previous == null ? null : revision(previous);
+        return previous;
     }
 
     private List<RoleGrantRecord> toGrantRecords(List<ActionGrant> grants,

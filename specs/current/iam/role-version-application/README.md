@@ -23,3 +23,8 @@
 2026-10-12，负责人 jy 确认角色详情加载优化人工测试通过。当前授权附带同一固定版本的轻量摘要，详情首屏不再借用历史分页读取最新版本。
 
 - [加载优化与验收记录](../../../changes/archive/2026/20261012-iam-role-detail-loading/README.md)
+
+2026-10-14，负责人 jy 确认平台管理接口优化测试完成。历史版本批量加载、任务批量版本读取和同范围聚合计数已纳入本能力基线。
+
+- [平台读取优化与验收记录](../../../changes/archive/2026/20261013-iam-platform-read-performance/README.md)
+- [请求内授权复用基线](../platform-read-performance/SPEC.md)

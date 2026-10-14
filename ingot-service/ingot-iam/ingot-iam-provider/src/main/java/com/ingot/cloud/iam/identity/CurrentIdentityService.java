@@ -1,5 +1,6 @@
 package com.ingot.cloud.iam.identity;
 
+import com.ingot.cloud.iam.authorization.read.IamReadRequestContext;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
@@ -13,7 +14,7 @@ import lombok.RequiredArgsConstructor;
  * <p>从已认证安全上下文恢复 IAM 成员身份，并查询数据库确认当前状态。</p>
  *
  * <p>不读取租户请求头、query 或角色名，不把 Member 用户体系或缺失成员信息的旧会话视为 IAM 身份。
- * 本服务只校验身份，业务操作仍必须调用授权引擎。</p>
+ * 本服务只校验身份，业务操作仍必须调用授权引擎；显式声明的只读 MVC 请求内复用已验证身份。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -24,7 +25,7 @@ public class CurrentIdentityService {
     private final ActiveIdentityService identities;
 
     /**
-     * 返回已认证会话中的当前有效成员，不接受请求中的替代身份。
+     * 返回已认证会话中的当前有效成员，不接受请求中的替代身份；只读请求外每次实时查库。
      * @return 经过实时状态验证的成员及其版本
      * @throws BizException 缺失可信成员上下文时使用 IdentityInvalid；数据库故障使用 AuthorizationUnavailable
      */
@@ -36,7 +37,8 @@ public class CurrentIdentityService {
                 || user.getAuthorizationContext() == null) {
             throw new BizException(IamReasonCode.IDENTITY_INVALID);
         }
-        return identities.requireActive(user.getAuthorizationContext());
+        return IamReadRequestContext.identity(user.getAuthorizationContext(),
+                () -> identities.requireActive(user.getAuthorizationContext()));
     }
 
     /**

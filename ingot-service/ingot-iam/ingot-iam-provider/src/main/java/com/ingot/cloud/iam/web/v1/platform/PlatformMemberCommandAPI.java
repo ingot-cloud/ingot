@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
+
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.annotation.field.*;
@@ -85,6 +87,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      * @return 成员页
      */
     @Operation(summary = "成员列表")
+    @IamReadOnlyRequest
     @GetMapping
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_READ)
     @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = MemberResources.PLATFORM_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_PLATFORM_MEMBER_READ, valueType = MemberRecord.class)

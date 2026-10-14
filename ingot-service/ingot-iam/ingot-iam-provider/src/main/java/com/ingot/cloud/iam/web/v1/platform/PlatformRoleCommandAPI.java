@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
+
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.commons.model.iam.IamAction;
 
@@ -59,6 +61,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * @return 角色页
      */
     @Operation(summary = "角色目录")
+    @IamReadOnlyRequest
     @GetMapping
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<PageResponse<ResourceDetail<RoleSummary>>> list(
@@ -78,6 +81,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * @param pageSize 页大小
      * @return 去重有效成员页
      */
+    @IamReadOnlyRequest
     @GetMapping("/{id}/members")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     @Operation(summary="角色有效成员")
@@ -153,6 +157,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * @return 角色详情
      */
     @Operation(summary = "角色元数据")
+    @IamReadOnlyRequest
     @GetMapping("/{id}")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<ResourceDetail<RoleSummary>> get(@PathVariable String id) {
@@ -166,6 +171,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * @return 当前绑定权限及对应的固定版本摘要
      */
     @Operation(summary = "角色当前绑定权限")
+    @IamReadOnlyRequest
     @GetMapping("/{id}/grants")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<RoleGrantList> grants(@PathVariable String id) {
@@ -215,6 +221,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * @return 版本页
      */
     @Operation(summary = "角色版本")
+    @IamReadOnlyRequest
     @GetMapping("/{id}/revisions")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<PageResponse<ResourceDetail<RoleRevision>>> revisions(

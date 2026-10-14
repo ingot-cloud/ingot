@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.evaluation;
 
+import java.util.Collection;
+import java.math.BigInteger;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -301,6 +303,22 @@ public class ResourceAccess {
             }
         }
         return false;
+    }
+
+    /**
+     * 批量计算平台成员当前页的操作范围；使用与单对象检查相同的 SQL 谓词。
+     * @param actor 当前可信平台身份
+     * @param view 本次展示授权视图
+     * @param action 精确操作
+     * @param ids 当前页成员 ID
+     * @return 允许的未移出成员
+     */
+    public Set<BigInteger> platformMemberIds(AuthorizationContext actor,
+            AuthorizationEvaluator.AuthorizationView view, IamAction action,
+            Collection<BigInteger> ids) {
+        if (actor.domain() != AuthorizationDomain.PLATFORM) throw new BizException(IamReasonCode.ACTION_DENIED);
+        if (ids.isEmpty() || !hasAction(view, action) || view.scope(action.getCode()).isEmpty()) return Set.of();
+        return members.visiblePlatformIds(ids, compiler.members(actor, view.scope(action.getCode())));
     }
 
     private static boolean hasAction(AuthorizationEvaluator.AuthorizationView view, IamAction action) {

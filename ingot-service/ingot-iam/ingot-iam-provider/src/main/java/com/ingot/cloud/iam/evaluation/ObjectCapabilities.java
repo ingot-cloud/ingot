@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.evaluation;
 
+import java.util.Collection;
+import java.math.BigInteger;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -80,6 +82,26 @@ public class ObjectCapabilities {
             result.put(action.getCode(), member(snapshot, action, memberId, Set.of(), operation(action)));
         }
         return result;
+    }
+
+    /**
+     * 按当前页批量计算平台成员能力；每个操作分别限制 SQL 范围并保留拒绝原因。
+     * @param snapshot 本次展示授权快照
+     * @param memberIds 当前页成员 ID
+     * @return 成员 ID 到逐操作能力
+     */
+    public Map<String, Map<String, ObjectCapability>> platformMembers(Snapshot snapshot,
+            Collection<BigInteger> memberIds) {
+        Map<String, Map<String, ObjectCapability>> result = new LinkedHashMap<>();
+        memberIds.forEach(id -> result.put(id.toString(), new LinkedHashMap<>()));
+        for (IamAction action : PLATFORM_MEMBER) {
+            var allowed = scopes.platformMemberIds(snapshot.actor(), snapshot.view(), action, memberIds);
+            memberIds.forEach(id -> result.get(id.toString()).put(action.getCode(),
+                    of(snapshot.view(), action, allowed.contains(id))));
+        }
+        Map<String, Map<String, ObjectCapability>> immutable = new LinkedHashMap<>();
+        result.forEach((id, values) -> immutable.put(id, Map.copyOf(values)));
+        return Map.copyOf(immutable);
     }
 
     /**

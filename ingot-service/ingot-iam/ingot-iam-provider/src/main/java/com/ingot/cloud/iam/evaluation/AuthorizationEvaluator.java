@@ -16,6 +16,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ingot.cloud.iam.authorization.IamActionAuthorizer;
+import com.ingot.cloud.iam.authorization.read.IamReadRequestContext;
 import com.ingot.cloud.iam.persistence.projection.AuthorizationEvalRows;
 import com.ingot.cloud.iam.role.RoleRevisionSnapshot;
 import com.ingot.cloud.iam.role.RoleSynthesis;
@@ -82,12 +83,16 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     }
 
     /**
-     * 读取账号最新改密状态，不接受授权热缓存或管理员资格替代。
+     * 读取账号改密状态，不接受授权热缓存或管理员资格替代；显式只读请求内共享本次查询。
      * @param actor 可信成员身份
      * @return 是否必须改密
      */
     public boolean passwordChangeRequired(AuthorizationContext actor) {
         if (actor == null) throw new BizException(IamReasonCode.IDENTITY_INVALID);
+        return IamReadRequestContext.passwordRequired(actor, () -> passwordChangeRequiredRaw(actor));
+    }
+
+    private boolean passwordChangeRequiredRaw(AuthorizationContext actor) {
         try {
             return evaluations.passwordChangeRequired(actor);
         } catch (DataAccessException | PersistenceException failure) {
@@ -119,8 +124,8 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
         if (actions.isEmpty()) {
             return Map.of();
         }
-        // 展示资格只读取一次最新事实，绝不缓存或复用于后续写命令。
-        AuthorizationView view = evaluateRaw(actor);
+        // 展示资格使用实时来源，仅在已声明的同一次只读请求内复用，写命令始终重验。
+        AuthorizationView view = evaluateFresh(actor);
         Set<String> allowed = new LinkedHashSet<>(view.actionCodes());
         Set<String> governed = new LinkedHashSet<>(view.governedCodes());
         Map<IamAction, Admission> result = new LinkedHashMap<>();
@@ -174,11 +179,15 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      * @return 操作码、范围与版本
      */
     public AuthorizationView evaluateForExecution(AuthorizationContext actor, boolean mutating) {
-        return mutating ? evaluateRaw(actor) : evaluate(actor);
+        return mutating ? evaluateFresh(actor) : evaluate(actor);
     }
 
     /** 读取未过期授权视图。 @param actor 可信身份 @return 授权视图 */
     public AuthorizationView evaluate(AuthorizationContext actor) {
+        return IamReadRequestContext.view(actor, false, () -> evaluateCached(actor));
+    }
+
+    private AuthorizationView evaluateCached(AuthorizationContext actor) {
         if (actor == null) {
             throw new BizException(IamReasonCode.IDENTITY_INVALID);
         }
@@ -204,7 +213,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      * @return 操作码与版本
      */
     public AuthorizationView evaluateRaw(String cacheKey) {
-        return evaluateRaw(contextFromKey(cacheKey));
+        return evaluateRaw(contextFromKey(cacheKey), false);
     }
 
     /**
@@ -247,9 +256,13 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
         return new AuthorizationView(codes, codes, scopes, version, deadline.expiresAt(Instant.now()), List.of(), true);
     }
 
-    private AuthorizationView evaluateRaw(AuthorizationContext actor) {
+    private AuthorizationView evaluateFresh(AuthorizationContext actor) {
+        return IamReadRequestContext.view(actor, true, () -> evaluateRaw(actor, true));
+    }
+
+    private AuthorizationView evaluateRaw(AuthorizationContext actor, boolean requestPassword) {
         try {
-            if (passwordChangeRequired(actor)) return passwordRestrictedView();
+            if (requestPassword ? passwordChangeRequired(actor) : passwordChangeRequiredRaw(actor)) return passwordRestrictedView();
             if (actor.domain() == AuthorizationDomain.PLATFORM) {
                 var administrators = evaluations.platformAdministrators(actor.memberId());
                 if (!administrators.isEmpty()) return administratorView(actor, administrators);

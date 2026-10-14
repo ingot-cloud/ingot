@@ -1,5 +1,6 @@
 package com.ingot.cloud.iam.persistence;
 
+import java.util.Collection;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -114,10 +115,34 @@ public class RoleApplicationRepository {
 
     /** 同一可见性边界的分状态计数。 */
     public Map<RoleApplicationItemStatus, Long> counts(long taskId, ObjectScope scope) {
-        Map<RoleApplicationItemStatus, Long> result = new LinkedHashMap<>();
-        for (var state : RoleApplicationItemStatus.values())
-            result.put(state, items.selectCount(query(taskId, scope).eq(IamRoleApplicationItemEntity::getStatus, state)));
-        return Map.copyOf(result);
+        return counts(List.of(BigInteger.valueOf(taskId)), scope).get(BigInteger.valueOf(taskId));
+    }
+
+    /**
+     * 批量聚合同一可见分配范围内的状态计数，缺失状态补零，空任务或空范围不查库。
+     * @param taskIds 当前页任务 ID
+     * @param scope 与明细读取一致的分配范围
+     * @return 每个任务完整的七状态计数
+     */
+    public Map<BigInteger, Map<RoleApplicationItemStatus, Long>> counts(
+            Collection<BigInteger> taskIds, ObjectScope scope) {
+        Map<BigInteger, Map<RoleApplicationItemStatus, Long>> result = new LinkedHashMap<>();
+        for (var taskId : taskIds) {
+            Map<RoleApplicationItemStatus, Long> states = new LinkedHashMap<>();
+            for (var state : RoleApplicationItemStatus.values()) states.put(state, 0L);
+            result.put(taskId, states);
+        }
+        if (result.isEmpty()) return Map.of();
+        var ids = scope.coversAll() ? null : scope.clauses().stream()
+                .flatMap(c -> c.requiredIds().stream()).distinct().toList();
+        if (ids == null || !ids.isEmpty()) {
+            for (var row : items.countByTaskAndStatus(result.keySet(), ids)) {
+                result.get(row.taskId()).put(row.status(), row.total());
+            }
+        }
+        Map<BigInteger, Map<RoleApplicationItemStatus, Long>> immutable = new LinkedHashMap<>();
+        result.forEach((id, states) -> immutable.put(id, Map.copyOf(states)));
+        return Map.copyOf(immutable);
     }
 
     /** 数据库时间确定可领取任务；持有租约的本节点可继续执行下一批。 */

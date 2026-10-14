@@ -77,8 +77,8 @@ public class PlatformRoleWorkspace {
         return java.util.Map.copyOf(names);
     }
     private IamAdmission admission(String roleId) {
-        roles.get(AuthorizationDomain.PLATFORM, false, roleId);
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ROLE_READ);
+        roles.requireDefinition(AuthorizationDomain.PLATFORM, false, actor, IamIds.require(roleId));
         resources.requireVisibleObject(actor.context(), IamAction.PLATFORM_ROLE_READ, IamIds.require(roleId));
         return access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_READ);
     }

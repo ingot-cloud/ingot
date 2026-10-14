@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.role;
 
+import com.ingot.cloud.iam.support.IamJson;
+import com.ingot.cloud.iam.persistence.QueryCountingDataSource;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,6 +46,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import static org.mockito.Mockito.mock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -62,6 +65,7 @@ class RoleServiceTest {
     private final AtomicLong ids = new AtomicLong(9000);
     /** 整个类共用一个库与一份 MyBatis 配置，避免逐用例重建导致内存堆积。 */
     private static DataSource dataSource;
+    private static QueryCountingDataSource counting;
     private static final AuthorizationContext TENANT =
             new AuthorizationContext(AuthorizationDomain.TENANT, "10", "1", "101");
     private static final String ALL = "[{\"kind\":\"ALL\"}]";
@@ -71,6 +75,8 @@ class RoleServiceTest {
     @BeforeAll
     static void source() {
         dataSource = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
+        counting = new QueryCountingDataSource(dataSource);
+        dataSource = counting;
     }
 
     @BeforeEach
@@ -164,7 +170,7 @@ class RoleServiceTest {
         var transactions = new DataSourceTransactionManager(dataSource);
         IamActionAuthorizer authorizer = (actor, action) -> new IamActionAuthorizer.Admission(true);
         ids.set(9000);
-        var access = new IamAccess(new CurrentIdentityService(identities), authorizer, ids::incrementAndGet, org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
+        var access = new IamAccess(new CurrentIdentityService(identities), authorizer, ids::incrementAndGet, mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
         service = new RoleService(access, IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> { }), new RoleSynthesisCache(),
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
@@ -640,4 +646,30 @@ class RoleServiceTest {
         SecurityContextHolder.getContext().setAuthentication(
                 UsernamePasswordAuthenticationToken.authenticated(user, null, List.of()));
     }
+    @Test
+    void historyBatchKeepsBoundaryDeltasAndFullChildrenWithConstantQueryCount() {
+        jdbc.update("INSERT INTO iam_role_definition(id,domain,tenant_id,kind,code,name,enabled,version) VALUES(99,'TENANT',10,'TENANT_CUSTOM','history','历史',TRUE,0)");
+        for (int revision = 1; revision <= 21; revision++) {
+            jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind,revision,metadata_overrides,resource_field_permissions,version_name,metadata_version) VALUES(?,99,'TENANT_CUSTOM',?,'{}','{}',?,0)", 100 + revision, revision, "v" + revision);
+            jdbc.update("INSERT INTO iam_role_grant VALUES (?,?,?)", 100 + revision, revision % 2 == 0 ? 11 : 12,
+                    IamJson.object(List.of(new ScopeExpression(ScopeKind.ALL, null, null))));
+            jdbc.update("INSERT INTO iam_role_parameter VALUES (?,'objects','OBJECTS')", 100 + revision);
+        }
+        counting.reset();
+        var one = service.listRevisions(AuthorizationDomain.TENANT, false, "99", 1, 1);
+        assertEquals(1, counting.from("iam_role_grant"));
+        assertEquals(1, counting.from("iam_role_delta"));
+        assertEquals(1, counting.from("iam_role_parameter"));
+        counting.reset();
+        var twenty = service.listRevisions(AuthorizationDomain.TENANT, false, "99", 1, 20);
+        assertEquals(1, counting.from("iam_role_grant"));
+        assertEquals(1, counting.from("iam_role_delta"));
+        assertEquals(1, counting.from("iam_role_parameter"));
+        assertEquals(one.items().getFirst(), twenty.items().getFirst());
+        assertEquals(20, twenty.items().size());
+        assertEquals(2, twenty.items().getLast().record().displayDeltas().size());
+        assertEquals(1, twenty.items().getLast().record().parameterDefinitions().size());
+        assertTrue(service.listRevisions(AuthorizationDomain.TENANT, false, "99", 21, 1).items().getFirst().record().displayDeltas().isEmpty());
+    }
+
 }

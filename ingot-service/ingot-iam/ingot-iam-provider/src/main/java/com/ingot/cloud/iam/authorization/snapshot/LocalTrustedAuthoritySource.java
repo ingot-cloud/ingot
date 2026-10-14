@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 /**
- * <p>IAM 接口注解的在线授权，先重验身份，再读取数据库有效来源。</p>
+ * <p>IAM 接口注解的在线授权，先确认身份，再读取数据库有效来源；显式只读请求共享本次实时结果。</p>
  * @author jy
  * @since 1.0.0
  */

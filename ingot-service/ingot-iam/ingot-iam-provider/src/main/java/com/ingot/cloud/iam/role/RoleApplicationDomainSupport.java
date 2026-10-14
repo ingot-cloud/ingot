@@ -1,5 +1,6 @@
 package com.ingot.cloud.iam.role;
 
+import java.util.Collection;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -50,6 +51,9 @@ interface RoleApplicationDomainSupport {
 
     /** 读取固定版本；调用方必须已验证角色可见性，并自行检查来源版本与角色关联。 */
     IamRoleRevisionEntity findRevision(long revisionId);
+
+    /** 批量读取固定版本；调用方必须已验证角色可见性，不缓存展示元数据。 */
+    List<IamRoleRevisionEntity> findRevisions(Collection<BigInteger> revisionIds);
 
     /** 构造当前业务域的目标版本引用，不额外查询数据库。 */
     RoleRevisionRef reference(BigInteger revisionId);

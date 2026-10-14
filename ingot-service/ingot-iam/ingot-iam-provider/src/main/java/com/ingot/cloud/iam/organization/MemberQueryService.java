@@ -316,11 +316,13 @@ public class MemberQueryService {
             Page<IamPlatformMemberEntity> result = members.pagePlatform(scope, page, pageSize, name, status, ids);
             Map<BigInteger, IamAccountEntity> contacts = members
                 .accountContacts(result.getRecords().stream().map(IamPlatformMemberEntity::getAccountId).toList());
+            var rowCapabilities = capabilities.platformMembers(caps,
+                    result.getRecords().stream().map(IamPlatformMemberEntity::getId).toList());
             List<ResourceDetail<MemberRecord>> items = result.getRecords()
                 .stream()
                 .map(row -> platformDetail(policy, fieldPolicies.get(IamAction.PLATFORM_MEMBER_UPDATE),
                         platformMember(row, contacts.get(row.getAccountId())),
-                        capabilities.platformMember(caps, row.getId().toString()), version(row.getVersion())))
+                        rowCapabilities.get(row.getId().toString()), version(row.getVersion())))
                 .toList();
             return IamPages.details(items, result.getTotal(), page, pageSize);
         }

@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.persistence;
 
+import java.util.stream.Collectors;
+import java.util.Set;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -277,6 +279,22 @@ public class MemberQueryRepository {
     }
 
     /**
+     * 按同一平台范围批量检查当前页未移出的成员，不替代关联列表或写入门禁。
+     * @param ids 当前页成员 ID
+     * @param scope 本操作的范围
+     * @return 范围内成员 ID
+     */
+    public Set<BigInteger> visiblePlatformIds(Collection<BigInteger> ids, ObjectScope scope) {
+        if (ids.isEmpty()) return Set.of();
+        var query = Wrappers.<IamPlatformMemberEntity>lambdaQuery()
+                .select(IamPlatformMemberEntity::getId).in(IamPlatformMemberEntity::getId, ids)
+                .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED);
+        ObjectScopeSql.restrictPlatformMembers(query, scope);
+        return platformMembers.selectList(query).stream().map(IamPlatformMemberEntity::getId)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
      * 批量读取任职投影，避免列表路径对每个成员各查一次。
      *
      * @param tenantId 已授权租户 ID
@@ -462,7 +480,7 @@ public class MemberQueryRepository {
      * @return 受影响行数；为 0 表示版本已被并发改写
      */
     public int updatePlatform(long memberId, String displayName, String avatar, String phone, String email,
-            BigInteger version, java.util.Set<String> suppliedFields) {
+            BigInteger version, Set<String> suppliedFields) {
         return platformMembers.update(Wrappers.<IamPlatformMemberEntity>lambdaUpdate()
                 .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
                 .eq(IamPlatformMemberEntity::getVersion, version)
@@ -488,7 +506,7 @@ public class MemberQueryRepository {
      * @return 受影响行数；为 0 表示版本已被并发改写或成员已移出
      */
     public int updateTenant(long tenantId, long memberId, String displayName, String avatar, String phone,
-                            String email, BigInteger version, java.util.Set<String> suppliedFields) {
+                            String email, BigInteger version, Set<String> suppliedFields) {
         return tenantMembers.update(Wrappers.<IamTenantMemberEntity>lambdaUpdate()
                 .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
                 .eq(IamTenantMemberEntity::getId, BigInteger.valueOf(memberId))

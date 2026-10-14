@@ -308,6 +308,27 @@ public class RoleRepository {
                 .eq(IamRoleParameterEntity::getRevisionId, BigInteger.valueOf(revisionId)));
     }
 
+    /** 批量读取版本授权，按版本和原主键顺序返回；空集合不查库。 */
+    public List<IamRoleGrantEntity> listGrants(Collection<BigInteger> revisionIds) {
+        return revisionIds.isEmpty() ? List.of() : grants.selectList(Wrappers.<IamRoleGrantEntity>lambdaQuery()
+                .in(IamRoleGrantEntity::getRevisionId, revisionIds)
+                .orderByAsc(IamRoleGrantEntity::getRevisionId).orderByAsc(IamRoleGrantEntity::getActionId));
+    }
+
+    /** 批量读取版本差异，按版本和原主键顺序返回；空集合不查库。 */
+    public List<IamRoleDeltaEntity> listDeltas(Collection<BigInteger> revisionIds) {
+        return revisionIds.isEmpty() ? List.of() : deltas.selectList(Wrappers.<IamRoleDeltaEntity>lambdaQuery()
+                .in(IamRoleDeltaEntity::getRevisionId, revisionIds)
+                .orderByAsc(IamRoleDeltaEntity::getRevisionId).orderByAsc(IamRoleDeltaEntity::getActionId));
+    }
+
+    /** 批量读取版本参数，按版本和原主键顺序返回；空集合不查库。 */
+    public List<IamRoleParameterEntity> listParameters(Collection<BigInteger> revisionIds) {
+        return revisionIds.isEmpty() ? List.of() : parameters.selectList(Wrappers.<IamRoleParameterEntity>lambdaQuery()
+                .in(IamRoleParameterEntity::getRevisionId, revisionIds)
+                .orderByAsc(IamRoleParameterEntity::getRevisionId).orderByAsc(IamRoleParameterEntity::getParameterKey));
+    }
+
     /**
      * 检查持久应用历史引用，避免删除版本时触发外键错误。
      * @param roleId 已校验角色ID

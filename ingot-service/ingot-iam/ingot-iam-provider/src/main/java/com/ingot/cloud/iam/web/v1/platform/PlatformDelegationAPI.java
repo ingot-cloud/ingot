@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
+
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.commons.model.iam.IamAction;
 
@@ -52,6 +54,7 @@ public class PlatformDelegationAPI implements RShortcuts {
      * @return 委派页
      */
     @Operation(summary = "委派列表")
+    @IamReadOnlyRequest
     @GetMapping
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_READ)
     public R<PageResponse<ResourceDetail<DelegationRecord>>> list(
