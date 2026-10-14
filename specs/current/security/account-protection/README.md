@@ -67,3 +67,5 @@
   - `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表物理 DROP）
   - `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（边沿事件 + Redis 锁定信号 + BFF/Gateway 短路）
   - `specs/changes/archive/2026/20260812-security-event-type-sot-cleanup/`（删除本地 `SecurityEventType`，改用 api 枚举）
+
+- [已验收的安全中心管理面与精确权限](../../iam/platform-capabilities/SPEC.md)

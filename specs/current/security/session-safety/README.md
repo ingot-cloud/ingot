@@ -47,3 +47,5 @@ L5 已验收闭环：登录态从 jti 级 OnlineToken 索引收口为 **sid 会�
 - 来源变更：
   - `specs/changes/archive/2026/20260817-security-session-safety/`
   - `specs/changes/archive/2026/20260910-pms-rbac-data-authorization/`（业务权限改为服务端快照）
+
+- [已验收的安全中心管理面与精确权限](../../iam/platform-capabilities/SPEC.md)

@@ -216,4 +216,4 @@ ACN01–ACN03 完成，增量 validating：公共模块 17 项测试、IAM/示�
 
 本增量已 completed，RL 系列任务及人工验收均完成，证据见上述归档。主 change 保持 implementing。
 
-关联补齐：[平台能力与页面归属](../20261012-iam-platform-capability-completion/README.md)，本轮单独验收。
+关联补齐：[平台能力与页面归属](../../archive/2026/20261012-iam-platform-capability-completion/README.md)，2026-10-14 用户确认本增量验收完成并已独立归档，主 change 状态不变。

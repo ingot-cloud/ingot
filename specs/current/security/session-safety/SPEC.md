@@ -105,13 +105,13 @@ ingot-service/ingot-auth/
 
 ### 6.2 Platform 会话（`/platform/security/sessions`）
 
-经网关为 `/security/platform/security/sessions`。
+经网关为 `/api/security/platform/security/sessions`。
 
 | 方法 | 路径 | 权限 |
 |---|---|---|
-| GET | `` | `platform:security:session:query` |
+| GET | `` | `iam-platform:session:read` |
 | GET | `/{sid}` | 同上 |
-| DELETE | `/{sid}` | `platform:security:session:revoke` |
+| DELETE | `/{sid}` | `iam-platform:session:revoke` |
 | DELETE | `/user` | 同上 |
 
 下线参数走 query（避免 DELETE body 被丢弃）。`reason` 固定 `ADMIN_REVOKE`，`actorId` 取当前管理员，不接受前端传入。用户名 / 租户名由中心拼 PMS；PMS 失败时名称可空，sid 级字段仍返回。
@@ -122,14 +122,14 @@ ingot-service/ingot-auth/
 
 | 方法 | 权限 |
 |---|---|
-| GET 列表 / `/{id}` | `platform:security:session:policy:query` |
-| POST / PUT / DELETE `/{id}` | `platform:security:session:policy:update` |
+| GET 列表 / `/{id}` | `iam-platform:session-policy:read` |
+| POST / PUT / DELETE `/{id}` | `iam-platform:session-policy:update` |
 
 PUT 为全量更新，未传可选字段会写成缺省值。GLOBAL 行禁止删除。
 
 Auth 拉全量快照：`GET /inner/security/session/concurrency-policies`（含 `enabled=false`，以便 LKG 能表达「停用」）。
 
-权限种子：`014_session_admin_permission_seed.sql`（会话）、`017_session_policy_permission_seed.sql`（策略，库 `ingot_core`）。菜单沿用 `platform:security:onlinetoken`。
+会话与并发策略分别使用 `PLATFORM / platform:security / session`、`session-policy` 资源，只支持 ALL，读取遵守授权 SDK 最长 30 秒热窗口，写入 fresh。正式 IAM 目录由生成器维护，已有 IAM 库使用 `020_platform_capability_completion.sql` 保留 ID 升级；不再以历史 ingot_core 权限种子为当前契约。页面入口为 `/security/sessions`，注册键 `security.sessions`，按 session:read 与 session-policy:read 的 ANY 开放，仅请求激活且授权的 Tab。完整管理面矩阵见 [平台能力基线](../../iam/platform-capabilities/SPEC.md)。
 
 ## 7. 账号联动与安全事件
 

@@ -58,3 +58,5 @@
   - `specs/changes/archive/2026/20260717-security-credential-resilience/`（弹性降级兜底与初始密码收口对齐）
   - `specs/changes/archive/2026/20260730-framework-layered-cache/`（内部实现迁入 `ingot-cache`，对外契约不变）
   - [密码过期场景化提示与独立 Nacos 文案配置](../../../changes/archive/2026/20261011-security-credential-expiry-messages/README.md)（2026-10-12 用户确认验收）
+
+- [已验收的安全中心管理面与精确权限](../../iam/platform-capabilities/SPEC.md)

@@ -47,3 +47,5 @@ L4 已验收闭环，覆盖三块能力：
   - `specs/changes/archive/2026/20260729-security-access-protection/`
   - `specs/changes/archive/2026/20260730-framework-layered-cache/`（LoginFailure 迁入 `ingot-cache`，补齐 L1+L2）
   - `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（超阈值 / 限流升级边沿去重）
+
+- [已验收的安全中心管理面与精确权限](../../iam/platform-capabilities/SPEC.md)

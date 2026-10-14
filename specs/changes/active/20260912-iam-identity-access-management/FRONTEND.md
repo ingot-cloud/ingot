@@ -223,4 +223,4 @@ Admin 同源 BFF 建立浏览器绑定事务；不向 BFF 传 returnTo 或任何
 
 平台与租户菜单均称授权审计；按可信当前身份固定查询域，无管理域筛选。操作者成员 ID 主搜索，其余筛选进浮层；提供时间、操作者、操作、目标、摘要和完整安全详情。状态、字段披露和接口见 [增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。
 
-页面目录与八个新 URL 按[平台能力补齐](../20261012-iam-platform-capability-completion/DESIGN.md)实施。安全中心六资源十六操作归 PLATFORM / platform:security，精确操作码保持 iam-platform:*。
+页面目录与八个新 URL 按[平台能力补齐](../../archive/2026/20261012-iam-platform-capability-completion/DESIGN.md)实施。安全中心六资源十六操作归 PLATFORM / platform:security，精确操作码保持 iam-platform:*。
