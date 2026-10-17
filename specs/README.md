@@ -193,6 +193,8 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [租户部门直属人数与成员部门菜单](./changes/archive/2026/20261017-iam-department-member-count/README.md)（completed，2026-10-17 用户要求归档）；[当前能力](./current/iam/tenant-departments/README.md)
+
 - [平台能力补齐与页面归属](./changes/archive/2026/20261012-iam-platform-capability-completion/README.md)（completed，2026-10-14 用户确认验收完成）；[平台能力基线](./current/iam/platform-capabilities/README.md)
 
 - [平台管理接口性能优化](./changes/archive/2026/20261013-iam-platform-read-performance/README.md)（completed，2026-10-14 用户确认测试完成）；[平台读取基线](./current/iam/platform-read-performance/README.md)

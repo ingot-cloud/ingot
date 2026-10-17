@@ -217,3 +217,7 @@ ACN01–ACN03 完成，增量 validating：公共模块 17 项测试、IAM/示�
 本增量已 completed，RL 系列任务及人工验收均完成，证据见上述归档。主 change 保持 implementing。
 
 关联补齐：[平台能力与页面归属](../../archive/2026/20261012-iam-platform-capability-completion/README.md)，2026-10-14 用户确认本增量验收完成并已独立归档，主 change 状态不变。
+
+## 2026-10-17 租户部门直属人数与成员部门菜单
+
+需求、设计及接口见 [部门计数增量](../../archive/2026/20261017-iam-department-member-count/README.md)。2026-10-17 用户要求归档本增量；current 已写入 [iam/tenant-departments](../../../current/iam/tenant-departments/README.md)。主 change 保持 implementing。

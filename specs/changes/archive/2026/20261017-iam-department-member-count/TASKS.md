@@ -21,11 +21,11 @@
 ## 验证任务
 
 - [x] V1：跑 `IamAuthorizationContractTest` 与新增测试
-- [ ] V2：对照 ACCEPTANCE 勾选；浏览器与联调待人工确认
+- [x] V2：2026-10-17 用户要求归档本增量；自动化证据见 ACCEPTANCE，未另做浏览器联调
 
 ## 完成检查
 
-- [ ] 实现与 DESIGN 一致
-- [ ] REQUIREMENTS 验收标准全部满足
-- [ ] Current 待验收后再更新
-- [ ] Change 已记录完成信息
+- [x] 实现与 DESIGN 一致（含实施中确认的树响应与菜单种子）
+- [x] REQUIREMENTS 验收标准按自动化与用户归档确认关闭
+- [x] Current 已更新 `iam/tenant-departments`
+- [x] Change 已记录完成信息并归档

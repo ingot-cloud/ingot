@@ -126,7 +126,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/applications/{id}/menus/{menuId}/actions | GET 菜单已绑定操作及资源名称（不分页），供详情回显 |
 | /v1/platform/actions/lookup | POST `{ids}` 按操作 ID 解析应用、资源与范围能力，供权限回显 |
 | /v1/platform/plans | GET 可选 `name`、`status=ENABLED|DISABLED`、`view=CATALOG|SUMMARY`（缺省 CATALOG 返回 PlanRecord，含 `applicationIds` 与 `applications` 展示内容；SUMMARY 仅 `{id,name}`）；POST；/{id} GET/PUT；套餐变化不自动改变既有开通，应用到租户须预览并显式提交 |
-| /v1/tenant/members | GET/POST 成员列表、创建成员关系；列表可选精确 `phone`/`email` |
+| /v1/tenant/members | GET/POST 成员列表、创建成员关系；列表可选精确 `phone`/`email`、直属 `departmentId`、`status=ACTIVE\|SUSPENDED\|REMOVED`（不传 status 时排除已移出） |
 | /v1/tenant/members/{id} | GET/PATCH 组织资料，禁止全局凭证字段 |
 | /v1/tenant/members/{id}/departments | PUT 调整关系，校验两端 |
 | /v1/tenant/members/{id}/status | PATCH 暂停/恢复成员资格 |
@@ -203,7 +203,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 
 分页 total/page/pageSize 和可见影响数量使用 JSON 数字；ID 与版本保持字符串。配置状态 ConfigurationStatus 为 ENABLED/DISABLED，持久化映射到 enabled；成员资格继续使用独立 MemberStatus。每条成员列表 item 为 ResourceDetail<MemberRecord>，包含 record、fieldAccess、capabilities、version。
 
-MemberRecord 不包含凭证；隐藏资料以 null 表示并在 JSON 中省略，脱敏值必须由服务端先行投影。DTO 本身不执行字段策略。DepartmentRecord 的 navigationOnly 标识祖先导航骨架，不携带隐藏成员计数。
+MemberRecord 不包含凭证；隐藏资料以 null 表示并在 JSON 中省略，脱敏值必须由服务端先行投影。DTO 本身不执行字段策略。DepartmentRecord 的 navigationOnly 标识祖先导航骨架。租户管理部门列表可携带直属 ACTIVE `memberCount`；详情、通讯录与导航骨架省略该字段。详见 [20261017-iam-department-member-count](../../archive/2026/20261017-iam-department-member-count/API.md)。
 
 UsageSummary 与 ImpactSummary 仅披露允许查看的数量，无法披露的项省略并标记 restricted，不能用 0 代替未知值。Decision 的 sources 只包含可披露来源，受限时返回 []，fieldAccess 无可披露项时为 {}。Preview 在 errors 非空时 valid 必须为 false；无法产生有效结果时省略 effectiveResult。UpgradePreview 另外携带 version 与受限 impactSummary，冲突以稳定 key 表达。
 
