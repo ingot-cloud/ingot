@@ -1,6 +1,10 @@
 package com.ingot.cloud.iam.persistence;
 
 import java.math.BigInteger;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -10,6 +14,8 @@ import com.ingot.cloud.iam.persistence.entity.IamDepartmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamMemberDepartmentEntity;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
+import com.ingot.cloud.iam.persistence.projection.DepartmentMemberCount;
+import com.ingot.framework.commons.model.iam.MemberStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -24,6 +30,18 @@ import org.springframework.stereotype.Repository;
 public class DepartmentQueryRepository {
     private final IamDepartmentMapper departments;
     private final IamMemberDepartmentMapper members;
+
+    /**
+     * 列出当前租户可见部门，按同级顺序返回全量，供组树。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param scope 已编译范围
+     * @return 部门列表
+     */
+    public List<IamDepartmentEntity> list(long tenantId, ObjectScope scope) {
+        return departments.selectList(scoped(tenantId, scope)
+                .orderByAsc(IamDepartmentEntity::getSortOrder, IamDepartmentEntity::getId));
+    }
 
     /**
      * 分页列出当前租户部门。
@@ -146,6 +164,30 @@ public class DepartmentQueryRepository {
         return members.selectCount(Wrappers.<IamMemberDepartmentEntity>lambdaQuery()
                 .eq(IamMemberDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId))
                 .eq(IamMemberDepartmentEntity::getDepartmentId, BigInteger.valueOf(departmentId)));
+    }
+
+    /**
+     * 批量统计当前页部门的直属 ACTIVE 成员，空集合不访问数据库。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param departmentIds 当前页部门 ID
+     * @return 部门 ID 到人数；无 ACTIVE 任职的部门不出现
+     */
+    public Map<Long, Integer> activeMemberCounts(long tenantId, Collection<Long> departmentIds) {
+        if (departmentIds == null || departmentIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, Integer> counts = new LinkedHashMap<>();
+        for (DepartmentMemberCount row : members.countMembersByStatus(
+                BigInteger.valueOf(tenantId),
+                departmentIds.stream().map(BigInteger::valueOf).toList(),
+                MemberStatus.ACTIVE)) {
+            if (row.departmentId() == null) {
+                continue;
+            }
+            counts.put(row.departmentId().longValueExact(), row.memberCount() == null ? 0 : row.memberCount());
+        }
+        return counts;
     }
 
     /**

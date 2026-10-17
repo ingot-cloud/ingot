@@ -6,7 +6,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 /**
- * <p>返回当前域内可见部门或必要导航骨架，骨架不携带成员数量。</p>
+ * <p>返回当前域内可见部门或必要导航骨架。</p>
+ * <p>租户管理部门列表填充 {@code memberCount}；详情、通讯录与导航骨架省略该字段。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -15,9 +16,10 @@ import jakarta.validation.constraints.*;
  * @param name 可见部门名称
  * @param sortOrder 展示顺序
  * @param navigationOnly 是否仅作为必要祖先导航骨架
+ * @param memberCount 本部门直属 ACTIVE 成员数；仅租户列表填充
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "返回当前域内可见部门或必要导航骨架，骨架不携带成员数量")
+@Schema(description = "返回当前域内可见部门或必要导航骨架；租户列表可携带直属 ACTIVE 成员数")
 public record DepartmentRecord(
         @NotBlank @Schema(description = "部门 ID", requiredMode = Schema.RequiredMode.REQUIRED)
         String id,
@@ -28,5 +30,7 @@ public record DepartmentRecord(
          @Schema(description = "展示顺序", requiredMode = Schema.RequiredMode.REQUIRED)
         int sortOrder,
          @Schema(description = "是否仅作为必要祖先导航骨架", requiredMode = Schema.RequiredMode.REQUIRED)
-        boolean navigationOnly) {
+        boolean navigationOnly,
+         @Min(0) @Schema(description = "本部门直属 ACTIVE 成员数，仅租户管理部门列表填充")
+        Integer memberCount) {
 }

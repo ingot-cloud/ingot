@@ -1,11 +1,11 @@
 package com.ingot.cloud.iam.organization;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
@@ -16,7 +16,6 @@ import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamIds;
-import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuditChangeType;
 import com.ingot.framework.commons.model.iam.AuditField;
@@ -24,10 +23,10 @@ import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.DepartmentDraft;
 import com.ingot.framework.commons.model.iam.DepartmentRecord;
+import com.ingot.framework.commons.model.iam.DepartmentTreeNode;
 import com.ingot.framework.commons.model.iam.DepartmentUpdateInput;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
-import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -71,24 +70,20 @@ public class DepartmentService {
     }
 
     /**
-     * 列出当前租户部门。
+     * 返回当前租户管理部门树，主部门与直属一级部门平级。
      *
-     * @param page 页码
-     * @param pageSize 页大小
-     * @return 部门页
+     * @return 树节点列表
      */
-    public PageResponse<ResourceDetail<DepartmentRecord>> list(int page, int pageSize) {
+    public List<DepartmentTreeNode> list() {
         ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_READ);
         long tenantId = IamIds.require(actor.context().tenantId());
-        IamPages.require(page, pageSize);
         ObjectScope scope = scopes.departmentRead(actor.context(), IamAction.TENANT_DEPARTMENT_READ);
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
-        Page<IamDepartmentEntity> result = departments.page(tenantId, scope, page, pageSize);
-        List<ResourceDetail<DepartmentRecord>> items = result.getRecords().stream()
-                .map(row -> IamDetails.of(department(row), capabilities.department(caps, row.getId().toString()),
-                        version(row.getVersion())))
-                .toList();
-        return IamPages.details(items, result.getTotal(), page, pageSize);
+        List<IamDepartmentEntity> rows = departments.list(tenantId, scope);
+        Map<Long, Integer> counts = departments.activeMemberCounts(tenantId, rows.stream()
+                .map(row -> row.getId().longValueExact())
+                .toList());
+        return flattenRootChildren(assembleTree(rows, counts, caps));
     }
 
     /**
@@ -232,10 +227,60 @@ public class DepartmentService {
         return false;
     }
 
+    private List<DepartmentTreeNode> assembleTree(List<IamDepartmentEntity> rows, Map<Long, Integer> counts,
+            ObjectCapabilities.Snapshot caps) {
+        Map<String, ResourceDetail<DepartmentRecord>> details = new LinkedHashMap<>();
+        Map<String, List<String>> childIds = new LinkedHashMap<>();
+        for (IamDepartmentEntity row : rows) {
+            String id = row.getId().toString();
+            details.put(id, IamDetails.of(department(row, counts.getOrDefault(row.getId().longValueExact(), 0)),
+                    capabilities.department(caps, id), version(row.getVersion())));
+            childIds.put(id, new ArrayList<>());
+        }
+        List<String> roots = new ArrayList<>();
+        for (IamDepartmentEntity row : rows) {
+            String id = row.getId().toString();
+            String parent = row.getParentId() == null ? null : row.getParentId().toString();
+            if (parent != null && details.containsKey(parent)) {
+                childIds.get(parent).add(id);
+            } else {
+                roots.add(id);
+            }
+        }
+        return roots.stream().map(id -> toTreeNode(id, details, childIds)).toList();
+    }
+
+    private static DepartmentTreeNode toTreeNode(String id, Map<String, ResourceDetail<DepartmentRecord>> details,
+            Map<String, List<String>> childIds) {
+        List<DepartmentTreeNode> children = childIds.getOrDefault(id, List.of()).stream()
+                .map(childId -> toTreeNode(childId, details, childIds))
+                .toList();
+        return DepartmentTreeNode.of(details.get(id), children);
+    }
+
+    private static List<DepartmentTreeNode> flattenRootChildren(List<DepartmentTreeNode> tree) {
+        if (tree.size() != 1) {
+            return tree;
+        }
+        DepartmentTreeNode root = tree.getFirst();
+        if (root.record().parentId() != null || root.children().isEmpty()) {
+            return tree;
+        }
+        List<DepartmentTreeNode> next = new ArrayList<>();
+        next.add(DepartmentTreeNode.of(new ResourceDetail<>(root.record(), root.fieldAccess(), root.capabilities(),
+                root.version()), List.of()));
+        next.addAll(root.children());
+        return List.copyOf(next);
+    }
+
     private static DepartmentRecord department(IamDepartmentEntity row) {
+        return department(row, null);
+    }
+
+    private static DepartmentRecord department(IamDepartmentEntity row, Integer memberCount) {
         String parent = row.getParentId() == null ? null : row.getParentId().toString();
         return new DepartmentRecord(row.getId().toString(), parent, row.getName(),
-                row.getSortOrder() == null ? 0 : row.getSortOrder(), false);
+                row.getSortOrder() == null ? 0 : row.getSortOrder(), false, memberCount);
     }
 
     private static String version(BigInteger version) {

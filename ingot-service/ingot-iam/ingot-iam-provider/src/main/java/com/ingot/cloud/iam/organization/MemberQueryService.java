@@ -246,13 +246,31 @@ public class MemberQueryService {
      */
     public PageResponse<ResourceDetail<MemberRecord>> list(AuthorizationDomain domain, int page, int pageSize,
             String phone, String email) {
+        return list(domain, page, pageSize, phone, email, null, null);
+    }
+
+    /**
+     * 分页列出当前域成员；原值筛选仅在字段完整可见时允许。
+     * 租户列表可按直属部门与资格筛选；不传 status 时排除已移出。
+     * @param domain 接口管理域
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param phone 手机号精确筛选，可空
+     * @param email 邮箱精确筛选，可空
+     * @param departmentId 直属任职部门，可空
+     * @param status 成员资格，可空；仅接受 ACTIVE、SUSPENDED、REMOVED
+     * @return 成员页
+     */
+    public PageResponse<ResourceDetail<MemberRecord>> list(AuthorizationDomain domain, int page, int pageSize,
+            String phone, String email, String departmentId, String status) {
         IamAction action = domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_READ
                 : IamAction.TENANT_MEMBER_READ;
         ActiveIdentity actor = access.require(domain, action);
-        if (domain == AuthorizationDomain.PLATFORM && (phone != null || email != null)) {
+        if (domain == AuthorizationDomain.PLATFORM && (phone != null || email != null || departmentId != null)) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
-        return listProjected(actor, action, page, pageSize, phone, email);
+        return listProjected(actor, action, page, pageSize, phone, email, null, IamFilters.memberStatusOf(status),
+                List.of(), departmentId);
     }
 
     /**
@@ -279,7 +297,7 @@ public class MemberQueryService {
      * @param phone 手机号精确筛选，可空
      * @param email 邮箱精确筛选，可空
      * @param name 平台显示名包含匹配，可空；租户列表忽略
-     * @param status 平台成员资格，可空；租户列表忽略
+     * @param status 成员资格，可空；不传时租户与平台均排除已移出
      * @return 投影后的成员页
      */
     public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action, int page,
@@ -296,12 +314,32 @@ public class MemberQueryService {
      * @param phone 手机号精确筛选，可空
      * @param email 邮箱精确筛选，可空
      * @param name 平台显示名包含匹配，可空；租户列表忽略
-     * @param status 平台成员资格，可空；租户列表忽略
+     * @param status 成员资格，可空；不传时租户与平台均排除已移出
      * @param ids 平台成员 ID，空表示不按 ID 限制
      * @return 投影后的成员页
      */
     public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action, int page,
             int pageSize, String phone, String email, String name, MemberStatus status, List<Long> ids) {
+        return listProjected(actor, action, page, pageSize, phone, email, name, status, ids, null);
+    }
+
+    /**
+     * 已通过 ACTION 校验后按范围、显示名、资格、成员 ID 与直属部门列出成员。
+     * @param actor 当前身份
+     * @param action 列表或导出操作
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param phone 手机号精确筛选，可空
+     * @param email 邮箱精确筛选，可空
+     * @param name 平台显示名包含匹配，可空；租户列表忽略
+     * @param status 成员资格，可空；不传时租户与平台均排除已移出
+     * @param ids 平台成员 ID，空表示不按 ID 限制
+     * @param departmentId 直属任职部门，可空；平台列表忽略
+     * @return 投影后的成员页
+     */
+    public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action, int page,
+            int pageSize, String phone, String email, String name, MemberStatus status, List<Long> ids,
+            String departmentId) {
         IamPages.require(page, pageSize);
         AuthorizationDomain domain = actor.context().domain();
         ObjectScope scope = scopes.memberRead(actor.context(), action);
@@ -333,7 +371,8 @@ public class MemberQueryService {
         if (phone != null && !phone.isBlank()) submitted.put(MemberFieldKey.VALUE_PHONE, phone);
         if (email != null && !email.isBlank()) submitted.put(MemberFieldKey.VALUE_EMAIL, email);
         fields.requireFilters(snapshot, viewerId, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, action.getCode(), scope, submitted);
-        Page<IamTenantMemberEntity> result = members.pageTenant(tenantId, scope, phone, email, page, pageSize);
+        Page<IamTenantMemberEntity> result = members.pageTenant(tenantId, scope, phone, email,
+                IamIds.optional(departmentId), status, page, pageSize);
         Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
                 result.getRecords().stream().map(IamTenantMemberEntity::getId).toList());
         var batch = fields.prepare(snapshot, viewerId, result.getRecords().stream().map(row -> row.getId().longValueExact()).toList());

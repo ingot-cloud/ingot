@@ -42,7 +42,7 @@ mysql --database=ingot_iam < databases/ingot_iam.sql
 
 - 不含账号、凭证、业务组织、角色分配、审计或登录运行状态。受控平台首账号通过 `ingot.iam.bootstrap` 启动器及安全框架注册用例创建，开关默认关闭。
 - 单独执行006时存在即跳过：按自然键判断并解析父行，保留既有业务修改。只给本次新建的治理版本初始化授权，不向已有不可变版本追加权限。完整文件会先删除旧表，不能用其保留业务修改。
-- 新建的DIRECTORY菜单默认 `view_path = 'layout.main'`，PAGE使用对应页面注册键；完整初始化和正式种子保持一致。
+- 一级 DIRECTORY 默认 `view_path = 'layout.main'`；有子菜单的二级 DIRECTORY 默认 `layout.simple`。PAGE 使用对应页面注册键；完整初始化和正式种子保持一致。
 - 正式应用的9个一级目录在 `iam_menu.icon` 保存 `ep:*` Iconify名称，两管理台已离线打包该图标集。已有目录的空图标通过 [019_root_menu_icons.sql](./migrations/019_root_menu_icons.sql) 补齐；单独重跑006仍跳过既有记录。
 - 平台治理应用 `iam-platform` 的“平台管理”包含全局账号、平台人员、角色与授权。独立平台应用 `platform:develop` 为开发者平台，包含生成二维码、客户端管理、社交管理、业务ID管理，沿用 `platform.develop.*` 页面键。租户治理仍为 `iam-tenant`，不包含平台开发者功能。
 - 社交/业务ID目录位于开发者应用，API仍使用原 `iam-platform:social-config:*` / `iam-platform:id-allocation:*` 的8个精确操作码；客户端沿用Auth注解的6个 `platform:develop:client:*` 精确操作码；星号仅是文档概括，种子不存通配码。菜单和操作同应用关联。新建平台治理版本覆盖全部平台正式应用，租户治理仅覆盖租户域，不因菜单存在自动授予其他成员权限。

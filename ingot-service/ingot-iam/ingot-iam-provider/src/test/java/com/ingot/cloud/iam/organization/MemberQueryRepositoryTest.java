@@ -57,15 +57,39 @@ class MemberQueryRepositoryTest {
                 CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, display_name VARCHAR(128),
                   avatar VARCHAR(256), phone VARCHAR(32), email VARCHAR(128), status VARCHAR(16), version BIGINT DEFAULT 0, created_at TIMESTAMP, updated_at TIMESTAMP)
                 """);
-        jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, tenant_id BIGINT, status VARCHAR(16))");
+        jdbc.execute("""
+                CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, tenant_id BIGINT, account_id BIGINT,
+                  display_name VARCHAR(128), avatar VARCHAR(256), phone VARCHAR(32), email VARCHAR(128),
+                  status VARCHAR(16), version BIGINT DEFAULT 0, created_at TIMESTAMP, updated_at TIMESTAMP)
+                """);
         jdbc.execute("CREATE TABLE iam_department(id BIGINT PRIMARY KEY, tenant_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_member_department(tenant_id BIGINT, member_id BIGINT, department_id BIGINT)");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,status) VALUES (2001,10,'ACTIVE'),(2002,10,'ACTIVE'),"
+                + "(2003,10,'SUSPENDED'),(2004,10,'REMOVED')");
+        jdbc.update("INSERT INTO iam_member_department VALUES (10,2001,1001103),(10,2002,1001104),(10,2003,1001103)");
         jdbc.execute("CREATE TABLE iam_platform_group_member(group_id BIGINT, member_id BIGINT)");
         jdbc.update("INSERT INTO iam_account VALUES (1,'alice',NULL,NULL,NULL),(2,'bob',NULL,NULL,NULL)");
         jdbc.update("INSERT INTO iam_platform_member(id,account_id,display_name,avatar,status,version,created_at,updated_at) VALUES (1001,1,'池鑫',NULL,'ACTIVE',0,NULL,NULL),"
                 + "(1002,2,'杨紫微',NULL,'ACTIVE',0,NULL,NULL)");
         jdbc.update("INSERT INTO iam_platform_group_member VALUES (9,1002),(9,1001)");
         members = IamMybatisTestAccess.memberQueries(counting);
+    }
+
+    @Test
+    void pageTenantFiltersDirectDepartmentAndStatus() {
+        var all = members.pageTenant(10, ObjectScope.all(), null, null, 1, 20);
+        assertEquals(3, all.getTotal());
+        var inDept = members.pageTenant(10, ObjectScope.all(), null, null, 1001103L, null, 1, 20);
+        assertEquals(2, inDept.getTotal());
+        assertEquals(List.of(2001L, 2003L), inDept.getRecords().stream().map(row -> row.getId().longValue()).toList());
+        var activeInDept = members.pageTenant(10, ObjectScope.all(), null, null, 1001103L, MemberStatus.ACTIVE, 1, 20);
+        assertEquals(1, activeInDept.getTotal());
+        assertEquals(2001L, activeInDept.getRecords().getFirst().getId().longValue());
+        var removed = members.pageTenant(10, ObjectScope.all(), null, null, null, MemberStatus.REMOVED, 1, 20);
+        assertEquals(1, removed.getTotal());
+        assertEquals(2004L, removed.getRecords().getFirst().getId().longValue());
+        var empty = members.pageTenant(10, ObjectScope.all(), null, null, 999L, null, 1, 20);
+        assertEquals(0, empty.getTotal());
     }
 
     @Test

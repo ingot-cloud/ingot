@@ -235,7 +235,11 @@ class BootstrapSeedTest(unittest.TestCase):
                 self.assertEqual(expected_menu, self.sql('SHOW CREATE TABLE iam_menu'))
                 self.assertEqual(1, self.count('iam_unmanaged_fixture'))
                 self.assertEqual('0', self.sql("SELECT COUNT(*) FROM iam_menu WHERE kind = 'DIRECTORY' "
+                                               "AND parent_id IS NULL "
                                                "AND (view_path IS NULL OR view_path <> 'layout.main')"))
+                self.assertEqual('0', self.sql("SELECT COUNT(*) FROM iam_menu WHERE kind = 'DIRECTORY' "
+                                               "AND parent_id IS NOT NULL "
+                                               "AND (view_path IS NULL OR view_path <> 'layout.simple')"))
                 self.assertEqual('0', self.sql('SELECT COUNT(*) FROM iam_action WHERE enabled = FALSE'))
                 self.assertEqual(str(RESERVED_CEILING),
                                  self.sql("SELECT max_id FROM biz_leaf_alloc WHERE biz_tag = 'iam'"))
@@ -453,13 +457,17 @@ class BootstrapSeedTest(unittest.TestCase):
                                 AND parent.action_id = link.action_id)
         """))
 
-    def test_pages_expose_their_view_key_and_directories_use_main_layout(self):
+    def test_pages_expose_their_view_key_and_directories_use_layout(self):
         self.bootstrap()
         self.assertEqual("0", self.sql("SELECT COUNT(*) FROM iam_menu "
                                        "WHERE kind = 'PAGE' AND (view_path IS NULL OR view_path = '')"))
         self.assertGreater(self.count('iam_menu', "kind = 'DIRECTORY'"), 0)
         self.assertEqual("0", self.sql("SELECT COUNT(*) FROM iam_menu WHERE kind = 'DIRECTORY' "
+                                       "AND parent_id IS NULL "
                                        "AND (view_path IS NULL OR view_path <> 'layout.main')"))
+        self.assertEqual("0", self.sql("SELECT COUNT(*) FROM iam_menu WHERE kind = 'DIRECTORY' "
+                                       "AND parent_id IS NOT NULL "
+                                       "AND (view_path IS NULL OR view_path <> 'layout.simple')"))
         self.assertEqual("0", self.sql("SELECT COUNT(*) FROM iam_menu "
                                        "WHERE path IS NULL OR route_name IS NULL"))
 

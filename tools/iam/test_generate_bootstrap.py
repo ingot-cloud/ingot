@@ -5,7 +5,9 @@ import json
 import re
 
 from generate_bootstrap import (ACTION_BASE, MENU_BASE, DEVELOPER_ACTIONS, DEVELOPER_APPLICATION,
-                                ROOT, ROUTES, collect, reserved_id, SECURITY_APPLICATION, SECURITY_RESOURCES, PAGE_PATHS, menu_path)
+                                NESTED_DIRECTORY_VIEW_PATH, ROOT, ROUTES, TENANT_MENUS, collect,
+                                collect_actions, menu_path, reserved_id, SECURITY_APPLICATION,
+                                SECURITY_RESOURCES, PAGE_PATHS)
 
 
 class ReservedIdTest(unittest.TestCase):
@@ -53,6 +55,22 @@ class ReservedIdTest(unittest.TestCase):
         self.assertEqual(8, len(PAGE_PATHS))
         self.assertEqual('/security/credential-policies', menu_path('security.credential.policies'))
         self.assertEqual('/platform/settings/dictionaries', menu_path('platform.settings.dictionaries'))
+        self.assertEqual('/org/iam/members/root', menu_path('org.iam.members.root'))
+
+    def test_tenant_members_directory_nests_member_and_department_pages(self):
+        organization = TENANT_MENUS[0]
+        self.assertEqual('org.iam.organization', organization[1])
+        folder = organization[3][0]
+        self.assertEqual(('成员与部门', 'org.iam.members.root'), folder[:2])
+        self.assertEqual(
+            [('成员', 'org.iam.members'), ('部门', 'org.iam.departments')],
+            [(name, key) for name, key, _ in folder[3]],
+        )
+        self.assertEqual(
+            {'iam-tenant:member:read', 'iam-tenant:department:read'},
+            collect_actions([folder]),
+        )
+        self.assertEqual('layout.simple', NESTED_DIRECTORY_VIEW_PATH)
 
 
 if __name__ == '__main__':

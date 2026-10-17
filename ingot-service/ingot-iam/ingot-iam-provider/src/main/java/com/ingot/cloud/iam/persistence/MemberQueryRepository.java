@@ -43,6 +43,7 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class MemberQueryRepository {
     private static final int ID_BATCH = 200;
+    private static final String DIRECT_DEPARTMENT_MEMBERSHIP = "SELECT 1 FROM iam_member_department md WHERE md.tenant_id = {0} AND md.member_id = iam_tenant_member.id AND md.department_id = {1}";
     private final IamAccountMapper accounts;
     private final IamPlatformMemberMapper platformMembers;
     private final IamTenantMemberMapper tenantMembers;
@@ -171,7 +172,26 @@ public class MemberQueryRepository {
      */
     public Page<IamTenantMemberEntity> pageTenant(long tenantId, ObjectScope scope, String phone, String email,
                                                   int page, int size) {
-        LambdaQueryWrapper<IamTenantMemberEntity> wrapper = tenantFilter(tenantId, scope, phone, email)
+        return pageTenant(tenantId, scope, phone, email, null, null, page, size);
+    }
+
+    /**
+     * 分页列出当前租户成员，可按直属部门与资格筛选；筛选条件由调用方完成字段可见性校验。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param scope 已编译范围
+     * @param phone 手机号精确筛选，可空
+     * @param email 邮箱精确筛选，可空
+     * @param departmentId 直属任职部门，可空
+     * @param status 成员资格，空表示排除已移出
+     * @param page 从 1 开始的页码
+     * @param size 页大小
+     * @return 成员页
+     */
+    public Page<IamTenantMemberEntity> pageTenant(long tenantId, ObjectScope scope, String phone, String email,
+                                                  Long departmentId, MemberStatus status, int page, int size) {
+        LambdaQueryWrapper<IamTenantMemberEntity> wrapper = tenantFilter(tenantId, scope, phone, email, departmentId,
+                status)
                 .orderByAsc(IamTenantMemberEntity::getId);
         return tenantMembers.selectPage(new Page<>(page, size), wrapper);
     }
@@ -521,12 +541,18 @@ public class MemberQueryRepository {
     }
 
     private LambdaQueryWrapper<IamTenantMemberEntity> tenantFilter(long tenantId, ObjectScope scope, String phone,
-                                                                   String email) {
+                                                                   String email, Long departmentId,
+                                                                   MemberStatus status) {
         LambdaQueryWrapper<IamTenantMemberEntity> wrapper = Wrappers.<IamTenantMemberEntity>lambdaQuery()
                 .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
-                .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED)
+                .eq(status != null, IamTenantMemberEntity::getStatus, status)
+                .ne(status == null, IamTenantMemberEntity::getStatus, MemberStatus.REMOVED)
                 .eq(phone != null && !phone.isBlank(), IamTenantMemberEntity::getPhone, phone)
                 .eq(email != null && !email.isBlank(), IamTenantMemberEntity::getEmail, email);
+        if (departmentId != null) {
+            wrapper.exists(DIRECT_DEPARTMENT_MEMBERSHIP, BigInteger.valueOf(tenantId),
+                    BigInteger.valueOf(departmentId));
+        }
         ObjectScopeSql.restrictTenantMembers(wrapper, scope, BigInteger.valueOf(tenantId));
         return wrapper;
     }

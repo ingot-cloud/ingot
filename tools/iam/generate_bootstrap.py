@@ -27,6 +27,8 @@ ROLE_BASE = 140000
 REVISION_BASE = 141000
 POLICY_BASE = 150000
 DIRECTORY_VIEW_PATH = 'layout.main'
+# 二级及以下带子集的目录走简单布局，避免再套一层完整壳。
+NESTED_DIRECTORY_VIEW_PATH = 'layout.simple'
 DEVELOPER_APPLICATION = 'platform:develop'
 SECURITY_APPLICATION = 'platform:security'
 SECURITY_RESOURCES = {'credential-policy', 'lockout-policy', 'login-failure-policy', 'session', 'session-policy', 'security-policy'}
@@ -189,7 +191,10 @@ PLATFORM_MENUS = [
 
 TENANT_MENUS = [
     ('组织管理', 'org.iam.organization', 'ep:office-building', [
-        ('成员与部门', 'org.iam.members', ['iam-tenant:member:read', 'iam-tenant:department:read']),
+        ('成员与部门', 'org.iam.members.root', '', [
+            ('成员', 'org.iam.members', ['iam-tenant:member:read']),
+            ('部门', 'org.iam.departments', ['iam-tenant:department:read']),
+        ]),
         ('用户组', 'org.iam.groups', ['iam-tenant:group:read']),
         ('组织设置', 'org.iam.settings', ['iam-tenant:settings:read']),
     ]),
@@ -225,7 +230,11 @@ SECURITY_MENUS = [('安全中心', 'security.root', 'ep:lock', [
     ('会话管理', 'security.sessions', ['iam-platform:session:read', 'iam-platform:session-policy:read']),
 ])]
 
-DIRECTORY_PATHS = {'security.root': '/security', 'platform.settings': '/platform/settings'}
+DIRECTORY_PATHS = {
+    'security.root': '/security',
+    'platform.settings': '/platform/settings',
+    'org.iam.members.root': '/org/iam/members/root',
+}
 
 PAGE_PATHS = {
     'platform.settings.dictionaries': '/platform/settings/dictionaries',
@@ -314,6 +323,29 @@ def reserved_id(table, preferred, low, high):
             f"WHERE taken.id >= {low} AND taken.id < {high}))")
 
 
+def is_directory_node(node):
+    """四级元组是目录：名称、键、图标、子节点。"""
+    return len(node) == 4 and isinstance(node[3], list)
+
+
+def is_page_node(node):
+    """三级元组是页面：名称、键、操作码。"""
+    return len(node) == 3 and isinstance(node[2], list)
+
+
+def collect_actions(nodes):
+    """目录携带全部后代页面的操作并集。"""
+    actions = set()
+    for node in nodes:
+        if is_page_node(node):
+            actions.update(node[2])
+        elif is_directory_node(node):
+            actions.update(collect_actions(node[3]))
+        else:
+            raise SystemExit(f'无法识别的菜单节点 {node!r}')
+    return actions
+
+
 def insert(table, columns, values, exists, source='DUAL', where=None):
     """存在即跳过的插入语句，重复执行不覆盖任何既有行。
 
@@ -329,6 +361,8 @@ def insert(table, columns, values, exists, source='DUAL', where=None):
 def build(check=False):
     routes = json.loads(ROUTES.read_text())
     catalog = collect(routes)
+    catalog.setdefault('iam-tenant',{}).setdefault('role',set()).add('iam-tenant:role:upgrade')
+    stable_ids = json.loads((ROOT / 'tools/iam/tenant_live/action_ids.json').read_text())
 
     lines = [
         '-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。',
@@ -386,9 +420,9 @@ def build(check=False):
                 lines.append(insert(
                     'iam_action',
                     ['id', 'application_id', 'resource_id', 'code', 'name', 'enabled'],
-                    [reserved_id('iam_action', ACTION_BASE + action_count, ACTION_BASE, MENU_BASE),
+                    [reserved_id('iam_action', stable_ids.get(code,ACTION_BASE + action_count), ACTION_BASE, MENU_BASE),
                      'res.application_id', 'res.id', quote(code),
-                     quote(action_name(code)), 'TRUE'],
+                     quote(action_name(code)), 'FALSE' if code=='iam-tenant:role:upgrade' else 'TRUE'],
                     f"code = {quote(code)}",
                     source='iam_resource res JOIN iam_application app ON app.id = res.application_id',
                     where=f"app.code = {quote(application)} AND res.code = {quote(resource)}"))
@@ -396,10 +430,51 @@ def build(check=False):
     lines.append('-- 菜单：目录携带子页操作并集，子页全部不可见时目录随之隐藏。')
     menu_count = 0
     menu_links = []
+
+    def emit_children(application, parent_key, children):
+        nonlocal menu_count
+        for child_order, child in enumerate(children, start=1):
+            parent_source = ('iam_menu parent JOIN iam_application app ON app.id = parent.application_id')
+            parent_where = (f"app.code = {quote(application)} "
+                            f"AND parent.route_name = {quote(parent_key)}")
+            if is_directory_node(child):
+                name, key, icon, nested = child
+                menu_count += 1
+                actions = sorted(collect_actions(nested))
+                lines.append(insert(
+                    'iam_menu',
+                    ['id', 'application_id', 'parent_id', 'name', 'path', 'view_path', 'route_name',
+                     'icon', 'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
+                    [reserved_id('iam_menu', MENU_BASE + menu_count, MENU_BASE, ROLE_BASE),
+                     'parent.application_id', 'parent.id',
+                     quote(name), quote(menu_path(key)), quote(NESTED_DIRECTORY_VIEW_PATH), quote(key),
+                     quote(icon or ''), quote('DIRECTORY'), quote('ANY'), quote('ACTION'),
+                     str(child_order), 'TRUE'],
+                    f"application_id = parent.application_id AND route_name = {quote(key)}",
+                    source=parent_source, where=parent_where))
+                menu_links.extend((application, key, code) for code in actions)
+                emit_children(application, key, nested)
+                continue
+            if not is_page_node(child):
+                raise SystemExit(f'无法识别的菜单节点 {child!r}')
+            page_name, view_key, codes = child
+            menu_count += 1
+            lines.append(insert(
+                'iam_menu',
+                ['id', 'application_id', 'parent_id', 'name', 'path', 'view_path', 'route_name',
+                 'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
+                [reserved_id('iam_menu', MENU_BASE + menu_count, MENU_BASE, ROLE_BASE),
+                 'parent.application_id', 'parent.id',
+                 quote(page_name), quote(menu_path(view_key)), quote(view_key), quote(view_key),
+                 quote('PAGE'), quote('ANY'), quote('ACTION'), str(child_order), 'TRUE'],
+                f"application_id = parent.application_id AND route_name = {quote(view_key)}",
+                source=parent_source, where=parent_where))
+            menu_links.extend((application, view_key, code) for code in sorted(set(codes)))
+
     for application, tree in MENUS.items():
         for order, (directory_name, directory_key, directory_icon, pages) in enumerate(tree, start=1):
             menu_count += 1
-            directory_actions = sorted({code for _, _, codes in pages for code in codes})
+            directory_actions = sorted(collect_actions(pages))
             lines.append(insert(
                 'iam_menu',
                 ['id', 'application_id', 'parent_id', 'name', 'path', 'view_path', 'route_name',
@@ -412,21 +487,7 @@ def build(check=False):
                 f"application_id = app.id AND route_name = {quote(directory_key)}",
                 source='iam_application app', where=f"app.code = {quote(application)}"))
             menu_links += [(application, directory_key, code) for code in directory_actions]
-            for page_order, (page_name, view_key, codes) in enumerate(pages, start=1):
-                menu_count += 1
-                lines.append(insert(
-                    'iam_menu',
-                    ['id', 'application_id', 'parent_id', 'name', 'path', 'view_path', 'route_name',
-                     'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
-                    [reserved_id('iam_menu', MENU_BASE + menu_count, MENU_BASE, ROLE_BASE),
-                     'parent.application_id', 'parent.id',
-                     quote(page_name), quote(menu_path(view_key)), quote(view_key), quote(view_key),
-                     quote('PAGE'), quote('ANY'), quote('ACTION'), str(page_order), 'TRUE'],
-                    f"application_id = parent.application_id AND route_name = {quote(view_key)}",
-                    source='iam_menu parent JOIN iam_application app ON app.id = parent.application_id',
-                    where=f"app.code = {quote(application)} "
-                          f"AND parent.route_name = {quote(directory_key)}"))
-                menu_links += [(application, view_key, code) for code in sorted(set(codes))]
+            emit_children(application, directory_key, pages)
 
     lines.append('-- 菜单与操作关联：ACTION 访问模式下缺少关联的菜单一律不可见。')
     known = {}

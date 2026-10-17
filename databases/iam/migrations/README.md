@@ -15,6 +15,9 @@
 | 017_role_revision_application.sql | 角色版本缺名称、备注、独立元数据锁，或缺持久版本应用任务表；只增加列、表及索引，支持重跑。 | 002/003/004 |
 | 018_authorization_audit_menu.sql | 两域授权审计菜单仍使用旧名称；仅调整名称，可重复执行。 | 006 |
 | 020_platform_capability_completion.sql | 平台能力补齐：新增安全应用、迁移六资源十六操作及八个页面，保留 ID/固定授权；先停写备份。 | 006 |
+| 021_tenant_live_authorization.sql | 当前角色授权结构扩展；仅已有库。 | 002/003 |
+| 022_tenant_live_authorization_constraints.sql | 当前角色分配约束；正转换成功后安装。 | 003 |
+| 023_tenant_members_departments_menus.sql | 组织管理下「成员与部门」收成目录，下面挂「成员」「部门」两个子页面；重挂父级、补菜单与操作关联。 | 006 |
 | 019_root_menu_icons.sql | 正式应用一级目录的icon为空；仅补齐空图标，可重复执行并保留自定义图标。 | 006 |
 
 014执行顺序为迁移→后端→前端；仅用于缺少两列的已有库，不能重复执行或用于新建库。DDL自动提交；若在DDL后中断，保持服务停止，确认列已新增后单独完成脚本回填语句。回退应用前冻结平台成员联系资料编辑，保留新增列和备份，不将独立联系资料写回账号。已有库禁止用完整初始化SQL替代迁移。
@@ -97,3 +100,15 @@ mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migra
 直接切换新 URL，不注册旧入口。发布顺序：备份停写→补丁→同批部署 IAM/Security/两管理台→广播授权失效、至少等待30秒并重新 bootstrap。回滚停止新版写入，按备份和输出 ID 恢复目录及菜单操作关联并回退应用，不重建库、不改历史角色版本；升级后已新增业务写入时先审查备份恢复范围。
 
 隔离验证：`python3 databases/iam/test_capability_migration.py`，使用无网络自动清理 MySQL 容器，不访问现有库。脚本由 `tools/iam/generate_database.py` 生成；`--check` 同时检查种子、迁移和 bundle。
+
+## 023 成员与部门拆为目录下的两个子页面
+
+适用于已有「成员与部门」单页菜单的 IAM 库，也兼容曾把「成员」「部门」直接挂在组织管理下的中间态。新增目录 `org.iam.members.root`（`view_path=layout.simple`），把 `org.iam.members` 收成「成员」、补齐 `org.iam.departments`「部门」，并改挂到该目录下。目录绑定 `member:read` 与 `department:read`，成员页只保留 `member:read`。用户组、组织设置仍挂在组织管理下，排序回到 2、3。按应用编码和路由名定位，不改已有菜单主键。可重复执行。
+
+确认目标库并留存目标菜单后执行：
+
+```sh
+mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migrations/023_tenant_members_departments_menus.sql
+```
+
+完成后重新 bootstrap 或登录加载菜单。新建库使用最新 006 或完整初始化文件，已有库不能用完整初始化文件代替本补齐脚本。回退时按菜单 ID 恢复原名称、父级、排序与 `iam_menu_action`，并删除部门页与「成员与部门」目录。
