@@ -283,6 +283,9 @@ public class MemberQueryRepository {
      * @return 范围内且未移出时为 true
      */
     public boolean visible(AuthorizationDomain domain, Long tenantId, long memberId, ObjectScope scope) {
+        if (scope.coversNone()) {
+            return false;
+        }
         if (domain == AuthorizationDomain.PLATFORM) {
             LambdaQueryWrapper<IamPlatformMemberEntity> wrapper = Wrappers.<IamPlatformMemberEntity>lambdaQuery()
                     .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
@@ -311,6 +314,28 @@ public class MemberQueryRepository {
                 .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED);
         ObjectScopeSql.restrictPlatformMembers(query, scope);
         return platformMembers.selectList(query).stream().map(IamPlatformMemberEntity::getId)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * 按同一租户范围批量检查当前页未移出的成员，不替代写入门禁。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param ids 当前页成员 ID
+     * @param scope 本操作的范围
+     * @return 范围内且未移出的成员 ID
+     */
+    public Set<BigInteger> visibleTenantIds(long tenantId, Collection<BigInteger> ids, ObjectScope scope) {
+        if (ids.isEmpty() || scope.coversNone()) {
+            return Set.of();
+        }
+        var query = Wrappers.<IamTenantMemberEntity>lambdaQuery()
+                .select(IamTenantMemberEntity::getId)
+                .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .in(IamTenantMemberEntity::getId, ids)
+                .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED);
+        ObjectScopeSql.restrictTenantMembers(query, scope, BigInteger.valueOf(tenantId));
+        return tenantMembers.selectList(query).stream().map(IamTenantMemberEntity::getId)
                 .collect(Collectors.toUnmodifiableSet());
     }
 

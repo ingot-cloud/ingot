@@ -2,6 +2,7 @@ package com.ingot.cloud.iam.web.v1.tenant;
 
 import java.util.List;
 
+import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
 import com.ingot.cloud.iam.organization.DepartmentService;
 import com.ingot.cloud.iam.support.IamPurposes;
 import com.ingot.framework.commons.model.iam.CreatedResource;
@@ -47,6 +48,7 @@ public class TenantDepartmentAPI implements RShortcuts {
      * @return 部门树
      */
     @Operation(summary = "部门树")
+    @IamReadOnlyRequest
     @GetMapping
     public R<List<DepartmentTreeNode>> list(@RequestParam SelectionPurpose purpose) {
         IamPurposes.require(purpose, SelectionPurpose.MANAGED_DEPARTMENT);
@@ -72,6 +74,7 @@ public class TenantDepartmentAPI implements RShortcuts {
      * @return 部门详情
      */
     @Operation(summary = "部门详情")
+    @IamReadOnlyRequest
     @GetMapping("/{id}")
     public R<ResourceDetail<DepartmentRecord>> get(@PathVariable String id) {
         return ok(departments.get(id));

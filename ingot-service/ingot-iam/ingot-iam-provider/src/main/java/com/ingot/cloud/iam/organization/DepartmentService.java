@@ -27,6 +27,7 @@ import com.ingot.framework.commons.model.iam.DepartmentTreeNode;
 import com.ingot.framework.commons.model.iam.DepartmentUpdateInput;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.ObjectCapability;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -83,7 +84,9 @@ public class DepartmentService {
         Map<Long, Integer> counts = departments.activeMemberCounts(tenantId, rows.stream()
                 .map(row -> row.getId().longValueExact())
                 .toList());
-        return flattenRootChildren(assembleTree(rows, counts, caps));
+        Map<String, Map<String, ObjectCapability>> rowCapabilities = capabilities.departments(caps,
+                rows.stream().map(row -> row.getId().toString()).toList());
+        return flattenRootChildren(assembleTree(rows, counts, rowCapabilities));
     }
 
     /**
@@ -191,8 +194,9 @@ public class DepartmentService {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
+        ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
         return IamDetails.of(department(row),
-                capabilities.department(capabilities.snapshot(actor.context()), row.getId().toString()),
+                capabilities.departments(caps, List.of(row.getId().toString())).get(row.getId().toString()),
                 version(row.getVersion()));
     }
 
@@ -228,13 +232,13 @@ public class DepartmentService {
     }
 
     private List<DepartmentTreeNode> assembleTree(List<IamDepartmentEntity> rows, Map<Long, Integer> counts,
-            ObjectCapabilities.Snapshot caps) {
+            Map<String, Map<String, ObjectCapability>> rowCapabilities) {
         Map<String, ResourceDetail<DepartmentRecord>> details = new LinkedHashMap<>();
         Map<String, List<String>> childIds = new LinkedHashMap<>();
         for (IamDepartmentEntity row : rows) {
             String id = row.getId().toString();
             details.put(id, IamDetails.of(department(row, counts.getOrDefault(row.getId().longValueExact(), 0)),
-                    capabilities.department(caps, id), version(row.getVersion())));
+                    rowCapabilities.get(id), version(row.getVersion())));
             childIds.put(id, new ArrayList<>());
         }
         List<String> roots = new ArrayList<>();

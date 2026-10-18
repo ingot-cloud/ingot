@@ -75,9 +75,8 @@ class DepartmentServiceTest {
         ObjectScope scope = ObjectScope.all();
         when(scopes.departmentRead(ACTOR, IamAction.TENANT_DEPARTMENT_READ)).thenReturn(scope);
         when(capabilities.snapshot(ACTOR)).thenReturn(snapshot);
-        when(capabilities.department(snapshot, "1")).thenReturn(Map.of());
-        when(capabilities.department(snapshot, "2")).thenReturn(Map.of());
-        when(capabilities.department(snapshot, "3")).thenReturn(Map.of());
+        when(capabilities.departments(snapshot, List.of("1", "2", "3"))).thenReturn(Map.of(
+                "1", Map.of(), "2", Map.of(), "3", Map.of()));
         when(departments.list(10L, scope)).thenReturn(List.of(root, product, nested));
         when(departments.activeMemberCounts(10L, List.of(1L, 2L, 3L))).thenReturn(Map.of(2L, 2));
 
@@ -95,7 +94,7 @@ class DepartmentServiceTest {
         IamDepartmentEntity row = departmentRow(11, null, "研发");
         ObjectCapabilities.Snapshot snapshot = mock(ObjectCapabilities.Snapshot.class);
         when(capabilities.snapshot(ACTOR)).thenReturn(snapshot);
-        when(capabilities.department(snapshot, "11")).thenReturn(Map.of());
+        when(capabilities.departments(snapshot, List.of("11"))).thenReturn(Map.of("11", Map.of()));
         when(departments.find(10L, 11L)).thenReturn(row);
 
         ResourceDetail<DepartmentRecord> detail = service.get("11");

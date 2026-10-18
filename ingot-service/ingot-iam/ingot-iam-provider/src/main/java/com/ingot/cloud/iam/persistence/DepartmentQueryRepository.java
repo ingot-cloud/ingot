@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -80,12 +82,36 @@ public class DepartmentQueryRepository {
      * @return 命中时为 true
      */
     public boolean matches(Long tenantId, long id, ObjectScope scope) {
+        if (scope.coversNone()) {
+            return false;
+        }
         LambdaQueryWrapper<IamDepartmentEntity> wrapper = Wrappers.<IamDepartmentEntity>lambdaQuery()
                 .eq(IamDepartmentEntity::getId, BigInteger.valueOf(id))
                 .eq(tenantId != null, IamDepartmentEntity::getTenantId,
                         tenantId == null ? null : BigInteger.valueOf(tenantId));
         ObjectScopeSql.restrictDepartments(wrapper, scope);
         return departments.selectCount(wrapper) > 0;
+    }
+
+    /**
+     * 按同一部门范围批量检查已加载的部门，调用方必须只传入当前租户的部门 ID。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param ids 当前页部门 ID
+     * @param scope 已编译范围
+     * @return 落入范围的部门 ID
+     */
+    public Set<BigInteger> matchingIds(long tenantId, Collection<BigInteger> ids, ObjectScope scope) {
+        if (ids.isEmpty() || scope.coversNone()) {
+            return Set.of();
+        }
+        var query = Wrappers.<IamDepartmentEntity>lambdaQuery()
+                .select(IamDepartmentEntity::getId)
+                .eq(IamDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .in(IamDepartmentEntity::getId, ids);
+        ObjectScopeSql.restrictDepartments(query, scope);
+        return departments.selectList(query).stream().map(IamDepartmentEntity::getId)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     /**

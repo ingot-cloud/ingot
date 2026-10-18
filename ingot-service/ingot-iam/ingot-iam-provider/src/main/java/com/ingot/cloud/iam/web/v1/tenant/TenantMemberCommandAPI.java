@@ -5,6 +5,7 @@ import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.MemberResources;
 import com.ingot.framework.commons.model.iam.TenantMemberFilter;
 
+import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
 import com.ingot.cloud.iam.organization.MemberCommandService;
 import com.ingot.cloud.iam.organization.MemberExportService;
 import com.ingot.cloud.iam.organization.MemberQueryService;
@@ -52,6 +53,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
     private final MemberExportService exports;
 
     /** 返回当前身份与完整查询范围的字段操作能力。 */
+    @IamReadOnlyRequest
     @GetMapping("/context")
     @Operation(summary = "字段能力上下文")
     public R<com.ingot.framework.commons.model.iam.ResourceFieldContext> context() { return ok(queries.tenantContext()); }
@@ -63,9 +65,12 @@ public class TenantMemberCommandAPI implements RShortcuts {
      * @param pageSize 页大小
      * @param phone 手机号精确筛选，可空
      * @param email 邮箱精确筛选，可空
+     * @param departmentId 直属任职部门，可空
+     * @param status 成员资格，可空；仅接受 ACTIVE、SUSPENDED、REMOVED
      * @return 成员页
      */
     @Operation(summary = "成员列表")
+    @IamReadOnlyRequest
     @GetMapping
     @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, valueType = MemberRecord.class)
     @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, use = FieldUse.FILTER, valueType = TenantMemberFilter.class)
@@ -73,8 +78,10 @@ public class TenantMemberCommandAPI implements RShortcuts {
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
             @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String email) {
-        return ok(queries.list(AuthorizationDomain.TENANT, page, pageSize, phone, email));
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String departmentId,
+            @RequestParam(required = false) String status) {
+        return ok(queries.list(AuthorizationDomain.TENANT, page, pageSize, phone, email, departmentId, status));
     }
 
     /**
@@ -97,6 +104,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
      * @return 安全投影
      */
     @Operation(summary = "成员详情")
+    @IamReadOnlyRequest
     @GetMapping("/{id}")
     @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, valueType = MemberRecord.class)
     public R<ResourceDetail<MemberRecord>> get(@PathVariable String id) {
@@ -176,6 +184,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
      * @return 任务状态
      */
     @Operation(summary = "查询成员导出任务")
+    @IamReadOnlyRequest
     @GetMapping("/export/{id}/status")
     public R<ExportTask> exportStatus(@PathVariable String id) {
         return ok(exports.status(id));
@@ -188,6 +197,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
      * @return 投影后的成员页
      */
     @Operation(summary = "下载成员导出")
+    @IamReadOnlyRequest
     @GetMapping("/export/{id}")
     public R<PageResponse<ResourceDetail<MemberRecord>>> downloadExport(@PathVariable String id) {
         return ok(exports.download(id));

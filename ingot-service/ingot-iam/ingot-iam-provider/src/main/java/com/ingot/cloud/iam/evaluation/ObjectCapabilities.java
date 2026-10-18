@@ -99,6 +99,11 @@ public class ObjectCapabilities {
             memberIds.forEach(id -> result.get(id.toString()).put(action.getCode(),
                     of(snapshot.view(), action, allowed.contains(id))));
         }
+        return copyCapabilities(result);
+    }
+
+    private static Map<String, Map<String, ObjectCapability>> copyCapabilities(
+            Map<String, Map<String, ObjectCapability>> result) {
         Map<String, Map<String, ObjectCapability>> immutable = new LinkedHashMap<>();
         result.forEach((id, values) -> immutable.put(id, Map.copyOf(values)));
         return Map.copyOf(immutable);
@@ -121,6 +126,25 @@ public class ObjectCapabilities {
     }
 
     /**
+     * 按当前页批量计算租户成员能力。每个操作最多各查一次成员范围和部门范围。
+     *
+     * @param snapshot 授权快照
+     * @param records 已加载的当前页成员
+     * @return 成员 ID 到逐操作能力
+     */
+    public Map<String, Map<String, ObjectCapability>> tenantMembers(Snapshot snapshot, List<MemberRecord> records) {
+        Map<String, Map<String, ObjectCapability>> result = new LinkedHashMap<>();
+        records.forEach(record -> result.put(record.id(), new LinkedHashMap<>()));
+        for (IamAction action : TENANT_MEMBER) {
+            Set<String> allowed = scopes.tenantMemberIds(snapshot.actor(), snapshot.view(), action,
+                    operation(action), records);
+            records.forEach(record -> result.get(record.id()).put(action.getCode(),
+                    of(snapshot.view(), action, allowed.contains(record.id()))));
+        }
+        return copyCapabilities(result);
+    }
+
+    /**
      * 计算部门行上的展示能力。
      *
      * @param snapshot 授权快照
@@ -128,13 +152,26 @@ public class ObjectCapabilities {
      * @return 按操作码索引的能力
      */
     public Map<String, ObjectCapability> department(Snapshot snapshot, String departmentId) {
-        Map<String, ObjectCapability> result = new LinkedHashMap<>();
-        long id = Long.parseLong(departmentId);
+        return departments(snapshot, List.of(departmentId)).get(departmentId);
+    }
+
+    /**
+     * 按已加载部门批量计算更新和删除能力。全域不再逐行查询。
+     *
+     * @param snapshot 授权快照
+     * @param departmentIds 当前租户已加载的部门 ID
+     * @return 部门 ID 到逐操作能力
+     */
+    public Map<String, Map<String, ObjectCapability>> departments(Snapshot snapshot, Collection<String> departmentIds) {
+        Map<String, Map<String, ObjectCapability>> result = new LinkedHashMap<>();
+        List<BigInteger> ids = departmentIds.stream().map(BigInteger::new).toList();
+        departmentIds.forEach(id -> result.put(id, new LinkedHashMap<>()));
         for (IamAction action : TENANT_DEPARTMENT) {
-            result.put(action.getCode(), of(snapshot.view(), action,
-                    scopes.departmentAllowed(snapshot.actor(), snapshot.view(), action, id)));
+            Set<BigInteger> allowed = scopes.departmentIds(snapshot.actor(), snapshot.view(), action, ids);
+            departmentIds.forEach(id -> result.get(id).put(action.getCode(),
+                    of(snapshot.view(), action, allowed.contains(new BigInteger(id)))));
         }
-        return result;
+        return copyCapabilities(result);
     }
 
     private ObjectCapability member(Snapshot snapshot, IamAction action, String memberId, Set<String> departments,

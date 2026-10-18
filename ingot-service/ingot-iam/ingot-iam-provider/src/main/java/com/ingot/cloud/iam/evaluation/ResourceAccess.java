@@ -3,6 +3,7 @@ package com.ingot.cloud.iam.evaluation;
 import java.util.Collection;
 import java.math.BigInteger;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.ingot.cloud.iam.organization.MemberMutationGuard;
@@ -15,6 +16,9 @@ import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.MemberDepartmentView;
+import com.ingot.framework.commons.model.iam.MemberRecord;
+import com.ingot.framework.commons.model.iam.MemberStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -313,6 +317,83 @@ public class ResourceAccess {
      * @param ids 当前页成员 ID
      * @return 允许的未移出成员
      */
+    /**
+     * 批量计算当前页租户成员是否允许该展示操作，谓词与逐条检查相同。
+     *
+     * @param actor 当前可信租户身份
+     * @param view 本次展示授权视图
+     * @param action 精确操作
+     * @param operation 成员变更种类；资料更新为空
+     * @param records 已加载的当前页成员，部门来源必须已经按租户存在性过滤
+     * @return 允许操作的成员 ID
+     */
+    public Set<String> tenantMemberIds(AuthorizationContext actor, AuthorizationEvaluator.AuthorizationView view,
+                                        IamAction action, MemberMutationGuard.Operation operation,
+                                        List<MemberRecord> records) {
+        if (actor.domain() != AuthorizationDomain.TENANT) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        if (records.isEmpty() || !hasAction(view, action)) {
+            return Set.of();
+        }
+        ResolvedActionScope resolved = view.scope(action.getCode());
+        if (resolved.isEmpty()) {
+            return Set.of();
+        }
+        boolean changeDepartments = operation == MemberMutationGuard.Operation.CHANGE_DEPARTMENTS;
+        boolean needsVisible = !changeDepartments || records.stream().anyMatch(record -> departmentIds(record).isEmpty());
+        boolean needsDepartments = operation != null && records.stream().anyMatch(record -> !departmentIds(record).isEmpty());
+        ObjectScope memberScope = compiler.members(actor, resolved);
+        Set<BigInteger> visible = needsVisible ? visibleTenantMembers(actor, memberScope, records) : Set.of();
+        Set<BigInteger> covered = needsDepartments
+                ? departments.matchingIds(tenantId(actor), departmentIds(records), compiler.departments(actor, resolved))
+                : Set.of();
+        LinkedHashSet<String> allowed = new LinkedHashSet<>();
+        for (MemberRecord record : records) {
+            Set<String> memberDepartments = departmentIds(record);
+            boolean memberVisible = visible.contains(new BigInteger(record.id()));
+            if (memberDepartments.isEmpty() || operation == null) {
+                if (memberVisible) {
+                    allowed.add(record.id());
+                }
+                continue;
+            }
+            boolean departmentCovered = memberDepartments.stream()
+                    .allMatch(id -> covered.contains(new BigInteger(id)));
+            if (changeDepartments ? departmentCovered : departmentCovered && memberVisible) {
+                allowed.add(record.id());
+            }
+        }
+        return Set.copyOf(allowed);
+    }
+
+    /**
+     * 批量计算已加载部门是否落入该操作范围。全域不再逐行查询。
+     *
+     * @param actor 当前可信租户身份
+     * @param view 本次展示授权视图
+     * @param action 精确操作
+     * @param departmentIds 当前租户已加载的部门 ID
+     * @return 允许操作的部门 ID
+     */
+    public Set<BigInteger> departmentIds(AuthorizationContext actor, AuthorizationEvaluator.AuthorizationView view,
+                                          IamAction action, Collection<BigInteger> departmentIds) {
+        if (actor.domain() != AuthorizationDomain.TENANT) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        if (departmentIds.isEmpty() || !hasAction(view, action)) {
+            return Set.of();
+        }
+        ResolvedActionScope resolved = view.scope(action.getCode());
+        if (resolved.isEmpty()) {
+            return Set.of();
+        }
+        if (resolved.clauses().stream().anyMatch(ScopeClause::all)) {
+            return Set.copyOf(new LinkedHashSet<>(departmentIds));
+        }
+        return departments.matchingIds(tenantId(actor), departmentIds, compiler.departments(actor, resolved));
+    }
+
     public Set<BigInteger> platformMemberIds(AuthorizationContext actor,
             AuthorizationEvaluator.AuthorizationView view, IamAction action,
             Collection<BigInteger> ids) {
@@ -332,6 +413,45 @@ public class ResourceAccess {
             return "";
         }
         return actionCode.substring(first + 1, last);
+    }
+
+    private Set<BigInteger> visibleTenantMembers(AuthorizationContext actor, ObjectScope scope,
+                                                   List<MemberRecord> records) {
+        if (scope.coversNone()) {
+            return Set.of();
+        }
+        if (scope.coversAll()) {
+            LinkedHashSet<BigInteger> visible = new LinkedHashSet<>();
+            for (MemberRecord record : records) {
+                if (record.status() != MemberStatus.REMOVED) {
+                    visible.add(new BigInteger(record.id()));
+                }
+            }
+            return visible;
+        }
+        List<BigInteger> ids = records.stream().map(record -> new BigInteger(record.id())).toList();
+        return members.visibleTenantIds(tenantId(actor), ids, scope);
+    }
+
+    private static Set<BigInteger> departmentIds(List<MemberRecord> records) {
+        LinkedHashSet<BigInteger> ids = new LinkedHashSet<>();
+        for (MemberRecord record : records) {
+            for (String departmentId : departmentIds(record)) {
+                ids.add(new BigInteger(departmentId));
+            }
+        }
+        return ids;
+    }
+
+    private static Set<String> departmentIds(MemberRecord record) {
+        LinkedHashSet<String> ids = new LinkedHashSet<>();
+        if (record.departments() == null) {
+            return ids;
+        }
+        for (MemberDepartmentView department : record.departments()) {
+            ids.add(department.id());
+        }
+        return ids;
     }
 
     private boolean covers(AuthorizationContext actor, ResolvedActionScope scope, String memberId,

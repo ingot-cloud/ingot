@@ -376,12 +376,13 @@ public class MemberQueryService {
         Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
                 result.getRecords().stream().map(IamTenantMemberEntity::getId).toList());
         var batch = fields.prepare(snapshot, viewerId, result.getRecords().stream().map(row -> row.getId().longValueExact()).toList());
-        List<ResourceDetail<MemberRecord>> items = result.getRecords()
-            .stream()
-            .map(row -> detail(batch, caps,
-                    tenantMember(row, departments.getOrDefault(row.getId(), List.of())), version(row.getVersion())))
-            .toList();
-        return IamPages.details(items, result.getTotal(), page, pageSize);
+        List<MemberRecord> raws = new ArrayList<>();
+        List<String> versions = new ArrayList<>();
+        for (IamTenantMemberEntity row : result.getRecords()) {
+            raws.add(tenantMember(row, departments.getOrDefault(row.getId(), List.of())));
+            versions.add(version(row.getVersion()));
+        }
+        return IamPages.details(projectMembers(batch, caps, raws, versions), result.getTotal(), page, pageSize);
     }
 
     /**
@@ -428,15 +429,17 @@ public class MemberQueryService {
         FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
         var batch = fields.prepare(snapshot, viewerId, rows.stream().map(row -> row.getId().longValueExact()).toList());
-        List<ResourceDetail<MemberRecord>> items = new ArrayList<>();
+        List<MemberRecord> raws = new ArrayList<>();
+        List<String> versions = new ArrayList<>();
         for (String memberId : order) {
             IamTenantMemberEntity row = byId.get(memberId);
             if (row == null) {
                 continue;
             }
-            items.add(detail(batch, caps,
-                    tenantMember(row, departments.getOrDefault(row.getId(), List.of())), version(row.getVersion())));
+            raws.add(tenantMember(row, departments.getOrDefault(row.getId(), List.of())));
+            versions.add(version(row.getVersion()));
         }
+        List<ResourceDetail<MemberRecord>> items = projectMembers(batch, caps, raws, versions);
         return IamPages.complete(items);
     }
 
@@ -781,7 +784,22 @@ public class MemberQueryService {
 
     private ResourceDetail<MemberRecord> detail(FieldAccessEvaluator.FieldBatch batch, ObjectCapabilities.Snapshot caps,
             MemberRecord raw, String version) {
-        var targetCapabilities = capabilities.tenantMember(caps, raw);
+        return projectMembers(batch, caps, List.of(raw), List.of(version)).getFirst();
+    }
+
+    private List<ResourceDetail<MemberRecord>> projectMembers(FieldAccessEvaluator.FieldBatch batch,
+            ObjectCapabilities.Snapshot caps, List<MemberRecord> raws, List<String> versions) {
+        var rowCapabilities = capabilities.tenantMembers(caps, raws);
+        List<ResourceDetail<MemberRecord>> items = new ArrayList<>();
+        for (int index = 0; index < raws.size(); index++) {
+            items.add(detail(batch, rowCapabilities.get(raws.get(index).id()), raws.get(index), versions.get(index)));
+        }
+        return items;
+    }
+
+    private ResourceDetail<MemberRecord> detail(FieldAccessEvaluator.FieldBatch batch,
+            Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> targetCapabilities, MemberRecord raw,
+            String version) {
         var update = targetCapabilities.get(IamAction.VALUE_TENANT_MEMBER_UPDATE);
         var access = fields.memberAccess(batch, IamIds.require(raw.id())).entrySet().stream().collect(java.util.stream.Collectors.toMap(
                 Map.Entry::getKey, entry -> new com.ingot.framework.commons.model.iam.FieldAccess(entry.getValue().visibility(),

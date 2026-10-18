@@ -23,6 +23,10 @@ import java.util.UUID;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.persistence.IamMybatisTestAccess;
 import com.ingot.cloud.iam.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
+import com.ingot.framework.commons.model.iam.MemberDepartmentView;
+import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -187,6 +191,84 @@ class MemberQueryRepositoryTest {
         org.junit.jupiter.api.Assertions.assertFalse(batch.get("1020").get(status.getCode()).allowed());
         org.junit.jupiter.api.Assertions.assertFalse(batch.get("1003").get(update.getCode()).allowed());
         org.junit.jupiter.api.Assertions.assertFalse(batch.get("1001").get(remove.getCode()).allowed());
+    }
+
+    @Test
+    void tenantBatchCapabilitiesMatchSingleObjectChecksAndRemainConstantAtTwentyRows() {
+        for (long id = 2101; id <= 2116; id++) {
+            jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,status) VALUES (?,10,'ACTIVE')", id);
+        }
+        jdbc.update("INSERT INTO iam_department(id,tenant_id) VALUES (1001103,10),(1001104,10)");
+        var actor = new AuthorizationContext(AuthorizationDomain.TENANT, "10", "1", "2001");
+        var update = IamAction.TENANT_MEMBER_UPDATE;
+        var status = IamAction.TENANT_MEMBER_STATUS;
+        var remove = IamAction.TENANT_MEMBER_REMOVE;
+        var assignDepartments = IamAction.TENANT_MEMBER_DEPARTMENTS;
+        var departmentUpdate = IamAction.TENANT_DEPARTMENT_UPDATE;
+        var departmentDelete = IamAction.TENANT_DEPARTMENT_DELETE;
+        var restrictedMembers = new ResolvedActionScope(List.of(
+                new ScopeClause(false, false, false, false, List.of(), false, List.of("2001", "2002"))));
+        var managedDepartments = new ResolvedActionScope(List.of(
+                new ScopeClause(false, false, false, false, List.of("1001103"), false, List.of())));
+        var view = new AuthorizationEvaluator.AuthorizationView(List.of(update.getCode(), status.getCode(),
+                remove.getCode(), assignDepartments.getCode(), departmentUpdate.getCode(), departmentDelete.getCode()),
+                List.of(), Map.of(
+                    update.getCode(), restrictedMembers,
+                    status.getCode(), new ResolvedActionScope(List.of(ScopeClause.universe())),
+                    remove.getCode(), new ResolvedActionScope(List.of()),
+                    assignDepartments.getCode(), managedDepartments,
+                    departmentUpdate.getCode(), new ResolvedActionScope(List.of(ScopeClause.universe())),
+                    departmentDelete.getCode(), managedDepartments),
+                "test", Instant.now().plusSeconds(30));
+        var departmentRepository = new DepartmentQueryRepository(
+                IamMybatisTestAccess.mapper(counting, IamDepartmentMapper.class),
+                IamMybatisTestAccess.mapper(counting, IamMemberDepartmentMapper.class));
+        var resources = new ResourceAccess(mock(AuthorizationEvaluator.class),
+                new ObjectScopeCompiler(mock(DepartmentClosure.class), mock(IamMemberDepartmentMapper.class)),
+                members, departmentRepository);
+        var capabilities = new ObjectCapabilities(mock(AuthorizationEvaluator.class), resources);
+        var snapshot = new ObjectCapabilities.Snapshot(actor, view);
+        var records = new java.util.ArrayList<MemberRecord>();
+        records.add(tenantMember("2001", MemberStatus.ACTIVE, "1001103"));
+        records.add(tenantMember("2002", MemberStatus.ACTIVE, "1001104"));
+        records.add(tenantMember("2003", MemberStatus.SUSPENDED, "1001103"));
+        records.add(tenantMember("2004", MemberStatus.REMOVED, "1001103"));
+        for (long id = 2101; id <= 2116; id++) {
+            records.add(tenantMember(Long.toString(id), MemberStatus.ACTIVE, "1001103"));
+        }
+        counting.reset();
+        capabilities.tenantMembers(snapshot, records.subList(0, 1));
+        int one = counting.count();
+        counting.reset();
+        var batch = capabilities.tenantMembers(snapshot, records);
+        assertEquals(one, counting.count());
+        org.junit.jupiter.api.Assertions.assertTrue(counting.count() <= 4);
+        for (var record : records) {
+            assertEquals(capabilities.tenantMember(snapshot, record), batch.get(record.id()));
+        }
+        org.junit.jupiter.api.Assertions.assertFalse(batch.get("2002").get(assignDepartments.getCode()).allowed());
+        org.junit.jupiter.api.Assertions.assertFalse(batch.get("2004").get(status.getCode()).allowed());
+        org.junit.jupiter.api.Assertions.assertTrue(batch.get("2004").get(assignDepartments.getCode()).allowed());
+        org.junit.jupiter.api.Assertions.assertFalse(batch.get("2101").get(update.getCode()).allowed());
+
+        var departmentIds = LongStream.rangeClosed(1, 20).mapToObj(Long::toString).toList();
+        counting.reset();
+        capabilities.departments(snapshot, departmentIds.subList(0, 1));
+        int departmentOne = counting.count();
+        counting.reset();
+        var departmentBatch = capabilities.departments(snapshot, departmentIds);
+        assertEquals(departmentOne, counting.count());
+        org.junit.jupiter.api.Assertions.assertTrue(counting.count() <= 2);
+        for (var id : departmentIds) {
+            assertEquals(capabilities.department(snapshot, id), departmentBatch.get(id));
+        }
+        org.junit.jupiter.api.Assertions.assertTrue(departmentBatch.get("1").get(departmentUpdate.getCode()).allowed());
+        org.junit.jupiter.api.Assertions.assertFalse(departmentBatch.get("1").get(departmentDelete.getCode()).allowed());
+    }
+
+    private static MemberRecord tenantMember(String id, MemberStatus status, String departmentId) {
+        return new MemberRecord(id, "成员", null, null, null, null, status,
+                List.of(new MemberDepartmentView(departmentId, "部门", true)));
     }
 
 }
