@@ -29,6 +29,7 @@ import com.ingot.cloud.iam.persistence.GroupRepository;
 import com.ingot.cloud.iam.persistence.MemberQueryRepository;
 import com.ingot.cloud.iam.persistence.entity.IamAccountEntity;
 import com.ingot.cloud.iam.persistence.entity.IamPlatformGroupEntity;
+import com.ingot.cloud.iam.persistence.entity.IamTenantGroupEntity;
 import com.ingot.cloud.iam.persistence.entity.IamPlatformMemberEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.policy.FieldAccessEvaluator;
@@ -63,6 +64,7 @@ import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberRoleReplaceInput;
 import com.ingot.framework.commons.model.iam.MemberRoleView;
 import com.ingot.framework.commons.model.iam.MemberStatus;
+import com.ingot.framework.commons.model.iam.MemberTimeFields;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.PolicyScenario;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
@@ -520,6 +522,32 @@ public class MemberQueryService {
     }
 
     /**
+     * 分页列出租户成员所在用户组，含直接加入和部门来源，只返回组名。
+     *
+     * @param memberId 租户成员 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 组页
+     */
+    public PageResponse<ResourceDetail<GroupRecord>> listTenantGroups(String memberId, int page, int pageSize) {
+        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_MEMBER_READ);
+        long id = IamIds.require(memberId);
+        IamPages.require(page, pageSize);
+        scopes.requireVisibleMember(actor.context(), IamAction.TENANT_MEMBER_READ, id);
+        long tenantId = IamIds.require(actor.context().tenantId());
+        if (members.findTenant(tenantId, id) == null) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        Page<IamTenantGroupEntity> rows = groups.pageTenantByMember(tenantId, id, page, pageSize);
+        List<ResourceDetail<GroupRecord>> items = rows.getRecords()
+            .stream()
+            .map(row -> IamDetails.of(new GroupRecord(row.getId().toString(), row.getName(), row.getDescription(),
+                    new Selection(List.of(), List.of()), null), version(row.getVersion())))
+            .toList();
+        return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    /**
      * 列出平台成员的简单直接角色。
      * @param memberId 平台成员 ID
      * @return 按名称排序的直接角色
@@ -773,8 +801,13 @@ public class MemberQueryService {
         }
         List<MemberDepartmentView> departments = members.departmentViews(tenantId, List.of(row.getId()))
             .getOrDefault(row.getId(), List.of());
-        return detail(fields.snapshot(tenantId, PolicyScenario.MANAGEMENT), capabilities.snapshot(actor.context()),
-                viewerId, tenantMember(row, departments), version(row.getVersion()));
+        MemberRecord raw = tenantMemberDetail(row, departments);
+        var snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
+        var caps = capabilities.snapshot(actor.context());
+        var batch = fields.prepare(snapshot, viewerId, List.of(row.getId().longValueExact()));
+        var rowCapabilities = capabilities.tenantMembers(caps, List.of(raw)).get(raw.id());
+        return detail(batch, rowCapabilities == null ? Map.of() : rowCapabilities, raw,
+                version(row.getVersion()), true);
     }
 
     private ResourceDetail<MemberRecord> detail(FieldPolicySnapshot snapshot, ObjectCapabilities.Snapshot caps,
@@ -792,18 +825,25 @@ public class MemberQueryService {
         var rowCapabilities = capabilities.tenantMembers(caps, raws);
         List<ResourceDetail<MemberRecord>> items = new ArrayList<>();
         for (int index = 0; index < raws.size(); index++) {
-            items.add(detail(batch, rowCapabilities.get(raws.get(index).id()), raws.get(index), versions.get(index)));
+            items.add(detail(batch, rowCapabilities.get(raws.get(index).id()), raws.get(index), versions.get(index),
+                    false));
         }
         return items;
     }
 
     private ResourceDetail<MemberRecord> detail(FieldAccessEvaluator.FieldBatch batch,
             Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> targetCapabilities, MemberRecord raw,
-            String version) {
+            String version, boolean retainTimes) {
         var update = targetCapabilities.get(IamAction.VALUE_TENANT_MEMBER_UPDATE);
         var access = fields.memberAccess(batch, IamIds.require(raw.id())).entrySet().stream().collect(java.util.stream.Collectors.toMap(
                 Map.Entry::getKey, entry -> new com.ingot.framework.commons.model.iam.FieldAccess(entry.getValue().visibility(),
                         entry.getValue().editable() && update != null && update.allowed())));
+        if (retainTimes) {
+            var readonly = new FieldAccess(FieldVisibility.FULL, false);
+            access.put(MemberTimeFields.JOINED_AT, readonly);
+            access.put(MemberTimeFields.LAST_LOGIN_AT, readonly);
+            access.put(MemberTimeFields.UPDATED_AT, readonly);
+        }
         return IamDetails.of(fields.project(raw, access, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, batch.snapshot().masks()),
                 access, targetCapabilities, version);
     }
@@ -847,6 +887,13 @@ public class MemberQueryService {
     private static MemberRecord tenantMember(IamTenantMemberEntity row, List<MemberDepartmentView> departments) {
         return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(), row.getPhone(),
                 row.getEmail(), null, row.getStatus(), departments);
+    }
+
+    private MemberRecord tenantMemberDetail(IamTenantMemberEntity row, List<MemberDepartmentView> departments) {
+        IamAccountEntity account = row.getAccountId() == null ? null : members.accountLoginInfo(row.getAccountId());
+        return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(), row.getPhone(),
+                row.getEmail(), null, row.getStatus(), departments, utcInstant(row.getCreatedAt()),
+                account == null ? null : utcInstant(account.getLastLoginAt()), utcInstant(row.getUpdatedAt()));
     }
 
     private void replaceDepartments(long tenantId, long memberId, Map<String, Boolean> departments) {

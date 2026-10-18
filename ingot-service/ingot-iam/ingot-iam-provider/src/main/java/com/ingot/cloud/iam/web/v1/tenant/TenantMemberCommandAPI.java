@@ -13,6 +13,7 @@ import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.ExportTask;
+import com.ingot.framework.commons.model.iam.GroupRecord;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberDepartmentInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
@@ -109,6 +110,24 @@ public class TenantMemberCommandAPI implements RShortcuts {
     @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, valueType = MemberRecord.class)
     public R<ResourceDetail<MemberRecord>> get(@PathVariable String id) {
         return ok(queries.get(AuthorizationDomain.TENANT, id));
+    }
+
+    /**
+     * 分页列出租户成员所在用户组，含直接加入和部门来源。
+     *
+     * @param id 租户成员 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 组页
+     */
+    @Operation(summary = "成员所在用户组")
+    @IamReadOnlyRequest
+    @GetMapping("/{id}/groups")
+    public R<PageResponse<ResourceDetail<GroupRecord>>> groups(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(queries.listTenantGroups(id, page, pageSize));
     }
 
     /**

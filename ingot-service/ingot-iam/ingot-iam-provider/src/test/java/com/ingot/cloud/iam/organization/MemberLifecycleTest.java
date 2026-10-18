@@ -108,8 +108,18 @@ class MemberLifecycleTest {
 
     @Test
     void ownerCannotBeSuspendedOrRemoved() {
-        assertThrows(BizException.class, () -> service.remove(TENANT, "101", new VersionInput("0"), 5001, ALLOW));
-        assertThrows(BizException.class, () -> service.changeStatus(TENANT, "101", new MemberStatusInput(MemberStatus.SUSPENDED, "0"), 5002, ALLOW));
+        var otherAdmin = new AuthorizationContext(AuthorizationDomain.TENANT, "10", "2", "102");
+        BizException removedByOther = assertThrows(BizException.class,
+                () -> service.remove(otherAdmin, "101", new VersionInput("0"), 5001, ALLOW));
+        assertEquals(IamReasonCode.OBJECT_IN_USE.getCode(), removedByOther.getCode());
+        assertEquals(MemberLifecycle.OWNER_CANNOT_BE_REMOVED, removedByOther.getMessage());
+        BizException suspendedByOther = assertThrows(BizException.class, () -> service.changeStatus(otherAdmin, "101",
+                new MemberStatusInput(MemberStatus.SUSPENDED, "0"), 5002, ALLOW));
+        assertEquals(MemberLifecycle.OWNER_CANNOT_BE_SUSPENDED, suspendedByOther.getMessage());
+        BizException removedBySelf = assertThrows(BizException.class,
+                () -> service.remove(TENANT, "101", new VersionInput("0"), 5003, ALLOW));
+        assertEquals(MemberLifecycle.OWNER_CANNOT_BE_REMOVED, removedBySelf.getMessage());
+        assertEquals(MemberStatus.ACTIVE.name(), state("iam_tenant_member", 101));
     }
 
     @Test

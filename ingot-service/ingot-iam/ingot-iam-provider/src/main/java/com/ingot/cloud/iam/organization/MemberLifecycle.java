@@ -38,6 +38,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class MemberLifecycle {
     private static final String MEMBER_RESOURCE = "member";
     private static final String MEMBER_VERSION = "member";
+    /** 组织拥有者不能被暂停，与操作者是谁无关。 */
+    static final String OWNER_CANNOT_BE_SUSPENDED = "不能暂停组织拥有者";
+    /** 组织拥有者不能被移出，与操作者是谁无关。 */
+    static final String OWNER_CANNOT_BE_REMOVED = "不能移出组织拥有者";
     private static final BigInteger MAX_ID = new BigInteger("18446744073709551615");
     private final TransactionTemplate transaction;
     private final com.ingot.cloud.iam.support.PlatformAdministratorGuard administrators;
@@ -170,9 +174,7 @@ public class MemberLifecycle {
                     : MemberMutationGuard.Operation.CHANGE_STATUS, memberId, departments, Set.of());
             requireVersion(before, expectedVersion);
             requirePresent(before);
-            if (Objects.equals(owner, memberId) && next != MemberStatus.ACTIVE) {
-                throw new BizException(IamReasonCode.OBJECT_IN_USE);
-            }
+            requireOwnerRemains(owner, memberId, next);
             if (before.status() == next) {
                 return before.version().toString();
             }
@@ -185,6 +187,14 @@ public class MemberLifecycle {
             changes.markAll();
             return version;
         });
+    }
+
+    private static void requireOwnerRemains(String ownerMemberId, String memberId, MemberStatus next) {
+        if (!Objects.equals(ownerMemberId, memberId) || next == MemberStatus.ACTIVE) {
+            return;
+        }
+        String message = next == MemberStatus.REMOVED ? OWNER_CANNOT_BE_REMOVED : OWNER_CANNOT_BE_SUSPENDED;
+        throw new BizException(IamReasonCode.OBJECT_IN_USE.getCode(), message);
     }
 
     private String lockTenant(AuthorizationContext actor) {

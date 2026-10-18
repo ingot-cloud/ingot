@@ -2,17 +2,12 @@ package com.ingot.cloud.iam.organization;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.identity.CurrentIdentityService;
 import com.ingot.cloud.iam.identity.InitializationIdAllocator;
-import com.ingot.cloud.iam.persistence.MemberLifecycleRepository;
-import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
-import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
-import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberDepartmentBinding;
 import com.ingot.framework.commons.model.iam.MemberDepartmentInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
@@ -35,7 +30,7 @@ public class MemberCommandService {
     private final MemberLifecycle lifecycle;
     private final MemberMutationGuard guard;
     private final InitializationIdAllocator ids;
-    private final MemberLifecycleRepository members;
+    private final MemberQueryService queries;
 
     /**
      * 暂停或恢复指定管理域中的成员资格。
@@ -70,7 +65,7 @@ public class MemberCommandService {
      *
      * @param memberId 当前租户成员
      * @param input 目标关系
-     * @return 字段策略接入前的安全投影，不含手机号邮箱原值
+     * @return 与成员详情相同的字段投影
      */
     public ResourceDetail<MemberRecord> replaceDepartments(String memberId, MemberDepartmentInput input) {
         ActiveIdentity actor = current.requireDomain(AuthorizationDomain.TENANT);
@@ -78,19 +73,8 @@ public class MemberCommandService {
         for (MemberDepartmentBinding binding : input.departments()) {
             departments.add(new MemberDepartmentPlan.Department(binding.id(), binding.primary()));
         }
-        String version = lifecycle.replaceDepartments(actor.context(), memberId,
+        lifecycle.replaceDepartments(actor.context(), memberId,
                 new MemberDepartmentPlan(input.expectedVersion(), departments), ids.nextId(), guard);
-        return projectTenantMember(actor, memberId, version);
-    }
-
-    private ResourceDetail<MemberRecord> projectTenantMember(ActiveIdentity actor, String memberId, String version) {
-        long tenantId = Long.parseLong(actor.context().tenantId());
-        IamTenantMemberEntity member = members.findTenantMember(tenantId, Long.parseLong(memberId));
-        if (member == null) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        }
-        MemberRecord record = new MemberRecord(member.getId().toString(), member.getDisplayName(), null, null, null,
-                null, member.getStatus(), members.departmentViews(tenantId, Long.parseLong(memberId)));
-        return new ResourceDetail<>(record, Map.of(), Map.of(), version);
+        return queries.get(AuthorizationDomain.TENANT, memberId);
     }
 }

@@ -114,6 +114,29 @@ public class GroupRepository {
     }
 
     /**
+     * 按租户成员分页列出其所在用户组，含直接加入和部门来源。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @param page 从 1 开始
+     * @param pageSize 页大小
+     * @return 组页
+     */
+    public Page<IamTenantGroupEntity> pageTenantByMember(long tenantId, long memberId, int page, int pageSize) {
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        BigInteger member = BigInteger.valueOf(memberId);
+        long total = tenantMembers.countGroupsOfMember(tenant, member);
+        Page<IamTenantGroupEntity> result = new Page<>(page, pageSize, total);
+        if (total == 0) {
+            result.setRecords(List.of());
+            return result;
+        }
+        int offset = Math.max(page - 1, 0) * pageSize;
+        result.setRecords(tenantMembers.pageGroupsOfMember(tenant, member, pageSize, offset));
+        return result;
+    }
+
+    /**
      * 分页列出当前租户用户组。
      *
      * @param tenantId 已授权租户 ID
