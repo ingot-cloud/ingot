@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthorizationSnapshotAccess {
 
     private final LayeredCache<String, AuthorizationSnapshotDTO> cache;
+    private final AuthorizationSnapshotLoader loader;
 
     /**
      * 读取当前租户用户的有效授权快照。
@@ -32,8 +33,8 @@ public class AuthorizationSnapshotAccess {
     public AuthorizationSnapshotDTO require(long tenantId, long userId) {
         String key = cacheKey(tenantId, userId);
         try {
-            AuthorizationSnapshotDTO snapshot = cache.get(key);
-            if (isExpired(snapshot)) {
+            AuthorizationSnapshotDTO snapshot = tenantId > 0 ? loader.load(tenantId, userId) : cache.get(key);
+            if (tenantId <= 0 && isExpired(snapshot)) {
                 cache.evict(key);
                 snapshot = cache.get(key);
             }
@@ -68,6 +69,6 @@ public class AuthorizationSnapshotAccess {
         if (snapshot == null || snapshot.getExpiresAt() == null) {
             return true;
         }
-        return Instant.now().isAfter(snapshot.getExpiresAt());
+        return !Instant.now().isBefore(snapshot.getExpiresAt());
     }
 }

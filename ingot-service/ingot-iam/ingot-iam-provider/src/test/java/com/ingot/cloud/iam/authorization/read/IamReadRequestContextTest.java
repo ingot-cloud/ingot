@@ -55,7 +55,7 @@ class IamReadRequestContextTest {
         authenticate(ACTOR);
         var beans = new DefaultListableBeanFactory();
         beans.registerSingleton("cache", cache);
-        evaluator = new AuthorizationEvaluator(repository, (org.springframework.beans.factory.ObjectProvider) beans.getBeanProvider(LayeredCache.class), null);
+        evaluator = new AuthorizationEvaluator(repository, (org.springframework.beans.factory.ObjectProvider) beans.getBeanProvider(LayeredCache.class), null, mock(com.ingot.cloud.iam.evaluation.TenantLiveAuthorization.class));
         when(identities.requireActive(ACTOR)).thenReturn(new ActiveIdentity(ACTOR, "0", "0", "0"));
         when(repository.platformAdministrators("10")).thenReturn(List.of(new AuthorizationEvalRows.Assignment(
                 BigInteger.ONE, "{}", null, null, null, BigInteger.TWO, RoleKind.SYSTEM, null)));

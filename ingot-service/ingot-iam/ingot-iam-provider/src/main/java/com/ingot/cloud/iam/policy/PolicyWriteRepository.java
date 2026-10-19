@@ -619,4 +619,12 @@ public class PolicyWriteRepository {
     private static BigInteger id(long value) {
         return BigInteger.valueOf(value);
     }
+    /** 按数据库当前事实判定组织拥有者。 */
+    public boolean currentOwner(long tenantId, long memberId) {
+        try { return members.currentOwner(id(tenantId), id(memberId)) == 1; }
+        catch(org.springframework.dao.DataAccessException failure) {
+            throw new com.ingot.framework.commons.error.BizException(com.ingot.framework.commons.model.iam.IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        }
+    }
+
 }

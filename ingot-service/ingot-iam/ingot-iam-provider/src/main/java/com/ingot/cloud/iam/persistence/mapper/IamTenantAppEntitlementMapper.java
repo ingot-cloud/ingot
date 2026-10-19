@@ -32,8 +32,8 @@ public interface IamTenantAppEntitlementMapper extends BaseMapper<IamTenantAppEn
     @Select("""
             SELECT COUNT(*) FROM iam_tenant_app_entitlement
              WHERE tenant_id=#{tenantId} AND application_id=#{applicationId} AND enabled=TRUE
-               AND (valid_from IS NULL OR valid_from<=CURRENT_TIMESTAMP)
-               AND (valid_until IS NULL OR valid_until>CURRENT_TIMESTAMP)
+               AND (valid_from IS NULL OR valid_from<=CURRENT_TIMESTAMP(6))
+               AND (valid_until IS NULL OR valid_until>CURRENT_TIMESTAMP(6))
             """)
     long countEntitled(@Param("tenantId") BigInteger tenantId, @Param("applicationId") BigInteger applicationId);
 
@@ -53,8 +53,8 @@ public interface IamTenantAppEntitlementMapper extends BaseMapper<IamTenantAppEn
               JOIN iam_app_audience aud ON aud.tenant_id=e.tenant_id AND aud.application_id=e.application_id
              WHERE e.tenant_id=#{tenantId} AND e.application_id=#{applicationId} AND e.enabled=TRUE
                AND aud.enabled=TRUE
-               AND (e.valid_from IS NULL OR e.valid_from<=CURRENT_TIMESTAMP)
-               AND (e.valid_until IS NULL OR e.valid_until>CURRENT_TIMESTAMP)
+               AND (e.valid_from IS NULL OR e.valid_from<=CURRENT_TIMESTAMP(6))
+               AND (e.valid_until IS NULL OR e.valid_until>CURRENT_TIMESTAMP(6))
                AND (aud.audience_kind=#{allKind}
                     OR EXISTS (
                         SELECT 1 FROM iam_audience_member m

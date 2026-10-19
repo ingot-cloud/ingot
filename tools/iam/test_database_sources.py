@@ -21,6 +21,7 @@ class DatabaseSourcesTest(unittest.TestCase):
         self.assertEqual(sorted(schema_files()), schema_files())
         self.assertTrue(all('/migrations/' not in str(path) for path in initialization_files()))
         self.assertNotIn(ROOT / 'databases/iam/seed-manual-verification.sql', initialization_files())
+        self.assertNotIn(ROOT / 'databases/iam/dev/prepare_tenant_live_test.sql', initialization_files())
 
     def test_framework_projection_stays_in_the_selected_database(self):
         statements = '\n'.join(read_source(path) for path in sources('frameworkSchemas'))
@@ -31,7 +32,7 @@ class DatabaseSourcesTest(unittest.TestCase):
     def test_bundle_resets_each_manifest_table_before_creating_and_checks_seed_foreign_keys(self):
         bundle = render_bundle()
         tables = CREATE_TABLE.findall(bundle)
-        self.assertEqual(58, len(tables))
+        self.assertEqual(62, len(tables))
         self.assertEqual(len(tables), len(set(tables)))
         self.assertNotIn('iam_resource_field_policy', tables)
         self.assertIn('iam_field_policy', tables)

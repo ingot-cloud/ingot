@@ -61,6 +61,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      */
     private static final Duration MAX_HOT_WINDOW = Duration.ofSeconds(30);
     private final AuthorizationEvaluationRepository evaluations;
+    private final TenantLiveAuthorization tenantLive;
     private final ObjectProvider<LayeredCache<String, AuthorizationView>> cache;
     private final ObjectProvider<RoleSynthesisCache> synthesis;
 
@@ -76,8 +77,9 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     public AuthorizationEvaluator(AuthorizationEvaluationRepository evaluations,
                                   @Qualifier(AuthorizationCacheConfiguration.CACHE_BEAN_NAME)
                                   ObjectProvider<LayeredCache<String, AuthorizationView>> cache,
-                                  ObjectProvider<RoleSynthesisCache> synthesis) {
+                                  ObjectProvider<RoleSynthesisCache> synthesis, TenantLiveAuthorization tenantLive) {
         this.evaluations = evaluations;
+        this.tenantLive = tenantLive;
         this.cache = cache;
         this.synthesis = synthesis;
     }
@@ -179,11 +181,12 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      * @return 操作码、范围与版本
      */
     public AuthorizationView evaluateForExecution(AuthorizationContext actor, boolean mutating) {
-        return mutating ? evaluateFresh(actor) : evaluate(actor);
+        return mutating || actor.domain() == AuthorizationDomain.TENANT ? evaluateFresh(actor) : evaluate(actor);
     }
 
     /** 读取未过期授权视图。 @param actor 可信身份 @return 授权视图 */
     public AuthorizationView evaluate(AuthorizationContext actor) {
+        if (actor != null && actor.domain() == AuthorizationDomain.TENANT) return evaluateFresh(actor);
         return IamReadRequestContext.view(actor, false, () -> evaluateCached(actor));
     }
 
@@ -263,6 +266,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     private AuthorizationView evaluateRaw(AuthorizationContext actor, boolean requestPassword) {
         try {
             if (requestPassword ? passwordChangeRequired(actor) : passwordChangeRequiredRaw(actor)) return passwordRestrictedView();
+            if (actor.domain() == AuthorizationDomain.TENANT) return tenantLive.evaluate(actor);
             if (actor.domain() == AuthorizationDomain.PLATFORM) {
                 var administrators = evaluations.platformAdministrators(actor.memberId());
                 if (!administrators.isEmpty()) return administratorView(actor, administrators);
@@ -352,6 +356,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      */
     public List<com.ingot.framework.commons.model.iam.DecisionSource> decisionSources(AuthorizationContext actor,
                                                                                     String actionId) {
+        if (actor.domain() == AuthorizationDomain.TENANT) return tenantLive.sources(actor, actionId);
         if (actor.domain() == AuthorizationDomain.PLATFORM) {
             var administrators = evaluations.platformAdministrators(actor.memberId());
             if (!administrators.isEmpty() && evaluations.enabledPlatformActions().stream()
@@ -524,7 +529,11 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      * @since 1.0.0
      */
     public record AuthorizationView(List<String> actionCodes, List<String> governedCodes,
-                                    Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt, List<RoleFieldSource> fieldSources, boolean platformAdministrator) {
+                                    Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt, List<RoleFieldSource> fieldSources, boolean platformAdministrator, boolean tenantOwner) {
+        /** 平台旧构造保留；租户拥有者必须由实时身份查询产生。 */
+        public AuthorizationView(List<String> actionCodes, List<String> governedCodes, Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt, List<RoleFieldSource> fieldSources, boolean platformAdministrator) {
+            this(actionCodes, governedCodes, scopes, version, expiresAt, fieldSources, platformAdministrator, false);
+        }
         /** 兼容旧授权快照；新模型不据此扩权。 */
         public AuthorizationView(List<String> actionCodes, List<String> governedCodes,
                 Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt) {

@@ -152,6 +152,49 @@ def delegation_routes(domain, prefix, ns):
     ]
 
 
+def live_role_routes(domain, path, namespace, key):
+    execution='完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本'
+    current='RResourceDetailCurrentRoleSummary'
+    return [
+      route(path,'get',key+'ListRoles','当前角色目录',domain,namespace+':read',None,'RPageResponseResourceDetailCurrentRoleSummary',execution,query=NAME_STATUS+[{'name':'kind','schema':{'type':'string','enum':['SHARED','TENANT_CUSTOM']}}]),
+      route(path,'post',key+'CreateRole','创建当前角色',domain,namespace+':create','CurrentRoleCreateInput','RCreatedResource',execution),
+      route(path+'/preview','post',key+'CreatePreview','预览角色创建',domain,namespace+':create','CurrentRoleCreateInput','RPreviewCurrentRolePreviewResult',execution),
+      route(path+'/{id}','get',key+'GetRole','当前角色详情',domain,namespace+':read',None,current,execution),
+      route(path+'/{id}','patch',key+'ProfileRole','保存角色基本信息',domain,namespace+':status','CurrentRoleProfileInput',current,execution),
+      route(path+'/{id}','delete',key+'DeleteRole','删除未引用角色',domain,namespace+':delete',None,'RCreatedResource',execution),
+      route(path+'/{id}/grants','get',key+'GetGrants','当前完整权限',domain,namespace+':read',None,'RCurrentRoleGrantList',execution),
+      route(path+'/{id}/grants','put',key+'SaveGrants','保存当前权限并自动生效',domain,namespace+':update','CurrentRolePermissionInput','RCurrentRolePermissionResult',execution),
+      route(path+'/{id}/preview','post',key+'PreviewGrants','预览当前权限变更',domain,namespace+':preview','CurrentRolePermissionInput','RPreviewCurrentRolePreviewResult',execution),
+    ]
+
+def current_routes(routes):
+    retired_prefixes=('/v1/tenant/roles','/v1/platform/shared-roles')
+    routes=[r for r in routes if not r['path'].startswith(retired_prefixes)]
+    routes+=live_role_routes('TENANT','/v1/tenant/roles','iam-tenant:role','tenantCurrent')
+    routes+=live_role_routes('PLATFORM','/v1/platform/shared-roles','iam-platform:shared-role','sharedCurrent')
+    for item in routes:
+        if item['path'].startswith('/v1/tenant/assignments'):
+            for field in ('request','response'):
+                if item.get(field):
+                    item[field]=item[field].replace('AssignmentBatchInput','TenantAssignmentBatchInput').replace('AssignmentUpdateInput','TenantAssignmentUpdateInput').replace('AssignmentRecord','TenantAssignmentRecord')
+            item.pop('example',None)
+        if item['path'].startswith('/v1/tenant/delegations'):
+            for field in ('request','response'):
+                if item.get(field):
+                    item[field]=item[field].replace('DelegationInput','TenantDelegationInput').replace('DelegationUpdateInput','TenantDelegationUpdateInput').replace('DelegationRecord','TenantDelegationRecord')
+            item.pop('example',None)
+        if item['path']=='/v1/tenant/assignments/scope-candidates':
+            item['query']=[{**q,'name':'roleId'} if q['name']=='revisionId' else q for q in item.get('query',[])]+[{'name':'delegationGrantId','schema':{'type':'string'}}]
+    for path, operation, response, query, action in [
+      ('/v1/tenant/roles/grant-catalog','tenantCurrentCatalog','RPageResponseCurrentRoleCatalogAction',PAGE+[{'name':'applicationId','required':True,'schema':{'type':'string'}}],'iam-tenant:role:create'),
+      ('/v1/tenant/assignments/options','tenantAssignmentOptions','RPageResponseTenantAssignmentOption',PAGE+[{'name':'kind','required':True,'schema':{'type':'string','enum':['ROLE','MEMBER','GROUP','RESOURCE']}},{'name':'delegationGrantId','schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}],'iam-tenant:assignment:read'),
+      ('/v1/tenant/assignments/roles/{id}','tenantAssignmentRole','RCurrentRoleGrantList',[{'name':'delegationGrantId','schema':{'type':'string'}}],'iam-tenant:assignment:read'),
+      ('/v1/tenant/delegations/mine','tenantMyDelegations','RListTenantDelegationMine',None,None),
+      ('/v1/tenant/delegations/scope-candidates','tenantDelegationScopeCandidates','RAuthorizationCandidatePage',PAGE+[{'name':'resourceId','required':True,'schema':{'type':'string'}},{'name':'parameterKey','required':True,'schema':{'type':'string'}}],'iam-tenant:delegation:create')]:
+        routes.append(route(path,'get',operation,'租户当前授权候选','TENANT',action,None,response,'可信当前租户；本人有效来源或独立治理；过滤后分页回显',query=query))
+    return routes
+
+
 def build():
     current_exec = '认证当前身份；身份及账号同时有效；固定域；一致快照'
     routes = [
@@ -299,6 +342,9 @@ def build():
     ]
     routes += member_routes('TENANT', '/v1/tenant', 'iam-tenant', PAGE + PHONE_EMAIL)
     routes += [
+        route('/v1/tenant/members/{id}/groups', 'get', 'tenantMemberGroups', '成员所在用户组', 'TENANT',
+              'iam-tenant:member:read', None, 'RPageResponseResourceDetailGroupRecord',
+              '成员可见范围；显式成员并入部门来源', query=PAGE),
         route('/v1/tenant/members/{id}/departments', 'put', 'tenantReplaceMemberDepartments', '调整成员任职', 'TENANT',
               'iam-tenant:member:departments', 'MemberDepartmentInput', 'RResourceDetailMemberRecord',
               '只校验受影响原/目标关系；覆盖全部部门写入审计'),
@@ -562,6 +608,7 @@ def build():
                             summary, 'PLATFORM', 'iam-platform:assignment:upgrade', request, response, application_exec, query=query))
     for item in routes:
         item['implemented'] = True
+    routes = current_routes(routes)
     seen = set()
     for item in routes:
         key = (item['path'], item['method'])

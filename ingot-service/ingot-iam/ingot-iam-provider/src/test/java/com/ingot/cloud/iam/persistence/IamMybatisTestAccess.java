@@ -126,11 +126,10 @@ public final class IamMybatisTestAccess {
 
     /** 在当前夹具数据源上建立组织初始化写入 Repository。 */
     public static TenantInitializationRepository tenantInit(DataSource source) {
-        return new TenantInitializationRepository(mapper(source, IamAccountMapper.class),
-                mapper(source, IamRoleRevisionMapper.class), mapper(source, IamApplicationMapper.class),
+        return new TenantInitializationRepository(mapper(source, IamAccountMapper.class), mapper(source, IamApplicationMapper.class),
                 mapper(source, IamDefaultPolicyRevisionMapper.class), mapper(source, IamTenantMapper.class),
                 mapper(source, IamTenantMemberMapper.class), mapper(source, IamDepartmentMapper.class),
-                mapper(source, IamMemberDepartmentMapper.class), mapper(source, IamRoleAssignmentMapper.class),
+                mapper(source, IamMemberDepartmentMapper.class),
                 mapper(source, IamTenantAppEntitlementMapper.class), mapper(source, IamAppAudienceMapper.class),
                 mapper(source, IamDirectoryPolicyMapper.class), mapper(source, IamFieldPolicyMapper.class));
     }
@@ -270,15 +269,23 @@ public final class IamMybatisTestAccess {
 
     /** 在当前夹具数据源上建立无缓存的授权求值器。 */
     public static AuthorizationEvaluator evaluator(DataSource source) {
-        return new AuthorizationEvaluator(evaluations(source), null, null);
+        return new AuthorizationEvaluator(evaluations(source), null, null, liveEvaluator(source));
     }
 
     /** 在当前夹具数据源上建立读取指定热缓存的授权求值器。 */
     public static AuthorizationEvaluator evaluator(DataSource source,
             LayeredCache<String, AuthorizationEvaluator.AuthorizationView> cache) {
-        return new AuthorizationEvaluator(evaluations(source), new SingletonProvider<>(cache), null);
+        return new AuthorizationEvaluator(evaluations(source), new SingletonProvider<>(cache), null, liveEvaluator(source));
     }
 
+    /** 当前角色仓库供租户实时授权验收。 */
+    public static TenantCurrentRoleRepository currentRoles(DataSource source) {
+        return new TenantCurrentRoleRepository(mapper(source,com.ingot.cloud.iam.persistence.mapper.TenantLiveMapper.class),mapper(source,IamRoleDefinitionMapper.class),mapper(source,IamRoleRevisionMapper.class),mapper(source,IamRoleGrantMapper.class),mapper(source,IamRoleParameterMapper.class),mapper(source,IamRoleDeltaMapper.class));
+    }
+    /** 租户实时求值器，平台测试仍使用原查询路径。 */
+    public static com.ingot.cloud.iam.evaluation.TenantLiveAuthorization liveEvaluator(DataSource source) {
+        return new com.ingot.cloud.iam.evaluation.TenantLiveAuthorization(mapper(source,com.ingot.cloud.iam.persistence.mapper.TenantLiveMapper.class),currentRoles(source),evaluations(source),new DepartmentClosure(mapper(source,IamDepartmentMapper.class)));
+    }
     /** 在当前夹具数据源上建立范围编译器。 */
     public static ObjectScopeCompiler objectScopes(DataSource source) {
         return new ObjectScopeCompiler(new DepartmentClosure(mapper(source, IamDepartmentMapper.class)),
@@ -385,7 +392,7 @@ public final class IamMybatisTestAccess {
             factory.afterPropertiesSet();
             SqlSessionFactory sessions = factory.getObject();
             for (Class<?> mapper : new Class<?>[] { IamAccountMapper.class, AccountLockStateMapper.class,
-                    IamTenantMapper.class, IamTenantMemberMapper.class, IamPlatformMemberMapper.class,
+                    com.ingot.cloud.iam.persistence.mapper.TenantLiveMapper.class, IamTenantMapper.class, IamTenantMemberMapper.class, IamPlatformMemberMapper.class,
                     IamMemberDepartmentMapper.class, IamDepartmentMapper.class, IamAuthorizationAuditMapper.class,
                     IamApplicationMapper.class, IamRoleDefinitionMapper.class, IamRoleRevisionMapper.class,
                     IamDefaultPolicyRevisionMapper.class, IamPlanMapper.class, IamPlanApplicationMapper.class,

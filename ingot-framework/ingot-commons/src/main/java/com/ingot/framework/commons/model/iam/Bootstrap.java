@@ -19,6 +19,7 @@ import jakarta.validation.constraints.*;
  * @param menus 当前可见导航
  * @param actionCodes 已展开的精确操作码
  * @param version 一致授权视图版本
+ * @param tenantOwner 服务器确认的当前组织拥有者；平台恒为 false
  * @param expiresAt 授权到期时间，UTC；不可延长既有有效期
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -37,7 +38,13 @@ public record Bootstrap(
         @NotBlank @Schema(description = "一致授权视图版本", requiredMode = Schema.RequiredMode.REQUIRED)
         String version,
         @NotNull @JsonFormat(shape = JsonFormat.Shape.STRING) @Schema(description = "授权到期时间，UTC；不可延长既有有效期", requiredMode = Schema.RequiredMode.REQUIRED)
-        Instant expiresAt) {
+        Instant expiresAt,
+        @Schema(description = "当前组织拥有者") boolean tenantOwner) {
+
+    /** 兼容平台和历史调用，不能据此产生拥有者资格。 */
+    public Bootstrap(AuthorizationContext context, CurrentProfile profile, List<ApplicationSummary> applications, List<MenuNode> menus, List<String> actionCodes, String version, Instant expiresAt) {
+        this(context, profile, applications, menus, actionCodes, version, expiresAt, false);
+    }
 
     /**
      * 复制输出集合，避免外部修改改变已经计算的响应视图；必填空引用由校验拒绝。

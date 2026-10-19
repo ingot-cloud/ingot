@@ -67,6 +67,8 @@ public final class RemoteAuthorizationClient implements AuthorizationClient {
             throw new SdkAuthorizationException(IamReasonCode.INVALID_ARGUMENT);
         }
         try {
+            if (actor.domain() == com.ingot.framework.commons.model.iam.AuthorizationDomain.TENANT)
+                return load(remote, request, actor, preview);
             if (!preview && selected.stream().anyMatch(action -> action.mode() == ExecutionMode.MUTATING)) {
                 return load(remote, request, actor);
             }

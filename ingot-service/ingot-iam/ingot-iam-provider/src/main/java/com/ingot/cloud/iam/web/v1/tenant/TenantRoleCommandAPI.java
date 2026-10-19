@@ -1,216 +1,114 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
-import com.ingot.cloud.iam.role.RoleService;
+import java.util.List;
+import com.ingot.cloud.iam.identity.CurrentIdentityService;
+import com.ingot.cloud.iam.role.TenantCurrentRoleService;
 import com.ingot.cloud.iam.support.IamPages;
-import com.ingot.framework.commons.model.iam.AuthorizationDomain;
-import com.ingot.framework.commons.model.iam.ConfigurationStatusInput;
-import com.ingot.framework.commons.model.iam.CreatedResource;
-import com.ingot.framework.commons.model.iam.EffectiveRole;
-import com.ingot.framework.commons.model.iam.PageResponse;
-import com.ingot.framework.commons.model.iam.Preview;
-import com.ingot.framework.commons.model.iam.ResourceDetail;
-import com.ingot.framework.commons.model.iam.RoleCreateInput;
-import com.ingot.framework.commons.model.iam.RoleDefinitionDraft;
-import com.ingot.framework.commons.model.iam.RoleGrantList;
-import com.ingot.framework.commons.model.iam.RolePublishInput;
-import com.ingot.framework.commons.model.iam.RoleRevision;
-import com.ingot.framework.commons.model.iam.RoleSummary;
-import com.ingot.framework.commons.model.iam.UpgradeInput;
-import com.ingot.framework.commons.model.iam.UpgradePreview;
-import com.ingot.framework.commons.model.iam.UpgradePreviewInput;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.*;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
- * <p>提供租户可见角色、自定义差异及共享基础升级，提交不覆盖未指定授权。</p>
- *
+ * <p>提供组织共享只读与私有角色的当前权限，不向租户暴露业务版本。</p>
  * @author jy
  * @since 1.0.0
  */
 @RestController
-@Tag(name = "IAM 租户角色")
+@Tag(name = "IAM 当前角色")
 @RequestMapping("/v1/tenant/roles")
 @RequiredArgsConstructor
 public class TenantRoleCommandAPI implements RShortcuts {
-    private final RoleService roles;
+    private final TenantCurrentRoleService roles;
+    private final CurrentIdentityService identities;
 
-    /**
-     * 分页列出租户可见角色。
-     *
-     * @param page 页码
-     * @param pageSize 页大小
-     * @return 角色页
-     */
-    @Operation(summary = "角色目录")
+    /** 按归属及筛选分页列出当前角色。 */
+    @Operation(summary = "当前角色目录")
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
     @GetMapping
-    public R<PageResponse<ResourceDetail<RoleSummary>>> list(
+    public R<PageResponse<ResourceDetail<CurrentRoleSummary>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(roles.list(AuthorizationDomain.TENANT, false, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) RoleKind kind) {
+        return ok(roles.list(false, page, pageSize, name, status, kind));
     }
 
-    /**
-     * 创建租户自定义角色并发布首个差异版本。
-     *
-     * @param input 创建命令
-     * @return 新角色 ID
-     */
-    @Operation(summary = "创建角色并发布首个版本")
+    /** 预览创建完整角色草稿，不分配标识。 */
+    @Operation(summary = "预览创建角色")
+    @PostMapping("/preview")
+    public R<Preview<CurrentRolePreviewResult>> previewCreate(@Valid @RequestBody CurrentRoleCreateInput input) {
+        return ok(roles.previewCreate(false, input));
+    }
+
+    /** 原子创建角色及首个完整当前权限。 */
+    @Operation(summary = "创建当前角色")
     @PostMapping
-    public R<CreatedResource> create(@Valid @RequestBody RoleCreateInput input) {
-        return ok(roles.create(AuthorizationDomain.TENANT, false, input));
+    public R<CreatedResource> create(@Valid @RequestBody CurrentRoleCreateInput input) {
+        return ok(roles.create(false, input));
     }
 
-    /**
-     * 读取角色元数据。
-     *
-     * @param id 角色 ID
-     * @return 角色详情
-     */
-    @Operation(summary = "角色元数据")
+    /** 读取可见角色身份。 */
+    @Operation(summary = "当前角色资料")
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
     @GetMapping("/{id}")
-    public R<ResourceDetail<RoleSummary>> get(@PathVariable String id) {
-        return ok(roles.get(AuthorizationDomain.TENANT, false, id));
-    }
+    public R<ResourceDetail<CurrentRoleSummary>> get(@PathVariable String id) { return ok(roles.get(false, id)); }
 
-    /**
-     * 读取租户角色最新已发布版本的当前绑定权限。
-     *
-     * @param id 角色 ID
-     * @return 当前绑定权限及对应的固定版本摘要
-     */
-    @Operation(summary = "角色当前绑定权限")
+    /** 读取完整当前权限和目录回显。 */
+    @Operation(summary = "角色当前权限")
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
     @GetMapping("/{id}/grants")
-    public R<RoleGrantList> grants(@PathVariable String id) {
-        return ok(roles.listCurrentGrants(AuthorizationDomain.TENANT, false, id));
-    }
+    public R<CurrentRoleGrantList> grants(@PathVariable String id, @RequestParam(required=false) String revisionId) { if(revisionId!=null)throw new BizException(IamReasonCode.INVALID_ARGUMENT);return ok(roles.grants(false, id)); }
 
-    /**
-     * 启停租户自定义角色。
-     *
-     * @param id 角色 ID
-     * @param input 目标状态
-     * @return 提交后版本
-     */
-    @Operation(summary = "启停角色")
+    /** 编辑当前资料与启停，角色归属由服务端重验。 */
+    @Operation(summary = "编辑角色资料")
     @PatchMapping("/{id}")
-    public R<CreatedResource> status(@PathVariable String id, @Valid @RequestBody ConfigurationStatusInput input) {
-        return ok(roles.changeStatus(AuthorizationDomain.TENANT, false, id, input));
+    public R<ResourceDetail<CurrentRoleSummary>> patch(@PathVariable String id, @Valid @RequestBody CurrentRoleProfileInput input) {
+        return ok(roles.profile(false, id, input));
     }
 
-    /**
-     * 删除未被授权引用的租户自定义角色。
-     *
-     * @param id 角色 ID
-     * @return 删除前版本
-     */
+    /** 预览保存后的当前权限与范围变化。 */
+    @Operation(summary = "预览当前权限")
+    @PostMapping("/{id}/preview")
+    public R<Preview<CurrentRolePreviewResult>> preview(@PathVariable String id, @Valid @RequestBody CurrentRolePermissionInput input, @RequestParam(required=false) String sourceRevisionId) {
+        if (sourceRevisionId != null) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        return ok(roles.preview(false, id, input));
+    }
+
+    /** 保存完整当前权限，关联人员在后续请求自动跟随。 */
+    @Operation(summary = "保存角色当前权限")
+    @PutMapping("/{id}/grants")
+    public R<CurrentRolePermissionResult> save(@PathVariable String id, @Valid @RequestBody CurrentRolePermissionInput input) {
+        return ok(roles.save(false, id, input));
+    }
+
+    /** 删除无实际引用角色，保留审计。 */
     @Operation(summary = "删除未引用角色")
     @DeleteMapping("/{id}")
-    public R<CreatedResource> delete(@PathVariable String id) {
-        return ok(roles.delete(AuthorizationDomain.TENANT, false, id));
-    }
+    public R<CreatedResource> delete(@PathVariable String id) { return ok(roles.delete(false, id)); }
 
-    /**
-     * 列出角色不可变版本。
-     *
-     * @param id 角色 ID
-     * @param page 页码
-     * @param pageSize 页大小
-     * @return 版本页
-     */
-    @Operation(summary = "角色版本")
-    @GetMapping("/{id}/revisions")
-    public R<PageResponse<ResourceDetail<RoleRevision>>> revisions(
-            @PathVariable String id,
+    /** 分页列出当前组织已开通的可编辑操作目录。 */
+    @Operation(summary = "当前角色操作候选")
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
+    @GetMapping("/grant-catalog")
+    public R<PageResponse<CurrentRoleCatalogAction>> catalog(@RequestParam String applicationId,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) List<String> ids,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(roles.listRevisions(AuthorizationDomain.TENANT, false, id, page, pageSize));
+        return ok(roles.catalog(applicationId, keyword, ids, page, pageSize));
     }
 
-    /**
-     * 发布新差异版本，不改写既有授权引用。
-     *
-     * @param id 角色 ID
-     * @param input 待发布定义
-     * @return 新版本 ID
-     */
-    @Operation(summary = "发布新版本")
-    @PostMapping("/{id}/revisions")
-    public R<CreatedResource> publish(@PathVariable String id, @Valid @RequestBody RolePublishInput input) {
-        return ok(roles.publish(AuthorizationDomain.TENANT, false, id, input));
+    /** 已认证旧入口明确退出，不解释或转换旧版本标识。 */
+    @Operation(summary = "已退出的角色版本入口")
+    @RequestMapping({"/{id}/revisions", "/{id}/revisions/{revisionId}", "/{id}/revisions/{revisionId}/metadata", "/{id}/revisions/{revisionId}/grants", "/{id}/upgrade", "/{id}/upgrade-preview"})
+    public R<Void> retired() {
+        identities.requireDomain(AuthorizationDomain.TENANT);
+        throw new BizException(IamReasonCode.ENDPOINT_RETIRED);
     }
-
-    /**
-     * 预览待发布定义，无写入。
-     *
-     * @param id 角色 ID
-     * @param input 待发布定义
-     * @return 合成预览
-     */
-    @Operation(summary = "预览待发布定义")
-    @PostMapping("/{id}/preview")
-    public R<Preview<EffectiveRole>> preview(@PathVariable String id, @Valid @RequestBody RoleDefinitionDraft input,
-            @RequestParam(required = false) String sourceRevisionId) {
-        return ok(roles.preview(AuthorizationDomain.TENANT, false, id, input, sourceRevisionId));
-    }
-
-    /**
-     * 预览共享基础升级，无写入。
-     *
-     * @param id 角色 ID
-     * @param input 目标基础
-     * @return 三方比较
-     */
-    @Operation(summary = "预览共享基础升级")
-    @PostMapping("/{id}/upgrade-preview")
-    public R<Preview<UpgradePreview>> previewUpgrade(@PathVariable String id,
-                                                     @Valid @RequestBody UpgradePreviewInput input) {
-        return ok(roles.previewUpgrade(id, input));
-    }
-
-    /**
-     * 提交共享基础升级，仅改写请求中的授权引用。
-     *
-     * @param id 角色 ID
-     * @param input 处置与要改写的授权
-     * @return 新版本 ID
-     */
-    @Operation(summary = "提交共享基础升级")
-    @PostMapping("/{id}/upgrade")
-    public R<CreatedResource> upgrade(@PathVariable String id, @Valid @RequestBody UpgradeInput input) {
-        return ok(roles.upgrade(id, input));
-    }
-    /** 读取同角色固定版本详情。 */
-    @GetMapping("/{id}/revisions/{revisionId}")
-        public R<ResourceDetail<RoleRevision>> revision(@PathVariable String id, @PathVariable String revisionId) {
-        return ok(roles.getRevision(AuthorizationDomain.TENANT, false, id, revisionId));
-    }
-
-    /** 独立更新版本说明，保持权限快照不变。 */
-    @PatchMapping("/{id}/revisions/{revisionId}/metadata")
-        public R<CreatedResource> metadata(@PathVariable String id, @PathVariable String revisionId,
-            @Valid @RequestBody com.ingot.framework.commons.model.iam.RoleRevisionMetadataInput input) {
-        return ok(roles.updateRevisionMetadata(AuthorizationDomain.TENANT, false, id, revisionId, input));
-    }
-
-    /** 固定历史版本的完整合成操作与字段权限。 */
-    @Operation(summary = "固定版本权限详情")
-    @GetMapping("/{id}/revisions/{revisionId}/grants")
-    public R<RoleGrantList> revisionGrants(@PathVariable String id, @PathVariable String revisionId) {
-        return ok(new RoleGrantList(roles.listRevisionGrants(AuthorizationDomain.TENANT, false, id, revisionId)));
-    }
-
 }

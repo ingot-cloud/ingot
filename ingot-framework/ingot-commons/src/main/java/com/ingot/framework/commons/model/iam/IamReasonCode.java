@@ -26,6 +26,8 @@ public enum IamReasonCode implements ErrorCode {
     DATA_SCOPE_DENIED("DataScopeDenied", "目标不在允许的操作范围内", 403),
     DELEGATION_EXCEEDED("DelegationExceeded", "超出来源委派的允许范围", 403),
     ROLE_REVISION_UNAVAILABLE("RoleRevisionUnavailable", "角色版本不可用", 403),
+    ROLE_UNAVAILABLE("RoleUnavailable", "当前角色不可用", 403),
+    ENDPOINT_RETIRED("EndpointRetired", "该入口已退出，请使用当前角色授权入口", 410),
     APPLICATION_UNAVAILABLE("ApplicationUnavailable", "当前身份不可访问该应用", 403),
     OBJECT_NOT_FOUND("ObjectNotFound", "对象不存在或不可访问", 404),
     POLICY_CONFLICT("PolicyConflict", "策略或角色差异存在未解决的冲突", 400),

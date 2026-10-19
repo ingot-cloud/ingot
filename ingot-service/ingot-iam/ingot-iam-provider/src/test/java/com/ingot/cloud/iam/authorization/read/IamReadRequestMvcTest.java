@@ -90,7 +90,7 @@ class IamReadRequestMvcTest {
         }
         @Bean AuthorizationEvaluator evaluator(AuthorizationEvaluationRepository repository,
                 ObjectProvider<LayeredCache<String, AuthorizationEvaluator.AuthorizationView>> cache) {
-            return new AuthorizationEvaluator(repository, cache, null);
+            return new AuthorizationEvaluator(repository, cache, null, org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.TenantLiveAuthorization.class));
         }
         @Bean LocalTrustedAuthoritySource source(CurrentIdentityService current, AuthorizationEvaluator evaluator) {
             return new LocalTrustedAuthoritySource(current, evaluator);

@@ -146,7 +146,13 @@ public class TenantQueryService {
      */
     public ResourceDetail<TenantRecord> settings() {
         ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_SETTINGS_READ);
-        return load(IamIds.require(actor.context().tenantId()));
+        var result = load(IamIds.require(actor.context().tenantId()));
+        boolean owner = actor.context().memberId().equals(result.record().ownerMemberId());
+        var capabilities = access.capabilities(actor, List.of(IamAction.TENANT_SETTINGS_UPDATE, IamAction.TENANT_SETTINGS_OWNER_TRANSFER));
+        boolean transfer = owner && capabilities.allows(IamAction.TENANT_SETTINGS_OWNER_TRANSFER, true);
+        return IamDetails.of(result.record(), Map.of(
+            IamAction.TENANT_SETTINGS_UPDATE.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(capabilities.allows(IamAction.TENANT_SETTINGS_UPDATE,false), null, null),
+            IamAction.TENANT_SETTINGS_OWNER_TRANSFER.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(transfer, transfer ? null : IamReasonCode.ACTION_DENIED, transfer ? null : "仅当前组织拥有者可以转交")), result.version());
     }
 
     /**
@@ -171,7 +177,7 @@ public class TenantQueryService {
     }
 
     /**
-     * 原子转交所有者：移动初始化系统治理授权，保留旧所有者独立授权，提交后失效快照。
+     * 原子转交当前所有者身份，独立角色分配保留，提交后动态权限按新身份求值。
      *
      * @param input 新所有者
      * @return 提交后版本
@@ -184,11 +190,12 @@ public class TenantQueryService {
             ResourceDetail<TenantRecord> current = lock(tenantId);
             IamIds.requireVersion(input.expectedVersion(), current.version());
             long oldOwner = IamIds.require(current.record().ownerMemberId());
+            if (!actor.context().memberId().equals(current.record().ownerMemberId()))
+                throw new BizException(IamReasonCode.ACTION_DENIED);
             if (oldOwner == newOwner) {
                 return new CreatedResource(IamIds.text(tenantId), current.version());
             }
             lockMembers(tenantId, oldOwner, newOwner);
-            moveGovernance(actor, tenantId, oldOwner, newOwner);
             requireApplied(tenants.transferOwner(tenantId, newOwner, new BigInteger(current.version())));
             String version = Long.toString(Long.parseLong(current.version()) + 1);
             audits.write(actor.context(), access.nextId(), TENANT, IamIds.text(tenantId), AuditChangeType.OWNER_TRANSFER,
@@ -220,97 +227,6 @@ public class TenantQueryService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         return row;
-    }
-
-    private void moveGovernance(ActiveIdentity actor, long tenantId, long oldOwner, long newOwner) {
-        List<IamRoleAssignmentEntity> governance = assignments.listOwnerGovernance(tenantId, oldOwner);
-        if (governance.isEmpty()) {
-            throw new BizException(IamReasonCode.POLICY_CONFLICT);
-        }
-        TreeSet<Long> lockIds = new TreeSet<>();
-        HashMap<Long, Long> existingByRevision = new HashMap<>();
-        for (IamRoleAssignmentEntity row : governance) {
-            lockIds.add(row.getId().longValue());
-            IamRoleAssignmentEntity existing = assignments.findActiveMemberRevision(tenantId, newOwner,
-                    row.getRevisionId().longValue());
-            if (existing != null) {
-                long existingId = existing.getId().longValue();
-                lockIds.add(existingId);
-                existingByRevision.put(row.getRevisionId().longValue(), existingId);
-            }
-        }
-        HashMap<Long, IamRoleAssignmentEntity> locked = new HashMap<>();
-        for (Long id : lockIds) {
-            IamRoleAssignmentEntity row = assignments.lock(AuthorizationDomain.TENANT, tenantId, id);
-            if (row == null) {
-                throw new BizException(IamReasonCode.REVISION_CONFLICT);
-            }
-            locked.put(id, row);
-        }
-        for (IamRoleAssignmentEntity listed : governance) {
-            IamRoleAssignmentEntity current = locked.get(listed.getId().longValue());
-            if (!ownerGovernance(current, oldOwner)) {
-                throw new BizException(IamReasonCode.REVISION_CONFLICT);
-            }
-            if (assignments.revoke(current.getId().longValue(), current.getVersion()) != 1) {
-                throw new BizException(IamReasonCode.REVISION_CONFLICT);
-            }
-            audits.write(actor.context(), access.nextId(), ASSIGNMENT, IamIds.text(current.getId().longValue()),
-                    AuditChangeType.REVOKE, Map.of(AuditField.OWNER_MEMBER, IamIds.text(oldOwner)),
-                    Map.of(AuditField.STATUS, GrantStatus.REVOKED.name()),
-                    Map.of(ASSIGNMENT, nextVersion(current.getVersion())),
-                    current.getDelegationGrantId() == null ? null : current.getDelegationGrantId().toString(),
-                    IamIds.text(current.getId().longValue()));
-            Long existingId = existingByRevision.get(current.getRevisionId().longValue());
-            if (existingId != null && reusable(locked.get(existingId), newOwner, current.getRevisionId())) {
-                continue;
-            }
-            long nextId = access.nextId();
-            assignments.insert(copyToOwner(current, tenantId, newOwner, nextId));
-            audits.write(actor.context(), access.nextId(), ASSIGNMENT, IamIds.text(nextId), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.OWNER_MEMBER, IamIds.text(newOwner),
-                            AuditField.ROLE_REVISION, IamIds.text(current.getRevisionId().longValue())),
-                    Map.of(ASSIGNMENT, "0"),
-                    current.getDelegationGrantId() == null ? null : current.getDelegationGrantId().toString(),
-                    IamIds.text(nextId));
-        }
-    }
-
-    private static boolean ownerGovernance(IamRoleAssignmentEntity row, long oldOwner) {
-        return row != null
-                && row.getStatus() == GrantStatus.ACTIVE
-                && row.getSource() == AssignmentSource.INITIALIZATION
-                && row.getRevisionKind() == RoleKind.SYSTEM
-                && row.getSubjectType() == SubjectType.MEMBER
-                && row.getTenantMemberId() != null
-                && row.getTenantMemberId().longValue() == oldOwner;
-    }
-
-    private static boolean reusable(IamRoleAssignmentEntity row, long newOwner, BigInteger revisionId) {
-        return row != null
-                && row.getStatus() == GrantStatus.ACTIVE
-                && row.getSubjectType() == SubjectType.MEMBER
-                && row.getTenantMemberId() != null
-                && row.getTenantMemberId().longValue() == newOwner
-                && revisionId.equals(row.getRevisionId());
-    }
-
-    private static IamRoleAssignmentEntity copyToOwner(IamRoleAssignmentEntity current, long tenantId, long newOwner,
-                                                       long nextId) {
-        IamRoleAssignmentEntity next = new IamRoleAssignmentEntity();
-        next.setId(BigInteger.valueOf(nextId));
-        next.setDomain(AuthorizationDomain.TENANT);
-        next.setTenantId(BigInteger.valueOf(tenantId));
-        next.setSubjectType(SubjectType.MEMBER);
-        next.setTenantMemberId(BigInteger.valueOf(newOwner));
-        next.setRevisionId(current.getRevisionId());
-        next.setRevisionKind(RoleKind.SYSTEM);
-        next.setScopeBindings(current.getScopeBindings() == null ? IamJson.object(null) : current.getScopeBindings());
-        next.setValidFrom(current.getValidFrom() == null ? LocalDateTime.now(ZoneOffset.UTC) : current.getValidFrom());
-        next.setValidUntil(current.getValidUntil());
-        next.setStatus(GrantStatus.ACTIVE);
-        next.setSource(AssignmentSource.INITIALIZATION);
-        return next;
     }
 
     private ResourceDetail<TenantRecord> load(long id) {

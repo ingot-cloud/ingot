@@ -244,3 +244,22 @@ CREATE TABLE IF NOT EXISTS iam_role_application_item (
     CONSTRAINT fk_iam_role_application_item_assignment FOREIGN KEY(assignment_id) REFERENCES iam_role_assignment(id),
     CONSTRAINT ck_iam_role_application_item_status CHECK(status IN ('PENDING','BLOCKED','SUCCEEDED','EXCLUDED','REVOKED','EXPIRED','ALREADY_TARGET'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE iam_live_authorization_batch (
+ batch_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+ source_digest CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ reverse_digest CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
+ state VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ decisions JSON NOT NULL DEFAULT (JSON_ARRAY()),
+ applied_at DATETIME(6) NULL,
+ CONSTRAINT ck_iam_live_batch_state CHECK(state IN ('FORWARD','REVERSE'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE iam_live_authorization_mapping (
+ batch_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ entity_type VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ entity_id BIGINT UNSIGNED NOT NULL,
+ source_row JSON NOT NULL,
+ target_id BIGINT UNSIGNED NULL,
+ PRIMARY KEY(batch_id,entity_type,entity_id),
+ FOREIGN KEY(batch_id) REFERENCES iam_live_authorization_batch(batch_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

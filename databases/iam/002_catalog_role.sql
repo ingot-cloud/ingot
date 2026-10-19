@@ -187,9 +187,11 @@ CREATE TABLE iam_role_definition (
     group_name VARCHAR(128) NULL,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    current_revision_id BIGINT UNSIGNED NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_iam_role_code (domain, tenant_key, code),
     UNIQUE KEY uk_iam_role_kind (id, kind),
+    UNIQUE KEY uk_iam_role_owner (domain, tenant_key, id, kind),
     CONSTRAINT fk_iam_role_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant (id),
     CONSTRAINT ck_iam_role_domain CHECK (domain IN ('PLATFORM', 'TENANT')),
     CONSTRAINT ck_iam_role_kind CHECK (
@@ -215,6 +217,7 @@ CREATE TABLE iam_role_revision (
     metadata_version BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '独立元数据乐观锁',
     published_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (id),
+    UNIQUE KEY uk_iam_revision_owner (id, role_id),
     UNIQUE KEY uk_iam_revision_number (role_id, revision),
     UNIQUE KEY uk_iam_revision_kind (id, kind),
     CONSTRAINT fk_iam_revision_role FOREIGN KEY (role_id, kind) REFERENCES iam_role_definition (id, kind),
@@ -228,9 +231,11 @@ CREATE TABLE iam_role_revision (
 CREATE TABLE iam_role_parameter (
     revision_id BIGINT UNSIGNED NOT NULL,
     parameter_key VARCHAR(128) COLLATE utf8mb4_bin NOT NULL,
+    resource_id BIGINT UNSIGNED NULL,
     binding_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     PRIMARY KEY (revision_id, parameter_key),
     CONSTRAINT fk_iam_parameter_revision FOREIGN KEY (revision_id) REFERENCES iam_role_revision (id),
+    CONSTRAINT fk_iam_parameter_resource FOREIGN KEY(resource_id) REFERENCES iam_resource(id),
     CONSTRAINT ck_iam_parameter_kind CHECK (binding_kind IN ('DEPARTMENTS', 'OBJECTS'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -255,3 +260,7 @@ CREATE TABLE iam_role_delta (
     CONSTRAINT ck_iam_delta_operation CHECK (operation IN ('ADD', 'REMOVE', 'REPLACE_SCOPE')),
     CONSTRAINT ck_iam_delta_scopes CHECK (JSON_TYPE(scopes) = 'ARRAY' AND (operation <> 'REMOVE' OR JSON_LENGTH(scopes) = 0))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 当前完整权限快照只能指向本角色。平台固定版本路径不依赖此指针。
+ALTER TABLE iam_role_definition ADD CONSTRAINT fk_iam_role_current
+    FOREIGN KEY (current_revision_id, id) REFERENCES iam_role_revision (id, role_id);

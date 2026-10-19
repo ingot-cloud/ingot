@@ -73,9 +73,28 @@ class FieldAccessEvaluatorTest {
                 """);
         jdbc.update("INSERT INTO iam_department VALUES (11,10,NULL),(12,10,11)");
         jdbc.update("INSERT INTO iam_member_department VALUES (10,101,11),(10,102,12)");
+        jdbc.execute("CREATE TABLE iam_tenant(id BIGINT PRIMARY KEY,owner_member_id BIGINT,enabled BOOLEAN DEFAULT TRUE,deleted_at TIMESTAMP)");
+        jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,enabled BOOLEAN DEFAULT TRUE,deleted_at TIMESTAMP)");
+        jdbc.execute("ALTER TABLE iam_tenant_member ADD account_id BIGINT");
         evaluator = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.fields(dataSource);
     }
 
+
+    @Test
+    void ownerIgnoresTenantMaskAndRulesButStillRespectsPlatformCeiling() {
+        jdbc.update("INSERT INTO iam_account(id,enabled) VALUES(1,TRUE)");
+        jdbc.update("INSERT INTO iam_tenant(id,owner_member_id) VALUES(10,101)");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,status,account_id) VALUES(101,10,'ACTIVE',1)");
+        try {
+            var snapshot=evaluator.snapshotFresh(10,PolicyScenario.MANAGEMENT);
+            assertEquals(com.ingot.framework.commons.model.iam.FieldVisibility.FULL,evaluator.memberAccess(snapshot,101,102).get("phone").visibility());
+            assertEquals(com.ingot.framework.commons.model.iam.FieldVisibility.MASKED,evaluator.memberAccess(snapshot,102,101).get("phone").visibility());
+            jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=1");
+            assertEquals(com.ingot.framework.commons.model.iam.FieldVisibility.MASKED,evaluator.memberAccess(snapshot,101,102).get("phone").visibility());
+        } finally {
+            jdbc.update("DELETE FROM iam_tenant_member WHERE id=101");jdbc.update("DELETE FROM iam_tenant WHERE id=10");jdbc.update("DELETE FROM iam_account WHERE id=1");
+        }
+    }
     @AfterEach
     void clearRules() {
         jdbc.update("DELETE FROM iam_field_rule");

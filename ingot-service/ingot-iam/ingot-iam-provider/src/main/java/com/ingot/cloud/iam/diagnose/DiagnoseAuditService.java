@@ -241,7 +241,7 @@ public class DiagnoseAuditService {
         if (!Boolean.TRUE.equals(application.getEnabled()) || !Boolean.TRUE.equals(action.appEnabled())) {
             return IamReasonCode.APPLICATION_UNAVAILABLE;
         }
-        if (domain == AuthorizationDomain.TENANT) {
+        if (domain == AuthorizationDomain.TENANT && !(view.tenantOwner() && view.actionCodes().contains(action.code()))) {
             AuthorizationEvalRows.Entitlement entitlement = evaluations.entitlement(
                     id(IamIds.require(actor.context().tenantId())), application.getId(),
                     id(IamIds.require(target.memberId())));

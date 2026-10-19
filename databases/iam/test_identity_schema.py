@@ -285,14 +285,23 @@ class IdentitySchemaTest(unittest.TestCase):
         self.sql("INSERT INTO iam_delegation_grant (id, domain, platform_administrator_id, max_assignment_duration_seconds) VALUES (1, 'PLATFORM', 1001, 3600)")
         self.sql("""
             INSERT INTO iam_role_assignment (id, domain, tenant_id, subject_type, tenant_member_id,
-                revision_id, revision_kind, scope_bindings, valid_from, source)
-            VALUES (1, 'TENANT', 10, 'MEMBER', 101, 1, 'SHARED', '{}', '2026-09-13', 'MANUAL')
+                revision_id, revision_kind, role_id, role_kind, role_tenant_key, scope_bindings, valid_from, source)
+            VALUES (1, 'TENANT', 10, 'MEMBER', 101, 1, 'SHARED',1,'SHARED',0, '{}', '2026-09-13', 'MANUAL')
         """)
         self.sql("UPDATE iam_role_assignment SET delegation_grant_id = 1 WHERE id = 1", error=1452)
         self.sql("UPDATE iam_role_assignment SET tenant_member_id = 201 WHERE id = 1", error=1452)
         self.sql("UPDATE iam_role_assignment SET platform_member_id = 1001 WHERE id = 1", error=3819)
         self.sql("UPDATE iam_role_assignment SET revision_kind = 'TENANT_CUSTOM' WHERE id = 1", error=1452)
         self.sql("DELETE FROM iam_role_revision WHERE id = 1", error=1451)
+
+    def test_current_role_pointer_belongs_to_same_role(self):
+        self.sql("UPDATE iam_role_definition SET current_revision_id=1 WHERE id=1")
+        self.sql("UPDATE iam_role_definition SET current_revision_id=1 WHERE id=2", error=1452)
+
+    def test_current_assignment_and_delegation_reject_private_cross_tenant(self):
+        self.sql("INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,tenant_member_id,role_id,role_kind,role_tenant_key,scope_bindings,valid_from,source) VALUES(50,'TENANT',20,'MEMBER',201,2,'TENANT_CUSTOM',10,'{}','2026-10-14','MANUAL')", error=3819)
+        self.sql("INSERT INTO iam_delegation_grant(id,domain,tenant_id,tenant_administrator_id,max_assignment_duration_seconds) VALUES(50,'TENANT',20,201,3600)")
+        self.sql("INSERT INTO iam_delegation_role(delegation_id,tenant_id,role_id,role_kind,role_tenant_key) VALUES(50,20,2,'TENANT_CUSTOM',10)", error=3819)
 
     def test_policy_default_and_selector_domains_are_enforced(self):
         self.sql("INSERT INTO iam_default_policy_revision VALUES (1, 'DIRECTORY', 1, '{}'), (2, 'FIELD', 1, '{}')")

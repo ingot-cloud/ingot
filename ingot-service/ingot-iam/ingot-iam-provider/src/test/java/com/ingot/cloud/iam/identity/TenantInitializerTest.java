@@ -42,7 +42,7 @@ class TenantInitializerTest {
 
     private TenantInitializationPlan plan(long governance, long directory, long application) {
         return new TenantInitializationPlan(10, "研发组织", "ingot/tenant/avatar/a.png", 2, 101, "组织所有者", 111, "根部门",
-                201, governance, directory, 22, List.of(new TenantInitializationPlan.Application(application, 301)),
+                directory, 22, List.of(new TenantInitializationPlan.Application(application, 301)),
                 null, 401);
     }
 
@@ -55,9 +55,7 @@ class TenantInitializerTest {
         assertEquals("ingot/tenant/avatar/a.png",
                 jdbc.queryForObject("SELECT avatar FROM iam_tenant WHERE id=10", String.class));
         assertEquals(2L, jdbc.queryForObject("SELECT account_id FROM iam_tenant_member WHERE id=101", Long.class));
-        assertEquals(11L, jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment", Long.class));
-        assertEquals("INITIALIZATION", jdbc.queryForObject("SELECT source FROM iam_role_assignment", String.class));
-        assertEquals("{}", jdbc.queryForObject("SELECT scope_bindings FROM iam_role_assignment", String.class));
+        assertEquals(0,count("iam_role_assignment"));
         assertEquals(3, count("iam_role_definition"));
         assertEquals(3, count("iam_role_revision"));
         assertEquals(2, count("iam_default_policy_revision"));
@@ -84,16 +82,17 @@ class TenantInitializerTest {
         initializer.initialize(actor, plan(11, 21, 1));
         assertThrows(DataAccessException.class, () -> initializer.initialize(actor, plan(11, 21, 1)));
         assertEquals(1, count("iam_tenant"));
-        assertEquals(1, count("iam_role_assignment"));
+        assertEquals(0, count("iam_role_assignment"));
         assertEquals(1, count("iam_authorization_audit"));
     }
 
     @Test
-    void sharedOrPlatformRoleCannotBecomeTenantGovernance() {
-        for (long revision : List.of(12L, 13L)) {
-            assertCode(IamReasonCode.ROLE_REVISION_UNAVAILABLE, plan(revision, 21, 1));
-            assertNoTenantRows();
-        }
+    void initializationDoesNotDependOnAnyGovernanceRole() {
+        jdbc.update("DELETE FROM iam_role_revision");
+        jdbc.update("DELETE FROM iam_role_definition");
+        initializer.initialize(actor, plan(0,21,1));
+        assertEquals(0,count("iam_role_assignment"));
+        assertEquals(101L,jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10",Long.class));
     }
 
     @Test

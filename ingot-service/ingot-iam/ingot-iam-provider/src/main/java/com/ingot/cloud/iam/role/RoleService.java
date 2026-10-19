@@ -1155,8 +1155,8 @@ public class RoleService {
                     ? IamAction.PLATFORM_ROLE_STATUS : IamAction.TENANT_ROLE_STATUS;
             case DELETE -> shared ? IamAction.PLATFORM_SHARED_ROLE_DELETE : domain == AuthorizationDomain.PLATFORM
                     ? IamAction.PLATFORM_ROLE_DELETE : IamAction.TENANT_ROLE_DELETE;
-            case PUBLISH -> shared ? IamAction.PLATFORM_SHARED_ROLE_PUBLISH : domain == AuthorizationDomain.PLATFORM
-                    ? IamAction.PLATFORM_ROLE_PUBLISH : IamAction.TENANT_ROLE_PUBLISH;
+            case PUBLISH -> shared ? IamAction.PLATFORM_SHARED_ROLE_UPDATE : domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_ROLE_PUBLISH : IamAction.TENANT_ROLE_UPDATE;
             case PREVIEW -> shared ? IamAction.PLATFORM_SHARED_ROLE_PREVIEW : domain == AuthorizationDomain.PLATFORM
                     ? IamAction.PLATFORM_ROLE_PREVIEW : IamAction.TENANT_ROLE_PREVIEW;
         };

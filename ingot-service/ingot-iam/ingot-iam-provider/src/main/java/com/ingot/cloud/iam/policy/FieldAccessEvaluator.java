@@ -77,24 +77,15 @@ public class FieldAccessEvaluator {
      * @return 字段策略快照
      */
     public FieldPolicySnapshot snapshot(long tenantId, PolicyScenario scenario) {
-        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
-            return snapshotFresh(tenantId, scenario);
-        var configured = cache.getIfAvailable();
-        if (configured == null) return snapshotFresh(tenantId, scenario);
-        var key = IamJson.object(new FieldPolicyCacheConfiguration.Query(tenantId, scenario));
-        var value = configured.get(key);
-        if (value == null || !java.time.Instant.now().isBefore(value.expiresAt())) {
-            configured.evict(key);
-            value = configured.get(key);
-        }
-        if (value == null || !java.time.Instant.now().isBefore(value.expiresAt()))
-            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
-        return value;
+        // 租户策略每次请求读取当前事实，不接受变更提交前的热缓存。
+        return snapshotFresh(tenantId, scenario);
+
     }
 
     /** 加载当前配置事实；写事务和缓存 loader 使用，绝不回读热缓存。 */
     public FieldPolicySnapshot snapshotFresh(long tenantId, PolicyScenario scenario) {
-        return loadSnapshot(tenantId, scenario, true);
+        try { return loadSnapshot(tenantId, scenario, true); }
+        catch(org.springframework.dao.DataAccessException failure) { throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE); }
     }
 
     /** 缓存 loader 使用当前默认引用缓存；业务写入调用 snapshotFresh。 */
@@ -181,6 +172,8 @@ public class FieldAccessEvaluator {
     public com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision decision(
             com.ingot.framework.commons.model.iam.AuthorizationContext actor, ResourceKey resource, String action,
             ObjectScope scope, boolean fresh) {
+        if (policies.currentOwner(IamIds.require(actor.tenantId()), IamIds.require(actor.memberId())))
+            return ownerDecision(resource, action);
         var scenario = resource.equals(BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE) ? PolicyScenario.DIRECTORY : PolicyScenario.MANAGEMENT;
         if (!resource.equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)
                 && !resource.equals(BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE))
@@ -310,7 +303,8 @@ public class FieldAccessEvaluator {
      * @param targetIds 当前完整批次对象标识
      * @return 不含敏感原值的执行批次
      */
-    public FieldBatch prepare(FieldPolicySnapshot snapshot, long viewerId, java.util.Collection<Long> targetIds) {
+    public FieldBatch prepare(FieldPolicySnapshot sourceSnapshot, long viewerId, java.util.Collection<Long> targetIds) {
+        final var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
         Set<BigInteger> ids = targetIds.stream().map(BigInteger::valueOf).collect(Collectors.toSet());
         ids.add(BigInteger.valueOf(viewerId));
         Map<Long, List<String>> departments = new LinkedHashMap<>();
@@ -481,7 +475,8 @@ public class FieldAccessEvaluator {
     }
 
     /** 当前查看者可能看到的列；行值仍由真实对象独立判断，不用列表样本推断能力。 */
-    public Map<String, FieldVisibility> contextVisibility(FieldPolicySnapshot snapshot, long viewerId) {
+    public Map<String, FieldVisibility> contextVisibility(FieldPolicySnapshot sourceSnapshot, long viewerId) {
+        final var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
         var batch = prepare(snapshot, viewerId, List.of());
         Map<String, FieldVisibility> result = new LinkedHashMap<>();
         snapshot.baseline().forEach((key, baseline) -> {
@@ -499,8 +494,9 @@ public class FieldAccessEvaluator {
     }
 
     /** 按查看者和精确操作计算全局能力，匹配规则覆盖默认，多匹配取交集。 */
-    public FieldOperations operation(FieldPolicySnapshot snapshot, long viewerId, ResourceKey resource,
+    public FieldOperations operation(FieldPolicySnapshot sourceSnapshot, long viewerId, ResourceKey resource,
             String action, String fieldKey) {
+        final var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
         FieldOperations matched = null;
         for (var rule : snapshot.operationRules()) {
             if (!resource.equals(rule.resource()) || snapshot.scenario() != rule.scenario()
@@ -517,8 +513,9 @@ public class FieldAccessEvaluator {
     }
 
     /** 整份查询范围的可用筛选能力，不能使用当前页样本判断。 */
-    public Map<String, FieldOperations> operations(FieldPolicySnapshot snapshot, long viewerId, ResourceKey resource,
+    public Map<String, FieldOperations> operations(FieldPolicySnapshot sourceSnapshot, long viewerId, ResourceKey resource,
             String action, ObjectScope scope) {
+        final var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
         Set<Long> ids = new LinkedHashSet<>();
         scope.clauses().forEach(clause -> clause.requiredIds().forEach(id -> ids.add(id.longValueExact())));
         var batch = prepare(snapshot, viewerId, ids);
@@ -735,4 +732,44 @@ public class FieldAccessEvaluator {
         /** 冻结可供异步执行的规则源值。 */
         public FieldRuleRow { scopes = List.copyOf(scopes); bindings = Map.copyOf(bindings); }
     }
+    private FieldPolicySnapshot ownerSnapshot(FieldPolicySnapshot snapshot, long viewerId) {
+        if (!policies.currentOwner(snapshot.tenantId(), viewerId)) return snapshot;
+        return new FieldPolicySnapshot(snapshot.tenantId(), snapshot.scenario(), snapshot.ceiling(), snapshot.ceiling(),
+                List.of(), List.of(), snapshot.operationCeiling(), snapshot.operationCeiling(), snapshot.masks(), snapshot.expiresAt());
+    }
+
+    /** 为真实拥有者输出注册字段全权，仍保留平台目录能力上限及写入绑定能力。 */
+    public com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision ownerDecision(ResourceKey resource, String action) {
+        var entry = metadata.requireFresh(resource, false);
+        var descriptor = entry.descriptor();
+        boolean write = descriptor.actions().stream().anyMatch(a -> a.code().equals(action)
+            && a.mode() == com.ingot.framework.commons.model.iam.extension.ExecutionMode.MUTATING);
+        Map<String, FieldAccess> fields = new LinkedHashMap<>();
+        Map<String, FieldOperations> operations = new LinkedHashMap<>();
+        Map<String, com.ingot.framework.commons.model.iam.MaskSpec> masks = new LinkedHashMap<>();
+        Map<String,FieldAccess> platformCeiling=Map.of();
+        Map<String,FieldOperations> platformOperations=Map.of();
+        if(resource.equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)||resource.equals(BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE)) {
+            try {
+                var latest=policies.latestRevision(DefaultPolicyKind.FIELD);
+                if(latest==null)throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+                platformCeiling=DefaultPolicyDefinitions.fieldCeiling(latest.getDefinition());
+                platformOperations=DefaultPolicyDefinitions.fieldOperations(latest.getDefinition(),true);
+            } catch(org.springframework.dao.DataAccessException failure){throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);}
+        }
+        var ceilings=platformCeiling;var operationCeilings=platformOperations;
+        descriptor.fields().forEach(field -> {
+            var visibility = field.visibilities().stream().max(java.util.Comparator.comparingInt(Enum::ordinal)).orElse(FieldVisibility.HIDDEN);
+            var ceiling=ceilings.get(field.key());
+            if(ceiling!=null && ceiling.visibility().ordinal()<visibility.ordinal())visibility=ceiling.visibility();
+            var upper=operationCeilings.getOrDefault(field.key(),new FieldOperations(true,true));
+            boolean editable=write && field.editable() && upper.editable();
+            fields.put(field.key(), new FieldAccess(visibility, visibility != FieldVisibility.HIDDEN && editable));
+            operations.put(field.key(), new FieldOperations(editable, !write && field.filterable() && upper.filterable()));
+            if (field.mask() != null) masks.put(field.key(), field.mask());
+        });
+        return new com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision(fields, fields, List.of(), operations,
+            masks, com.ingot.framework.commons.model.iam.FieldMergeMode.RESTRICTIONS, entry.expiresAt());
+    }
+
 }

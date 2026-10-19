@@ -62,15 +62,13 @@ public class InitializationCatalog {
         Long planId = blank(input.planId()) ? null : Long.parseLong(input.planId());
         return new TenantInitializationPlan(ids.nextId(), selection.name(), input.avatar(), selection.ownerAccountId(),
                 ids.nextId(),
-                selection.ownerDisplayName(), ids.nextId(), selection.rootDepartmentName(), ids.nextId(),
-                selection.governanceRevisionId(), selection.directoryRevisionId(), selection.fieldRevisionId(),
+                selection.ownerDisplayName(), ids.nextId(), selection.rootDepartmentName(), selection.directoryRevisionId(), selection.fieldRevisionId(),
                 applications, planId, ids.nextId());
     }
 
     private CatalogSelection resolve(TenantCreateInput input) {
         long ownerAccountId = parseId(input.ownerAccountId(), IamReasonCode.IDENTITY_INVALID);
         requireAccount(ownerAccountId);
-        long governance = uniqueTenantSystemRevision();
         long directory = latestDefault(DefaultPolicyKind.DIRECTORY);
         long field = latestDefault(DefaultPolicyKind.FIELD);
         List<ResolvedEntitlement> resolved = entitlements.resolve(input.planId(), input.applications());
@@ -78,7 +76,7 @@ public class InitializationCatalog {
         String name = input.name().trim();
         String ownerName = blank(input.ownerDisplayName()) ? DEFAULT_OWNER_NAME : input.ownerDisplayName().trim();
         String rootName = blank(input.rootDepartmentName()) ? name : input.rootDepartmentName().trim();
-        return new CatalogSelection(name, ownerAccountId, ownerName, rootName, governance,
+        return new CatalogSelection(name, ownerAccountId, ownerName, rootName,
                 directory, field, applications, resolved);
     }
 
@@ -86,18 +84,6 @@ public class InitializationCatalog {
         if (!catalog.activeAccount(accountId)) {
             throw new BizException(IamReasonCode.IDENTITY_INVALID);
         }
-    }
-
-    private long uniqueTenantSystemRevision() {
-        List<Long> roles = catalog.systemRoles(AuthorizationDomain.TENANT);
-        if (roles.size() != 1) {
-            throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
-        }
-        List<Long> revisions = catalog.systemRevisions(roles.getFirst());
-        if (revisions.isEmpty()) {
-            throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
-        }
-        return revisions.getFirst();
     }
 
     private long latestDefault(DefaultPolicyKind kind) {
@@ -134,7 +120,7 @@ public class InitializationCatalog {
      * @since 1.0.0
      */
     private record CatalogSelection(String name, long ownerAccountId, String ownerDisplayName, String rootDepartmentName,
-                                   long governanceRevisionId, long directoryRevisionId, long fieldRevisionId,
+                                   long directoryRevisionId, long fieldRevisionId,
                                    List<ApplicationSummary> applications, List<ResolvedEntitlement> resolved) {
     }
 }

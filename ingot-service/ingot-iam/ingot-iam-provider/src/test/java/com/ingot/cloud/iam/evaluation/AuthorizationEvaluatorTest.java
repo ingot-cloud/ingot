@@ -24,6 +24,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -148,8 +150,109 @@ class AuthorizationEvaluatorTest {
         jdbc.update("INSERT INTO iam_account(id,enabled,deleted_at) VALUES (1,TRUE,NULL)");
         jdbc.update("INSERT INTO iam_platform_member VALUES (1001,1,'ACTIVE')");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,status VARCHAR(16))");
-        jdbc.update("INSERT INTO iam_tenant_member VALUES (101,10,1,'ACTIVE')");
+        jdbc.update("INSERT INTO iam_tenant_member VALUES (101,10,1,'ACTIVE'),(9999,10,1,'ACTIVE')");
+        jdbc.execute("CREATE TABLE iam_tenant(id BIGINT PRIMARY KEY,owner_member_id BIGINT,version BIGINT DEFAULT 0,enabled BOOLEAN DEFAULT TRUE,deleted_at TIMESTAMP)");
+        jdbc.update("INSERT INTO iam_tenant(id,owner_member_id) VALUES(10,9999)");
+        jdbc.execute("ALTER TABLE iam_tenant_member ADD display_name VARCHAR(128)");
+        jdbc.execute("CREATE TABLE iam_tenant_group(id BIGINT PRIMARY KEY,tenant_id BIGINT,name VARCHAR(128))");
+        jdbc.execute("ALTER TABLE iam_application ADD name VARCHAR(128)");
+        jdbc.execute("ALTER TABLE iam_application ADD icon VARCHAR(128)");
+        jdbc.execute("ALTER TABLE iam_application ADD sort_order INT DEFAULT 0");
+        jdbc.execute("ALTER TABLE iam_resource ADD name VARCHAR(128)");
+        jdbc.execute("ALTER TABLE iam_resource ADD scope_capabilities VARCHAR(1024) DEFAULT '[\"ALL\"]'");
+        jdbc.execute("ALTER TABLE iam_action ADD name VARCHAR(128)");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD name VARCHAR(128)");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD description VARCHAR(512)");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD group_name VARCHAR(128)");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD version BIGINT DEFAULT 0");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD current_revision_id BIGINT");
+        jdbc.update("UPDATE iam_role_definition SET domain='TENANT',kind='SHARED',current_revision_id=32 WHERE id=22");
+        jdbc.execute("ALTER TABLE iam_role_assignment ADD role_id BIGINT DEFAULT 22");
+        jdbc.execute("ALTER TABLE iam_role_assignment ADD role_kind VARCHAR(24) DEFAULT 'SHARED'");
+        jdbc.execute("ALTER TABLE iam_role_assignment ADD role_tenant_key BIGINT DEFAULT 0");
+        jdbc.execute("ALTER TABLE iam_role_assignment ADD source VARCHAR(16) DEFAULT 'MANUAL'");
+        jdbc.execute("ALTER TABLE iam_role_assignment ADD version BIGINT DEFAULT 0");
+        jdbc.execute("ALTER TABLE iam_role_assignment ADD created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        jdbc.execute("CREATE TABLE iam_role_parameter(revision_id BIGINT,parameter_key VARCHAR(128),binding_kind VARCHAR(16),resource_id BIGINT)");
+        jdbc.execute("ALTER TABLE iam_delegation_recipient_member ADD domain VARCHAR(16) DEFAULT 'TENANT'");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD tenant_administrator_id BIGINT DEFAULT 9999");
+        jdbc.execute("CREATE TABLE iam_delegation_role(delegation_id BIGINT,role_id BIGINT)");
+        jdbc.execute("CREATE TABLE iam_delegation_resource_ceiling(delegation_id BIGINT,resource_id BIGINT,scopes VARCHAR(1024),scope_bindings VARCHAR(1024))");
+        for(var table:List.of("iam_application","iam_action","iam_resource","iam_account","iam_tenant_member","iam_department","iam_tenant_group","iam_tenant_app_entitlement","iam_app_audience"))jdbc.execute("ALTER TABLE "+table+" ADD version BIGINT DEFAULT 0");
+        for(var table:List.of("iam_tenant_app_entitlement","iam_app_audience"))jdbc.execute("ALTER TABLE "+table+" ADD id BIGINT DEFAULT 0");
+        jdbc.execute("CREATE TABLE iam_directory_policy(tenant_id BIGINT,version BIGINT,default_revision_id BIGINT)");
+        jdbc.execute("CREATE TABLE iam_field_policy(tenant_id BIGINT,version BIGINT,default_revision_id BIGINT)");
+        jdbc.execute("CREATE TABLE iam_default_policy_revision(id BIGINT,revision BIGINT)");
+        jdbc.execute("CREATE TABLE iam_menu(id BIGINT,application_id BIGINT,version BIGINT)");
+        jdbc.update("UPDATE iam_application SET code='iam-tenant',name='组织治理' WHERE id=2");
+        jdbc.update("INSERT INTO iam_resource(id,application_id,name,enabled) VALUES(6,2,'成员',TRUE)");
+        jdbc.update("UPDATE iam_action SET resource_id=6,name='成员状态' WHERE id=12");
         evaluator = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.evaluator(dataSource);
+    }
+
+
+    @Test
+    void ownerDynamicallyGetsFutureActionsWithoutRoleAssignmentAndWithoutAudience() {
+        entitleTenantApplication();
+        jdbc.update("UPDATE iam_tenant SET owner_member_id=101 WHERE id=10");
+        jdbc.update("DELETE FROM iam_role_assignment WHERE domain='TENANT'");
+        jdbc.update("DELETE FROM iam_app_audience WHERE tenant_id=10");
+        var first=evaluator.evaluate(TENANT);
+        assertTrue(first.tenantOwner());assertFalse(first.platformAdministrator());
+        assertTrue(first.scope(IamAction.VALUE_TENANT_MEMBER_STATUS).clauses().getFirst().all());
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled) VALUES(140,2,6,?,'新操作',TRUE)",IamAction.VALUE_TENANT_MEMBER_UPDATE);
+        var next=evaluator.evaluate(TENANT);
+        assertTrue(next.actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_UPDATE));
+        assertNotEquals(first.version(),next.version());
+        var sources=evaluator.decisionSources(TENANT,"140");
+        assertEquals(1,sources.size());assertNull(sources.getFirst().assignmentId());assertNull(sources.getFirst().roleRevisionRef());
+        jdbc.update("UPDATE iam_tenant_app_entitlement SET enabled=FALSE WHERE tenant_id=10");
+        assertTrue(evaluator.evaluate(TENANT).actionCodes().isEmpty());
+    }
+
+    @Test
+    void ownerTransferChangesDynamicPrivilegeAndPreservesOrdinaryAssignments() {
+        entitleTenantApplication();jdbc.update("UPDATE iam_tenant SET owner_member_id=101 WHERE id=10");
+        jdbc.update("INSERT INTO iam_account(id,enabled) VALUES(2,TRUE)");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,status) VALUES(102,10,2,'ACTIVE')");
+        var target=new AuthorizationContext(AuthorizationDomain.TENANT,"10","2","102");
+        assertTrue(evaluator.evaluate(TENANT).tenantOwner());
+        jdbc.update("UPDATE iam_tenant SET owner_member_id=102,version=version+1 WHERE id=10");
+        assertFalse(evaluator.evaluate(TENANT).tenantOwner());assertTrue(evaluator.evaluate(target).tenantOwner());
+        assertTrue(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_STATUS));
+        assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id=42 AND revision_id=32",Integer.class));
+    }
+
+    @Test
+    void sharedCurrentHeadChangesBothTenantsWithoutRewritingAssignments() {
+        entitleTenantApplication();
+        jdbc.update("INSERT INTO iam_tenant(id,owner_member_id) VALUES(20,9999)");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,status) VALUES(201,20,1,'ACTIVE')");
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(tenant_id,application_id,enabled) VALUES(20,2,TRUE)");
+        jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,enabled,audience_kind) VALUES(20,2,TRUE,'ALL')");
+        jdbc.update("INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,tenant_member_id,revision_id,status,valid_from,scope_bindings) VALUES(43,'TENANT',20,'MEMBER',201,32,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00','{}')");
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled) VALUES(140,2,6,?,'新操作',TRUE)",IamAction.VALUE_TENANT_MEMBER_UPDATE);
+        jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind) VALUES(33,22,'SHARED')");
+        jdbc.update("INSERT INTO iam_role_grant VALUES(33,140,'[{\"kind\":\"ALL\"}]')");
+        jdbc.update("UPDATE iam_role_definition SET current_revision_id=33,version=version+1 WHERE id=22");
+        assertTrue(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_UPDATE));
+        assertFalse(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_STATUS));
+        assertTrue(evaluator.evaluate(new AuthorizationContext(AuthorizationDomain.TENANT,"20","1","201")).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_UPDATE));
+        assertEquals(2,jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id IN(42,43) AND revision_id=32 AND role_id=22",Integer.class));
+    }
+
+    @Test
+    void missingNewResourceBindingClosesOnlyItsContributionUntilConfigured() {
+        entitleTenantApplication();
+        jdbc.update("INSERT INTO iam_resource(id,application_id,name,enabled) VALUES(7,2,'新资源',TRUE)");
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled) VALUES(140,2,7,?,'新操作',TRUE)",IamAction.VALUE_TENANT_MEMBER_UPDATE);
+        jdbc.update("INSERT INTO iam_role_grant VALUES(32,140,'[{\"kind\":\"OBJECT_SET\",\"parameterKey\":\"new-objects\"}]')");
+        jdbc.update("INSERT INTO iam_role_parameter VALUES(32,'new-objects','OBJECTS',7)");
+        assertTrue(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_STATUS));
+        assertFalse(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_UPDATE));
+        jdbc.update("UPDATE iam_role_assignment SET scope_bindings='{\"new-objects\":{\"kind\":\"OBJECTS\",\"ids\":[\"701\"]}}' WHERE id=42");
+        assertTrue(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_UPDATE));
+        assertEquals(List.of("701"),evaluator.evaluate(TENANT).scope(IamAction.VALUE_TENANT_MEMBER_UPDATE).clauses().getFirst().objectIds());
     }
 
     @Test
@@ -223,13 +326,13 @@ class AuthorizationEvaluatorTest {
     }
 
     private void entitleTenantApplication() {
-        jdbc.update("INSERT INTO iam_tenant_app_entitlement VALUES (10,2,TRUE,NULL,NULL)");
-        jdbc.update("INSERT INTO iam_app_audience VALUES (10,2,TRUE,'ALL')");
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(tenant_id,application_id,enabled,valid_from,valid_until) VALUES (10,2,TRUE,NULL,NULL)");
+        jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,enabled,audience_kind) VALUES (10,2,TRUE,'ALL')");
     }
 
     /** 组织 10 的部门树为 700 → 710 → 720，成员 101 只任职最深的 720。 */
     private void departmentChainWithMemberAtLeaf() {
-        jdbc.update("INSERT INTO iam_department VALUES (700,10,NULL),(710,10,700),(720,10,710)");
+        jdbc.update("INSERT INTO iam_department(id,tenant_id,parent_id) VALUES (700,10,NULL),(710,10,700),(720,10,710)");
         jdbc.update("INSERT INTO iam_member_department VALUES (10,720,101)");
     }
 
@@ -242,7 +345,7 @@ class AuthorizationEvaluatorTest {
                 "INSERT INTO iam_delegation_grant(id,status,valid_from,valid_until) VALUES (61,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',?)",
                 validUntil);
         jdbc.update("INSERT INTO iam_delegation_role_revision VALUES (61,31)");
-        jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES (61,NULL,1001,NULL)");
+        jdbc.update("INSERT INTO iam_delegation_recipient_member(delegation_id,tenant_id,platform_member_id,tenant_member_id) VALUES (61,NULL,1001,NULL)");
         jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES (61,11,'[]','{}')");
         jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=61 WHERE id=41");
     }
@@ -269,7 +372,7 @@ class AuthorizationEvaluatorTest {
     @Test
     void addingAdministratorInvalidatesWholeDerivedGroupEvenWhenWhitelisted() {
         platformDelegationOnPlatformAssignment(null);
-        jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(61,NULL,9999,NULL)");
+        jdbc.update("INSERT INTO iam_delegation_recipient_member(delegation_id,tenant_id,platform_member_id,tenant_member_id) VALUES(61,NULL,9999,NULL)");
         jdbc.update("INSERT INTO iam_platform_group_member VALUES(501,9999)");
         assertFalse(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
     }
@@ -368,18 +471,18 @@ class AuthorizationEvaluatorTest {
     @Test
     void snapshotIsTruncatedToTheNearestEntitlementDeadline() {
         LocalDateTime deadline = LocalDateTime.now(ZoneOffset.UTC).plusSeconds(11);
-        jdbc.update("INSERT INTO iam_tenant_app_entitlement VALUES (10,2,TRUE,NULL,?)", deadline);
-        jdbc.update("INSERT INTO iam_app_audience VALUES (10,2,TRUE,'ALL')");
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(tenant_id,application_id,enabled,valid_from,valid_until) VALUES (10,2,TRUE,NULL,?)", deadline);
+        jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,enabled,audience_kind) VALUES (10,2,TRUE,'ALL')");
         assertEquals(deadline.toInstant(ZoneOffset.UTC), evaluator.evaluate(TENANT).expiresAt());
     }
 
     @Test
     void unboundedEntitlementKeepsTheHotWindowDespiteABoundedSibling() {
         // 存在不限期开通时最近边界不成立，MIN 不能把不限期当成截止。
-        jdbc.update("INSERT INTO iam_tenant_app_entitlement VALUES (10,2,TRUE,NULL,?)",
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(tenant_id,application_id,enabled,valid_from,valid_until) VALUES (10,2,TRUE,NULL,?)",
                 LocalDateTime.now(ZoneOffset.UTC).plusSeconds(11));
-        jdbc.update("INSERT INTO iam_tenant_app_entitlement VALUES (10,2,TRUE,NULL,NULL)");
-        jdbc.update("INSERT INTO iam_app_audience VALUES (10,2,TRUE,'ALL')");
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(tenant_id,application_id,enabled,valid_from,valid_until) VALUES (10,2,TRUE,NULL,NULL)");
+        jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,enabled,audience_kind) VALUES (10,2,TRUE,'ALL')");
         assertFalse(
                 evaluator.evaluate(TENANT).expiresAt().isBefore(Instant.now().plus(MAX_HOT_WINDOW).minusSeconds(5)));
     }
@@ -401,7 +504,7 @@ class AuthorizationEvaluatorTest {
     }
 
     @Test
-    void mutatingActionIgnoresTheHotSnapshotWhileReadingActionAcceptsIt() {
+    void allTenantActionsIgnoreTheHotSnapshot() {
         var cache = new RecordingCache(evaluator::evaluateRaw);
         var cached = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.evaluator(dataSource, cache);
         cache.seed(AuthorizationEvaluator.cacheKey(TENANT),
@@ -409,7 +512,7 @@ class AuthorizationEvaluatorTest {
                         List.of(IamAction.VALUE_TENANT_DIRECTORY_READ, IamAction.VALUE_TENANT_MEMBER_STATUS), List.of(),
                         Map.of(), "stale", Instant.now().plus(MAX_HOT_WINDOW)));
 
-        cached.require(TENANT, IamAction.TENANT_DIRECTORY_READ);
+        assertEquals(IamReasonCode.ACTION_DENIED.getCode(),assertThrows(BizException.class,() -> cached.require(TENANT, IamAction.TENANT_DIRECTORY_READ)).getCode());
         BizException failure = assertThrows(BizException.class,
                 () -> cached.require(TENANT, IamAction.TENANT_MEMBER_STATUS));
 
@@ -466,8 +569,8 @@ class AuthorizationEvaluatorTest {
     @Test
     void audienceDepartmentReachesMembersOfDescendantDepartments() {
         departmentChainWithMemberAtLeaf();
-        jdbc.update("INSERT INTO iam_tenant_app_entitlement VALUES (10,2,TRUE,NULL,NULL)");
-        jdbc.update("INSERT INTO iam_app_audience VALUES (10,2,TRUE,'DEPARTMENT')");
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(tenant_id,application_id,enabled,valid_from,valid_until) VALUES (10,2,TRUE,NULL,NULL)");
+        jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,enabled,audience_kind) VALUES (10,2,TRUE,'DEPARTMENT')");
         jdbc.update("INSERT INTO iam_audience_department VALUES (10,2,700,FALSE)");
 
         assertFalse(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_STATUS));
@@ -480,8 +583,8 @@ class AuthorizationEvaluatorTest {
     @Test
     void audienceGroupAcceptsMembersJoiningThroughADepartment() {
         departmentChainWithMemberAtLeaf();
-        jdbc.update("INSERT INTO iam_tenant_app_entitlement VALUES (10,2,TRUE,NULL,NULL)");
-        jdbc.update("INSERT INTO iam_app_audience VALUES (10,2,TRUE,'GROUP')");
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(tenant_id,application_id,enabled,valid_from,valid_until) VALUES (10,2,TRUE,NULL,NULL)");
+        jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,enabled,audience_kind) VALUES (10,2,TRUE,'GROUP')");
         jdbc.update("INSERT INTO iam_audience_group VALUES (10,2,503)");
         jdbc.update("INSERT INTO iam_tenant_group_department VALUES (10,503,710,TRUE)");
 
@@ -518,11 +621,15 @@ class AuthorizationEvaluatorTest {
         jdbc.update("INSERT INTO iam_delegation_role_revision VALUES (62,32)");
         jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES (62,12,'[]','{}')");
         jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=62 WHERE id=42");
+        jdbc.update("UPDATE iam_delegation_grant SET domain='TENANT',tenant_id=10,assignment_duration_mode='LIMITED',max_assignment_duration_seconds=86400 WHERE id=62");
+        jdbc.update("UPDATE iam_role_assignment SET valid_from=CURRENT_TIMESTAMP,valid_until=DATEADD('HOUR',1,CURRENT_TIMESTAMP) WHERE id=42");
+        jdbc.update("INSERT INTO iam_delegation_role VALUES(62,22)");
+        jdbc.update("INSERT INTO iam_delegation_resource_ceiling VALUES(62,6,'[]','{}')");
 
         // 组把成员拉了进来，但委派接收名单里没有他，求值不得放行。
         assertFalse(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_STATUS));
 
-        jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES (62,10,NULL,101)");
+        jdbc.update("INSERT INTO iam_delegation_recipient_member(delegation_id,tenant_id,platform_member_id,tenant_member_id) VALUES (62,10,NULL,101)");
 
         assertTrue(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_STATUS));
     }
@@ -537,6 +644,10 @@ class AuthorizationEvaluatorTest {
         jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES (63,12,'[]','{}')");
         jdbc.update("INSERT INTO iam_delegation_recipient_department VALUES (63,10,700,FALSE)");
         jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=63 WHERE id=42");
+        jdbc.update("UPDATE iam_delegation_grant SET domain='TENANT',tenant_id=10,assignment_duration_mode='LIMITED',max_assignment_duration_seconds=86400 WHERE id=63");
+        jdbc.update("UPDATE iam_role_assignment SET valid_from=CURRENT_TIMESTAMP,valid_until=DATEADD('HOUR',1,CURRENT_TIMESTAMP) WHERE id=42");
+        jdbc.update("INSERT INTO iam_delegation_role VALUES(63,22)");
+        jdbc.update("INSERT INTO iam_delegation_resource_ceiling VALUES(63,6,'[]','{}')");
 
         assertFalse(evaluator.evaluate(TENANT).actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_STATUS));
 

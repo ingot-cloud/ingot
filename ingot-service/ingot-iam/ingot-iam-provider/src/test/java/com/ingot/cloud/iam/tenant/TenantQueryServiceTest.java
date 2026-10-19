@@ -101,17 +101,17 @@ class TenantQueryServiceTest {
     }
 
     @Test
-    void transferMovesInitializationGovernanceAndKeepsIndependentGrant() {
+    void transferChangesOwnerWithoutChangingRoleAssignments() {
         var result = service.transferOwner(new OwnerTransferInput("0", "102"));
 
         assertEquals("10", result.id());
         assertEquals("1", result.version());
         assertEquals(102L, jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10", Long.class));
-        assertEquals("REVOKED", status(50));
+        assertEquals("ACTIVE", status(50));
         assertEquals("ACTIVE", status(51));
         assertEquals(101L, jdbc.queryForObject("SELECT tenant_member_id FROM iam_role_assignment WHERE id=51",
                 Long.class));
-        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE tenant_member_id=102"
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE tenant_member_id=102"
                 + " AND status='ACTIVE' AND source='INITIALIZATION' AND revision_id=12", Integer.class));
         assertEquals(1, invalidations.get());
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit WHERE change_type="
@@ -124,7 +124,7 @@ class TenantQueryServiceTest {
 
         service.transferOwner(new OwnerTransferInput("0", "102"));
 
-        assertEquals("REVOKED", status(50));
+        assertEquals("ACTIVE", status(50));
         assertEquals("ACTIVE", status(52));
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE tenant_member_id=102"
                 + " AND revision_id=12 AND status='ACTIVE'", Integer.class));
@@ -149,12 +149,11 @@ class TenantQueryServiceTest {
     }
 
     @Test
-    void transferFailsClosedWhenGovernanceAssignmentIsMissing() {
+    void transferWorksWithoutAnInitializationAssignment() {
         jdbc.update("DELETE FROM iam_role_assignment WHERE id=50");
-        BizException failure = assertThrows(BizException.class,
-                () -> service.transferOwner(new OwnerTransferInput("0", "102")));
-        assertEquals(IamReasonCode.POLICY_CONFLICT.getCode(), failure.getCode());
-        assertEquals(101L, jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10", Long.class));
+        service.transferOwner(new OwnerTransferInput("0","102"));
+        assertEquals(102L,jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10",Long.class));
+        assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment",Integer.class));
     }
 
     @Test
@@ -223,13 +222,25 @@ class TenantQueryServiceTest {
                 id, memberId, revisionId, kind, source);
     }
 
+    @Test
+    void ordinaryMemberCannotTransferEvenWithTheAction() {
+        authenticate(new AuthorizationContext(AuthorizationDomain.TENANT,"10","2","102"));
+        assertEquals(IamReasonCode.ACTION_DENIED.getCode(),assertThrows(BizException.class,()->service.transferOwner(new OwnerTransferInput("0","102"))).getCode());
+        assertEquals(101L,jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10",Long.class));
+    }
+
+    @Test
+    void disabledTargetAccountCannotReceiveOwnership() {
+        jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=2");
+        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(),assertThrows(BizException.class,()->service.transferOwner(new OwnerTransferInput("0","102"))).getCode());
+    }
     private String status(long id) {
         return jdbc.queryForObject("SELECT status FROM iam_role_assignment WHERE id=?", String.class, id);
     }
 
     private void authenticate(AuthorizationContext context) {
         Long tenantId = context.tenantId() == null ? null : Long.parseLong(context.tenantId());
-        var user = InUser.stateless(1L, tenantId, "web", "standard", UserTypeEnum.ADMIN.getValue(), "account",
+        var user = InUser.stateless(Long.parseLong(context.accountId()), tenantId, "web", "standard", UserTypeEnum.ADMIN.getValue(), "account",
                 List.of(), List.of(), Map.of()).toBuilder().authorizationContext(context).build();
         SecurityContextHolder.getContext().setAuthentication(
                 UsernamePasswordAuthenticationToken.authenticated(user, null, List.of()));

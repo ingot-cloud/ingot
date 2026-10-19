@@ -58,7 +58,7 @@ class InitializationCatalogTest {
     void planAllocatesServerIdsAndReadsCatalogRevisions() {
         var ids = new AtomicLong(500);
         var plan = catalog.plan(input(null), ids::incrementAndGet);
-        assertEquals(11L, plan.governanceRevisionId());
+        assertNotNull(plan.ownerAccountId());
         assertEquals(21L, plan.directoryRevisionId());
         assertEquals(22L, plan.fieldRevisionId());
         assertEquals(1, plan.applications().size());
@@ -102,8 +102,7 @@ class InitializationCatalogTest {
                 assertThrows(BizException.class, () -> catalog.preview(input(null))).getCode());
         jdbc.update("UPDATE iam_application SET baseline=TRUE WHERE id=1");
         jdbc.update("INSERT INTO iam_role_definition(id,domain,kind,code,name) VALUES (4,'TENANT','SYSTEM','dup','重复')");
-        assertEquals(IamReasonCode.ROLE_REVISION_UNAVAILABLE.getCode(),
-                assertThrows(BizException.class, () -> catalog.preview(input(null))).getCode());
+        assertNotNull(catalog.preview(input(null)));
     }
 
     @Test

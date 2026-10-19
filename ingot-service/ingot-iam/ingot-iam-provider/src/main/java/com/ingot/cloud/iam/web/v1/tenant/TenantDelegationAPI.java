@@ -1,12 +1,12 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
-import com.ingot.cloud.iam.delegation.DelegationService;
+import com.ingot.cloud.iam.delegation.TenantLiveDelegationService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
-import com.ingot.framework.commons.model.iam.DelegationInput;
-import com.ingot.framework.commons.model.iam.DelegationRecord;
-import com.ingot.framework.commons.model.iam.DelegationUpdateInput;
+import com.ingot.framework.commons.model.iam.TenantDelegationInput;
+import com.ingot.framework.commons.model.iam.TenantDelegationRecord;
+import com.ingot.framework.commons.model.iam.TenantDelegationUpdateInput;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.Preview;
 import com.ingot.framework.commons.model.iam.ReferenceImpactPreview;
@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/tenant/delegations")
 @RequiredArgsConstructor
 public class TenantDelegationAPI implements RShortcuts {
-    private final DelegationService delegations;
+    private final TenantLiveDelegationService delegations;
 
     /**
      * 分页列出租户委派。
@@ -48,11 +48,12 @@ public class TenantDelegationAPI implements RShortcuts {
      * @return 委派页
      */
     @Operation(summary = "委派列表")
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
     @GetMapping
-    public R<PageResponse<ResourceDetail<DelegationRecord>>> list(
+    public R<PageResponse<ResourceDetail<TenantDelegationRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(delegations.list(AuthorizationDomain.TENANT, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize, @RequestParam(required=false) String administratorName) {
+        return ok(delegations.list(page, pageSize, administratorName));
     }
 
     /**
@@ -63,8 +64,8 @@ public class TenantDelegationAPI implements RShortcuts {
      */
     @Operation(summary = "创建委派")
     @PostMapping
-    public R<CreatedResource> create(@Valid @RequestBody DelegationInput input) {
-        return ok(delegations.create(AuthorizationDomain.TENANT, input));
+    public R<CreatedResource> create(@Valid @RequestBody TenantDelegationInput input) {
+        return ok(delegations.create(input));
     }
 
     /**
@@ -74,9 +75,10 @@ public class TenantDelegationAPI implements RShortcuts {
      * @return 委派详情
      */
     @Operation(summary = "委派详情")
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
     @GetMapping("/{id}")
-    public R<ResourceDetail<DelegationRecord>> get(@PathVariable String id) {
-        return ok(delegations.get(AuthorizationDomain.TENANT, id));
+    public R<ResourceDetail<TenantDelegationRecord>> get(@PathVariable String id) {
+        return ok(delegations.get(id));
     }
 
     /**
@@ -88,9 +90,9 @@ public class TenantDelegationAPI implements RShortcuts {
      */
     @Operation(summary = "调整委派")
     @PutMapping("/{id}")
-    public R<ResourceDetail<DelegationRecord>> replace(@PathVariable String id,
-                                                       @Valid @RequestBody DelegationUpdateInput input) {
-        return ok(delegations.replace(AuthorizationDomain.TENANT, id, input));
+    public R<ResourceDetail<TenantDelegationRecord>> replace(@PathVariable String id,
+                                                       @Valid @RequestBody TenantDelegationUpdateInput input) {
+        return ok(delegations.replace(id, input));
     }
 
     /**
@@ -102,7 +104,7 @@ public class TenantDelegationAPI implements RShortcuts {
     @Operation(summary = "撤销委派")
     @DeleteMapping("/{id}")
     public R<CreatedResource> delete(@PathVariable String id) {
-        return ok(delegations.delete(AuthorizationDomain.TENANT, id));
+        return ok(delegations.delete(id));
     }
 
     /**
@@ -115,7 +117,20 @@ public class TenantDelegationAPI implements RShortcuts {
     @Operation(summary = "预览委派收缩影响")
     @PostMapping("/{id}/preview")
     public R<Preview<ReferenceImpactPreview>> preview(@PathVariable String id,
-                                                      @Valid @RequestBody DelegationUpdateInput input) {
-        return ok(delegations.preview(AuthorizationDomain.TENANT, id, input));
+                                                      @Valid @RequestBody TenantDelegationUpdateInput input) {
+        return ok(delegations.preview(id, input));
     }
+    /** 仅返回当前本人有效委派。 */
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
+    @GetMapping("/mine")
+    public R<java.util.List<com.ingot.framework.commons.model.iam.TenantDelegationMine>> mine() { return ok(delegations.mine()); }
+    /** 查询独立委派治理的真实范围对象。 */
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
+    @GetMapping("/scope-candidates")
+    public R<com.ingot.framework.commons.model.iam.AuthorizationCandidatePage> scopeCandidates(@RequestParam String resourceId,
+        @RequestParam String parameterKey,@RequestParam(required=false) String keyword,@RequestParam(required=false) java.util.List<String> ids,
+        @RequestParam(defaultValue=""+IamPages.DEFAULT_PAGE) int page,@RequestParam(defaultValue=""+IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(delegations.scopeCandidates(resourceId,parameterKey,keyword,ids,page,pageSize));
+    }
+
 }

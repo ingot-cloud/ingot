@@ -372,9 +372,9 @@ public enum IamAction {
      */
     PLATFORM_SHARED_ROLE_DELETE("iam-platform:shared-role:delete"),
     /**
-     * 契约字面量 {@code iam-platform:shared-role:publish}。
+     * 契约字面量 {@code iam-platform:shared-role:update}。
      */
-    PLATFORM_SHARED_ROLE_PUBLISH("iam-platform:shared-role:publish"),
+    PLATFORM_SHARED_ROLE_UPDATE("iam-platform:shared-role:update"),
     /**
      * 契约字面量 {@code iam-platform:shared-role:preview}。
      */
@@ -530,9 +530,9 @@ public enum IamAction {
      */
     TENANT_ROLE_DELETE("iam-tenant:role:delete"),
     /**
-     * 契约字面量 {@code iam-tenant:role:publish}。
+     * 契约字面量 {@code iam-tenant:role:update}。
      */
-    TENANT_ROLE_PUBLISH("iam-tenant:role:publish"),
+    TENANT_ROLE_UPDATE("iam-tenant:role:update"),
     /**
      * 契约字面量 {@code iam-tenant:role:preview}。
      */
@@ -959,9 +959,9 @@ public enum IamAction {
      */
     public static final String VALUE_PLATFORM_SHARED_ROLE_DELETE = "iam-platform:shared-role:delete";
     /**
-     * 契约字面量 {@code iam-platform:shared-role:publish}。
+     * 契约字面量 {@code iam-platform:shared-role:update}。
      */
-    public static final String VALUE_PLATFORM_SHARED_ROLE_PUBLISH = "iam-platform:shared-role:publish";
+    public static final String VALUE_PLATFORM_SHARED_ROLE_UPDATE = "iam-platform:shared-role:update";
     /**
      * 契约字面量 {@code iam-platform:shared-role:preview}。
      */
@@ -1117,9 +1117,9 @@ public enum IamAction {
      */
     public static final String VALUE_TENANT_ROLE_DELETE = "iam-tenant:role:delete";
     /**
-     * 契约字面量 {@code iam-tenant:role:publish}。
+     * 契约字面量 {@code iam-tenant:role:update}。
      */
-    public static final String VALUE_TENANT_ROLE_PUBLISH = "iam-tenant:role:publish";
+    public static final String VALUE_TENANT_ROLE_UPDATE = "iam-tenant:role:update";
     /**
      * 契约字面量 {@code iam-tenant:role:preview}。
      */

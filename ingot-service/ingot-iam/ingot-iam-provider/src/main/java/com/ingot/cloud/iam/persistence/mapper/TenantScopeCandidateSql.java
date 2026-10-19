@@ -50,8 +50,8 @@ public final class TenantScopeCandidateSql {
             case APPLICATION -> "SELECT app.id,app.name FROM iam_application app "
                     + "JOIN iam_tenant_app_entitlement e ON e.application_id=app.id "
                     + "WHERE e.tenant_id=#{q.tenantId} AND e.enabled=TRUE AND app.enabled=TRUE "
-                    + "AND (e.valid_from IS NULL OR e.valid_from&lt;=CURRENT_TIMESTAMP) "
-                    + "AND (e.valid_until IS NULL OR e.valid_until&gt;CURRENT_TIMESTAMP)";
+                    + "AND (e.valid_from IS NULL OR e.valid_from&lt;=CURRENT_TIMESTAMP(6)) "
+                    + "AND (e.valid_until IS NULL OR e.valid_until&gt;CURRENT_TIMESTAMP(6))";
             case ROLE -> "SELECT id,name FROM iam_role_definition WHERE domain='" + TENANT_DOMAIN + "' "
                     + "AND tenant_id=#{q.tenantId} AND enabled=TRUE";
             case ASSIGNMENT -> "SELECT id,CAST(id AS CHAR) AS name FROM iam_role_assignment "

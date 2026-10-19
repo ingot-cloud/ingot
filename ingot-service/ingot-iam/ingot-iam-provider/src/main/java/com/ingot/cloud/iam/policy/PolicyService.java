@@ -481,7 +481,7 @@ public class PolicyService {
         IamDepartmentEntity row = node.row();
         return new DepartmentRecord(row.getId().toString(),
                 row.getParentId() == null ? null : row.getParentId().toString(),
-                row.getName(), row.getSortOrder() == null ? 0 : row.getSortOrder(), node.navigationOnly());
+                row.getName(), row.getSortOrder() == null ? 0 : row.getSortOrder(), node.navigationOnly(), null);
     }
 
     private static Selection selection(Map<Long, Selection> selectors, long selectorId) {

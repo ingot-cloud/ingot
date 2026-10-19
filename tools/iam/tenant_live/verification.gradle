@@ -1,0 +1,20 @@
+// Isolate existing Spring/MyBatis test classes; optional real HTTP fixtures use disposable MySQL.
+allprojects {
+    tasks.withType(Test).configureEach {
+        maxHeapSize = '1g'
+        forkEvery = 1
+        filter { excludeTestsMatching 'com.ingot.cloud.iam.UnitTest' }
+        if (project.findProperty('iamLiveHttp') == 'true') {
+            environment 'IAM_TENANT_LIVE_MYSQL_HTTP_TEST', 'true'
+        }
+        if (project.findProperty('iamLiveBrowser') == 'true') {
+            environment 'IAM_TENANT_LIVE_BROWSER_TEST', 'true'
+        }
+        if (project.findProperty('iamLivePerformance') == 'true') {
+            environment 'IAM_TENANT_LIVE_PERFORMANCE_TEST', 'true'
+        }
+        if (project.findProperty('iamPlatformHttp') == 'true') {
+            environment 'IAM_MYSQL_HTTP_TEST', 'true'
+        }
+    }
+}

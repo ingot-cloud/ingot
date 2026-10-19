@@ -68,9 +68,6 @@ public class TenantInitializer {
             if (!repository.lockActiveAccount(plan.ownerAccountId())) {
                 throw new BizException(IamReasonCode.IDENTITY_INVALID);
             }
-            if (!repository.lockTenantSystemRevision(plan.governanceRevisionId())) {
-                throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
-            }
             for (var app : plan.applications()) {
                 if (!repository.lockTenantApplication(app.applicationId())) {
                     throw new BizException(IamReasonCode.APPLICATION_UNAVAILABLE);
@@ -84,8 +81,7 @@ public class TenantInitializer {
             audits.write(actor, plan.auditId(), TENANT_RESOURCE, Long.toString(plan.tenantId()),
                     AuditChangeType.CREATE, Map.of(),
                     Map.of(AuditField.NAME, plan.name(), AuditField.OWNER_MEMBER, Long.toString(plan.ownerMemberId())),
-                    Map.of(InitialReference.GOVERNANCE.name(), Long.toString(plan.governanceRevisionId()),
-                            InitialReference.DIRECTORY.name(), Long.toString(plan.directoryRevisionId()),
+                    Map.of(InitialReference.DIRECTORY.name(), Long.toString(plan.directoryRevisionId()),
                             InitialReference.FIELD.name(), Long.toString(plan.fieldRevisionId())));
             return new CreatedResource(Long.toString(plan.tenantId()), version);
         });
@@ -97,6 +93,6 @@ public class TenantInitializer {
      * @since 1.0.0
      */
     private enum InitialReference {
-        GOVERNANCE, DIRECTORY, FIELD
+        DIRECTORY, FIELD
     }
 }

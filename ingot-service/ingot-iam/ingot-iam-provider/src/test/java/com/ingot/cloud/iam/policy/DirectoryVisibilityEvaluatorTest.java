@@ -67,10 +67,26 @@ class DirectoryVisibilityEvaluatorTest {
         jdbc.update("INSERT INTO iam_department VALUES (11,10,NULL,'总部',1,0),(12,10,11,'可见组',2,0),"
                 + "(13,10,11,'隐藏组',3,0)");
         jdbc.update("INSERT INTO iam_member_department VALUES (10,101,12),(10,102,12),(10,103,13)");
+        jdbc.execute("CREATE TABLE iam_tenant(id BIGINT PRIMARY KEY,owner_member_id BIGINT,enabled BOOLEAN DEFAULT TRUE,deleted_at TIMESTAMP)");
+        jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,enabled BOOLEAN DEFAULT TRUE,deleted_at TIMESTAMP)");
+        jdbc.execute("ALTER TABLE iam_tenant_member ADD account_id BIGINT");
         evaluator = IamMybatisTestAccess.directory(dataSource);
         policies = IamMybatisTestAccess.policies(dataSource);
     }
 
+
+    @Test
+    void ownerSeesOrganizationDespiteTenantDirectoryDeny() {
+        jdbc.update("INSERT INTO iam_account(id,enabled) VALUES(1,TRUE)");
+        jdbc.update("INSERT INTO iam_tenant(id,owner_member_id) VALUES(10,101)");
+        jdbc.update("UPDATE iam_tenant_member SET account_id=1 WHERE id=101");
+        try {
+            var denied=new com.ingot.framework.commons.model.iam.DirectoryPolicyDraft("21",null,List.of(
+                new com.ingot.framework.commons.model.iam.DirectoryRule(com.ingot.framework.commons.model.iam.PolicyEffect.DENY,
+                new com.ingot.framework.commons.model.iam.Selection(List.of("101"),List.of()),new com.ingot.framework.commons.model.iam.Selection(List.of("103"),List.of()))));
+            assertTrue(evaluator.evaluate(10,101,denied).contains(103));
+        } finally {jdbc.update("DELETE FROM iam_tenant WHERE id=10");jdbc.update("DELETE FROM iam_account WHERE id=1");}
+    }
     @Test
     void defaultRevisionIsWholeOrganizationNotSelf() {
         DirectoryVisibility visibility = evaluator.evaluate(10, 101, draft(null, List.of()));

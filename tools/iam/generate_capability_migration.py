@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """生成020离线目录迁移；业务更新全部在事务内，绝不改固定角色版本。"""
 import re
+import hashlib
 import json
 from generate_bootstrap import ROOT, TARGET, PAGE_PATHS, SECURITY_RESOURCES, quote, collect, ROUTES
 
@@ -18,7 +19,13 @@ MAPPINGS = [
 
 
 def build(check=False):
+    # 已发布020冻结；当前角色迁移由021及tenant_live工具负责，不能用新契约重写旧升级历史。
     seed = TARGET.read_text()
+    if 'iam-tenant:role:update' in seed:
+        expected=(ROOT/'tools/iam/tenant_live/legacy-capability-migration.sha256').read_text().strip()
+        if hashlib.sha256(MIGRATION.read_bytes()).hexdigest()!=expected:
+            raise SystemExit('历史020迁移摘要不一致，禁止自动覆盖')
+        return
     # 保留完整语句，初始化中的角色、策略、发号器不属于增量目录升级。
     statements = re.findall(r'INSERT INTO (?:iam_application|iam_resource|iam_action|iam_menu|iam_menu_action) .*?;\n', seed, re.S)
     applications = [s for s in statements if s.startswith('INSERT INTO iam_application ')]

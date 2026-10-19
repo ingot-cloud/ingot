@@ -51,14 +51,12 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class TenantInitializationRepository {
     private final IamAccountMapper accounts;
-    private final IamRoleRevisionMapper revisions;
     private final IamApplicationMapper applications;
     private final IamDefaultPolicyRevisionMapper defaults;
     private final IamTenantMapper tenants;
     private final IamTenantMemberMapper members;
     private final IamDepartmentMapper departments;
     private final IamMemberDepartmentMapper memberDepartments;
-    private final IamRoleAssignmentMapper assignments;
     private final IamTenantAppEntitlementMapper entitlements;
     private final IamAppAudienceMapper audiences;
     private final IamDirectoryPolicyMapper directoryPolicies;
@@ -71,16 +69,6 @@ public class TenantInitializationRepository {
      */
     public boolean lockActiveAccount(long accountId) {
         return accounts.lockActive(BigInteger.valueOf(accountId)) != null;
-    }
-
-    /**
-     * 锁定租户域启用的系统角色版本。
-     * @param revisionId 角色版本 ID
-     * @return 是否恰好命中一行
-     */
-    public boolean lockTenantSystemRevision(long revisionId) {
-        return revisions.lockTenantSystem(BigInteger.valueOf(revisionId), RoleKind.SYSTEM,
-                AuthorizationDomain.TENANT) != null;
     }
 
     /**
@@ -136,18 +124,6 @@ public class TenantInitializationRepository {
         tenants.update(Wrappers.<IamTenantEntity>lambdaUpdate()
                 .eq(IamTenantEntity::getId, id(plan.tenantId()))
                 .set(IamTenantEntity::getOwnerMemberId, id(plan.ownerMemberId())));
-        IamRoleAssignmentEntity assignment = new IamRoleAssignmentEntity();
-        assignment.setId(id(plan.assignmentId()));
-        assignment.setDomain(AuthorizationDomain.TENANT);
-        assignment.setTenantId(id(plan.tenantId()));
-        assignment.setSubjectType(SubjectType.MEMBER);
-        assignment.setTenantMemberId(id(plan.ownerMemberId()));
-        assignment.setRevisionId(id(plan.governanceRevisionId()));
-        assignment.setRevisionKind(RoleKind.SYSTEM);
-        assignment.setScopeBindings(IamJson.object(null));
-        assignment.setValidFrom(now);
-        assignment.setSource(AssignmentSource.INITIALIZATION);
-        assignments.insert(assignment);
         for (TenantInitializationPlan.Application app : plan.applications()) {
             IamTenantAppEntitlementEntity entitlement = new IamTenantAppEntitlementEntity();
             entitlement.setId(id(app.entitlementId()));

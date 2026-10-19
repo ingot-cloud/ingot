@@ -120,8 +120,8 @@ public class InDataScopeConfig {
     @ConditionalOnBean(name = "authorizationSnapshotCache")
     @ConditionalOnMissingBean
     public AuthorizationSnapshotAccess authorizationSnapshotAccess(
-            LayeredCache<String, AuthorizationSnapshotDTO> cache) {
-        return new AuthorizationSnapshotAccess(cache);
+            LayeredCache<String, AuthorizationSnapshotDTO> cache, AuthorizationSnapshotLoader loader) {
+        return new AuthorizationSnapshotAccess(cache, loader);
     }
 
     /**

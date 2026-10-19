@@ -25,6 +25,16 @@ public interface IamTenantMemberMapper extends BaseMapper<IamTenantMemberEntity>
      * @param id 租户成员 ID
      * @return 成员记录，不存在时为空
      */
-    @Select("SELECT id,tenant_id AS tenantId,status,version FROM iam_tenant_member WHERE tenant_id=#{tenantId} AND id=#{id} FOR UPDATE")
+    @Select("SELECT m.id,m.tenant_id AS tenantId,m.status,m.version FROM iam_tenant_member m JOIN iam_account a ON a.id=m.account_id WHERE m.tenant_id=#{tenantId} AND m.id=#{id} AND a.enabled=TRUE AND a.deleted_at IS NULL FOR UPDATE")
     IamTenantMemberEntity lock(@Param("tenantId") BigInteger tenantId, @Param("id") BigInteger id);
+    /** 验证本组织真实拥有者与账号当前有效；不使用客户端标志。 */
+    @org.apache.ibatis.annotations.Select("""
+        SELECT COUNT(*) FROM iam_tenant t JOIN iam_tenant_member m ON m.tenant_id=t.id AND m.id=t.owner_member_id
+          JOIN iam_account a ON a.id=m.account_id
+         WHERE t.id=#{tenantId} AND m.id=#{memberId} AND t.enabled=TRUE AND t.deleted_at IS NULL
+           AND m.status='ACTIVE' AND a.enabled=TRUE AND a.deleted_at IS NULL
+        """)
+    long currentOwner(@org.apache.ibatis.annotations.Param("tenantId") BigInteger tenantId,
+                      @org.apache.ibatis.annotations.Param("memberId") BigInteger memberId);
+
 }

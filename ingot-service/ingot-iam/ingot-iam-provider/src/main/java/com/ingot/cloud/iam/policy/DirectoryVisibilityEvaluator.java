@@ -41,6 +41,7 @@ public class DirectoryVisibilityEvaluator {
      * @return 可交给 SQL 过滤的谓词
      */
     public DirectoryVisibility evaluate(long tenantId, long viewerId, DirectoryPolicyDraft policy) {
+        if (policies.currentOwner(tenantId, viewerId)) return DirectoryVisibility.all(Set.of(), viewerId);
         Set<Long> allow = new HashSet<>();
         Set<Long> deny = new HashSet<>();
         boolean anyAllow = false;

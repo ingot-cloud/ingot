@@ -278,7 +278,7 @@ class IamAuthorizationContractTest {
     @Test
     void exportSchemasFromPublicTypesAndCheckRequiredFields() throws Exception {
         Map<String, Schema> schemas = new TreeMap<>();
-        for (Class<?> type : List.of(ResourceDescriptor.class, AssignmentUpgradeInput.class,
+        for (Class<?> type : List.of(CurrentRoleCatalogAction.class,CurrentRoleCreateInput.class,CurrentRoleDefinition.class,CurrentRoleGrantList.class,CurrentRoleParameter.class,CurrentRolePermissionInput.class,CurrentRolePermissionResult.class,CurrentRolePreviewResult.class,CurrentRoleProfileInput.class,CurrentRoleSummary.class,ResourceScopeCeiling.class,ScopeIssue.class,TenantAssignmentBatchInput.class,TenantAssignmentInput.class,TenantAssignmentOption.class,TenantAssignmentRecord.class,TenantAssignmentUpdateInput.class,TenantDelegationInput.class,TenantDelegationMine.class,TenantDelegationRecord.class,TenantDelegationUpdateInput.class, ResourceDescriptor.class, AssignmentUpgradeInput.class,
                 ResourceFieldContext.class, com.ingot.framework.commons.model.iam.extension.FieldManifestInvocation.class, com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.class, AssignmentUpgradeResult.class, AuthorizationRequest.class, AuthorizationDecision.class,
                 ResourceObjectInvocation.class, SignedResourceObjectRequest.class, ResourceObjectResult.class,
                 AuthorizationContext.class, SubjectRef.class, Selection.class, RoleSubjectSummary.class,
@@ -313,7 +313,19 @@ class IamAuthorizationContractTest {
             schemas.putAll(ModelConverters.getInstance().readAll(type));
         }
         for (java.lang.reflect.Type type : List
-            .of(new com.fasterxml.jackson.core.type.TypeReference<R<RoleApplicationTask>>() { }.getType(),
+            .of(new com.fasterxml.jackson.core.type.TypeReference<R<CurrentRoleGrantList>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<CurrentRolePermissionResult>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<CurrentRolePreviewResult>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<CurrentRoleSummary>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<CurrentRoleSummary>>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantAssignmentRecord>>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<TenantAssignmentRecord>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantDelegationRecord>>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<TenantDelegationRecord>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<TenantDelegationMine>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<TenantAssignmentOption>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<CurrentRoleCatalogAction>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<RoleApplicationTask>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<RoleApplicationTask>>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<RoleApplicationItem>>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<List<RoleRevisionDistribution>>>() { }.getType(),

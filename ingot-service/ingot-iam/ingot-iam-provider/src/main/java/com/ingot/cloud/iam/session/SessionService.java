@@ -34,6 +34,7 @@ public class SessionService {
     private final IamAccess access;
     private final AuthorizationEvaluator evaluator;
     private final SessionRepository sessions;
+    private final com.ingot.cloud.iam.persistence.mapper.TenantLiveMapper live;
 
     /**
      * 返回当前身份一致授权视图。
@@ -43,9 +44,11 @@ public class SessionService {
     public Bootstrap bootstrap() {
         ActiveIdentity actor = access.requireCurrent();
         AuthorizationEvaluator.AuthorizationView view = evaluator.evaluate(actor.context());
-        List<ApplicationSummary> applications = sessions.accessibleApplications(actor.context());
+        List<ApplicationSummary> applications = view.tenantOwner()
+            ? live.applications(new java.math.BigInteger(actor.context().tenantId())).stream().map(a -> new ApplicationSummary(a.id().toString(), a.code(), a.name(), a.icon(), a.sortOrder())).toList()
+            : sessions.accessibleApplications(actor.context());
         return new Bootstrap(actor.context(), profile(actor), applications,
-                menus(actor, view, applications), view.actionCodes(), view.version(), view.expiresAt());
+                menus(actor, view, applications), view.actionCodes(), view.version(), view.expiresAt(), view.tenantOwner());
     }
 
     /**
