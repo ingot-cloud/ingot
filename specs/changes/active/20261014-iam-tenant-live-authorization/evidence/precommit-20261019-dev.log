@@ -1,0 +1,8 @@
+test_missing_structure_fails_before_data_changes (test_dev_prepare.DevPrepareSqlTest.test_missing_structure_fails_before_data_changes) ... ok
+test_repair_022_failure_and_preserve_platform_and_shared_permissions (test_dev_prepare.DevPrepareSqlTest.test_repair_022_failure_and_preserve_platform_and_shared_permissions) ... ok
+test_replay_keeps_new_current_test_data (test_dev_prepare.DevPrepareSqlTest.test_replay_keeps_new_current_test_data) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 42.988s
+
+OK

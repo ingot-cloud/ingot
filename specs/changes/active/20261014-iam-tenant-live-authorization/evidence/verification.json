@@ -1,0 +1,21 @@
+{
+  "verifiedAt": "2026-10-14",
+  "status": "validating",
+  "committed": false,
+  "productionDatabaseAccessed": false,
+  "currentUpdated": false,
+  "backendHead": "9bd2c87658031ee119865492479e72ed537611c1",
+  "frontendHead": "f5b0871daaf33f3d2fc5d1b37753be6795047248",
+  "sha256": {
+    "ingot/databases/ingot_iam.sql": "195e3713c62ab97c003e6ae763445059686ba9965d395d9032619618542f4c0e",
+    "ingot/databases/iam/migrations/021_tenant_live_authorization.sql": "653d1a0a5d3b9f0689ee43a80f92a5112f1c2431fd52b8a04e4e4242da104684",
+    "ingot/databases/iam/migrations/022_tenant_live_authorization_constraints.sql": "97ff3dc38dd86a6f095f9bc8456ec73584e5d0c2100a7f65591d6cc005225e4f",
+    "ingot/specs/changes/active/20261014-iam-tenant-live-authorization/API.md": "9dd748b3150363909352e27e9b6413e912f2709fe55ab6485656c6a78450ec31",
+    "ingot/specs/changes/active/20260912-iam-identity-access-management/contracts/openapi.json": "56295423667dd0a3d83e39b5a993a6280bc60c15dce2c5be08a85b7be1aed18f",
+    "ingot/specs/changes/active/20260912-iam-identity-access-management/contracts/schemas.json": "db63da0c96bf09af94ae8386d7ca6a09fd0ff6f6f16fb9b57c7676dfd022935f",
+    "ingot-admin/scripts/verify-tenant-live-browser.mjs": "91419f77ea9b52b16816826c3e2366b602030d806ed8c1e0b5afdca63d4f2cd0",
+    "ingot-admin/specs/changes/active/20261014-org-tenant-live-authorization/API.md": "9dd748b3150363909352e27e9b6413e912f2709fe55ab6485656c6a78450ec31",
+    "ingot/databases/iam/dev/prepare_tenant_live_test.sql": "51b18cb95290cbbfbd2af15c06d649049eebc92f9fa37cbfed4c1631f0268640",
+    "ingot/specs/changes/active/20261014-iam-tenant-live-authorization/MIGRATION.md": "2ec884c6628ec2b9e43b549c3829164ea90b2121848cc26a6fb3734a94959ce3"
+  }
+}

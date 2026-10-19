@@ -1,0 +1,35 @@
+..EE..
+======================================================================
+ERROR: test_gradle_and_rpc_do_not_depend_on_old_module (test_service_naming.ServiceNamingTest.test_gradle_and_rpc_do_not_depend_on_old_module)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jy/Repositories/Github/ingot-cloud/ingot/tools/iam/test_service_naming.py", line 20, in test_gradle_and_rpc_do_not_depend_on_old_module
+    self.assertIsNone(stale.search((ROOT / name).read_text()), name)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/jy/Repositories/Github/ingot-cloud/ingot/.gitlab-ci.yml'
+
+======================================================================
+ERROR: test_iam_ci_does_not_build_or_remove_auth_service (test_service_naming.ServiceNamingTest.test_iam_ci_does_not_build_or_remove_auth_service)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jy/Repositories/Github/ingot-cloud/ingot/tools/iam/test_service_naming.py", line 49, in test_iam_ci_does_not_build_or_remove_auth_service
+    content = (ROOT / '.gitlab-ci.yml').read_text()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/jy/Repositories/Github/ingot-cloud/ingot/.gitlab-ci.yml'
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.085s
+
+FAILED (errors=2)

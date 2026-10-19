@@ -1,0 +1,10 @@
+test_current_source_change_is_detected_inside_transaction (test_sql.MigrationSqlTest.test_current_source_change_is_detected_inside_transaction) ... ok
+test_forward_replay_and_reverse_preserve_new_writes (test_sql.MigrationSqlTest.test_forward_replay_and_reverse_preserve_new_writes) ... ok
+test_incremental_structure_matches_new_database (test_sql.MigrationSqlTest.test_incremental_structure_matches_new_database) ... ok
+test_observation_window_backup_restores_original_facts (test_sql.MigrationSqlTest.test_observation_window_backup_restores_original_facts) ... ok
+test_reverse_rejects_writes_since_export_and_can_resume (test_sql.MigrationSqlTest.test_reverse_rejects_writes_since_export_and_can_resume) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 179.133s
+
+OK

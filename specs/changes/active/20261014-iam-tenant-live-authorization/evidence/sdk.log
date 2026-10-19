@@ -1,0 +1,126 @@
+
+> Configure project :ingot-service:ingot-bff
+Creating Docker tasks for environment 'prod' - image: ingot/bff, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'dev' - image: ingot/bff, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'test' - image: ingot/bff, registry: docker-registry.ingotcloud.top
+
+> Configure project :ingot-service:ingot-gateway
+Creating Docker tasks for environment 'prod' - image: ingot/gateway, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'dev' - image: ingot/gateway, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'test' - image: ingot/gateway, registry: docker-registry.ingotcloud.top
+
+> Configure project :ingot-service:ingot-test
+未配置 Docker 环境（envs），跳过 Docker 任务创建
+请在 ingotAssemble.docker 中配置至少一个环境
+
+> Configure project :ingot-service:ingot-auth:ingot-auth-provider
+Creating Docker tasks for environment 'prod' - image: ingot/auth, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'dev' - image: ingot/auth, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'test' - image: ingot/auth, registry: docker-registry.ingotcloud.top
+
+> Configure project :ingot-service:ingot-iam:ingot-iam-provider
+Creating Docker tasks for environment 'prod' - image: ingot/iam, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'dev' - image: ingot/iam, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'test' - image: ingot/iam, registry: docker-registry.ingotcloud.top
+
+> Configure project :ingot-service:ingot-member:ingot-member-provider
+Creating Docker tasks for environment 'prod' - image: ingot/member, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'dev' - image: ingot/member, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'test' - image: ingot/member, registry: docker-registry.ingotcloud.top
+
+> Configure project :ingot-service:ingot-security:ingot-security-provider
+Creating Docker tasks for environment 'prod' - image: ingot/credential, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'dev' - image: ingot/credential, registry: docker-registry.ingotcloud.top
+Creating Docker tasks for environment 'test' - image: ingot/credential, registry: docker-registry.ingotcloud.top
+
+> Task :ingot-framework:ingot-commons:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-event-bus:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-cache:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-core:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-common:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-config:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-common:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-feign:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-oss:ingot-oss-common:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-event-codes:compileJava UP-TO-DATE
+> Task :ingot-service:ingot-security:ingot-security-api:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-credential:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-replay:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-crypto:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-account:ingot-security-account-core:compileJava UP-TO-DATE
+> Task :ingot-service:ingot-iam:ingot-iam-api:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-scope:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-access-control:compileJava UP-TO-DATE
+> Task :ingot-framework:ingot-access-control:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-access-control:classes UP-TO-DATE
+> Task :ingot-framework:ingot-access-control:compileTestJava
+> Task :ingot-framework:ingot-access-control:processTestResources NO-SOURCE
+> Task :ingot-framework:ingot-access-control:testClasses
+> Task :ingot-framework:ingot-cache:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-cache:classes UP-TO-DATE
+> Task :ingot-framework:ingot-cache:jar UP-TO-DATE
+> Task :ingot-framework:ingot-commons:processResources NO-SOURCE
+> Task :ingot-framework:ingot-commons:classes UP-TO-DATE
+> Task :ingot-framework:ingot-commons:jar UP-TO-DATE
+> Task :ingot-framework:ingot-core:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-core:classes UP-TO-DATE
+> Task :ingot-framework:ingot-core:jar UP-TO-DATE
+> Task :ingot-framework:ingot-event-bus:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-event-bus:classes UP-TO-DATE
+> Task :ingot-framework:ingot-event-bus:jar UP-TO-DATE
+> Task :ingot-framework:ingot-feign:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-feign:classes UP-TO-DATE
+> Task :ingot-framework:ingot-feign:jar UP-TO-DATE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-common:processResources NO-SOURCE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-common:classes UP-TO-DATE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-common:jar UP-TO-DATE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-scope:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-scope:classes UP-TO-DATE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-scope:jar UP-TO-DATE
+> Task :ingot-framework:ingot-oss:ingot-oss-common:processResources NO-SOURCE
+> Task :ingot-framework:ingot-oss:ingot-oss-common:classes UP-TO-DATE
+> Task :ingot-framework:ingot-oss:ingot-oss-common:jar UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-common:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-common:classes UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-common:jar UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-config:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-config:classes UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-config:jar UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-credential:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-credential:classes UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-credential:jar UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-crypto:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-crypto:classes UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-crypto:jar UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-event-codes:processResources NO-SOURCE
+> Task :ingot-framework:ingot-security:ingot-security-event-codes:classes UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-event-codes:jar UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-replay:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-replay:classes UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-replay:jar UP-TO-DATE
+> Task :ingot-service:ingot-iam:ingot-iam-api:processResources UP-TO-DATE
+> Task :ingot-service:ingot-iam:ingot-iam-api:classes UP-TO-DATE
+> Task :ingot-service:ingot-iam:ingot-iam-api:jar UP-TO-DATE
+> Task :ingot-service:ingot-security:ingot-security-api:processResources UP-TO-DATE
+> Task :ingot-service:ingot-security:ingot-security-api:classes UP-TO-DATE
+> Task :ingot-service:ingot-security:ingot-security-api:jar UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-account:ingot-security-account-core:processResources UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-account:ingot-security-account-core:classes UP-TO-DATE
+> Task :ingot-framework:ingot-security:ingot-security-account:ingot-security-account-core:jar UP-TO-DATE
+> Task :ingot-framework:ingot-access-control:test
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-scope:compileTestJava
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-scope:processTestResources NO-SOURCE
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-scope:testClasses
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+> Task :ingot-framework:ingot-data:ingot-data-mybatis-scope:test
+
+[Incubating] Problems report is available at: file:///Users/jy/Repositories/Github/ingot-cloud/ingot/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+53 actionable tasks: 4 executed, 49 up-to-date

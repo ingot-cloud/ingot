@@ -48,6 +48,7 @@
 
 ## 现状与相关变更
 
+- 2026-10-14 新增 [租户拥有者动态全权限与角色即时生效](../20261014-iam-tenant-live-authorization/README.md)（validating）。用户评审批准实施，开发及隔离验证完成；该变更接管本目录R01/R03/R04/R05中拥有者、租户固定版本/共享差异/委派相关条款，并提供已有IAM数据保留迁移。主变更状态与历史证据保持，其他范围独立维护；产品人工验收及current更新待用户确认。
 - 当前基线：[应用授权](../../../current/pms/application-authorization/SPEC.md)、[数据授权](../../../current/pms/data-authorization/SPEC.md)。
 - [SQL 规模优化 draft](../20260912-mybatis-data-scope-predicate-scale/README.md) 以旧快照及规则模型为前提。本 change 不直接实施其闭包表或 UNION 改写，不修改其状态；后续须按新模型重新评估。
 - 当前实现的平台默认层与租户追加层只有并集语义；本方案新增移除与范围替换，不能照搬旧合并算法。

@@ -1,0 +1,29 @@
+{
+  "tenants" : 100,
+  "databasePool" : 64,
+  "actionsPerRole" : 100,
+  "resources" : 10,
+  "reports" : [ {
+    "requests" : 56889,
+    "durationSeconds" : 60.034265041,
+    "p95Ms" : 31.039875,
+    "throughput" : 947.6088357398569,
+    "concurrency" : 20,
+    "errors" : 0,
+    "p50Ms" : 20.138708
+  }, {
+    "requests" : 63188,
+    "durationSeconds" : 60.066439125,
+    "p95Ms" : 142.354792,
+    "throughput" : 1051.9684689232859,
+    "concurrency" : 100,
+    "errors" : 0,
+    "p50Ms" : 91.83875
+  } ],
+  "sqlReads" : {
+    "fourRoleSelects" : 12,
+    "oneRoleSelects" : 12
+  },
+  "rolesPerIdentity" : 4,
+  "membersPerTenant" : 1000
+}

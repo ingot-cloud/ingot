@@ -1,0 +1,7 @@
+{
+  "sdkInternalRpcCallsPerResourceRequest" : 1,
+  "sharedSaveDml" : {
+    "oneActiveAssignment" : 4,
+    "hundredActiveAssignments" : 4
+  }
+}

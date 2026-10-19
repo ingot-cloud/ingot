@@ -1,0 +1,4 @@
+API / MIGRATION copies and SHA-256 match
+both changes validating; JSON and Markdown references valid
+tracked diff and new source whitespace checked
+specs/current unchanged; no commit created
