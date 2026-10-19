@@ -18,7 +18,7 @@
 
 ## 完成检查
 
-- [ ] 实现与 DESIGN 一致
-- [ ] REQUIREMENTS 验收标准全部满足
-- [ ] Current 未提前改写
-- [ ] Change 完成后归档
+- [x] 实现与 DESIGN 一致
+- [x] REQUIREMENTS 验收标准全部满足
+- [x] Current 在归档时写入 `specs/current/iam/tenant-members`
+- [x] Change 完成后归档

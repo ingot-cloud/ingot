@@ -1,0 +1,26 @@
+# 租户成员入职
+
+## 添加成员
+
+`POST /v1/tenant/members` 权限为 `iam-tenant:member:create`。请求体是 `TenantMemberCreateInput`：`displayName`、`phone`、可选 `email`、`departments`。`phone` 为 11 位大陆手机号，不含国家码。`departments` 必须出现，允许空数组；第一项为主部门。未知字段拒绝。格式错误返回「手机号格式不正确」，不向调用方暴露正则。
+
+响应是 `TenantMemberCreated`：`id`、`version`、`accountCreated`，以及仅在新建账号时出现的 `initialPassword`。含密码的响应与平台创建账号相同，使用 data_only 信封加密。
+
+平台 `POST /v1/platform/members` 仍接收 `MemberCreateInput`，按已有账号 ID 关联。
+
+## 手机号匹配
+
+按未删除账号的手机号匹配：
+
+- 没有账号：新建全局账号。登录名和登录手机号都使用该手机号，初始密码由安全框架生成，创建来源为管理员创建。`accountCreated=true`。
+- 唯一且启用：加入当前组织，不修改账号资料、密码或启用状态。`accountCreated=false`，省略密码。
+- 唯一且停用：「该手机号对应的账号已停用」。
+- 多个账号：「该手机号对应多个账号，请联系平台管理员」。
+- 该手机号已被其他账号用作登录名：「该手机号已被其他账号用作登录名」。
+- 该账号已是本组织成员，含已移出：「成员资格已存在」。本次不恢复已移出成员。
+
+成员通讯录写入提交的手机号和邮箱。同一事务内完成账号匹配或创建、成员插入、部门替换和审计。无需数据迁移。
+
+## 登录手机号
+
+`MemberRecord.loginPhone` 是已关联全局账号的登录手机号，公开字段，可空，不按当前域联系手机号做字段策略脱敏。租户与平台的成员列表、详情和导出会返回它。没有账号或账号未设置手机号时省略。`phone` 仍是当前域联系手机号，可能脱敏，不回退到登录手机号。
