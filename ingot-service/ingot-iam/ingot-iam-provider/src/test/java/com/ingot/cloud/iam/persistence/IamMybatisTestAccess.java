@@ -289,7 +289,8 @@ public final class IamMybatisTestAccess {
     public static com.ingot.cloud.iam.evaluation.ResourceAccess resourceAccess(DataSource source) {
         return new com.ingot.cloud.iam.evaluation.ResourceAccess(evaluator(source), objectScopes(source),
                 memberQueries(source), new DepartmentQueryRepository(mapper(source, IamDepartmentMapper.class),
-                        mapper(source, IamMemberDepartmentMapper.class)));
+                        mapper(source, IamMemberDepartmentMapper.class),
+                        mapper(source, IamTenantMemberMapper.class)));
     }
 
     /** 在当前夹具数据源上建立对象展示能力。 */

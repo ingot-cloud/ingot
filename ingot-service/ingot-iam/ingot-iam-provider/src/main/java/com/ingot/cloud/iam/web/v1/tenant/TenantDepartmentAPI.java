@@ -42,7 +42,7 @@ public class TenantDepartmentAPI implements RShortcuts {
     private final DepartmentService departments;
 
     /**
-     * 返回管理部门树，主部门与直属一级部门平级。
+     * 返回管理部门树，子部门挂在各自父节点下。
      *
      * @param purpose 必须为 {@link SelectionPurpose#MANAGED_DEPARTMENT}
      * @return 部门树

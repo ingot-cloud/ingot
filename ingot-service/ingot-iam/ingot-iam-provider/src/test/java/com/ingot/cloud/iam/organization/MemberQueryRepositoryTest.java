@@ -25,6 +25,7 @@ import com.ingot.cloud.iam.persistence.IamMybatisTestAccess;
 import com.ingot.cloud.iam.persistence.MemberQueryRepository;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
 import com.ingot.framework.commons.model.iam.MemberDepartmentView;
 import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberStatus;
@@ -222,7 +223,8 @@ class MemberQueryRepositoryTest {
                 "test", Instant.now().plusSeconds(30));
         var departmentRepository = new DepartmentQueryRepository(
                 IamMybatisTestAccess.mapper(counting, IamDepartmentMapper.class),
-                IamMybatisTestAccess.mapper(counting, IamMemberDepartmentMapper.class));
+                IamMybatisTestAccess.mapper(counting, IamMemberDepartmentMapper.class),
+                IamMybatisTestAccess.mapper(counting, IamTenantMemberMapper.class));
         var resources = new ResourceAccess(mock(AuthorizationEvaluator.class),
                 new ObjectScopeCompiler(mock(DepartmentClosure.class), mock(IamMemberDepartmentMapper.class)),
                 members, departmentRepository);

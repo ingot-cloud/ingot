@@ -14,8 +14,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.persistence.entity.IamDepartmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamMemberDepartmentEntity;
+import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
 import com.ingot.cloud.iam.persistence.projection.DepartmentMemberCount;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Repository;
 public class DepartmentQueryRepository {
     private final IamDepartmentMapper departments;
     private final IamMemberDepartmentMapper members;
+    private final IamTenantMemberMapper tenantMembers;
 
     /**
      * 列出当前租户可见部门，按同级顺序返回全量，供组树。
@@ -214,6 +217,19 @@ public class DepartmentQueryRepository {
             counts.put(row.departmentId().longValueExact(), row.memberCount() == null ? 0 : row.memberCount());
         }
         return counts;
+    }
+
+    /**
+     * 统计当前租户仍在组织内的成员，口径与未指定状态的成员列表一致，不含已移出。
+     *
+     * @param tenantId 已授权租户 ID
+     * @return 成员数
+     */
+    public int currentMemberCount(long tenantId) {
+        Long count = tenantMembers.selectCount(Wrappers.<IamTenantMemberEntity>lambdaQuery()
+                .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED));
+        return count == null ? 0 : Math.toIntExact(count);
     }
 
     /**

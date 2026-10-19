@@ -26,7 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -67,7 +66,7 @@ class DepartmentServiceTest {
     }
 
     @Test
-    void listReturnsFlattenedTreeAndFillsActiveMemberCount() {
+    void listReturnsNestedTreeAndFillsActiveMemberCount() {
         IamDepartmentEntity root = departmentRow(1, null, "英歌特云");
         IamDepartmentEntity product = departmentRow(2, 1L, "产品部");
         IamDepartmentEntity nested = departmentRow(3, 2L, "产品A组");
@@ -78,14 +77,16 @@ class DepartmentServiceTest {
         when(capabilities.departments(snapshot, List.of("1", "2", "3"))).thenReturn(Map.of(
                 "1", Map.of(), "2", Map.of(), "3", Map.of()));
         when(departments.list(10L, scope)).thenReturn(List.of(root, product, nested));
-        when(departments.activeMemberCounts(10L, List.of(1L, 2L, 3L))).thenReturn(Map.of(2L, 2));
+        when(departments.activeMemberCounts(10L, List.of(1L, 2L, 3L))).thenReturn(new java.util.HashMap<>(Map.of(2L, 2)));
+        when(departments.currentMemberCount(10L)).thenReturn(7);
 
         List<DepartmentTreeNode> tree = service.list();
-        assertEquals(List.of("1", "2"), tree.stream().map(node -> node.record().id()).toList());
-        assertTrue(tree.getFirst().children().isEmpty());
-        assertEquals(List.of("3"), tree.get(1).children().stream().map(node -> node.record().id()).toList());
-        assertEquals(0, tree.getFirst().record().memberCount());
-        assertEquals(2, tree.get(1).record().memberCount());
+        assertEquals(List.of("1"), tree.stream().map(node -> node.record().id()).toList());
+        assertEquals(List.of("2"), tree.getFirst().children().stream().map(node -> node.record().id()).toList());
+        assertEquals(List.of("3"), tree.getFirst().children().getFirst().children().stream()
+                .map(node -> node.record().id()).toList());
+        assertEquals(7, tree.getFirst().record().memberCount());
+        assertEquals(2, tree.getFirst().children().getFirst().record().memberCount());
         verify(departments).activeMemberCounts(10L, List.of(1L, 2L, 3L));
     }
 

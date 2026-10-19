@@ -9,6 +9,7 @@ import com.ingot.cloud.iam.persistence.IamMybatisTestAccess;
 import com.ingot.cloud.iam.persistence.QueryCountingDataSource;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -44,7 +45,8 @@ class DepartmentQueryRepositoryTest {
                 + "(10,103,11,FALSE),(10,104,12,TRUE),(10,105,11,FALSE)");
         departments = new DepartmentQueryRepository(
                 IamMybatisTestAccess.mapper(counting, IamDepartmentMapper.class),
-                IamMybatisTestAccess.mapper(counting, IamMemberDepartmentMapper.class));
+                IamMybatisTestAccess.mapper(counting, IamMemberDepartmentMapper.class),
+                IamMybatisTestAccess.mapper(counting, IamTenantMemberMapper.class));
     }
 
     @Test
@@ -55,6 +57,11 @@ class DepartmentQueryRepositoryTest {
         assertEquals(1, counts.get(12L));
         assertTrue(!counts.containsKey(13L));
         assertEquals(1, counting.from("iam_member_department"));
+    }
+
+    @Test
+    void currentMemberCountIncludesSuspendedAndSkipsRemoved() {
+        assertEquals(4, departments.currentMemberCount(10));
     }
 
     @Test

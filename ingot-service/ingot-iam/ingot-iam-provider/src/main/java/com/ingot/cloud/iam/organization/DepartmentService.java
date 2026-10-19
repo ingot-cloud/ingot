@@ -71,7 +71,7 @@ public class DepartmentService {
     }
 
     /**
-     * 返回当前租户管理部门树，主部门与直属一级部门平级。
+     * 返回当前租户管理部门树。子部门挂在父节点下，根部门人数为组织成员总数。
      *
      * @return 树节点列表
      */
@@ -84,9 +84,10 @@ public class DepartmentService {
         Map<Long, Integer> counts = departments.activeMemberCounts(tenantId, rows.stream()
                 .map(row -> row.getId().longValueExact())
                 .toList());
+        applyRootMemberTotal(rows, counts, departments.currentMemberCount(tenantId));
         Map<String, Map<String, ObjectCapability>> rowCapabilities = capabilities.departments(caps,
                 rows.stream().map(row -> row.getId().toString()).toList());
-        return flattenRootChildren(assembleTree(rows, counts, rowCapabilities));
+        return assembleTree(rows, counts, rowCapabilities);
     }
 
     /**
@@ -262,19 +263,13 @@ public class DepartmentService {
         return DepartmentTreeNode.of(details.get(id), children);
     }
 
-    private static List<DepartmentTreeNode> flattenRootChildren(List<DepartmentTreeNode> tree) {
-        if (tree.size() != 1) {
-            return tree;
+    /** 根部门人数是组织成员总数，其余部门保持直属 ACTIVE 任职数。 */
+    private static void applyRootMemberTotal(List<IamDepartmentEntity> rows, Map<Long, Integer> counts, int total) {
+        for (IamDepartmentEntity row : rows) {
+            if (row.getParentId() == null) {
+                counts.put(row.getId().longValueExact(), total);
+            }
         }
-        DepartmentTreeNode root = tree.getFirst();
-        if (root.record().parentId() != null || root.children().isEmpty()) {
-            return tree;
-        }
-        List<DepartmentTreeNode> next = new ArrayList<>();
-        next.add(DepartmentTreeNode.of(new ResourceDetail<>(root.record(), root.fieldAccess(), root.capabilities(),
-                root.version()), List.of()));
-        next.addAll(root.children());
-        return List.copyOf(next);
     }
 
     private static DepartmentRecord department(IamDepartmentEntity row) {
