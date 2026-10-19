@@ -375,13 +375,16 @@ public class MemberQueryService {
         fields.requireFilters(snapshot, viewerId, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, action.getCode(), scope, submitted);
         Page<IamTenantMemberEntity> result = members.pageTenant(tenantId, scope, phone, email,
                 IamIds.optional(departmentId), status, page, pageSize);
+        Map<BigInteger, IamAccountEntity> accounts = members.accountContacts(result.getRecords().stream()
+                .map(IamTenantMemberEntity::getAccountId).filter(java.util.Objects::nonNull).toList());
         Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
                 result.getRecords().stream().map(IamTenantMemberEntity::getId).toList());
         var batch = fields.prepare(snapshot, viewerId, result.getRecords().stream().map(row -> row.getId().longValueExact()).toList());
         List<MemberRecord> raws = new ArrayList<>();
         List<String> versions = new ArrayList<>();
         for (IamTenantMemberEntity row : result.getRecords()) {
-            raws.add(tenantMember(row, departments.getOrDefault(row.getId(), List.of())));
+            raws.add(tenantMember(row, departments.getOrDefault(row.getId(), List.of()),
+                    loginPhone(accounts.get(row.getAccountId()))));
             versions.add(version(row.getVersion()));
         }
         return IamPages.details(projectMembers(batch, caps, raws, versions), result.getTotal(), page, pageSize);
@@ -426,6 +429,8 @@ public class MemberQueryService {
         for (IamTenantMemberEntity row : rows) {
             byId.put(row.getId().toString(), row);
         }
+        Map<BigInteger, IamAccountEntity> accounts = members.accountContacts(rows.stream()
+                .map(IamTenantMemberEntity::getAccountId).filter(java.util.Objects::nonNull).toList());
         Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
                 rows.stream().map(IamTenantMemberEntity::getId).toList());
         FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
@@ -438,7 +443,8 @@ public class MemberQueryService {
             if (row == null) {
                 continue;
             }
-            raws.add(tenantMember(row, departments.getOrDefault(row.getId(), List.of())));
+            raws.add(tenantMember(row, departments.getOrDefault(row.getId(), List.of()),
+                    loginPhone(accounts.get(row.getAccountId()))));
             versions.add(version(row.getVersion()));
         }
         List<ResourceDetail<MemberRecord>> items = projectMembers(batch, caps, raws, versions);
@@ -870,13 +876,14 @@ public class MemberQueryService {
     private static MemberRecord platformMember(IamPlatformMemberEntity row, IamAccountEntity account) {
         return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
                 row.getPhone(), row.getEmail(),
-                account == null ? null : account.getUsername(), row.getStatus(), List.of());
+                account == null ? null : account.getUsername(), loginPhone(account), row.getStatus(), List.of(),
+                null, null, null);
     }
 
     private static MemberRecord platformMemberDetail(IamPlatformMemberEntity row, IamAccountEntity account) {
         return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
-                row.getPhone(), row.getEmail(), account == null ? null : account.getUsername(), row.getStatus(),
-                List.of(), utcInstant(row.getCreatedAt()),
+                row.getPhone(), row.getEmail(), account == null ? null : account.getUsername(), loginPhone(account),
+                row.getStatus(), List.of(), utcInstant(row.getCreatedAt()),
                 account == null ? null : utcInstant(account.getLastLoginAt()), utcInstant(row.getUpdatedAt()));
     }
 
@@ -884,16 +891,21 @@ public class MemberQueryService {
         return value == null ? null : value.toInstant(ZoneOffset.UTC);
     }
 
-    private static MemberRecord tenantMember(IamTenantMemberEntity row, List<MemberDepartmentView> departments) {
+    private static MemberRecord tenantMember(IamTenantMemberEntity row, List<MemberDepartmentView> departments,
+                                             String loginPhone) {
         return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(), row.getPhone(),
-                row.getEmail(), null, row.getStatus(), departments);
+                row.getEmail(), null, loginPhone, row.getStatus(), departments, null, null, null);
     }
 
     private MemberRecord tenantMemberDetail(IamTenantMemberEntity row, List<MemberDepartmentView> departments) {
         IamAccountEntity account = row.getAccountId() == null ? null : members.accountLoginInfo(row.getAccountId());
         return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(), row.getPhone(),
-                row.getEmail(), null, row.getStatus(), departments, utcInstant(row.getCreatedAt()),
+                row.getEmail(), null, loginPhone(account), row.getStatus(), departments, utcInstant(row.getCreatedAt()),
                 account == null ? null : utcInstant(account.getLastLoginAt()), utcInstant(row.getUpdatedAt()));
+    }
+
+    private static String loginPhone(IamAccountEntity account) {
+        return account == null || account.getPhone() == null || account.getPhone().isBlank() ? null : account.getPhone();
     }
 
     private void replaceDepartments(long tenantId, long memberId, Map<String, Boolean> departments) {

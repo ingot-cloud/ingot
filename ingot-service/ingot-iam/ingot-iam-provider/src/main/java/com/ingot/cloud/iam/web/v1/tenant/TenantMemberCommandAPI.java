@@ -9,12 +9,14 @@ import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
 import com.ingot.cloud.iam.organization.MemberCommandService;
 import com.ingot.cloud.iam.organization.MemberExportService;
 import com.ingot.cloud.iam.organization.MemberQueryService;
+import com.ingot.cloud.iam.organization.TenantMemberOnboarding;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.ExportTask;
 import com.ingot.framework.commons.model.iam.GroupRecord;
-import com.ingot.framework.commons.model.iam.MemberCreateInput;
+import com.ingot.framework.commons.model.iam.TenantMemberCreateInput;
+import com.ingot.framework.commons.model.iam.TenantMemberCreated;
 import com.ingot.framework.commons.model.iam.MemberDepartmentInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
@@ -37,6 +39,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
+import com.ingot.framework.security.crypto.annotation.InEncrypt;
 
 /**
  * <p>提供租户成员列表、创建、资料、暂停、移出与任职替换，跨租户引用由服务端拒绝。</p>
@@ -52,6 +56,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
     private final MemberCommandService members;
     private final MemberQueryService queries;
     private final MemberExportService exports;
+    private final TenantMemberOnboarding onboarding;
 
     /** 返回当前身份与完整查询范围的字段操作能力。 */
     @IamReadOnlyRequest
@@ -86,16 +91,18 @@ public class TenantMemberCommandAPI implements RShortcuts {
     }
 
     /**
-     * 把已有账号关联为租户成员。
+     * 按手机号加入当前组织；没有账号时先创建全局登录凭证。
      *
-     * @param input 账号与任职
-     * @return 新成员 ID
+     * @param input 姓名、手机号、邮箱与任职
+     * @return 新成员及可选一次性密码
      */
-    @Operation(summary = "创建成员资格")
+    @Operation(summary = "添加成员")
     @PostMapping
-    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_CREATE, use = FieldUse.WRITE, valueType = MemberCreateInput.class)
-    public R<CreatedResource> create(@Valid @RequestBody MemberCreateInput input) {
-        return ok(queries.create(AuthorizationDomain.TENANT, input));
+    @InCryptoHybridContext
+    @InEncrypt
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_CREATE, use = FieldUse.WRITE, valueType = TenantMemberCreateInput.class)
+    public R<TenantMemberCreated> create(@Valid @RequestBody TenantMemberCreateInput input) {
+        return ok(onboarding.create(input));
     }
 
     /**

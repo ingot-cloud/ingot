@@ -128,11 +128,12 @@ public class MemberQueryRepository {
      * 为已通过对象范围校验的平台成员详情读取未删除账号的登录信息白名单。
      *
      * @param accountId 该成员关联的全局账号 ID
-     * @return 仅包含账号 ID、登录名与最近登录时间；账号不存在或已删除时为空
+     * @return 仅包含账号 ID、登录名、登录手机号与最近登录时间；账号不存在或已删除时为空
      */
     public IamAccountEntity accountLoginInfo(BigInteger accountId) {
         return accounts.selectOne(Wrappers.<IamAccountEntity>lambdaQuery()
-                .select(IamAccountEntity::getId, IamAccountEntity::getUsername, IamAccountEntity::getLastLoginAt)
+                .select(IamAccountEntity::getId, IamAccountEntity::getUsername, IamAccountEntity::getPhone,
+                        IamAccountEntity::getLastLoginAt)
                 .eq(IamAccountEntity::getId, accountId)
                 .isNull(IamAccountEntity::getDeletedAt));
     }
@@ -443,12 +444,30 @@ public class MemberQueryRepository {
      * @param avatar 头像引用；入库只保存 {@code bucket/objectName}
      */
     public void insertTenant(long id, long tenantId, long accountId, String displayName, String avatar) {
+        insertTenant(id, tenantId, accountId, displayName, avatar, null, null);
+    }
+
+    /**
+     * 新增当前租户成员资格，并写入组织通讯录联系方式。
+     *
+     * @param id 新成员 ID
+     * @param tenantId 已授权租户 ID
+     * @param accountId 全局账号 ID
+     * @param displayName 显示名称
+     * @param avatar 头像引用；入库只保存 {@code bucket/objectName}
+     * @param phone 组织通讯录手机号
+     * @param email 组织通讯录邮箱
+     */
+    public void insertTenant(long id, long tenantId, long accountId, String displayName, String avatar, String phone,
+            String email) {
         IamTenantMemberEntity row = new IamTenantMemberEntity();
         row.setId(BigInteger.valueOf(id));
         row.setTenantId(BigInteger.valueOf(tenantId));
         row.setAccountId(BigInteger.valueOf(accountId));
         row.setDisplayName(displayName);
         row.setAvatar(IamOssPaths.store(avatar));
+        row.setPhone(phone);
+        row.setEmail(email);
         row.setStatus(MemberStatus.ACTIVE);
         tenantMembers.insert(row);
     }

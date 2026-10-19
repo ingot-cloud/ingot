@@ -20,6 +20,7 @@ import jakarta.validation.constraints.*;
  * @param phone 当前域联系手机号；可能已脱敏，隐藏时省略，不回退到全局账号
  * @param email 当前域联系邮箱；可能已脱敏，隐藏时省略，不回退到全局账号
  * @param username 已关联全局账号的登录名；平台成员填写，租户成员省略
+ * @param loginPhone 已关联全局账号的登录手机号；可空，不是当前域联系手机号
  * @param status 该域的成员资格
  * @param departments 仅包含可见部门关系；平台成员为空数组
  * @param joinedAt 详情的首次加入时间，UTC；列表省略
@@ -43,6 +44,9 @@ public record MemberRecord(
          @Schema(description = "已关联全局账号的登录名；平台成员填写，租户成员省略")
         @PublicField
         String username,
+        @Schema(description = "已关联全局账号的登录手机号；可空，不是当前域联系手机号")
+        @PublicField
+        String loginPhone,
         @NotNull @Schema(description = "该域的成员资格", requiredMode = Schema.RequiredMode.REQUIRED)
         @PublicField
         MemberStatus status,
@@ -61,7 +65,17 @@ public record MemberRecord(
      */
     public MemberRecord(String id, String displayName, String avatar, String phone, String email, String username,
                         MemberStatus status, List<MemberDepartmentView> departments) {
-        this(id, displayName, avatar, phone, email, username, status, departments, null, null, null);
+        this(id, displayName, avatar, phone, email, username, null, status, departments, null, null, null);
+    }
+
+    /**
+     * 构造携带详情时间、但不含登录手机号的成员投影。
+     */
+    public MemberRecord(String id, String displayName, String avatar, String phone, String email, String username,
+                        MemberStatus status, List<MemberDepartmentView> departments, Instant joinedAt,
+                        Instant lastLoginAt, Instant updatedAt) {
+        this(id, displayName, avatar, phone, email, username, null, status, departments, joinedAt, lastLoginAt,
+                updatedAt);
     }
 
     /**

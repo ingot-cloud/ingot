@@ -94,6 +94,19 @@ public class AccountQueryRepository {
     }
 
     /**
+     * 按手机号列出全部未删除账号，用于发现一对多冲突。
+     *
+     * @param phone 手机号
+     * @return 匹配账号，可能为空
+     */
+    public List<IamAccountEntity> listByPhone(String phone) {
+        return accounts.selectList(Wrappers.<IamAccountEntity>lambdaQuery()
+                .eq(IamAccountEntity::getPhone, phone)
+                .isNull(IamAccountEntity::getDeletedAt)
+                .orderByAsc(IamAccountEntity::getId));
+    }
+
+    /**
      * 按邮箱精确查找未删除账号。
      *
      * @param email 邮箱

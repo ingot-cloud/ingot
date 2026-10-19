@@ -12,5 +12,6 @@
 
 当前变更：
 
+- [租户按手机号添加成员](./20261018-iam-tenant-member-onboarding/README.md)（implementing）
 - [IAM 多租户身份与访问管理重构](./20260912-iam-identity-access-management/README.md)（review；包含前端契约与数据迁移）
 - [DataScope SQL 谓词规模升级](./20260912-mybatis-data-scope-predicate-scale/README.md)（draft）

@@ -285,7 +285,7 @@ class IamAuthorizationContractTest {
                 RoleSubjectPage.class, RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class,
                 RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class, FieldAccess.class,
                 FieldRule.class, DirectoryRule.class, CreatedResource.class, ObjectCapability.class, Bootstrap.class,
-                CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class,
+                CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class, DepartmentTreeNode.class,
                 GroupRecord.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
                 EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
                 DelegationRecord.class, PlanRecord.class, PlanApplication.class, EntitlementRecord.class,
@@ -297,7 +297,7 @@ class IamAuthorizationContractTest {
                 RoleRevisionMetadataInput.class, RoleApplicationPrepareInput.class, RolePublishApplicationInput.class,
                 RoleApplicationChangeInput.class, RoleApplicationConfirmInput.class, RoleApplicationRefreshInput.class,
                 RoleApplicationTask.class, RoleApplicationItem.class, RoleRevisionDistribution.class,
-                UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, MemberProfileInput.class, PlatformMemberEditInput.class, PlatformMemberEditPreview.class, MemberBoundRole.class,
+                UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, TenantMemberCreateInput.class, TenantMemberCreated.class, MemberProfileInput.class, PlatformMemberEditInput.class, PlatformMemberEditPreview.class, MemberBoundRole.class,
                 MemberRoleView.class, MemberRoleReplaceInput.class, MemberDepartmentInput.class,
                 TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class, DepartmentDraft.class,
                 DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class, ResourceDraft.class,
@@ -332,6 +332,7 @@ class IamAuthorizationContractTest {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<FieldPolicyDraft>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CreatedResource>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<TenantMemberCreated>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CurrentCapabilities>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Decision>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<MemberBoundRole>>>() {
@@ -388,6 +389,8 @@ class IamAuthorizationContractTest {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DepartmentRecord>>>>() {
                     }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<DepartmentTreeNode>>>() {
+                    }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ApplicationRecord>>>>() {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ResourceRecord>>>>() {
@@ -435,7 +438,15 @@ class IamAuthorizationContractTest {
                 ((Schema<?>) page.getProperties().get("items")).getItems().get$ref());
         assertEquals("#/components/schemas/MemberRecord",
                 ((Schema<?>) schemas.get("ResourceDetailMemberRecord").getProperties().get("record")).get$ref());
+        Schema<?> department = schemas.get("DepartmentRecord");
+        assertNotNull(department.getProperties().get("memberCount"));
+        assertFalse(department.getRequired().contains("memberCount"));
+        Schema<?> departmentTree = schemas.get("DepartmentTreeNode");
+        assertNotNull(departmentTree.getProperties().get("children"));
+        assertTrue(departmentTree.getRequired().contains("children"));
         Schema<?> member = schemas.get("MemberRecord");
+        assertNotNull(member.getProperties().get("loginPhone"));
+        assertFalse(member.getRequired().contains("loginPhone"));
         for (var field : List.of("joinedAt", "lastLoginAt", "updatedAt")) {
             Schema<?> time = (Schema<?>) member.getProperties().get(field);
             assertEquals("string", time.getType());
