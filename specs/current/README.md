@@ -30,4 +30,4 @@
 - [framework / field-access-control](./framework/field-access-control/README.md)：集中字段目录、注解绑定、逐对象可见性、编辑/筛选门禁与缓存。
 
 - [iam / role-version-application](./iam/role-version-application/README.md)：可读固定版本、历史来源发布、平台分配集合预检及持久批量应用。
-- [iam / tenant-departments](./iam/tenant-departments/README.md)：租户管理部门树、直属 ACTIVE 人数及组织「成员与部门」目录种子。
+- [iam / tenant-departments](./iam/tenant-departments/README.md)：租户管理部门树、根部门成员总数、非根直属 ACTIVE 人数及组织「成员与部门」目录种子。

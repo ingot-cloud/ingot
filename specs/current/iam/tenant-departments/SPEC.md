@@ -2,13 +2,13 @@
 
 ## 管理部门树
 
-`GET /v1/tenant/departments` 仅接受 `purpose=MANAGED_DEPARTMENT`，权限为 `iam-tenant:department:read`。一次返回当前身份可见的全部部门树，不分页，不接受 `page` / `pageSize`。响应为 `DepartmentTreeNode[]`：唯一根部门与其直属一级部门平级，更深层仍挂在各自父节点的 `children`。
+`GET /v1/tenant/departments` 仅接受 `purpose=MANAGED_DEPARTMENT`，权限为 `iam-tenant:department:read`。一次返回当前身份可见的全部部门树，不分页，不接受 `page` / `pageSize`。响应为 `DepartmentTreeNode[]`：子部门挂在父节点的 `children` 下，根部门的直属一级部门不再与根平级。
 
 `GET /v1/tenant/departments/{id}`、通讯录 `GET /v1/directory/departments` 以及策略/选择器构造保持原语义，不改成分页树。
 
 ## 直属成员数
 
-`DepartmentRecord.memberCount` 为可选整数，只在租户管理部门树填充。口径为本部门直属任职且成员状态为 `ACTIVE`，不含下级部门人数。无直属 ACTIVE 成员时填 `0`，不省略。详情、通讯录、策略骨架和 `navigationOnly` 祖先骨架省略该字段。
+`DepartmentRecord.memberCount` 为可选整数，只在租户管理部门树填充。非根部门口径为本部门直属任职且成员状态为 `ACTIVE`，不含下级部门人数。无直属 ACTIVE 成员时填 `0`，不省略。根部门（`parentId` 为空）的人数是当前租户未移出成员总数，含暂停，与不传 `departmentId` 的成员列表总数一致，不按根部门任职行计数。详情、通讯录、策略骨架和 `navigationOnly` 祖先骨架省略该字段。
 
 计数按当前可见部门 ID 一次 `GROUP BY`，禁止按部门 N+1。无可见部门时跳过计数 SQL。计数失败随列表失败，不 fail-open 为 `0`。未出现在计数结果中的部门视为 `0`。
 
@@ -16,7 +16,7 @@
 
 ## 成员列表筛选
 
-`GET /v1/tenant/members` 可按直属 `departmentId` 与 `status=ACTIVE|SUSPENDED|REMOVED` 过滤。不传 `status` 时排除已移出成员。精确 `phone` / `email` 筛选保持不变。
+`GET /v1/tenant/members` 可按直属 `departmentId` 与 `status=ACTIVE|SUSPENDED|REMOVED` 过滤。不传 `departmentId` 时返回当前身份可见的组织成员，不按部门任职收窄；组织管理选中根部门时不传该参数。不传 `status` 时排除已移出成员。精确 `phone` / `email` 筛选保持不变。
 
 ## 组织菜单种子
 
