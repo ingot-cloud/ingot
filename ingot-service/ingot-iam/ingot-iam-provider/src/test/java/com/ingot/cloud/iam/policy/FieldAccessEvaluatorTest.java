@@ -104,6 +104,46 @@ class FieldAccessEvaluatorTest {
     }
 
     @Test
+    void nameSearchRequiresFilterGrantAndFullVisibilityWhileOwnerRespectsExplicitCeiling() {
+        var scope = com.ingot.cloud.iam.evaluation.ObjectScope.all();
+        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+                MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope));
+        jdbc.update("INSERT INTO iam_field_policy(tenant_id,default_revision_id,default_kind,version,operation_rules) VALUES(10,22,'FIELD',0,?)",
+                com.ingot.cloud.iam.support.IamJson.array(List.of(new com.ingot.framework.commons.model.iam.FieldOperationRule(
+                        com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER, PolicyScenario.MANAGEMENT,
+                        com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ, MemberFieldKey.VALUE_DISPLAY_NAME,
+                        new Selection(List.of("101"),List.of()), new com.ingot.framework.commons.model.iam.FieldOperations(false,true)))));
+        evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+                MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope);
+        jdbc.update("INSERT INTO iam_policy_selector_member VALUES(10,601,101)");
+        jdbc.update("INSERT INTO iam_field_rule VALUES(601,10,'MANAGEMENT','displayName',601,'[{\"kind\":\"ALL\"}]','{}','MASKED')");
+        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+                MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope));
+        jdbc.update("UPDATE iam_field_rule SET visibility='HIDDEN' WHERE id=601");
+        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+                MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope));
+        jdbc.update("INSERT INTO iam_account(id,enabled) VALUES(1,TRUE)");
+        jdbc.update("INSERT INTO iam_tenant(id,owner_member_id) VALUES(10,101)");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,status,account_id) VALUES(101,10,'ACTIVE',1)");
+        try {
+            evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+                    MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope);
+            jdbc.update("INSERT INTO iam_default_policy_revision VALUES(23,'FIELD',2,?)",
+                    "{\"operationCeiling\":{\"displayName\":{\"editable\":true,\"filterable\":false}}}");
+            assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+                    MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope));
+        } finally {
+            jdbc.update("DELETE FROM iam_tenant_member WHERE id=101");jdbc.update("DELETE FROM iam_tenant WHERE id=10");jdbc.update("DELETE FROM iam_account WHERE id=1");
+        }
+    }
+
+    @Test
+    void directoryNameSearchRemainsUnsupported() {
+        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.DIRECTORY), 101,
+                MemberFieldKey.VALUE_DISPLAY_NAME, "张", com.ingot.cloud.iam.evaluation.ObjectScope.all()));
+    }
+
+    @Test
     void memberMetadataSurvivesHiddenAndMaskedProfileProjection() {
         var joined = Instant.parse("2026-10-01T01:00:00Z");
         var login = Instant.parse("2026-10-08T02:00:00Z");

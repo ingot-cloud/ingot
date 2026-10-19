@@ -469,6 +469,8 @@ public enum IamAction {
      * 契约字面量 {@code iam-tenant:department:delete}。
      */
     TENANT_DEPARTMENT_DELETE("iam-tenant:department:delete"),
+    /** 独立维护部门负责人，不产生业务授权。 */
+    TENANT_DEPARTMENT_LEADERS("iam-tenant:department:leaders"),
     /**
      * 契约字面量 {@code iam-tenant:settings:read}。
      */
@@ -1056,6 +1058,8 @@ public enum IamAction {
      * 契约字面量 {@code iam-tenant:department:delete}。
      */
     public static final String VALUE_TENANT_DEPARTMENT_DELETE = "iam-tenant:department:delete";
+    /** 部门负责人维护操作码。 */
+    public static final String VALUE_TENANT_DEPARTMENT_LEADERS = "iam-tenant:department:leaders";
     /**
      * 契约字面量 {@code iam-tenant:settings:read}。
      */

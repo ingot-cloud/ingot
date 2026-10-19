@@ -22,6 +22,8 @@ LEAF_STEP = 100
 APPLICATION_BASE = 100000
 RESOURCE_BASE = 110000
 ACTION_BASE = 120000
+# 新增操作固定保留号；避免改变历史目录操作的标识。
+ADDITIONAL_ACTION_IDS = {'iam-tenant:department:leaders': 120999}
 MENU_BASE = 130000
 ROLE_BASE = 140000
 REVISION_BASE = 141000
@@ -82,6 +84,8 @@ PLATFORM_MEMBER_FIELDS = [dict(field, filterable=field['key'] == 'displayName') 
     {'key': key, 'label': label, 'visibilities': ['HIDDEN', 'FULL'], 'editable': False, 'filterable': False}
     for key, label in [('joinedAt', '加入时间'), ('lastLoginAt', '最后登录'), ('updatedAt', '更新时间')]
 ]
+# 目录能力上限不等同默认筛选授权；已有租户策略保持原值。
+TENANT_MEMBER_FIELDS = [dict(field, filterable=True) if field['key'] == 'displayName' else dict(field) for field in MEMBER_FIELDS]
 DIRECTORY_FIELDS = [dict(field, editable=False) for field in MEMBER_FIELDS]
 
 RESOURCES = {
@@ -140,6 +144,7 @@ VERBS = {
     'create': '创建',
     'delete': '删除',
     'departments': '调整任职',
+    'leaders': '设置部门负责人',
     'diagnose': '诊断',
     'export': '导出',
     'owner-transfer': '转交所有者',
@@ -162,7 +167,7 @@ VERBS = {
 
 # 无宾语动词直接作为展示名，避免出现「转交所有者组织设置」这类拼接。
 
-STANDALONE_VERBS = {'owner-transfer', 'departments', 'diagnose', 'reset-password', 'revoke'}
+STANDALONE_VERBS = {'owner-transfer', 'departments', 'leaders', 'diagnose', 'reset-password', 'revoke'}
 
 # 菜单树按 change 的 FRONTEND.md 第 1 节：平台与组织各最多四个一级目录。
 # view_path 为前端 definePluginPages 生成的 canonical 键，path 为浏览器路由。
@@ -363,6 +368,7 @@ def build(check=False):
     catalog = collect(routes)
     catalog.setdefault('iam-tenant',{}).setdefault('role',set()).add('iam-tenant:role:upgrade')
     stable_ids = json.loads((ROOT / 'tools/iam/tenant_live/action_ids.json').read_text())
+    stable_ids.update(ADDITIONAL_ACTION_IDS)
 
     lines = [
         '-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。',
@@ -397,7 +403,7 @@ def build(check=False):
         for resource in sorted(catalog[application]):
             resource_count += 1
             name, scopes, fields = RESOURCES[resource]
-            if resource == 'member' and application == 'iam-platform': fields = PLATFORM_MEMBER_FIELDS
+            if resource == 'member': fields = PLATFORM_MEMBER_FIELDS if application == 'iam-platform' else TENANT_MEMBER_FIELDS
             if resource == 'directory': fields = DIRECTORY_FIELDS
             if APPLICATIONS[application]['domain'] == 'PLATFORM':
                 scopes = [scope for scope in scopes if scope not in ('MEMBER_DEPARTMENTS', 'MANAGED_DEPARTMENTS')]

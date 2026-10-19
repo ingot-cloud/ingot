@@ -121,6 +121,22 @@ class IdentitySchemaTest(unittest.TestCase):
         size = 2 if domain == "PLATFORM" else 3
         return "\n".join("\t".join(line.split("\t")[:size]) for line in output.splitlines())
 
+    def test_department_leaders_are_independent_and_tenant_bound(self):
+        self.sql("INSERT INTO iam_department_leader (tenant_id,department_id,member_id,is_primary) VALUES (10,11,101,TRUE)")
+        self.sql("INSERT INTO iam_department_leader (tenant_id,department_id,member_id,is_primary) VALUES (10,11,102,FALSE)")
+        self.sql("INSERT INTO iam_department_leader (tenant_id,department_id,member_id,is_primary) VALUES (10,11,101,FALSE)", error=1062)
+        self.sql("UPDATE iam_department_leader SET is_primary=TRUE WHERE member_id=102", error=1062)
+        self.sql("INSERT INTO iam_department_leader (tenant_id,department_id,member_id) VALUES (10,21,101)", error=1452)
+        self.sql("INSERT INTO iam_department_leader (tenant_id,department_id,member_id) VALUES (10,11,201)", error=1452)
+        before = self.sql("SELECT COUNT(*) FROM iam_role_assignment")
+        self.sql("UPDATE iam_tenant_member SET status='REMOVED' WHERE id=102")
+        self.assertEqual('2', self.sql("SELECT COUNT(*) FROM iam_department_leader WHERE tenant_id=10"))
+        self.assertEqual(before, self.sql("SELECT COUNT(*) FROM iam_role_assignment"))
+        migration = SCHEMA_DIRECTORY / 'migrations' / '024_department_leaders.sql'
+        self.sql(migration.read_text())
+        self.sql(migration.read_text())
+        self.assertEqual('2', self.sql("SELECT COUNT(*) FROM iam_department_leader WHERE tenant_id=10"))
+
     def test_runtime_identity_query_preserves_domain_and_account(self):
         self.assertEqual("0\t0", self.runtime_identity_query("PLATFORM"))
         self.assertEqual("0\t0\t0", self.runtime_identity_query("TENANT", member_id=101))

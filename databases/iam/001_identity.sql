@@ -121,6 +121,20 @@ CREATE TABLE iam_member_department (
     CONSTRAINT ck_iam_member_department_primary CHECK (is_primary IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE iam_department_leader (
+    tenant_id BIGINT UNSIGNED NOT NULL,
+    department_id BIGINT UNSIGNED NOT NULL,
+    member_id BIGINT UNSIGNED NOT NULL,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    primary_department_id BIGINT UNSIGNED GENERATED ALWAYS AS (CASE WHEN is_primary = 1 THEN department_id ELSE NULL END) STORED,
+    PRIMARY KEY (tenant_id, department_id, member_id),
+    UNIQUE KEY uk_iam_department_primary_leader (tenant_id, primary_department_id),
+    KEY idx_iam_member_led_departments (tenant_id, member_id, department_id),
+    CONSTRAINT fk_iam_department_leader_department FOREIGN KEY (tenant_id, department_id) REFERENCES iam_department (tenant_id, id),
+    CONSTRAINT fk_iam_department_leader_member FOREIGN KEY (tenant_id, member_id) REFERENCES iam_tenant_member (tenant_id, id),
+    CONSTRAINT ck_iam_department_leader_primary CHECK (is_primary IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE iam_platform_group (
     id BIGINT UNSIGNED NOT NULL,
     name VARCHAR(128) NOT NULL,

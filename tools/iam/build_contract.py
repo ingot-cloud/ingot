@@ -137,7 +137,8 @@ def main():
         if target.read_text() != content:
             raise SystemExit('OpenAPI snapshot differs; regenerate after Java contract tests pass')
     else:
-        (CONTRACT / 'schemas.json').write_text(source.read_text())
+        (CONTRACT / 'schemas.json').write_text(
+            json.dumps(json.loads(source.read_text()), ensure_ascii=False, indent=2) + '\n')
         target.write_text(content)
     print(f'{len(document["paths"])} paths, {sum(len(v) for v in document["paths"].values())} operations verified')
 

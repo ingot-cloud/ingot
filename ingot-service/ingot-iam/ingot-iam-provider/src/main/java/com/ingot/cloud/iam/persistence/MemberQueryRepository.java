@@ -327,14 +327,19 @@ public class MemberQueryRepository {
      * @return 范围内且未移出的成员 ID
      */
     public Set<BigInteger> visibleTenantIds(long tenantId, Collection<BigInteger> ids, ObjectScope scope) {
+        return visibleTenantIds(tenantId, ids, scope, false);
+    }
+
+    /** 已绑定资料回显可保留移出记录；仍按租户及完整成员SQL范围过滤。 */
+    public Set<BigInteger> visibleTenantIds(long tenantId, Collection<BigInteger> ids, ObjectScope scope, boolean includeRemoved) {
         if (ids.isEmpty() || scope.coversNone()) {
             return Set.of();
         }
         var query = Wrappers.<IamTenantMemberEntity>lambdaQuery()
                 .select(IamTenantMemberEntity::getId)
                 .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
-                .in(IamTenantMemberEntity::getId, ids)
-                .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED);
+                .in(IamTenantMemberEntity::getId, ids);
+        if (!includeRemoved) query.ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED);
         ObjectScopeSql.restrictTenantMembers(query, scope, BigInteger.valueOf(tenantId));
         return tenantMembers.selectList(query).stream().map(IamTenantMemberEntity::getId)
                 .collect(Collectors.toUnmodifiableSet());

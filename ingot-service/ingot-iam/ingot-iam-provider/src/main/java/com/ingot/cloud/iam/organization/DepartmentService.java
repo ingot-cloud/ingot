@@ -11,6 +11,9 @@ import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.DepartmentQueryRepository;
+import com.ingot.cloud.iam.persistence.DepartmentLeaderRepository;
+import com.ingot.framework.commons.model.iam.DepartmentLeaderSummary;
+import com.ingot.framework.commons.model.iam.DepartmentNavigationEntry;
 import com.ingot.cloud.iam.persistence.entity.IamDepartmentEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
@@ -47,6 +50,8 @@ public class DepartmentService {
     private final IamAuditWriter audits;
     private final DepartmentQueryRepository departments;
     private final TransactionTemplate transaction;
+    private final DepartmentLeaderService leaders;
+    private final DepartmentLeaderRepository leaderRelations;
 
     /**
      * 绑定身份、审计与部门表。
@@ -57,11 +62,15 @@ public class DepartmentService {
      * @param capabilities 对象展示能力
      * @param audits 同事务审计
      * @param departments 部门持久化
+     * @param leaders 负责人安全投影及摘要
+     * @param leaderRelations 负责人删除与移动约束
      * @param transactionManager 同一数据源事务
      */
     public DepartmentService(IamAccess access, ResourceAccess scopes, ObjectCapabilities capabilities,
                              IamAuditWriter audits, DepartmentQueryRepository departments,
-                             PlatformTransactionManager transactionManager) {
+                             PlatformTransactionManager transactionManager, DepartmentLeaderService leaders, DepartmentLeaderRepository leaderRelations) {
+        this.leaders = leaders;
+        this.leaderRelations = leaderRelations;
         this.access = access;
         this.scopes = scopes;
         this.capabilities = capabilities;
@@ -87,11 +96,11 @@ public class DepartmentService {
         applyRootMemberTotal(rows, counts, departments.currentMemberCount(tenantId));
         Map<String, Map<String, ObjectCapability>> rowCapabilities = capabilities.departments(caps,
                 rows.stream().map(row -> row.getId().toString()).toList());
-        return assembleTree(rows, counts, rowCapabilities);
+        return assembleTree(rows, counts, rowCapabilities, leaders.summaries(actor, rows));
     }
 
     /**
-     * 读取部门详情，不携带成员计数。
+     * 读取部门详情，聚合可见上级名称及已授权负责人首屏，不携带成员计数。
      *
      * @param id 部门 ID
      * @return 部门详情
@@ -100,7 +109,7 @@ public class DepartmentService {
         ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_READ);
         long departmentId = IamIds.require(id);
         scopes.requireVisibleDepartment(actor.context(), IamAction.TENANT_DEPARTMENT_READ, departmentId);
-        return load(actor, IamIds.require(actor.context().tenantId()), departmentId);
+        return load(actor, IamIds.require(actor.context().tenantId()), departmentId, true);
     }
 
     /**
@@ -152,6 +161,9 @@ public class DepartmentService {
             if (parentId != null) {
                 scopes.requireDepartmentWrite(actor.context(), IamAction.TENANT_DEPARTMENT_UPDATE, parentId);
             }
+            if (parentId == null && leaderRelations.relationCount(tenantId, departmentId) > 0) {
+                throw new BizException(IamReasonCode.OBJECT_IN_USE);
+            }
             if (parentId != null && (parentId == departmentId || isAncestor(tenantId, parentId, departmentId))) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
@@ -161,8 +173,31 @@ public class DepartmentService {
                     Map.of(AuditField.NAME, current.record().name()),
                     Map.of(AuditField.NAME, input.department().name()),
                     Map.of("department", Long.toString(Long.parseLong(current.version()) + 1)));
-            return load(actor, tenantId, departmentId);
+            return load(actor, tenantId, departmentId,
+                    access.allows(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_READ, false)
+                            && departments.matches(tenantId, departmentId,
+                            scopes.departmentRead(actor.context(), IamAction.TENANT_DEPARTMENT_READ)));
         });
+    }
+
+    /** 已持组织与部门锁时更新实际变化的资料，独立验证部门编辑权限。 */
+    boolean editProfileLocked(ActiveIdentity actor, IamDepartmentEntity row, DepartmentDraft draft) {
+        Long parent = draft.parentId() == null || draft.parentId().isBlank() ? null : IamIds.require(draft.parentId());
+        Long beforeParent = row.getParentId() == null ? null : row.getParentId().longValueExact();
+        if (java.util.Objects.equals(beforeParent, parent) && java.util.Objects.equals(row.getName(), draft.name())
+                && java.util.Objects.equals(row.getSortOrder(), draft.sortOrder())) return false;
+        access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_UPDATE);
+        long tenant = IamIds.require(actor.context().tenantId()), id = row.getId().longValueExact();
+        scopes.requireDepartmentWrite(actor.context(), IamAction.TENANT_DEPARTMENT_UPDATE, id);
+        parent = requireParent(tenant, draft.parentId());
+        if (parent != null) scopes.requireDepartmentWrite(actor.context(), IamAction.TENANT_DEPARTMENT_UPDATE, parent);
+        if (parent == null && leaderRelations.relationCount(tenant, id) > 0) throw new BizException(IamReasonCode.OBJECT_IN_USE);
+        if (parent != null && (parent == id || isAncestor(tenant, parent, id))) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        departments.updateProfile(tenant, id, parent, draft.name(), draft.sortOrder());
+        audits.write(actor.context(), access.nextId(), "department", row.getId().toString(), AuditChangeType.UPDATE,
+                Map.of(AuditField.NAME, row.getName()), Map.of(AuditField.NAME, draft.name()),
+                Map.of("department", row.getVersion().add(BigInteger.ONE).toString()));
+        return true;
     }
 
     /**
@@ -179,7 +214,8 @@ public class DepartmentService {
         return transaction.execute(status -> {
             ResourceDetail<DepartmentRecord> current = lock(tenantId, departmentId);
             if (departments.childCount(tenantId, departmentId) > 0
-                    || departments.memberCount(tenantId, departmentId) > 0) {
+                    || departments.memberCount(tenantId, departmentId) > 0
+                    || leaderRelations.relationCount(tenantId, departmentId) > 0) {
                 throw new BizException(IamReasonCode.OBJECT_IN_USE);
             }
             departments.delete(tenantId, departmentId);
@@ -190,13 +226,24 @@ public class DepartmentService {
         });
     }
 
-    private ResourceDetail<DepartmentRecord> load(ActiveIdentity actor, long tenantId, long id) {
+    private ResourceDetail<DepartmentRecord> load(ActiveIdentity actor, long tenantId, long id, boolean includeReadRelations) {
         IamDepartmentEntity row = departments.find(tenantId, id);
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
-        return IamDetails.of(department(row),
+        var summary = leaders.summaries(actor, List.of(row)).get(Long.toString(id));
+        DepartmentNavigationEntry parent = null;
+        if (includeReadRelations && row.getParentId() != null) {
+            var parentRow = departments.findVisible(tenantId, row.getParentId().longValueExact(),
+                    scopes.departmentRead(actor.context(), IamAction.TENANT_DEPARTMENT_READ));
+            if (parentRow != null) parent = new DepartmentNavigationEntry(parentRow.getId().toString(), parentRow.getName());
+        }
+        var record = new DepartmentRecord(row.getId().toString(),
+                row.getParentId() == null ? null : row.getParentId().toString(), row.getName(),
+                row.getSortOrder() == null ? 0 : row.getSortOrder(), false, null, summary, parent,
+                includeReadRelations ? leaders.initialPage(actor, row, summary) : null);
+        return IamDetails.of(record,
                 capabilities.departments(caps, List.of(row.getId().toString())).get(row.getId().toString()),
                 version(row.getVersion()));
     }
@@ -233,12 +280,12 @@ public class DepartmentService {
     }
 
     private List<DepartmentTreeNode> assembleTree(List<IamDepartmentEntity> rows, Map<Long, Integer> counts,
-            Map<String, Map<String, ObjectCapability>> rowCapabilities) {
+            Map<String, Map<String, ObjectCapability>> rowCapabilities, Map<String, DepartmentLeaderSummary> summaries) {
         Map<String, ResourceDetail<DepartmentRecord>> details = new LinkedHashMap<>();
         Map<String, List<String>> childIds = new LinkedHashMap<>();
         for (IamDepartmentEntity row : rows) {
             String id = row.getId().toString();
-            details.put(id, IamDetails.of(department(row, counts.getOrDefault(row.getId().longValueExact(), 0)),
+            details.put(id, IamDetails.of(withLeaders(department(row, counts.getOrDefault(row.getId().longValueExact(), 0)), summaries.get(id)),
                     rowCapabilities.get(id), version(row.getVersion())));
             childIds.put(id, new ArrayList<>());
         }
@@ -280,6 +327,10 @@ public class DepartmentService {
         String parent = row.getParentId() == null ? null : row.getParentId().toString();
         return new DepartmentRecord(row.getId().toString(), parent, row.getName(),
                 row.getSortOrder() == null ? 0 : row.getSortOrder(), false, memberCount);
+    }
+
+    private static DepartmentRecord withLeaders(DepartmentRecord row, DepartmentLeaderSummary summary) {
+        return new DepartmentRecord(row.id(), row.parentId(), row.name(), row.sortOrder(), row.navigationOnly(), row.memberCount(), summary);
     }
 
     private static String version(BigInteger version) {

@@ -38,7 +38,7 @@ public class ObjectCapabilities {
             IamAction.TENANT_MEMBER_UPDATE, IamAction.TENANT_MEMBER_STATUS, IamAction.TENANT_MEMBER_REMOVE,
             IamAction.TENANT_MEMBER_DEPARTMENTS);
     private static final List<IamAction> TENANT_DEPARTMENT = List.of(
-            IamAction.TENANT_DEPARTMENT_UPDATE, IamAction.TENANT_DEPARTMENT_DELETE);
+            IamAction.TENANT_DEPARTMENT_UPDATE, IamAction.TENANT_DEPARTMENT_DELETE, IamAction.TENANT_DEPARTMENT_LEADERS);
     private static final String ALLOWED_MESSAGE = "当前对象允许该操作";
     private final AuthorizationEvaluator evaluator;
     private final ResourceAccess scopes;

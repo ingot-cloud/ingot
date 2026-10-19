@@ -28,6 +28,8 @@ public enum AuditField {
     /** 租户稳定角色身份，不是业务版本。 */
     ROLE("ROLE"),
     SCOPE("SCOPE"),
+    /** 负责人关系及主负责人标记，仅保存成员ID。 */
+    DEPARTMENT_LEADERS("DEPARTMENT_LEADERS"),
     RECIPIENT_SELECTION("RECIPIENT_SELECTION"),
     VALID_FROM("VALID_FROM"),
     VALID_UNTIL("VALID_UNTIL"),

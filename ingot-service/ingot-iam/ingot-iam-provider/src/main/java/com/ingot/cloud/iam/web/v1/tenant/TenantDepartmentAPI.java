@@ -4,6 +4,10 @@ import java.util.List;
 
 import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
 import com.ingot.cloud.iam.organization.DepartmentService;
+import com.ingot.cloud.iam.organization.DepartmentLeaderService;
+import com.ingot.framework.commons.model.iam.DepartmentLeaderPage;
+import com.ingot.framework.commons.model.iam.DepartmentLeaderUpdateInput;
+import org.springframework.web.bind.annotation.PatchMapping;
 import com.ingot.cloud.iam.support.IamPurposes;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.DepartmentDraft;
@@ -40,6 +44,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TenantDepartmentAPI implements RShortcuts {
     private final DepartmentService departments;
+    private final DepartmentLeaderService leaders;
+    private final com.ingot.cloud.iam.organization.DepartmentEditService editor;
+    private final com.ingot.cloud.iam.organization.DepartmentNavigationService navigation;
 
     /**
      * 返回管理部门树，子部门挂在各自父节点下。
@@ -55,8 +62,69 @@ public class TenantDepartmentAPI implements RShortcuts {
         return ok(departments.list());
     }
 
+    /** 人员选择专用部门分支，部门只导航而不作为人员选择结果。 */
+    @IamReadOnlyRequest
+    @GetMapping("/member-picker-navigation")
+    @Operation(summary = "组织成员部门导航")
+    public R<com.ingot.framework.commons.model.iam.DepartmentNavigationPage> navigation(
+            @RequestParam(required = false) String parentId,
+            @RequestParam(defaultValue = "" + com.ingot.cloud.iam.support.IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + com.ingot.cloud.iam.support.IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(navigation.page(parentId, page, pageSize));
+    }
+
+    /** 分页读取当前部门已绑定的可见负责人。 */
+    @IamReadOnlyRequest
+    @com.ingot.framework.commons.annotation.field.FieldControl(domain = com.ingot.framework.commons.model.iam.AuthorizationDomain.TENANT,
+            applicationCode = com.ingot.framework.commons.model.iam.MemberResources.TENANT_APPLICATION,
+            resourceCode = com.ingot.framework.commons.model.iam.MemberResources.MEMBER,
+            action = com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ,
+            use = com.ingot.framework.commons.annotation.field.FieldUse.FILTER,
+            valueType = com.ingot.framework.commons.model.iam.OrganizationMemberNameFilter.class)
+    @GetMapping("/{id}/leaders")
+    @Operation(summary = "部门负责人列表")
+    public R<DepartmentLeaderPage> leaders(@PathVariable String id,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "" + com.ingot.cloud.iam.support.IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + com.ingot.cloud.iam.support.IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(leaders.page(id, keyword, page, pageSize, false));
+    }
+
+    /** 仅返回本次操作者有权选择的有效成员，不开放全员列表。 */
+    @IamReadOnlyRequest
+    @com.ingot.framework.commons.annotation.field.FieldControl(domain = com.ingot.framework.commons.model.iam.AuthorizationDomain.TENANT,
+            applicationCode = com.ingot.framework.commons.model.iam.MemberResources.TENANT_APPLICATION,
+            resourceCode = com.ingot.framework.commons.model.iam.MemberResources.MEMBER,
+            action = com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ,
+            use = com.ingot.framework.commons.annotation.field.FieldUse.FILTER,
+            valueType = com.ingot.framework.commons.model.iam.DepartmentLeaderCandidateFilter.class)
+    @GetMapping("/{id}/leader-candidates")
+    @Operation(summary = "部门负责人候选")
+    public R<DepartmentLeaderPage> leaderCandidates(@PathVariable String id,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String browseDepartmentId,
+            @RequestParam(defaultValue = "" + com.ingot.cloud.iam.support.IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + com.ingot.cloud.iam.support.IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(leaders.candidates(id, keyword, page, pageSize, browseDepartmentId));
+    }
+
+    /** 一次版本原子提交基本信息和负责人，权限按实际变化分别校验。 */
+    @PatchMapping("/{id}")
+    @Operation(summary = "统一编辑部门")
+    public R<ResourceDetail<DepartmentRecord>> edit(@PathVariable String id,
+            @Valid @RequestBody com.ingot.framework.commons.model.iam.DepartmentEditInput input) {
+        return ok(editor.edit(id, input));
+    }
+
+    /** 保存负责人差量，不授予或同步任何角色。 */
+    @PatchMapping("/{id}/leaders")
+    @Operation(summary = "设置部门负责人")
+    public R<CreatedResource> updateLeaders(@PathVariable String id, @Valid @RequestBody DepartmentLeaderUpdateInput input) {
+        return ok(leaders.update(id, input));
+    }
+
     /**
-     * 创建部门。
+     * 创建部门.
      *
      * @param input 部门草稿
      * @return 新部门 ID

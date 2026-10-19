@@ -9,6 +9,10 @@ import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.DepartmentQueryRepository;
+import com.ingot.cloud.iam.persistence.DepartmentLeaderRepository;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.DepartmentDraft;
+import com.ingot.framework.commons.model.iam.DepartmentUpdateInput;
 import com.ingot.cloud.iam.persistence.entity.IamDepartmentEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
@@ -27,10 +31,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 
 /**
  * <p>验证租户部门树写入直属 ACTIVE 人数，并将主部门与一级部门拉平。</p>
@@ -56,12 +63,19 @@ class DepartmentServiceTest {
     @Mock
     private PlatformTransactionManager transactionManager;
 
+    @Mock
+    private DepartmentLeaderRepository leaderRelations;
+    @Mock
+    private DepartmentLeaderService leaders;
+
     private DepartmentService service;
 
     @BeforeEach
     void setup() {
-        service = new DepartmentService(access, scopes, capabilities, audits, departments, transactionManager);
-        when(access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_READ))
+        service = new DepartmentService(access, scopes, capabilities, audits, departments, transactionManager,
+                leaders,
+                leaderRelations);
+        lenient().when(access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_READ))
                 .thenReturn(new ActiveIdentity(ACTOR, "0", "0", "0"));
     }
 
@@ -103,6 +117,89 @@ class DepartmentServiceTest {
         assertNull(detail.record().memberCount());
         verify(scopes).requireVisibleDepartment(eq(ACTOR), eq(IamAction.TENANT_DEPARTMENT_READ), eq(11L));
         verify(departments).find(10L, 11L);
+    }
+
+    @Test
+    void detailAggregatesVisibleParentAndBoundFirstPageWithoutWideningParentLookup() {
+        var row = departmentRow(11, 1L, "研发");
+        var actor = new ActiveIdentity(ACTOR, "0", "0", "0");
+        var snapshot = mock(ObjectCapabilities.Snapshot.class);
+        var scope = ObjectScope.none();
+        var summary = new com.ingot.framework.commons.model.iam.DepartmentLeaderSummary(null, 0, false);
+        var first = new com.ingot.framework.commons.model.iam.DepartmentLeaderPage(List.of(), 0, 1, 20, "0", false, null);
+        when(departments.find(10L, 11L)).thenReturn(row);
+        when(scopes.departmentRead(ACTOR, IamAction.TENANT_DEPARTMENT_READ)).thenReturn(scope);
+        when(departments.findVisible(10L, 1L, scope)).thenReturn(departmentRow(1, null, "公司"));
+        when(capabilities.snapshot(ACTOR)).thenReturn(snapshot);
+        when(capabilities.departments(snapshot, List.of("11"))).thenReturn(Map.of("11", Map.of()));
+        when(leaders.summaries(actor, List.of(row))).thenReturn(Map.of("11", summary));
+        when(leaders.initialPage(actor, row, summary)).thenReturn(first);
+        var detail = service.get("11");
+        assertEquals("公司", detail.record().parentDepartment().name());
+        assertEquals(first, detail.record().leaderPage());
+        assertEquals(summary, detail.record().leaderSummary());
+        assertNull(detail.record().memberCount());
+        verify(departments).findVisible(10L, 1L, scope);
+        verify(departments, never()).find(10L, 1L);
+        verify(leaders).summaries(actor, List.of(row));
+    }
+
+    @Test
+    void hiddenParentHasNoNameProjectionAndNoFallbackLookup() {
+        var row = departmentRow(11, 1L, "研发");
+        var snapshot = mock(ObjectCapabilities.Snapshot.class);
+        var scope = ObjectScope.none();
+        when(departments.find(10L, 11L)).thenReturn(row);
+        when(scopes.departmentRead(ACTOR, IamAction.TENANT_DEPARTMENT_READ)).thenReturn(scope);
+        when(capabilities.snapshot(ACTOR)).thenReturn(snapshot);
+        when(capabilities.departments(snapshot, List.of("11"))).thenReturn(Map.of("11", Map.of()));
+        var detail = service.get("11");
+        assertEquals("1", detail.record().parentId());
+        assertNull(detail.record().parentDepartment());
+        assertNull(detail.record().leaderPage());
+        verify(departments).findVisible(10L, 1L, scope);
+        verify(departments, never()).find(10L, 1L);
+    }
+
+    @Test
+    void legacyUpdateDoesNotExposeNewRelationsOutsideDepartmentReadScope() {
+        when(access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_UPDATE))
+                .thenReturn(new ActiveIdentity(ACTOR, "0", "0", "0"));
+        when(access.allows(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_READ, false)).thenReturn(true);
+        var row = departmentRow(11, 1L, "研发");
+        when(departments.lock(10L, 11L)).thenReturn(row);
+        when(departments.find(10L, 11L)).thenReturn(row);
+        when(departments.find(10L, 1L)).thenReturn(departmentRow(1, null, "公司"));
+        var snapshot = mock(ObjectCapabilities.Snapshot.class);
+        when(capabilities.snapshot(ACTOR)).thenReturn(snapshot);
+        when(capabilities.departments(snapshot, List.of("11"))).thenReturn(Map.of("11", Map.of()));
+        when(scopes.departmentRead(ACTOR, IamAction.TENANT_DEPARTMENT_READ)).thenReturn(ObjectScope.none());
+        var detail = service.update("11", new DepartmentUpdateInput("0", new DepartmentDraft("1", "研发", 1)));
+        assertNull(detail.record().parentDepartment());
+        assertNull(detail.record().leaderPage());
+        verify(departments, never()).findVisible(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.any());
+        verify(leaders, never()).initialPage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+
+    @Test
+    void departmentWithLeaderRelationshipsCannotBeDeletedEvenWithoutMembers() {
+        when(access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_DELETE))
+                .thenReturn(new ActiveIdentity(ACTOR, "0", "0", "0"));
+        when(departments.lock(10L, 11L)).thenReturn(departmentRow(11, 1L, "研发"));
+        when(leaderRelations.relationCount(10L, 11L)).thenReturn(1L);
+        assertThrows(BizException.class, () -> service.delete("11"));
+        verify(departments, never()).delete(10L, 11L);
+    }
+
+    @Test
+    void departmentWithLeaderRelationshipsCannotBeConvertedIntoRoot() {
+        when(access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DEPARTMENT_UPDATE))
+                .thenReturn(new ActiveIdentity(ACTOR, "0", "0", "0"));
+        when(departments.lock(10L, 11L)).thenReturn(departmentRow(11, 1L, "研发"));
+        when(leaderRelations.relationCount(10L, 11L)).thenReturn(1L);
+        assertThrows(BizException.class, () -> service.update("11", new DepartmentUpdateInput("0", new DepartmentDraft(null, "研发", 0))));
+        verify(departments, never()).update(10L, 11L, null, "研发", 0, BigInteger.ZERO);
     }
 
     private static IamDepartmentEntity departmentRow(long id, Long parentId, String name) {

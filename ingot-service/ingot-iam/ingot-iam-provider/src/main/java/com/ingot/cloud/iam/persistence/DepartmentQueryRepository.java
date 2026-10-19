@@ -63,6 +63,36 @@ public class DepartmentQueryRepository {
         return departments.selectPage(new Page<>(page, size), wrapper);
     }
 
+    /** 仅提供当前读取范围内的组织根名称，不回退到隐藏祖先。 */
+    public IamDepartmentEntity navigationRoot(long tenantId, ObjectScope scope) {
+        var result = departments.selectPage(new Page<>(1, 1), scoped(tenantId, scope)
+                .select(IamDepartmentEntity::getId, IamDepartmentEntity::getName)
+                .isNull(IamDepartmentEntity::getParentId).orderByAsc(IamDepartmentEntity::getId));
+        return result.getRecords().stream().findFirst().orElse(null);
+    }
+
+    /** 分页返回允许导航的直接子部门；不连续范围从可见片段入口开始。 */
+    public Page<IamDepartmentEntity> navigation(long tenantId, ObjectScope scope, Long parentId, int page, int size) {
+        var roots = departments.selectList(Wrappers.<IamDepartmentEntity>lambdaQuery()
+                .select(IamDepartmentEntity::getId).eq(IamDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .isNull(IamDepartmentEntity::getParentId)).stream().map(IamDepartmentEntity::getId).toList();
+        var query = scoped(tenantId, scope);
+        if (!roots.isEmpty()) query.notIn(IamDepartmentEntity::getId, roots);
+        if (parentId != null) query.eq(IamDepartmentEntity::getParentId, BigInteger.valueOf(parentId));
+        else if (scope.coversAll()) {
+            if (roots.isEmpty()) query.isNull(IamDepartmentEntity::getParentId);
+            else query.in(IamDepartmentEntity::getParentId, roots);
+        } else {
+            var visible = scope.clauses().stream().flatMap(clause -> clause.requiredIds().stream()).distinct().toList();
+            query.and(branch -> {
+                branch.isNull(IamDepartmentEntity::getParentId);
+                if (!roots.isEmpty()) branch.or().in(IamDepartmentEntity::getParentId, roots);
+                if (!visible.isEmpty()) branch.or().notIn(IamDepartmentEntity::getParentId, visible);
+            });
+        }
+        return departments.selectPage(new Page<>(page, size), query.orderByAsc(IamDepartmentEntity::getSortOrder, IamDepartmentEntity::getId));
+    }
+
     /**
      * 读取当前租户部门。
      *
@@ -73,6 +103,12 @@ public class DepartmentQueryRepository {
     public IamDepartmentEntity find(long tenantId, long id) {
         return departments.selectOne(Wrappers.<IamDepartmentEntity>lambdaQuery()
                 .eq(IamDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .eq(IamDepartmentEntity::getId, BigInteger.valueOf(id)));
+    }
+
+    /** 读取同一租户且满足当前部门读取范围的详情关联名称，不补齐隐藏祖先。 */
+    public IamDepartmentEntity findVisible(long tenantId, long id, ObjectScope scope) {
+        return departments.selectOne(scoped(tenantId, scope)
                 .eq(IamDepartmentEntity::getId, BigInteger.valueOf(id)));
     }
 
@@ -155,6 +191,22 @@ public class DepartmentQueryRepository {
                 .set(IamDepartmentEntity::getName, name)
                 .set(IamDepartmentEntity::getSortOrder, sortOrder)
                 .set(IamDepartmentEntity::getVersion, version.add(BigInteger.ONE)));
+    }
+
+    /** 修改已锁定资料，版本由统一编辑事务在最后递增。 */
+    public void updateProfile(long tenantId, long id, Long parentId, String name, int order) {
+        departments.update(Wrappers.<IamDepartmentEntity>lambdaUpdate()
+                .eq(IamDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId)).eq(IamDepartmentEntity::getId, BigInteger.valueOf(id))
+                .set(IamDepartmentEntity::getParentId, parentId == null ? null : BigInteger.valueOf(parentId))
+                .set(IamDepartmentEntity::getName, name).set(IamDepartmentEntity::getSortOrder, order));
+    }
+
+    /** 统一提交后仅递增一次部门版本，冲突使整个事务回滚。 */
+    public void advanceVersion(long tenantId, long id, BigInteger version) {
+        int count = departments.update(Wrappers.<IamDepartmentEntity>lambdaUpdate()
+                .eq(IamDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId)).eq(IamDepartmentEntity::getId, BigInteger.valueOf(id))
+                .eq(IamDepartmentEntity::getVersion, version).set(IamDepartmentEntity::getVersion, version.add(BigInteger.ONE)));
+        if (count != 1) throw new com.ingot.framework.commons.error.BizException(com.ingot.framework.commons.model.iam.IamReasonCode.REVISION_CONFLICT);
     }
 
     /**

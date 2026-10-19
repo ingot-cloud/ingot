@@ -139,8 +139,8 @@ public class TenantAssignmentAPI implements RShortcuts {
     public R<com.ingot.framework.commons.model.iam.PageResponse<com.ingot.framework.commons.model.iam.TenantAssignmentOption>> options(
         @RequestParam com.ingot.framework.commons.model.iam.TenantAssignmentOptionKind kind,
         @RequestParam(required=false) String delegationGrantId,@RequestParam(required=false) String keyword,
-        @RequestParam(required=false) List<String> ids,@RequestParam(defaultValue=""+IamPages.DEFAULT_PAGE) int page,@RequestParam(defaultValue=""+IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(assignments.options(kind,delegationGrantId,keyword,ids,page,pageSize));
+        @RequestParam(required=false) List<String> ids,@RequestParam(required=false) String departmentId,@RequestParam(defaultValue=""+IamPages.DEFAULT_PAGE) int page,@RequestParam(defaultValue=""+IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(assignments.options(kind,delegationGrantId,keyword,ids,page,pageSize,departmentId));
     }
     /** 受限分配流程读取当前角色，服务器重验白名单。 */
     @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest

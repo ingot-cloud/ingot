@@ -2551,6 +2551,221 @@
         },
         "description": "提交部门名称与树位置，不携带成员计数"
       },
+      "DepartmentEditInput": {
+        "required": [
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string"
+          },
+          "department": {
+            "$ref": "#/components/schemas/DepartmentDraft"
+          },
+          "leaders": {
+            "$ref": "#/components/schemas/DepartmentLeaderChanges"
+          }
+        },
+        "description": "统一部门编辑，基本资料与负责人原子保存"
+      },
+      "DepartmentLeaderChanges": {
+        "required": [
+          "addMemberIds",
+          "removeMemberIds"
+        ],
+        "type": "object",
+        "properties": {
+          "addMemberIds": {
+            "maxItems": 200,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removeMemberIds": {
+            "maxItems": 200,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "primaryMemberId": {
+            "type": "string"
+          }
+        },
+        "description": "负责人增删与设主差量，使用外层部门版本"
+      },
+      "DepartmentLeaderPage": {
+        "required": [
+          "departmentVersion",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepartmentLeaderRecord"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "departmentVersion": {
+            "type": "string"
+          },
+          "restricted": {
+            "type": "boolean"
+          },
+          "primaryLeader": {
+            "$ref": "#/components/schemas/DepartmentLeaderRecord"
+          }
+        },
+        "description": "部门关联分页及版本；total仅统计当前成员读取范围内的记录。"
+      },
+      "DepartmentLeaderRecord": {
+        "required": [
+          "departments",
+          "memberId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED",
+              "REMOVED"
+            ]
+          },
+          "primary": {
+            "type": "boolean"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "departments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberDepartmentView"
+            }
+          }
+        },
+        "description": "返回经成员字段策略投影的负责人最小资料，不携带联系方式或权限。"
+      },
+      "DepartmentLeaderSummary": {
+        "type": "object",
+        "properties": {
+          "primaryLeader": {
+            "$ref": "#/components/schemas/DepartmentLeaderRecord"
+          },
+          "visibleCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "restricted": {
+            "type": "boolean"
+          }
+        },
+        "description": "仅汇总当前可见负责人；受限时不披露隐藏成员或完整人数。"
+      },
+      "DepartmentLeaderUpdateInput": {
+        "required": [
+          "addMemberIds",
+          "expectedVersion",
+          "removeMemberIds"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string"
+          },
+          "addMemberIds": {
+            "maxItems": 200,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removeMemberIds": {
+            "maxItems": 200,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "primaryMemberId": {
+            "type": "string"
+          }
+        },
+        "description": "提交负责人增删差量及主负责人选择，不覆盖未加载或不可见关系。"
+      },
+      "DepartmentNavigationEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "description": "只能展开的部门导航"
+      },
+      "DepartmentNavigationPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepartmentNavigationEntry"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "breadcrumbs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepartmentNavigationEntry"
+            }
+          },
+          "organization": {
+            "$ref": "#/components/schemas/DepartmentNavigationEntry"
+          }
+        },
+        "description": "组织成员选择器的部门分支分页"
+      },
       "DepartmentRecord": {
         "required": [
           "id",
@@ -2586,6 +2801,15 @@
             "type": "integer",
             "description": "本部门直属 ACTIVE 成员数，仅租户管理部门列表填充",
             "format": "int32"
+          },
+          "leaderSummary": {
+            "$ref": "#/components/schemas/DepartmentLeaderSummary"
+          },
+          "parentDepartment": {
+            "$ref": "#/components/schemas/DepartmentNavigationEntry"
+          },
+          "leaderPage": {
+            "$ref": "#/components/schemas/DepartmentLeaderPage"
           }
         },
         "description": "返回当前域内可见部门或必要导航骨架；租户列表可携带直属 ACTIVE 成员数"
@@ -2606,6 +2830,47 @@
           }
         },
         "description": "租户部门选择项；平台域不支持"
+      },
+      "DepartmentTreeNode": {
+        "required": [
+          "capabilities",
+          "children",
+          "fieldAccess",
+          "record",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/DepartmentRecord"
+          },
+          "fieldAccess": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldAccess"
+            },
+            "description": "字段访问结果"
+          },
+          "capabilities": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ObjectCapability"
+            },
+            "description": "按操作代码索引的对象能力"
+          },
+          "version": {
+            "type": "string",
+            "description": "求值版本字符串"
+          },
+          "children": {
+            "type": "array",
+            "description": "子部门，叶节点为空数组",
+            "items": {
+              "$ref": "#/components/schemas/DepartmentTreeNode"
+            }
+          }
+        },
+        "description": "返回租户管理部门树节点，保留详情信封并嵌套子节点"
       },
       "DepartmentUpdateInput": {
         "required": [
@@ -3729,6 +3994,10 @@
             "type": "string",
             "description": "已关联全局账号的登录名；平台成员填写，租户成员省略"
           },
+          "loginPhone": {
+            "type": "string",
+            "description": "已关联全局账号的登录手机号；可空，不是当前域联系手机号"
+          },
           "status": {
             "type": "string",
             "description": "该域的成员资格",
@@ -4356,6 +4625,62 @@
         },
         "description": "表达当前对象上的操作能力，不能作为后续提交的授权凭证"
       },
+      "OrganizationMemberPickerOption": {
+        "required": [
+          "departments",
+          "id",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED",
+              "REMOVED"
+            ]
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "departments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberDepartmentView"
+            }
+          },
+          "implicitRoot": {
+            "$ref": "#/components/schemas/DepartmentNavigationEntry"
+          }
+        },
+        "description": "组织成员选择器候选"
+      },
+      "OrganizationMemberPickerPage": {
+        "required": [
+          "members",
+          "navigation"
+        ],
+        "type": "object",
+        "properties": {
+          "navigationAvailable": {
+            "type": "boolean"
+          },
+          "navigation": {
+            "$ref": "#/components/schemas/DepartmentNavigationPage"
+          },
+          "members": {
+            "$ref": "#/components/schemas/PageResponseOrganizationMemberPickerOption"
+          }
+        },
+        "description": "组织成员选择器浏览结果"
+      },
       "OwnerTransferInput": {
         "required": [
           "expectedVersion",
@@ -4445,6 +4770,64 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/MemberBoundRole"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PageResponseMemberRecord": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberRecord"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PageResponseOrganizationMemberPickerOption": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationMemberPickerOption"
             }
           },
           "total": {
@@ -6083,6 +6466,40 @@
           }
         }
       },
+      "RDepartmentLeaderPage": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DepartmentLeaderPage"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RDepartmentNavigationPage": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DepartmentNavigationPage"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RExportTask": {
         "type": "object",
         "properties": {
@@ -6150,6 +6567,26 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ActionRecord"
+            }
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RListDepartmentTreeNode": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepartmentTreeNode"
             }
           },
           "success": {
@@ -6237,6 +6674,23 @@
           }
         }
       },
+      "ROrganizationMemberPickerPage": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/OrganizationMemberPickerPage"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RPageResponseCurrentRoleCatalogAction": {
         "type": "object",
         "properties": {
@@ -6282,6 +6736,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/PageResponseMemberBoundRole"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RPageResponseMemberRecord": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResponseMemberRecord"
           },
           "success": {
             "type": "boolean"
@@ -7336,6 +7807,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/RoleSubjectPage"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RTenantMemberCreated": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/TenantMemberCreated"
           },
           "success": {
             "type": "boolean"
@@ -9603,6 +10091,12 @@
               "PLATFORM_CUSTOM",
               "TENANT_CUSTOM"
             ]
+          },
+          "departments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberDepartmentView"
+            }
           }
         },
         "description": "返回受限分页候选身份及可披露名称"
@@ -9990,6 +10484,64 @@
         },
         "additionalProperties": false,
         "description": "用技术锁编辑完整组织委派定义"
+      },
+      "TenantMemberCreateInput": {
+        "required": [
+          "departments",
+          "displayName",
+          "phone"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "当前租户显示名"
+          },
+          "phone": {
+            "pattern": "^1[3-9]\\d{9}$",
+            "type": "string",
+            "description": "11 位大陆手机号，作为账号标识"
+          },
+          "email": {
+            "type": "string",
+            "description": "组织通讯录邮箱，可空"
+          },
+          "departments": {
+            "type": "array",
+            "description": "任职部门，可空且最多一个主部门",
+            "items": {
+              "$ref": "#/components/schemas/MemberDepartmentBinding"
+            }
+          }
+        },
+        "description": "按手机号加入当前组织；没有账号时先创建全局账号"
+      },
+      "TenantMemberCreated": {
+        "required": [
+          "accountCreated",
+          "id",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "新成员 ID"
+          },
+          "version": {
+            "type": "string",
+            "description": "创建后的版本"
+          },
+          "accountCreated": {
+            "type": "boolean",
+            "description": "是否新建了全局账号"
+          },
+          "initialPassword": {
+            "type": "string",
+            "description": "新建账号时的一次性明文，HTTP 传输由信封加密"
+          }
+        },
+        "description": "租户添加成员结果；仅新建账号时返回一次性初始密码"
       },
       "TenantPreviewResult": {
         "required": [
@@ -10471,81 +11023,6 @@
           }
         },
         "description": "携带独立命令的乐观锁版本"
-      },
-      "TenantMemberCreateInput": {
-        "required": [
-          "displayName",
-          "phone",
-          "departments"
-        ],
-        "type": "object",
-        "properties": {
-          "displayName": {
-            "type": "string",
-            "description": "当前租户显示名"
-          },
-          "phone": {
-            "type": "string",
-            "description": "11 位大陆手机号，作为账号标识",
-            "pattern": "^1[3-9]\\d{9}$"
-          },
-          "email": {
-            "type": "string",
-            "description": "组织通讯录邮箱，可空"
-          },
-          "departments": {
-            "type": "array",
-            "description": "任职部门，可空且最多一个主部门",
-            "items": {
-              "$ref": "#/components/schemas/MemberDepartmentBinding"
-            }
-          }
-        },
-        "description": "按手机号加入当前组织；没有账号时先创建全局账号"
-      },
-      "TenantMemberCreated": {
-        "required": [
-          "id",
-          "version",
-          "accountCreated"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "新成员 ID"
-          },
-          "version": {
-            "type": "string",
-            "description": "创建后的版本"
-          },
-          "accountCreated": {
-            "type": "boolean",
-            "description": "是否新建了全局账号"
-          },
-          "initialPassword": {
-            "type": "string",
-            "description": "新建账号时的一次性明文，HTTP 传输由信封加密"
-          }
-        },
-        "description": "租户添加成员结果；仅新建账号时返回一次性初始密码"
-      },
-      "RTenantMemberCreated": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/TenantMemberCreated"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        }
       }
     }
   }

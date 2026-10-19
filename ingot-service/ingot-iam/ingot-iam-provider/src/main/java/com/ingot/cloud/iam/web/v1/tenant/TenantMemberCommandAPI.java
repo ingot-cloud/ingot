@@ -57,6 +57,24 @@ public class TenantMemberCommandAPI implements RShortcuts {
     private final MemberQueryService queries;
     private final MemberExportService exports;
     private final TenantMemberOnboarding onboarding;
+    private final com.ingot.cloud.iam.organization.OrganizationMemberService picker;
+
+    /** 同范围的最小有效人员候选，供组织业务表单选择使用。 */
+    @IamReadOnlyRequest
+    @com.ingot.framework.commons.annotation.field.FieldControl(domain = com.ingot.framework.commons.model.iam.AuthorizationDomain.TENANT,
+            applicationCode = com.ingot.framework.commons.model.iam.MemberResources.TENANT_APPLICATION,
+            resourceCode = com.ingot.framework.commons.model.iam.MemberResources.MEMBER,
+            action = com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ,
+            use = com.ingot.framework.commons.annotation.field.FieldUse.FILTER,
+            valueType = com.ingot.framework.commons.model.iam.OrganizationMemberPickerFilter.class)
+    @GetMapping("/picker")
+    @Operation(summary = "组织成员选择候选")
+    public R<PageResponse<MemberRecord>> picker(@RequestParam(required = false) String departmentId,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) java.util.List<String> ids,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(picker.page(departmentId, keyword, ids, page, pageSize));
+    }
 
     /** 返回当前身份与完整查询范围的字段操作能力。 */
     @IamReadOnlyRequest

@@ -278,7 +278,7 @@ class IamAuthorizationContractTest {
     @Test
     void exportSchemasFromPublicTypesAndCheckRequiredFields() throws Exception {
         Map<String, Schema> schemas = new TreeMap<>();
-        for (Class<?> type : List.of(CurrentRoleCatalogAction.class,CurrentRoleCreateInput.class,CurrentRoleDefinition.class,CurrentRoleGrantList.class,CurrentRoleParameter.class,CurrentRolePermissionInput.class,CurrentRolePermissionResult.class,CurrentRolePreviewResult.class,CurrentRoleProfileInput.class,CurrentRoleSummary.class,ResourceScopeCeiling.class,ScopeIssue.class,TenantAssignmentBatchInput.class,TenantAssignmentInput.class,TenantAssignmentOption.class,TenantAssignmentRecord.class,TenantAssignmentUpdateInput.class,TenantDelegationInput.class,TenantDelegationMine.class,TenantDelegationRecord.class,TenantDelegationUpdateInput.class, ResourceDescriptor.class, AssignmentUpgradeInput.class,
+        for (Class<?> type : List.of(OrganizationMemberPickerScene.class, OrganizationMemberPickerOption.class, OrganizationMemberPickerPage.class, DepartmentEditInput.class, DepartmentLeaderChanges.class, DepartmentNavigationEntry.class, DepartmentNavigationPage.class, DepartmentLeaderRecord.class, DepartmentLeaderPage.class, DepartmentLeaderUpdateInput.class, DepartmentLeaderSummary.class, CurrentRoleCatalogAction.class,CurrentRoleCreateInput.class,CurrentRoleDefinition.class,CurrentRoleGrantList.class,CurrentRoleParameter.class,CurrentRolePermissionInput.class,CurrentRolePermissionResult.class,CurrentRolePreviewResult.class,CurrentRoleProfileInput.class,CurrentRoleSummary.class,ResourceScopeCeiling.class,ScopeIssue.class,TenantAssignmentBatchInput.class,TenantAssignmentInput.class,TenantAssignmentOption.class,TenantAssignmentRecord.class,TenantAssignmentUpdateInput.class,TenantDelegationInput.class,TenantDelegationMine.class,TenantDelegationRecord.class,TenantDelegationUpdateInput.class, ResourceDescriptor.class, AssignmentUpgradeInput.class,
                 ResourceFieldContext.class, com.ingot.framework.commons.model.iam.extension.FieldManifestInvocation.class, com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.class, AssignmentUpgradeResult.class, AuthorizationRequest.class, AuthorizationDecision.class,
                 ResourceObjectInvocation.class, SignedResourceObjectRequest.class, ResourceObjectResult.class,
                 AuthorizationContext.class, SubjectRef.class, Selection.class, RoleSubjectSummary.class,
@@ -344,6 +344,10 @@ class IamAuthorizationContractTest {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<FieldPolicyDraft>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CreatedResource>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<OrganizationMemberPickerPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<DepartmentNavigationPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<MemberRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<DepartmentLeaderPage>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<TenantMemberCreated>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CurrentCapabilities>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Decision>>() {

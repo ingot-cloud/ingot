@@ -75,6 +75,8 @@ public enum IamActionOperation {
      * 整体替换成员任职部门。
      */
     DEPARTMENTS("departments", true),
+    /** 维护部门负责人关系，不授予权限。 */
+    LEADERS("leaders", true),
     /**
      * 受限精确查找，不返回组织关系。
      */

@@ -91,6 +91,12 @@ public final class BuiltinResourceProviders {
         return PlatformScopeObjectResource.find(code);
     }
 
+    private static boolean supportsFilter(ResourceKey key, MemberFieldKey field) {
+        if (key.domain() == AuthorizationDomain.PLATFORM) return field == MemberFieldKey.DISPLAY_NAME;
+        return field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL
+                || key.equals(TENANT_MEMBER_RESOURCE) && field == MemberFieldKey.DISPLAY_NAME;
+    }
+
     private static ResourceDescriptor descriptor(ResourceKey key, List<ActionDescriptor> actions) {
         var object = key.domain() == AuthorizationDomain.PLATFORM ? objectResource(key.resourceCode()) : null;
         List<FieldCapability> fields = new ArrayList<>();
@@ -98,7 +104,7 @@ public final class BuiltinResourceProviders {
         if (key.equals(PLATFORM_MEMBER_RESOURCE) || key.equals(TENANT_MEMBER_RESOURCE) || key.equals(TENANT_DIRECTORY_RESOURCE)) {
             for (var field : MemberFieldKey.values()) {
                 fields.add(new FieldCapability(field.getValue(), fieldLabel(field), field == MemberFieldKey.AVATAR ? List.of(FieldVisibility.HIDDEN, FieldVisibility.FULL) : List.of(FieldVisibility.values()),
-                        !key.equals(TENANT_DIRECTORY_RESOURCE), key.domain() == AuthorizationDomain.PLATFORM ? field == MemberFieldKey.DISPLAY_NAME : field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL, field == MemberFieldKey.PHONE ? MaskSpec.PHONE : field == MemberFieldKey.EMAIL ? MaskSpec.EMAIL : field == MemberFieldKey.AVATAR ? null : MaskSpec.ALL));
+                        !key.equals(TENANT_DIRECTORY_RESOURCE), supportsFilter(key, field), field == MemberFieldKey.PHONE ? MaskSpec.PHONE : field == MemberFieldKey.EMAIL ? MaskSpec.EMAIL : field == MemberFieldKey.AVATAR ? null : MaskSpec.ALL));
                 defaults.put(field.getValue(),
                         new FieldAccess(
                                 field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL ? FieldVisibility.MASKED

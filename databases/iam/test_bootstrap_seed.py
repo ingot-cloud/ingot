@@ -88,6 +88,35 @@ class BootstrapSeedTest(unittest.TestCase):
     def bootstrap(self):
         self.sql(BOOTSTRAP.read_text())
 
+    def test_picker_name_capability_does_not_grant_default_filter_permission(self):
+        self.bootstrap()
+        self.assertEqual('true', self.sql("""SELECT JSON_EXTRACT(res.field_capabilities,'$[0].filterable') FROM iam_resource res
+            JOIN iam_application app ON app.id=res.application_id WHERE app.code='iam-tenant' AND res.code='member'"""))
+        self.assertEqual('false', self.sql("""SELECT JSON_EXTRACT(res.field_capabilities,'$[0].filterable') FROM iam_resource res
+            JOIN iam_application app ON app.id=res.application_id WHERE app.code='iam-tenant' AND res.code='directory'"""))
+        self.assertEqual('false', self.sql("SELECT JSON_EXTRACT(definition,'$.operations.displayName.filterable') FROM iam_default_policy_revision WHERE kind='FIELD' ORDER BY revision DESC LIMIT 1"))
+
+    def test_picker_name_patch_is_key_based_idempotent_and_preserves_policies(self):
+        self.bootstrap()
+        policies = self.sql("SELECT id,definition FROM iam_default_policy_revision ORDER BY id")
+        others = self.sql("""SELECT res.id,res.field_capabilities,res.version FROM iam_resource res JOIN iam_application app ON app.id=res.application_id
+            WHERE app.code!='iam-tenant' OR res.code!='member' ORDER BY res.id""")
+        roles = self.sql("SELECT id,resource_field_permissions FROM iam_role_revision ORDER BY id")
+        self.sql("""UPDATE iam_resource res JOIN iam_application app ON app.id=res.application_id SET res.version=8,
+            res.field_capabilities=JSON_ARRAY(JSON_OBJECT('key','phone','filterable',CAST('true' AS JSON)),JSON_OBJECT('key','displayName','filterable',CAST('false' AS JSON)))
+            WHERE app.code='iam-tenant' AND res.code='member'""")
+        patch = (SCHEMA_DIRECTORY / 'migrations' / '025_member_picker_name_filter.sql').read_text()
+        self.sql(patch)
+        check = """SELECT JSON_EXTRACT(res.field_capabilities,'$[1].filterable'),JSON_EXTRACT(res.field_capabilities,'$[0].filterable'),res.version
+            FROM iam_resource res JOIN iam_application app ON app.id=res.application_id WHERE app.code='iam-tenant' AND res.code='member'"""
+        self.assertEqual('true\ttrue\t9',self.sql(check))
+        self.sql(patch)
+        self.assertEqual('true\ttrue\t9',self.sql(check))
+        self.assertEqual(policies,self.sql("SELECT id,definition FROM iam_default_policy_revision ORDER BY id"))
+        self.assertEqual(roles,self.sql("SELECT id,resource_field_permissions FROM iam_role_revision ORDER BY id"))
+        self.assertEqual(others,self.sql("""SELECT res.id,res.field_capabilities,res.version FROM iam_resource res JOIN iam_application app ON app.id=res.application_id
+            WHERE app.code!='iam-tenant' OR res.code!='member' ORDER BY res.id"""))
+
     def test_root_menu_icons(self):
         self.bootstrap()
         self.assertEqual(

@@ -139,7 +139,8 @@ public final class DefaultPolicyDefinitions {
         Map<String, FieldOperations> result = new LinkedHashMap<>();
         for (var field : MemberFieldKey.values()) {
             var fallback = new FieldOperations(ceiling || documented(field.getValue()).editable(),
-                    field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL);
+                    field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL
+                            || ceiling && field == MemberFieldKey.DISPLAY_NAME);
             result.put(field.getValue(), configured.getOrDefault(field.getValue(), fallback));
         }
         configured.forEach(result::putIfAbsent);

@@ -82,7 +82,15 @@ class ContractTest(unittest.TestCase):
                     self.assertNotEqual('tenantId', parameter['name'])
                 if '/tenant/' in path or path.startswith('/v1/directory/'):
                     self.assertEqual('TENANT', operation['x-iam-domain'])
-                    self.assertTrue(operation['x-iam-action'] is None and path.endswith('/delegations/mine') or operation['x-iam-action'] is not None and operation['x-iam-action'].startswith('iam-tenant:'))
+                    action = operation['x-iam-action']
+                    if action is None:
+                        self.assertIn(path, ('/v1/tenant/delegations/mine', '/v1/tenant/member-picker/browse'))
+                        if path == '/v1/tenant/member-picker/browse':
+                            scene = next(parameter for parameter in operation['parameters'] if parameter['name'] == 'scene')
+                            self.assertTrue(scene['required'])
+                            self.assertEqual(['MEMBER', 'DEPARTMENT_LEADER', 'ASSIGNMENT'], scene['schema']['enum'])
+                    else:
+                        self.assertTrue(action.startswith('iam-tenant:'))
                 elif '/platform/' in path:
                     self.assertEqual('PLATFORM', operation['x-iam-domain'])
                     self.assertTrue(operation['x-iam-action'].startswith('iam-platform:'))

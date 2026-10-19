@@ -39,6 +39,7 @@ public class TenantLiveAssignmentService {
     private final AuthorizationChangeNotifier changes;
     private final TenantScopeCandidateMapper candidates;
     private final DepartmentClosure departments;
+    private final com.ingot.cloud.iam.organization.OrganizationMemberDepartments memberDepartments;
 
     /** 分页读取允许披露的当前分配。 */
     public PageResponse<ResourceDetail<TenantAssignmentRecord>> list(int page,int size,SubjectType type,String keyword) {
@@ -98,9 +99,28 @@ public class TenantLiveAssignmentService {
 
     /** 查询当前可选角色、成员、组和资源，已选ID使用同一来源过滤。 */
     public PageResponse<TenantAssignmentOption> options(TenantAssignmentOptionKind kind,String source,String keyword,List<String> ids,int page,int size) {
+        return options(kind,source,keyword,ids,page,size,null);
+    }
+
+    /** 组织成员浏览以部门条件与原直接/委派候选求交，不补充任何候选资格。 */
+    public PageResponse<TenantAssignmentOption> options(TenantAssignmentOptionKind kind,String source,String keyword,List<String> ids,int page,int size,String departmentId) {
+        return options(kind,source,keyword,ids,page,size,departmentId,null);
+    }
+
+    /** 组织人员浏览沿用直接/本人委派来源的原有候选资格。 */
+    public PageResponse<TenantAssignmentOption> pickerOptions(String source, String keyword, int page, int size, com.ingot.cloud.iam.persistence.MemberPickerBranch branch) {
+        return options(TenantAssignmentOptionKind.MEMBER,source,keyword,List.of(),page,size,null,branch);
+    }
+
+    private PageResponse<TenantAssignmentOption> options(TenantAssignmentOptionKind kind,String source,String keyword,List<String> ids,int page,int size,String departmentId,com.ingot.cloud.iam.persistence.MemberPickerBranch branch) {
         var actor=optionActor();candidateAdmission(actor,kind);var grant=source(actor,source,null);if(grant!=null&&(kind==TenantAssignmentOptionKind.APPLICATION||kind==TenantAssignmentOptionKind.DEPARTMENT))denied();IamPages.require(page,size);
-        var query=new TenantLiveOptionSql.Query(tenant(actor),member(actor),grant==null?null:grant.id(),kind,search(keyword),ids(ids),size,IamPages.offset(page,size));
-        return new PageResponse<>(live.options(query).stream().map(o->new TenantAssignmentOption(o.id().toString(),o.name(),kind,o.roleKind())).toList(),live.optionsCount(query),page,size);
+        BigInteger department = kind == TenantAssignmentOptionKind.MEMBER && departmentId != null && !departmentId.isBlank() && (keyword == null || keyword.isBlank()) ? BigInteger.valueOf(IamIds.require(departmentId)) : null;
+        if (department != null) { access.require(AuthorizationDomain.TENANT,IamAction.TENANT_DEPARTMENT_READ);resources.requireVisibleDepartment(actor.context(),IamAction.TENANT_DEPARTMENT_READ,department.longValueExact()); }
+
+        var query=new TenantLiveOptionSql.Query(tenant(actor),member(actor),grant==null?null:grant.id(),kind,search(keyword),ids(ids),size,IamPages.offset(page,size),department,branch);
+        var options=live.options(query);
+        var views=kind==TenantAssignmentOptionKind.MEMBER?memberDepartments.visible(actor,options.stream().map(TenantLiveOptionSql.Option::id).toList()):Map.<BigInteger,List<MemberDepartmentView>>of();
+        return new PageResponse<>(options.stream().map(o->new TenantAssignmentOption(o.id().toString(),o.name(),kind,o.roleKind(),views.getOrDefault(o.id(),List.of()))).toList(),live.optionsCount(query),page,size);
     }
 
     /** 受限分配专用角色详情，不补通用角色读取资格。 */

@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TenantGroupAPI implements RShortcuts {
     private final GroupService groups;
+    private final com.ingot.cloud.iam.organization.OrganizationMemberService memberPicker;
 
     /**
      * 分页列出租户用户组。
@@ -55,6 +56,16 @@ public class TenantGroupAPI implements RShortcuts {
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
             @RequestParam(required = false) String name) {
         return ok(groups.list(AuthorizationDomain.TENANT, page, pageSize, name));
+    }
+
+    /** 按当前可披露范围分页读取直接成员，用于组织成员对话框已选栏。 */
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
+    @GetMapping("/{id}/members")
+    @Operation(summary = "组织组直接成员")
+    public R<com.ingot.framework.commons.model.iam.PageResponse<com.ingot.framework.commons.model.iam.MemberRecord>> members(
+            @PathVariable String id, @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(memberPicker.groupMembers(id, page, pageSize));
     }
 
     /**

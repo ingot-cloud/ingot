@@ -41,12 +41,23 @@ public final class TenantLiveOptionSql {
             case RESOURCE -> "SELECT r.id,r.name,NULL AS role_kind FROM iam_resource r JOIN iam_application app ON app.id=r.application_id WHERE app.domain='TENANT' AND app.enabled=TRUE AND r.enabled=TRUE AND EXISTS(SELECT 1 FROM iam_tenant_app_entitlement e WHERE e.tenant_id=#{q.tenantId} AND e.application_id=app.id AND e.enabled=TRUE AND (e.valid_from IS NULL OR e.valid_from&lt;=CURRENT_TIMESTAMP(6)) AND (e.valid_until IS NULL OR e.valid_until>CURRENT_TIMESTAMP(6)))" + (q.sourceId()==null ? "" : " AND EXISTS(SELECT 1 FROM iam_delegation_resource_ceiling rc WHERE rc.delegation_id=#{q.sourceId} AND rc.resource_id=r.id)");
         };
         String filter=" x.name LIKE #{q.keyword} ESCAPE '!'";
+        if(q.kind()==TenantAssignmentOptionKind.MEMBER && q.departmentId()!=null) filter += " AND EXISTS(SELECT 1 FROM iam_member_department md WHERE md.tenant_id=#{q.tenantId} AND md.member_id=x.id AND md.department_id=#{q.departmentId})";
+        if(q.kind()==TenantAssignmentOptionKind.MEMBER && q.pickerBranch()!=null) filter += " AND " + q.pickerBranch().sql("x.id", "#{q.tenantId}", "#{q.pickerBranch.departmentId}");
         if(!q.ids().isEmpty()) filter += " AND x.id IN <foreach collection='q.ids' item='id' open='(' close=')' separator=','>#{id}</foreach>";
         return "<script>" + (q.sourceId()==null ? "" : REACH) + (count ? "SELECT COUNT(*)" : "SELECT x.id,x.name,x.role_kind") + " FROM ("+source+") x WHERE"+filter+(count ? "" : " ORDER BY x.id LIMIT #{q.size} OFFSET #{q.offset}")+"</script>";
     }
     /** <p>可信租户和本人来源解析后的选择器参数。</p> @author jy @since 1.0.0 */
     public record Query(BigInteger tenantId,BigInteger memberId,BigInteger sourceId,TenantAssignmentOptionKind kind,
-        String keyword,List<BigInteger> ids,int size,int offset) { }
+        String keyword,List<BigInteger> ids,int size,int offset,BigInteger departmentId,MemberPickerBranch pickerBranch) {
+        /** 兼容通用候选接口，不应用选择器根投影。 */
+        public Query(BigInteger tenantId, BigInteger memberId, BigInteger sourceId, TenantAssignmentOptionKind kind, String keyword, List<BigInteger> ids, int size, int offset, BigInteger departmentId) {
+            this(tenantId, memberId, sourceId, kind, keyword, ids, size, offset, departmentId, null);
+        }
+        /** 未指定浏览部门时保留原候选语义。 */
+        public Query(BigInteger tenantId, BigInteger memberId, BigInteger sourceId, TenantAssignmentOptionKind kind, String keyword, List<BigInteger> ids, int size, int offset) {
+            this(tenantId, memberId, sourceId, kind, keyword, ids, size, offset, null);
+        }
+    }
     /** <p>当前角色和主体候选。</p> @author jy @since 1.0.0 */
     public record Option(BigInteger id,String name,com.ingot.framework.commons.model.iam.RoleKind roleKind) { }
 }

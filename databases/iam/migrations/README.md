@@ -17,6 +17,7 @@
 | 020_platform_capability_completion.sql | 平台能力补齐：新增安全应用、迁移六资源十六操作及八个页面，保留 ID/固定授权；先停写备份。 | 006 |
 | 021_tenant_live_authorization.sql | 当前角色授权结构扩展；仅已有库。 | 002/003 |
 | 022_tenant_live_authorization_constraints.sql | 当前角色分配约束；正转换成功后安装。 | 003 |
+| 024_department_leaders.sql | 新增负责人关系及独立维护操作；不回填角色或分配。 | 001/006 |
 | 023_tenant_members_departments_menus.sql | 组织管理下「成员与部门」收成目录，下面挂「成员」「部门」两个子页面；重挂父级、补菜单与操作关联。 | 006 |
 | 019_root_menu_icons.sql | 正式应用一级目录的icon为空；仅补齐空图标，可重复执行并保留自定义图标。 | 006 |
 
@@ -112,3 +113,9 @@ mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migra
 ```
 
 完成后重新 bootstrap 或登录加载菜单。新建库使用最新 006 或完整初始化文件，已有库不能用完整初始化文件代替本补齐脚本。回退时按菜单 ID 恢复原名称、父级、排序与 `iam_menu_action`，并删除部门页与「成员与部门」目录。
+
+## 025 组织成员选择器姓名搜索能力
+
+仅将 `iam-tenant/member` 目录中 `displayName.filterable` 补为 true，并在实际变化时递增资源版本；按字段 key 定位，不依赖 JSON 数组顺序，可重复执行。不改通讯录、平台资源、角色/分配、历史默认策略版本或租户字段规则。该值是已接入能力上限，普通用户仍需字段策略允许筛选且整个查询范围内姓名完整可见。真实拥有者也受平台显式操作上限限制。
+
+已有库执行 `025_member_picker_name_filter.sql`，与含 `OrganizationMemberNameFilter` 执行清单的后端同批部署；广播既有配置失效或等待最长元数据缓存窗口后验证。未补齐目录或清单时继续拒绝姓名筛选。新库使用最新006/bundle。回退应用时可保留目录能力，由旧清单继续收紧；若回退目录，将该字段 filterable 恢复备份值并递增资源版本。不要重建现有库，也不要通过删除字段筛选门禁解决403。

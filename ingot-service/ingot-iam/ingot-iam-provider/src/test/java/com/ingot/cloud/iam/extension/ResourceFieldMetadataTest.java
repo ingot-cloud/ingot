@@ -46,6 +46,42 @@ class ResourceFieldMetadataTest {
     private static final ResourceKey KEY = new ResourceKey(AuthorizationDomain.PLATFORM, "iam-ops", "incident");
 
     @Test
+    void pickerNameFilteringNeedsCatalogSupportAndActualHttpFilterManifest() {
+        var key = com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER;
+        var bindings = new com.ingot.framework.authorization.field.FieldBindingRegistry(new com.fasterxml.jackson.databind.ObjectMapper());
+        bindings.register(com.ingot.framework.commons.model.iam.MemberRecord.class, key,
+                com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ, com.ingot.framework.commons.annotation.field.FieldUse.READ);
+        var manifests = mock(FieldManifestService.class);
+        when(manifests.require(key)).thenAnswer(ignored -> bindings.manifest(key));
+        var registry = new BuiltinResourceProviders(mock(com.ingot.cloud.iam.persistence.mapper.AuthorizationCandidateMapper.class)).registry(List.of());
+        var app = new IamApplicationEntity();app.setId(BigInteger.ONE);app.setDomain(AuthorizationDomain.TENANT);app.setCode(key.applicationCode());app.setEnabled(true);
+        var row = new IamResourceEntity();row.setId(BigInteger.TEN);row.setApplicationId(BigInteger.ONE);row.setCode(key.resourceCode());row.setEnabled(true);
+        row.setFieldCapabilities("[{\"key\":\"displayName\",\"label\":\"显示名\",\"visibilities\":[\"HIDDEN\",\"MASKED\",\"FULL\"],\"editable\":true,\"filterable\":true,\"mask\":{\"kind\":\"ALL\"}}]");
+        var apps = mock(IamApplicationMapper.class);when(apps.selectBatchIds(anyCollection())).thenReturn(List.of(app));
+        var service = new ResourceFieldMetadata(apps,mock(IamResourceMapper.class),mock(IamActionMapper.class),registry,manifests,com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
+        assertFalse(service.describe(List.of(row)).get("10").fields().stream().filter(field -> field.key().equals("displayName")).findFirst().orElseThrow().filterable());
+        int registrations = 0;
+        for (var controller : List.of(com.ingot.cloud.iam.web.v1.tenant.TenantMemberPickerAPI.class,
+                com.ingot.cloud.iam.web.v1.tenant.TenantMemberCommandAPI.class,com.ingot.cloud.iam.web.v1.tenant.TenantDepartmentAPI.class)) {
+            for (var method : controller.getDeclaredMethods())
+                for (var control : method.getAnnotationsByType(com.ingot.framework.commons.annotation.field.FieldControl.class))
+                    if (java.util.Set.of(com.ingot.framework.commons.model.iam.OrganizationMemberNameFilter.class,
+                            com.ingot.framework.commons.model.iam.OrganizationMemberBrowseFilter.class,
+                            com.ingot.framework.commons.model.iam.OrganizationMemberPickerFilter.class,
+                            com.ingot.framework.commons.model.iam.DepartmentLeaderCandidateFilter.class).contains(control.valueType())) {
+                        assertEquals(com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ,control.action());
+                        bindings.register(control.valueType(),key,control.action(),control.use());registrations++;
+                    }
+        }
+        assertEquals(4,registrations);
+        assertTrue(bindings.manifest(key).bindings().stream().anyMatch(binding -> binding.use()==com.ingot.framework.commons.annotation.field.FieldUse.FILTER
+                && binding.property().equals("keyword") && binding.fieldKey().equals("displayName")));
+        assertTrue(service.describe(List.of(row)).get("10").fields().stream().filter(field -> field.key().equals("displayName")).findFirst().orElseThrow().filterable());
+        row.setFieldCapabilities(row.getFieldCapabilities().replace("\"filterable\":true","\"filterable\":false"));
+        assertFalse(service.describe(List.of(row)).get("10").fields().stream().filter(field -> field.key().equals("displayName")).findFirst().orElseThrow().filterable());
+    }
+
+    @Test
     void directoryRemovalAndFullOnlyConfigurationCannotPromoteMaskedDefault() {
         var app = new IamApplicationEntity();
         app.setId(BigInteger.ONE);

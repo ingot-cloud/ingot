@@ -393,7 +393,7 @@ public final class IamMybatisTestAccess {
             SqlSessionFactory sessions = factory.getObject();
             for (Class<?> mapper : new Class<?>[] { IamAccountMapper.class, AccountLockStateMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.TenantLiveMapper.class, IamTenantMapper.class, IamTenantMemberMapper.class, IamPlatformMemberMapper.class,
-                    IamMemberDepartmentMapper.class, IamDepartmentMapper.class, IamAuthorizationAuditMapper.class,
+                    IamMemberDepartmentMapper.class, IamDepartmentMapper.class, com.ingot.cloud.iam.persistence.mapper.IamDepartmentLeaderMapper.class, IamAuthorizationAuditMapper.class,
                     IamApplicationMapper.class, IamRoleDefinitionMapper.class, IamRoleRevisionMapper.class,
                     IamDefaultPolicyRevisionMapper.class, IamPlanMapper.class, IamPlanApplicationMapper.class,
                     IamRoleAssignmentMapper.class, IamTenantAppEntitlementMapper.class, IamAppAudienceMapper.class,

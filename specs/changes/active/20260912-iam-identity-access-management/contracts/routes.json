@@ -1755,11 +1755,11 @@
     "path": "/v1/tenant/members",
     "method": "post",
     "operationId": "tenantCreateMember",
-    "summary": "添加成员",
+    "summary": "创建成员资格",
     "domain": "TENANT",
     "action": "iam-tenant:member:create",
-    "request": "TenantMemberCreateInput",
-    "response": "RTenantMemberCreated",
+    "request": "MemberCreateInput",
+    "response": "RCreatedResource",
     "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
     "implemented": true
   },
@@ -1956,7 +1956,7 @@
     "action": "iam-tenant:department:read",
     "request": null,
     "response": "RResourceDetailDepartmentRecord",
-    "execution": "不携带隐藏成员计数",
+    "execution": "聚合当前读取范围内的父部门名称及负责人首屏20条；不携带成员计数",
     "implemented": true
   },
   {
@@ -1981,6 +1981,328 @@
     "request": null,
     "response": "RCreatedResource",
     "execution": "非空部门拒绝删除",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/{id}",
+    "method": "patch",
+    "operationId": "tenantEditDepartment",
+    "summary": "统一编辑部门",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:read",
+    "request": "DepartmentEditInput",
+    "response": "RResourceDetailDepartmentRecord",
+    "execution": "按实际资料/负责人变化分别校验update/leaders操作及范围；同事务只递增一次版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/member-picker/browse",
+    "method": "get",
+    "operationId": "tenantMemberPickerBrowse",
+    "summary": "组织成员选择器浏览",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "ROrganizationMemberPickerPage",
+    "execution": "按scene复用原成员读取/负责人维护/直接或委派分配资格；根成员仅显式根关系或真实零任职；部门及成员独立分页",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "scene",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "DEPARTMENT_LEADER",
+            "ASSIGNMENT"
+          ]
+        }
+      },
+      {
+        "name": "departmentId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "targetDepartmentId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "delegationGrantId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "departmentPage",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "departmentPageSize",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments/member-picker-navigation",
+    "method": "get",
+    "operationId": "tenantMemberPickerNavigation",
+    "summary": "组织成员部门导航",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:read",
+    "request": null,
+    "response": "RDepartmentNavigationPage",
+    "execution": "只读部门分支，部门不可作为人员选择；不连续范围只披露可见入口",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "parentId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/groups/{id}/members",
+    "method": "get",
+    "operationId": "tenantGroupMemberPickerBound",
+    "summary": "组织组直接成员",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:read",
+    "request": null,
+    "response": "RPageResponseMemberRecord",
+    "execution": "关联表过滤分页；同时应用成员读取范围与字段投影；不回查全量ID",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/members/picker",
+    "method": "get",
+    "operationId": "tenantMemberPickerCandidates",
+    "summary": "组织成员选择候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:read",
+    "request": null,
+    "response": "RPageResponseMemberRecord",
+    "execution": "同成员范围、字段投影及有效资格；部门过滤只收窄，关键词跨部门；不返回联系方式",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "departmentId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments/{id}/leaders",
+    "method": "get",
+    "operationId": "tenantListDepartmentLeaders",
+    "summary": "部门负责人列表",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:read",
+    "request": null,
+    "response": "RDepartmentLeaderPage",
+    "execution": "部门读取和成员读取范围交集；独立关联分页；字段投影；不扩大权限",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments/{id}/leader-candidates",
+    "method": "get",
+    "operationId": "tenantDepartmentLeaderCandidates",
+    "summary": "部门负责人候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:leaders",
+    "request": null,
+    "response": "RDepartmentLeaderPage",
+    "execution": "另需部门读取及成员读取；仅当前范围内有效未绑定人员；浏览部门只收窄原范围",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "browseDepartmentId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments/{id}/leaders",
+    "method": "patch",
+    "operationId": "tenantUpdateDepartmentLeaders",
+    "summary": "设置部门负责人",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:leaders",
+    "request": "DepartmentLeaderUpdateInput",
+    "response": "RCreatedResource",
+    "execution": "组织锁及版本检查；差量原子保存；不授予权限；普通部门限定",
     "implemented": true
   },
   {
@@ -4573,6 +4895,12 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "departmentId",
+        "schema": {
+          "type": "string"
         }
       },
       {

@@ -32,11 +32,12 @@ class DatabaseSourcesTest(unittest.TestCase):
     def test_bundle_resets_each_manifest_table_before_creating_and_checks_seed_foreign_keys(self):
         bundle = render_bundle()
         tables = CREATE_TABLE.findall(bundle)
-        self.assertEqual(62, len(tables))
+        self.assertEqual(63, len(tables))
         self.assertEqual(len(tables), len(set(tables)))
         self.assertNotIn('iam_resource_field_policy', tables)
         self.assertIn('iam_field_policy', tables)
         self.assertIn('iam_member_export', tables)
+        self.assertIn('iam_department_leader', tables)
         self.assertNotRegex(bundle, r'(?mi)^\s*(?:USE|(?:CREATE|DROP) DATABASE)\b')
         drops = list(re.finditer(r'(?m)^DROP TABLE IF EXISTS `([a-z_]+)`;', bundle))
         self.assertEqual(list(reversed(tables)), [drop.group(1) for drop in drops])
