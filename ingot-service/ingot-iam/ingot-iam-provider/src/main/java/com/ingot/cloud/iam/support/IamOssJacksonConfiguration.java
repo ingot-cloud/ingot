@@ -7,6 +7,8 @@ import com.ingot.framework.commons.model.iam.CurrentProfile;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
+import com.ingot.framework.commons.model.iam.DepartmentLeaderRecord;
+import com.ingot.framework.commons.model.iam.OrganizationMemberPickerOption;
 import com.ingot.framework.commons.model.iam.TenantCreateInput;
 import com.ingot.framework.commons.model.iam.TenantRecord;
 import com.ingot.framework.commons.model.iam.TenantSettingsInput;
@@ -36,6 +38,8 @@ public class IamOssJacksonConfiguration {
     public InJackson2ObjectMapperBuilderCustomizer iamOssAvatarMixins() {
         return builder -> {
             builder.mixIn(MemberRecord.class, ReadAvatar.class);
+            builder.mixIn(DepartmentLeaderRecord.class, ReadAvatar.class);
+            builder.mixIn(OrganizationMemberPickerOption.class, ReadAvatar.class);
             builder.mixIn(TenantRecord.class, ReadAvatar.class);
             builder.mixIn(CurrentProfile.class, ReadAvatar.class);
             builder.mixIn(ApplicationRecord.class, ReadIcon.class);

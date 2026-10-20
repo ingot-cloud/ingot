@@ -22,7 +22,7 @@ public final class DepartmentLeaderSql {
     /** 生成候选或已绑定分页；两者均在分页前应用成员范围。 */
     public static String page(Map<String, Object> parameters) {
         Query q = (Query) parameters.get("q");
-        return "<script>SELECT m.id AS member_id,m.display_name,m.status,"
+        return "<script>SELECT m.id AS member_id,m.display_name,m.avatar,m.status,"
                 + (q.candidates() ? "FALSE" : "l.is_primary") + " AS primary_flag," + AVAILABLE + " AS available"
                 + source(q) + " ORDER BY " + (q.candidates() ? "m.id" : "l.is_primary DESC,m.id")
                 + " LIMIT #{q.size} OFFSET #{q.offset}</script>";
@@ -39,6 +39,7 @@ public final class DepartmentLeaderSql {
         return "<script>SELECT l.department_id,COUNT(*) AS visible_count,"
                 + "MAX(CASE WHEN l.is_primary THEN m.id END) AS member_id,"
                 + "MAX(CASE WHEN l.is_primary THEN m.display_name END) AS display_name,"
+                + "MAX(CASE WHEN l.is_primary THEN m.avatar END) AS avatar,"
                 + "MAX(CASE WHEN l.is_primary THEN m.status END) AS status,"
                 + "MAX(CASE WHEN l.is_primary THEN " + AVAILABLE + " ELSE FALSE END) AS available"
                 + MEMBERS + RELATION + " WHERE m.tenant_id=#{q.tenantId} AND l.department_id IN "

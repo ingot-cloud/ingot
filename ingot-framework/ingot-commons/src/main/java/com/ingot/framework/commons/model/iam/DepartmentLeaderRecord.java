@@ -14,6 +14,7 @@ import jakarta.validation.constraints.*;
  * @param primary 是否为主负责人
  * @param available 成员有效且账号可用
  * @param departments 当前允许披露的任职部门，随候选和已绑定页返回
+ * @param avatar 按成员头像字段策略投影的时效链接，未设置或隐藏时省略
  * @author jy
  * @since 1.0.0
  */
@@ -25,7 +26,13 @@ public record DepartmentLeaderRecord(
         @NotNull MemberStatus status,
         boolean primary,
         boolean available,
-        @NotNull List<MemberDepartmentView> departments) {
+        @NotNull List<MemberDepartmentView> departments,
+        String avatar) {
+    /** 兼容不附带头像的既有调用。 */
+    public DepartmentLeaderRecord(String memberId, String displayName, MemberStatus status, boolean primary,
+                                  boolean available, List<MemberDepartmentView> departments) {
+        this(memberId, displayName, status, primary, available, departments, null);
+    }
     /** 兼容不附带任职的既有调用。 */
     public DepartmentLeaderRecord(String memberId, String displayName, MemberStatus status, boolean primary, boolean available) {
         this(memberId, displayName, status, primary, available, List.of());

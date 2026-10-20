@@ -105,11 +105,12 @@ class OrganizationMemberPickerServiceTest {
     @Test
     void implicitRootIsSeparateFromActualRelationshipsAndDoesNotInferFromEmptyProjection() {
         when(members.pickerPage(any(),anyInt(),anyInt(),any())).thenReturn(new PageResponse<>(List.of(
-                new MemberRecord("104","零任职",null,null,null,null,MemberStatus.ACTIVE,List.of()),
+                new MemberRecord("104","零任职","ingot/member/avatar.png",null,null,null,MemberStatus.ACTIVE,List.of()),
                 new MemberRecord("108","隐藏任职",null,null,null,null,MemberStatus.ACTIVE,List.of())),2,1,20));
         when(repository.unassigned(10,List.of(BigInteger.valueOf(104),BigInteger.valueOf(108)),readableScope)).thenReturn(Set.of(BigInteger.valueOf(104)));
         var result=browse(OrganizationMemberPickerScene.MEMBER,null,null,null,null);
         assertEquals(ROOT,result.members().items().getFirst().implicitRoot());
+        assertEquals("ingot/member/avatar.png",result.members().items().getFirst().avatar());
         assertTrue(result.members().items().getFirst().departments().isEmpty());
         assertNull(result.members().items().getLast().implicitRoot());
     }

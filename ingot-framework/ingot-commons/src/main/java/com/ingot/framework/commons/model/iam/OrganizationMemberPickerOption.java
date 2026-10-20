@@ -16,8 +16,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param available 是否可新增选择
  * @param departments 真实且可披露的任职
  * @param implicitRoot 确实未绑定任何部门时可披露的根展示，不是持久化任职
+ * @param avatar 当前候选已授权的头像时效链接，未设置或隐藏时省略
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "组织成员选择器候选")
 public record OrganizationMemberPickerOption(@NotBlank String id, String name, @NotNull MemberStatus status, boolean available,
-        @NotNull List<MemberDepartmentView> departments, DepartmentNavigationEntry implicitRoot) { }
+        @NotNull List<MemberDepartmentView> departments, DepartmentNavigationEntry implicitRoot, String avatar) {
+    /** 兼容不附带头像的既有场景投影。 */
+    public OrganizationMemberPickerOption(String id, String name, MemberStatus status, boolean available,
+                                          List<MemberDepartmentView> departments, DepartmentNavigationEntry implicitRoot) {
+        this(id, name, status, available, departments, implicitRoot, null);
+    }
+}

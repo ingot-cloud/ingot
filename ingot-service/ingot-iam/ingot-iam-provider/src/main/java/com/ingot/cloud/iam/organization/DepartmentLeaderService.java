@@ -210,12 +210,13 @@ public class DepartmentLeaderService {
         var views = memberDepartments.visible(actor, rows.stream().map(DepartmentLeaderRow::getMemberId).toList());
         var batch = fields.prepare(snapshot, member(actor), rows.stream().map(row -> row.getMemberId().longValueExact()).toList());
         return rows.stream().map(row -> {
-            var raw = new MemberRecord(row.getMemberId().toString(), row.getDisplayName(), null, null, null, null,
+            var raw = new MemberRecord(row.getMemberId().toString(), row.getDisplayName(), row.getAvatar(), null, null, null,
                     row.getStatus(), List.of());
             var projected = fields.project(raw, fields.memberAccess(batch, row.getMemberId().longValueExact()),
                     BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, snapshot.masks());
             return new DepartmentLeaderRecord(raw.id(), projected.displayName(), row.getStatus(),
-                    primary || row.isPrimaryFlag(), row.isAvailable(), views.getOrDefault(row.getMemberId(), List.of()));
+                    primary || row.isPrimaryFlag(), row.isAvailable(), views.getOrDefault(row.getMemberId(), List.of()),
+                    projected.avatar());
         }).toList();
     }
 

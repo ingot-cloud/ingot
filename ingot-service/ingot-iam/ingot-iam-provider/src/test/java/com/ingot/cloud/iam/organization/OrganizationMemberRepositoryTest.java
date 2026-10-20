@@ -26,12 +26,12 @@ class OrganizationMemberRepositoryTest {
         var source = new DriverManagerDataSource("jdbc:h2:mem:"+UUID.randomUUID()+";DB_CLOSE_DELAY=-1","sa","");
         jdbc = new JdbcTemplate(source);
         jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,enabled BOOLEAN,deleted_at TIMESTAMP)");
-        jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,display_name VARCHAR(64),status VARCHAR(16))");
+        jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,display_name VARCHAR(64),avatar VARCHAR(512),status VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_member_department(tenant_id BIGINT,member_id BIGINT,department_id BIGINT,is_primary BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_tenant_group_member(tenant_id BIGINT,group_id BIGINT,member_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_department(id BIGINT PRIMARY KEY,tenant_id BIGINT,parent_id BIGINT,name VARCHAR(64),sort_order INT,version BIGINT,created_at TIMESTAMP,updated_at TIMESTAMP)");
         jdbc.update("INSERT INTO iam_account VALUES(1,TRUE,NULL),(2,TRUE,NULL),(3,FALSE,NULL),(4,TRUE,NULL)");
-        jdbc.update("INSERT INTO iam_tenant_member VALUES(101,10,1,'张一','ACTIVE'),(102,10,2,'张二','SUSPENDED'),(103,10,3,'停用','ACTIVE'),(201,20,4,'跨租户','ACTIVE')");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(101,10,1,'张一','ACTIVE'),(102,10,2,'张二','SUSPENDED'),(103,10,3,'停用','ACTIVE'),(201,20,4,'跨租户','ACTIVE')");
         jdbc.update("INSERT INTO iam_department(id,tenant_id,parent_id,name,sort_order,version) VALUES(1,10,NULL,'组织',0,0),(11,10,1,'研发',1,0),(12,10,11,'小组',1,0),(21,20,NULL,'别的组织',0,0)");
         jdbc.update("INSERT INTO iam_member_department VALUES(10,101,11,TRUE),(10,101,12,FALSE),(10,102,11,TRUE),(20,201,21,TRUE)");
         jdbc.update("INSERT INTO iam_tenant_group_member VALUES(10,31,101),(10,31,102),(20,31,201)");
@@ -43,6 +43,9 @@ class OrganizationMemberRepositoryTest {
     }
     @Test
     void activeCandidatesAndKnownSelectedHaveSeparateAvailabilityRules() {
+        jdbc.update("UPDATE iam_tenant_member SET avatar='ingot/member/avatar.png' WHERE id=101");
+        assertEquals("ingot/member/avatar.png", members.page(10,ObjectScope.all(),null,null,List.of(),1,20)
+                .getRecords().getFirst().getAvatar());
         assertEquals(1,members.page(10,ObjectScope.all(),null,null,List.of(),1,20).getTotal());
         assertEquals(1,members.page(10,ObjectScope.all(),null,null,List.of(id(102)),1,20).getTotal());
         assertEquals(0,members.page(10,ObjectScope.all(),null,null,List.of(id(103),id(201)),1,20).getTotal());
@@ -67,7 +70,7 @@ class OrganizationMemberRepositoryTest {
         jdbc.execute("CREATE TABLE iam_delegation_recipient_department(tenant_id BIGINT,delegation_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_delegation_recipient_member(tenant_id BIGINT,delegation_id BIGINT,tenant_member_id BIGINT,domain VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_tenant_group_department(tenant_id BIGINT,group_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
-        jdbc.update("INSERT INTO iam_tenant_member VALUES(104,10,4,'接收人','ACTIVE'),(105,10,1,'非接收人','ACTIVE')");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(104,10,4,'接收人','ACTIVE'),(105,10,1,'非接收人','ACTIVE')");
         jdbc.update("INSERT INTO iam_member_department VALUES(10,104,12,TRUE),(10,105,12,TRUE)");
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(10,61,101,'TENANT'),(10,61,104,'TENANT'),(20,61,201,'TENANT')");
         var direct=new TenantLiveOptionSql.Query(id(10),id(101),null,com.ingot.framework.commons.model.iam.TenantAssignmentOptionKind.MEMBER,"%",List.of(),1,0,id(12));
@@ -93,7 +96,7 @@ class OrganizationMemberRepositoryTest {
     }
     @Test
     void pickerRootUsesActualBindingsBeforePagingWithoutChangingLegacyLists() {
-        jdbc.update("INSERT INTO iam_tenant_member VALUES(104,10,1,'零任职','ACTIVE'),(105,10,1,'仅根','ACTIVE'),(106,10,1,'根及研发','ACTIVE'),(107,10,1,'仅研发','ACTIVE'),(108,10,1,'隐藏部门','ACTIVE'),(109,10,1,'子部门','ACTIVE'),(110,10,1,'本租户零任职','ACTIVE')");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(104,10,1,'零任职','ACTIVE'),(105,10,1,'仅根','ACTIVE'),(106,10,1,'根及研发','ACTIVE'),(107,10,1,'仅研发','ACTIVE'),(108,10,1,'隐藏部门','ACTIVE'),(109,10,1,'子部门','ACTIVE'),(110,10,1,'本租户零任职','ACTIVE')");
         jdbc.update("INSERT INTO iam_member_department VALUES(10,105,1,TRUE),(10,106,1,TRUE),(10,106,11,FALSE),(10,107,11,TRUE),(10,108,99,TRUE),(10,109,12,TRUE),(20,110,21,TRUE)");
         var root=MemberPickerBranch.department(1,true);
         var first=members.page(10,ObjectScope.all(),null,null,List.of(),1,1,null,root);
@@ -114,7 +117,7 @@ class OrganizationMemberRepositoryTest {
         jdbc.execute("CREATE TABLE iam_delegation_recipient_department(tenant_id BIGINT,delegation_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_delegation_recipient_member(tenant_id BIGINT,delegation_id BIGINT,tenant_member_id BIGINT,domain VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_tenant_group_department(tenant_id BIGINT,group_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
-        jdbc.update("INSERT INTO iam_tenant_member VALUES(104,10,1,'可接收零任职','ACTIVE'),(105,10,1,'不可接收零任职','ACTIVE'),(106,10,1,'可接收根及研发','ACTIVE')");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(104,10,1,'可接收零任职','ACTIVE'),(105,10,1,'不可接收零任职','ACTIVE'),(106,10,1,'可接收根及研发','ACTIVE')");
         jdbc.update("INSERT INTO iam_member_department VALUES(10,106,1,TRUE),(10,106,11,FALSE)");
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(10,61,101,'TENANT'),(10,61,104,'TENANT'),(10,61,106,'TENANT')");
         var root=MemberPickerBranch.department(1,true);

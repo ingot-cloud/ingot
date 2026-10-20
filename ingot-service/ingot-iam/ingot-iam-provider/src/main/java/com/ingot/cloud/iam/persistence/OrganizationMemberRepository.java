@@ -37,7 +37,8 @@ public class OrganizationMemberRepository {
     public Page<IamTenantMemberEntity> page(long tenantId, ObjectScope scope, Long departmentId, String keyword,
                                           List<BigInteger> selected, int page, int size, Long groupId, MemberPickerBranch branch) {
         var query = Wrappers.<IamTenantMemberEntity>lambdaQuery()
-                .select(IamTenantMemberEntity::getId, IamTenantMemberEntity::getDisplayName, IamTenantMemberEntity::getStatus)
+                .select(IamTenantMemberEntity::getId, IamTenantMemberEntity::getDisplayName,
+                        IamTenantMemberEntity::getAvatar, IamTenantMemberEntity::getStatus)
                 .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
                 .inSql(IamTenantMemberEntity::getAccountId, "SELECT id FROM iam_account WHERE enabled=TRUE AND deleted_at IS NULL");
         ObjectScopeSql.restrictTenantMembers(query, scope, BigInteger.valueOf(tenantId));

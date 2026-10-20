@@ -21,6 +21,8 @@ import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberStatus;
+import com.ingot.framework.commons.model.iam.DepartmentLeaderRecord;
+import com.ingot.framework.commons.model.iam.OrganizationMemberPickerOption;
 import com.ingot.framework.commons.oss.OssService;
 import com.ingot.framework.oss.jackson.OssUrlSerializer;
 import org.junit.jupiter.api.Test;
@@ -57,6 +59,12 @@ class IamOssJacksonConfigurationTest {
                 MemberStatus.ACTIVE, List.of());
         String json = mapper.writeValueAsString(record);
         assertTrue(json.contains("https://signed.example/ingot/user/avatar/a.png"));
+        var leader = new DepartmentLeaderRecord("1", "成员", MemberStatus.ACTIVE, true, true,
+                List.of(), "ingot/user/avatar/a.png");
+        var candidate = new OrganizationMemberPickerOption("1", "成员", MemberStatus.ACTIVE, true,
+                List.of(), null, "ingot/user/avatar/a.png");
+        assertTrue(mapper.writeValueAsString(leader).contains("https://signed.example/ingot/user/avatar/a.png"));
+        assertTrue(mapper.writeValueAsString(candidate).contains("https://signed.example/ingot/user/avatar/a.png"));
     }
 
     @Test

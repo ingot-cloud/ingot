@@ -66,13 +66,15 @@ public class OrganizationMemberPickerService {
             case MEMBER -> {
                 var data = members.pickerPage(keyword, page, size, branch);
                 yield new PageResponse<>(data.items().stream().map(row -> new OrganizationMemberPickerOption(
-                        row.id(), row.displayName(), row.status(), row.status() == MemberStatus.ACTIVE, row.departments(), null)).toList(),
+                        row.id(), row.displayName(), row.status(), row.status() == MemberStatus.ACTIVE, row.departments(), null,
+                        row.avatar())).toList(),
                         data.total(), data.page(), data.pageSize());
             }
             case DEPARTMENT_LEADER -> {
                 var data = leaders.pickerCandidates(targetDepartmentId, keyword, page, size, branch);
                 yield new PageResponse<>(data.items().stream().map(row -> new OrganizationMemberPickerOption(
-                        row.memberId(), row.displayName(), row.status(), row.available(), row.departments(), null)).toList(),
+                        row.memberId(), row.displayName(), row.status(), row.available(), row.departments(), null,
+                        row.avatar())).toList(),
                         data.total(), data.page(), data.pageSize());
             }
             case ASSIGNMENT -> {
@@ -94,7 +96,7 @@ public class OrganizationMemberPickerService {
         var implicit = unassigned;
         return new OrganizationMemberPickerPage(canNavigate, nav, new PageResponse<>(result.items().stream().map(row ->
                 new OrganizationMemberPickerOption(row.id(), row.name(), row.status(), row.available(), row.departments(),
-                        implicit.contains(BigInteger.valueOf(IamIds.require(row.id()))) ? root : null)).toList(),
+                        implicit.contains(BigInteger.valueOf(IamIds.require(row.id()))) ? root : null, row.avatar())).toList(),
                 result.total(), page, size));
     }
 

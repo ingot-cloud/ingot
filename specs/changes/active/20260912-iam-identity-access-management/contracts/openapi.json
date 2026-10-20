@@ -28463,6 +28463,9 @@
             "items": {
               "$ref": "#/components/schemas/MemberDepartmentView"
             }
+          },
+          "avatar": {
+            "type": "string"
           }
         },
         "description": "返回经成员字段策略投影的负责人最小资料，不携带联系方式或权限。"
@@ -30453,6 +30456,9 @@
           },
           "implicitRoot": {
             "$ref": "#/components/schemas/DepartmentNavigationEntry"
+          },
+          "avatar": {
+            "type": "string"
           }
         },
         "description": "组织成员选择器候选"

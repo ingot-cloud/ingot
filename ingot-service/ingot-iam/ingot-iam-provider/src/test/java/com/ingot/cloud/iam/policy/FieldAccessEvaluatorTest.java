@@ -43,6 +43,20 @@ class FieldAccessEvaluatorTest {
     private JdbcTemplate jdbc;
     private FieldAccessEvaluator evaluator;
 
+    @Test
+    void avatarUsesTheSameFieldProjectionAndHiddenPathsNeverEscape() {
+        var raw = new MemberRecord("102", "成员", "ingot/member/avatar.png", null, null, null,
+                MemberStatus.ACTIVE, List.of());
+        var resource = com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
+        var full = evaluator.project(raw, Map.of(MemberFieldKey.VALUE_AVATAR,
+                new FieldAccess(FieldVisibility.FULL, false)), resource, Map.of());
+        assertEquals("ingot/member/avatar.png", full.avatar());
+        var hidden = evaluator.project(raw, Map.of(MemberFieldKey.VALUE_AVATAR,
+                new FieldAccess(FieldVisibility.HIDDEN, false)), resource, Map.of());
+        assertNull(hidden.avatar());
+        assertEquals("ingot/member/avatar.png", raw.avatar());
+    }
+
     @BeforeAll
     void database() {
         var dataSource = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");

@@ -38,12 +38,12 @@ class DepartmentLeaderRepositoryTest {
         jdbc = new JdbcTemplate(source);
         transaction = new TransactionTemplate(new DataSourceTransactionManager(source));
         jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,enabled BOOLEAN,deleted_at TIMESTAMP)");
-        jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,display_name VARCHAR(100),status VARCHAR(16))");
+        jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,display_name VARCHAR(100),avatar VARCHAR(512),status VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_department(id BIGINT PRIMARY KEY,tenant_id BIGINT,version BIGINT)");
         jdbc.execute("CREATE TABLE iam_member_department(tenant_id BIGINT,member_id BIGINT,department_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_department_leader(tenant_id BIGINT,department_id BIGINT,member_id BIGINT,is_primary BOOLEAN,primary_department_id BIGINT GENERATED ALWAYS AS (CASE WHEN is_primary THEN department_id ELSE NULL END),PRIMARY KEY(tenant_id,department_id,member_id),UNIQUE(tenant_id,primary_department_id))");
         jdbc.update("INSERT INTO iam_account VALUES(1,TRUE,NULL),(2,TRUE,NULL),(3,FALSE,NULL),(4,TRUE,NULL),(5,TRUE,NULL),(6,TRUE,NULL),(7,TRUE,NULL)");
-        jdbc.update("INSERT INTO iam_tenant_member VALUES(101,10,1,'研发主管','ACTIVE'),(102,10,2,'暂停负责人','SUSPENDED'),(103,10,3,'停用账号','ACTIVE'),(104,10,4,'跨部兼管','ACTIVE'),(105,10,5,'离职负责人','REMOVED'),(106,10,6,'新候选','ACTIVE'),(201,20,7,'其他租户','ACTIVE')");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(101,10,1,'研发主管','ACTIVE'),(102,10,2,'暂停负责人','SUSPENDED'),(103,10,3,'停用账号','ACTIVE'),(104,10,4,'跨部兼管','ACTIVE'),(105,10,5,'离职负责人','REMOVED'),(106,10,6,'新候选','ACTIVE'),(201,20,7,'其他租户','ACTIVE')");
         jdbc.update("INSERT INTO iam_department VALUES(11,10,0),(12,10,0),(21,20,0)");
         jdbc.update("INSERT INTO iam_member_department VALUES(10,101,11),(10,101,12),(10,102,11),(10,103,11),(10,104,12),(10,105,11),(10,106,11),(20,201,21)");
         jdbc.update("INSERT INTO iam_department_leader(tenant_id,department_id,member_id,is_primary) VALUES(10,11,101,TRUE),(10,11,102,FALSE),(10,11,103,FALSE),(10,11,105,FALSE),(10,12,104,TRUE),(20,21,201,TRUE)");
@@ -53,11 +53,17 @@ class DepartmentLeaderRepositoryTest {
 
     @Test
     void boundPageRetainsUnavailableRelationsAndNeverCrossesTenant() {
+        jdbc.update("UPDATE iam_tenant_member SET avatar='ingot/member/primary.png' WHERE id=101");
+        jdbc.update("UPDATE iam_tenant_member SET avatar='ingot/member/other.png' WHERE id=102");
         var query = query(ObjectScope.all(), false);
         var rows = repository.page(query);
         assertEquals(4, repository.count(query));
         assertEquals(List.of(101L, 102L, 103L, 105L), rows.stream().map(row -> row.getMemberId().longValueExact()).toList());
         assertTrue(rows.getFirst().isPrimaryFlag());
+        assertEquals("ingot/member/primary.png", rows.getFirst().getAvatar());
+        var summary = repository.summaries(new DepartmentLeaderSql.Query(id(10), id(11), List.of(id(11)),
+                ObjectScope.all(), null, 20, 0, false)).getFirst();
+        assertEquals("ingot/member/primary.png", summary.getAvatar());
         assertTrue(rows.getFirst().isAvailable());
         assertTrue(rows.stream().skip(1).noneMatch(row -> row.isAvailable()));
         assertEquals(MemberStatus.REMOVED, rows.getLast().getStatus());
@@ -109,7 +115,7 @@ class DepartmentLeaderRepositoryTest {
 
     @Test
     void pickerRootKeepsCandidateExclusionsAndCountsDualMembershipOnce() {
-        jdbc.update("INSERT INTO iam_tenant_member VALUES(107,10,1,'零任职','ACTIVE'),(108,10,1,'根兼任','ACTIVE'),(109,10,1,'隐藏任职','ACTIVE')");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(107,10,1,'零任职','ACTIVE'),(108,10,1,'根兼任','ACTIVE'),(109,10,1,'隐藏任职','ACTIVE')");
         jdbc.update("INSERT INTO iam_member_department VALUES(10,101,1),(10,106,1),(10,108,1),(10,108,12),(10,109,99)");
         var root=new DepartmentLeaderSql.Query(id(10),id(11),List.of(),ObjectScope.all(),null,1,0,true,null,com.ingot.cloud.iam.persistence.MemberPickerBranch.department(1,true));
         assertEquals(3,repository.count(root));

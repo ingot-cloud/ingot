@@ -131,17 +131,20 @@ class DepartmentLeaderServiceTest {
     void detailFirstPageUsesRelationScopeAndFieldProjectionWithoutRecounting() {
         when(access.allows(AuthorizationDomain.TENANT, IamAction.TENANT_MEMBER_READ, false)).thenReturn(true);
         var raw = row(102, true, true); raw.setDisplayName("隐藏姓名");
+        raw.setAvatar("ingot/member/hidden.png");
         when(leaders.page(any())).thenReturn(List.of(raw));
         var snapshot = new FieldPolicySnapshot(10, PolicyScenario.MANAGEMENT, Map.of(), Map.of(), List.of(),
                 List.of(), Map.of(), Map.of(), Map.of());
         when(fields.snapshotFresh(10, PolicyScenario.MANAGEMENT)).thenReturn(snapshot);
         when(fields.project(any(MemberRecord.class), any(), any(), anyMap())).thenAnswer(invocation -> {
             MemberRecord value = invocation.getArgument(0);
+            assertEquals("ingot/member/hidden.png", value.avatar());
             return new MemberRecord(value.id(), null, null, null, null, null, value.status(), List.of());
         });
         var page = service.initialPage(actor, department, new DepartmentLeaderSummary(null, 21, true));
         assertEquals(21, page.total()); assertEquals(1, page.page()); assertEquals(20, page.pageSize());
         assertTrue(page.restricted()); assertNull(page.items().getFirst().displayName());
+        assertNull(page.items().getFirst().avatar());
         verify(leaders).page(argThat(query -> query.tenantId().equals(id(10))
                 && query.departmentId().equals(id(11)) && query.size() == 20 && query.offset() == 0
                 && !query.candidates() && query.scope().coversAll()));
@@ -167,6 +170,7 @@ class DepartmentLeaderServiceTest {
         var second = new IamDepartmentEntity(); second.setId(id(12)); second.setParentId(id(1));
         var first = row(102, true, true); first.setDepartmentId(id(11)); first.setVisibleCount(1L); first.setDisplayName("原始姓名");
         var another = row(102, true, true); another.setDepartmentId(id(12)); another.setVisibleCount(1L); another.setDisplayName("原始姓名");
+        first.setAvatar("ingot/member/visible.png"); another.setAvatar("ingot/member/visible.png");
         when(leaders.summaries(any())).thenReturn(List.of(first, another));
         var snapshot = new FieldPolicySnapshot(10, PolicyScenario.MANAGEMENT, Map.of(), Map.of(), List.of(),
                 List.of(), Map.of(), Map.of(), Map.of());
@@ -174,11 +178,12 @@ class DepartmentLeaderServiceTest {
         when(fields.project(any(MemberRecord.class), any(), any(), anyMap())).thenAnswer(invocation -> {
             MemberRecord raw = invocation.getArgument(0);
             assertNull(raw.phone()); assertNull(raw.email()); assertNull(raw.loginPhone());
-            return new MemberRecord(raw.id(), null, null, null, null, null, raw.status(), List.of());
+            return new MemberRecord(raw.id(), null, raw.avatar(), null, null, null, raw.status(), List.of());
         });
         var result = service.summaries(actor, List.of(department, second));
         assertEquals(2, result.size());
         assertNull(result.get("11").primaryLeader().displayName());
+        assertEquals("ingot/member/visible.png", result.get("11").primaryLeader().avatar());
         assertNull(result.get("12").primaryLeader().displayName());
         assertFalse(result.get("11").restricted());
         verify(leaders, times(2)).summaries(any());

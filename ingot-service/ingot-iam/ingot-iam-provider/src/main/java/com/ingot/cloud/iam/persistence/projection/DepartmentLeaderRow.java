@@ -21,6 +21,8 @@ public class DepartmentLeaderRow {
     private BigInteger memberId;
     /** 原始显示名，仅供服务端字段投影。 */
     private String displayName;
+    /** 库存头像路径，仅供字段策略处理后签发，不向客户端直接披露。 */
+    private String avatar;
     /** 原始成员状态。 */
     private MemberStatus status;
     /** 关系是否指定主负责人。 */

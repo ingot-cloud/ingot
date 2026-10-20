@@ -68,7 +68,7 @@ public class OrganizationMemberService {
         var batch = fields.prepare(snapshot, viewer, memberIds.stream().map(BigInteger::longValueExact).toList());
         var items = result.getRecords().stream().map(row -> {
             var visibleDepartments = views.getOrDefault(row.getId(), List.of());
-            var raw = new MemberRecord(row.getId().toString(), row.getDisplayName(), null, null, null, null, row.getStatus(), visibleDepartments);
+            var raw = new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(), null, null, null, row.getStatus(), visibleDepartments);
             return fields.project(raw, fields.memberAccess(batch, row.getId().longValueExact()), BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, snapshot.masks());
         }).toList();
         return new PageResponse<>(items, result.getTotal(), page, size);
