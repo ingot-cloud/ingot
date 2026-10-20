@@ -39,6 +39,10 @@ keyword映射租户member资源的displayName，实际执行清单在browse及�
 
 /leaders的page/pageSize用于已有负责人关联；browse的page/pageSize用于新增候选，departmentPage/departmentPageSize用于可展开部门，三者独立。左栏候选排除已绑定，已有不可用/受限关系不因未出现在候选中而丢失。
 
+## 头像投影（2026-10-20）
+
+DepartmentLeaderRecord与OrganizationMemberPickerOption增加可选avatar：来源为当前租户成员已授权头像，经member.avatar字段策略处理后使用框架OSS签发时效链接；未设置/隐藏时省略。关联页、候选、详情leaderPage与列表主负责人摘要，以及MEMBER/DEPARTMENT_LEADER组织浏览沿当前查询一次返回，不新增逐人请求或默认权限。ASSIGNMENT保持原资料投影；旧客户端忽略新增字段，无数据库迁移。
+
 前端选人关联快照：initialBoundPage?: Page<IamSelectOption>，records为当前已连续加载的原始可见关联（可包含多页），current为最后成功页，size为原服务页长，total为同范围关联总数。已选集合另带增删草稿，不能用过滤后的右栏人数推断是否有更多。确认事件可附带最新关联快照供父级复用。服务端路由与分页参数保持原契约。
 
 详情增量字段：DepartmentRecord.parentDepartment?: {id:string,name:string}，仅当前租户department:read范围可见时填；parentId存在但父对象不可见时省略此投影。DepartmentRecord.leaderPage?: DepartmentLeaderPage，成员读取资格有效且为普通部门时返回第1页20条，包含可见total、primaryLeader、restricted及departmentVersion。GET /departments/{id}、PATCH /departments/{id}、PUT /departments/{id}同样装配；树和通讯录省略。保持/leaders后续页契约，不将关联分页改成全量详情。没有新路由、查询参数或数据库迁移。

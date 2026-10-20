@@ -243,3 +243,13 @@ python3 -m unittest discover -s tools/iam -p 'test_contract.py'
 ```
 
 日志：/tmp/ingot-picker-http-red.log（修复前失败复现）、/tmp/ingot-picker-http-green.log（修复后通过）。需要重新构建并重启当前IAM实例，使commons分类DTO及provider控制器声明共同生效；本轮未重启用户服务或执行业务数据库迁移，真实业务环境仍待A01验收。current不提前更新，状态validating，不归档、不提交。
+
+## 负责人头像投影（2026-10-20）
+
+负责人关联页/候选、主负责人摘要及普通成员候选SQL在原范围内读取成员avatar；摘要用主负责人条件聚合，不从其他负责人取头像。姓名与头像经同一MemberRecord字段投影分别受控后装配，不附带联系方式。DepartmentLeaderRecord和OrganizationMemberPickerOption新增可选avatar，保留旧构造器，IAM ReadAvatar mixin通过@OssUrl签发响应；库存路径不变。browse在MEMBER/DEPARTMENT_LEADER及implicitRoot重装配时保留已投影头像，ASSIGNMENT保持原投影。无DDL、Token、角色、字段上限或候选范围变化。
+
+验证：commons公共契约17项、provider定向49项全部通过（DepartmentLeaderService11、DepartmentLeaderRepository6、OrganizationMemberRepository9、OrganizationMemberPickerService8、IamOssJacksonConfiguration3、FieldAccessEvaluator12）。SQL覆盖绑定页及主负责人头像一致、不用非主负责人的头像；真实字段投影覆盖FULL保留/隐藏省略且原对象不变；服务覆盖头像进入投影、姓名隐藏时头像仍可独立授权、隐藏头像不透出；OSS验证两个新DTO把库存路径签发为链接；组织浏览重装配保留头像及原分支/资格。
+
+公共契约156路径/228操作，两个DTO仅增加非必填avatar；生成及复现检查、工具契约8项、git diff --check通过。日志：/tmp/ingot-leader-avatar-backend.log、/tmp/ingot-leader-avatar-service-final.log。配套前端的浅深主题隔离组件核验见其VALIDATION.md，未访问或修改真实业务数据。
+
+需要重新构建/重启IAM并配套更新前端以展示真实头像，本轮未重启用户服务、未部署、迁移或提交。V01-V03完成，状态validating；真实上传头像及租户权限切换验收仍归A01，current不提前更新。
