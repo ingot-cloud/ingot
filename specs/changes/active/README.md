@@ -12,8 +12,6 @@
 
 当前变更：
 
-
-
 - [租户拥有者动态全权限与角色即时生效](./20261014-iam-tenant-live-authorization/README.md)（validating；2026-10-14 开发与隔离验证完成，待用户产品验收，2026-10-19已本地提交）
 - [IAM 多租户身份与访问管理重构](./20260912-iam-identity-access-management/README.md)（implementing；主变更状态以其 README 为准，旧 PMS 迁移已退出必需范围）
 - [DataScope SQL 谓词规模升级](./20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
@@ -22,5 +20,6 @@
 
 本轮已验收归档：
 
+- [20261020-iam-tenant-member-rejoin](../archive/2026/20261020-iam-tenant-member-rejoin/README.md)（completed，2026-10-20）
 - [20261020-iam-recipient-primary-key-password-index](../archive/2026/20261020-iam-recipient-primary-key-password-index/README.md)（completed，2026-10-20）
 - [20261020-iam-schema-relations](../archive/2026/20261020-iam-schema-relations/README.md)（completed，2026-10-20）

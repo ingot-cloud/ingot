@@ -9,7 +9,7 @@
 
 ## 设计与兼容
 
-- MemberRecord 新增可选 Instant joinedAt、lastLoginAt、updatedAt；仅平台详情及平台编辑成功响应填充，成员列表、组成员列表、租户响应仍省略。保留无时间的构造器以复用既有成员投影。
+- MemberRecord 新增可选 Instant joinedAt、lastLoginAt、updatedAt；平台与租户成员详情及对应编辑成功响应填充，成员列表和组成员列表仍省略。保留无时间的构造器以复用既有列表投影。
 - joinedAt 取 iam_platform_member.created_at，表示首次创建成员资格，暂停/恢复不重置；updatedAt 取该成员的 updated_at，含资料/状态等变更，不等于最后活跃；lastLoginAt 取 iam_account.last_login_at，为全局账号最近成功登录，不区分平台/租户。
 - 现有存储 LocalDateTime 明确为 UTC，读取转 Instant，API 输出 UTC Z。无新表、DDL、配置或登录事件修改。
 - 详情先执行 iam-platform:member:read 及真实成员对象范围校验；编辑成功响应沿用 member:update 的目标范围校验。通过当前操作及成员范围后，以账号 ID 精确读取白名单 username/lastLoginAt；不返回账号实体、凭证或其他身份。不要求全局账号管理权限，不新增浏览器账号查询。三项时间是固定只读元数据，与已有 username/status 一样由当前成员 read/update 操作及目标范围控制，不进入可配置资料字段或可写字段白名单；资料隐藏/脱敏策略保持。

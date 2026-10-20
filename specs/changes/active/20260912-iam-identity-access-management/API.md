@@ -131,6 +131,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/members/{id}/departments | PUT 调整关系，校验两端 |
 | /v1/tenant/members/{id}/status | PATCH 暂停/恢复成员资格 |
 | /v1/tenant/members/{id}/remove | POST 移出组织，不删除账号 |
+| /v1/tenant/members/{id}/rejoin | POST 已移出成员重新加入；权限 `iam-tenant:member:create`，清旧授权并覆盖通讯录 |
 | /v1/tenant/members/export | POST 登记共享任务，返回 `CreatedResource`；GET `/{id}/status` 返回 `ExportTask`（不含成员快照）；GET `/{id}` 下载完整投影 |
 | /v1/tenant/departments | GET 必填 `purpose=MANAGED_DEPARTMENT` 及分页；POST；/{id} GET/PUT/DELETE |
 | /v1/tenant/groups | GET 列表可选 `name` 包含匹配组名；POST 创建；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响 |
@@ -144,7 +145,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 
 平台 Selection 的 departments 必须为空，ScopeBindings 不接受 DEPARTMENTS；平台角色不接受 MEMBER_DEPARTMENTS/MANAGED_DEPARTMENTS。平台与租户的成员/组均从当前可信身份域解析。客户端提交的引用只有类型和 ID，不授予切换域的能力。同一账号同时出现在平台和租户时，两者使用各自的 memberId。
 
-成员状态使用 MemberStatus：ACTIVE（有效）、SUSPENDED（暂停）、REMOVED（已移出）。状态字段描述当前成员资格，不是全局账号状态；移出使用独立 remove 命令，不能绕过该命令通过普通资料 PATCH 修改状态。全局账号 enabled 与成员状态分开保存，授权必须同时验证。
+成员状态使用 MemberStatus：ACTIVE（有效）、SUSPENDED（暂停）、REMOVED（已移出）。状态字段描述当前成员资格，不是全局账号状态；移出使用独立 remove 命令，不能绕过该命令通过普通资料 PATCH 修改状态。已移出成员可通过 `POST /v1/tenant/members/{id}/rejoin` 或再次 `POST /v1/tenant/members` 命中同一手机号复用原行重新加入；响应 `TenantMemberCreated.rejoined=true`，旧授权关系清除。全局账号 enabled 与成员状态分开保存，授权必须同时验证。
 
 ## 4. 角色、授权、策略
 
@@ -341,7 +342,7 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 
 ## 平台成员详情只读时间（2026-10-08）
 
-`MemberRecord` 新增可选只读 `joinedAt`、`lastLoginAt`、`updatedAt`，类型为 ISO-8601 UTC Z 时间点。仅 `GET /v1/platform/members/{id}` 和平台成员编辑成功响应填写，列表/租户省略。joinedAt 为平台成员创建时间，updatedAt 为成员记录更新时间，lastLoginAt 为账号最近成功登录（平台/组织共用），无记录省略。三项是当前成员 read/update 操作及真实目标范围保护的固定元数据，非可配置资料字段；PATCH/preview 不接受它们。不新增接口或账号管理权限依赖。完整边界见 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md)。
+`MemberRecord` 新增可选只读 `joinedAt`、`lastLoginAt`、`updatedAt`，类型为 ISO-8601 UTC Z 时间点。平台与租户的成员详情，以及对应编辑成功响应填写；列表省略。joinedAt 为该域成员创建时间，updatedAt 为成员记录更新时间，lastLoginAt 为账号最近成功登录（平台/组织共用），无记录省略。三项是当前成员 read/update 操作及真实目标范围保护的固定元数据，非可配置资料字段；PATCH/preview 不接受它们。不新增账号管理权限依赖。租户详情另以 `GET /v1/tenant/members/{id}/groups` 分页返回所在用户组（直接加入并入部门来源）。完整边界见 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md)。
 
 
 ## 2026-10-09 菜单高级配置与步骤编辑
