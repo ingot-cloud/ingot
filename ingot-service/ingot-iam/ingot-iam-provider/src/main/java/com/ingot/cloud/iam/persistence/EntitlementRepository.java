@@ -336,6 +336,33 @@ public class EntitlementRepository {
         audienceGroups.insert(row);
     }
 
+    /**
+     * 删除该成员在当前租户全部人群引用，并递增所属人群版本。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @return 被删除的人群成员行数
+     */
+    public int removeAudienceMember(long tenantId, long memberId) {
+        BigInteger tenant = id(tenantId);
+        BigInteger member = id(memberId);
+        List<BigInteger> applications = audienceMembers.selectList(Wrappers.<IamAudienceMemberEntity>lambdaQuery()
+                .select(IamAudienceMemberEntity::getApplicationId)
+                .eq(IamAudienceMemberEntity::getTenantId, tenant)
+                .eq(IamAudienceMemberEntity::getMemberId, member))
+                .stream().map(IamAudienceMemberEntity::getApplicationId).distinct().toList();
+        int removed = audienceMembers.delete(Wrappers.<IamAudienceMemberEntity>lambdaQuery()
+                .eq(IamAudienceMemberEntity::getTenantId, tenant)
+                .eq(IamAudienceMemberEntity::getMemberId, member));
+        if (!applications.isEmpty()) {
+            audiences.update(Wrappers.<IamAppAudienceEntity>lambdaUpdate()
+                    .eq(IamAppAudienceEntity::getTenantId, tenant)
+                    .in(IamAppAudienceEntity::getApplicationId, applications)
+                    .setSql("version = version + 1"));
+        }
+        return removed;
+    }
+
     private static BigInteger id(long value) {
         return BigInteger.valueOf(value);
     }

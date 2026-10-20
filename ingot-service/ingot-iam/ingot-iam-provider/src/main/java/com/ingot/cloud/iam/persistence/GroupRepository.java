@@ -413,6 +413,33 @@ public class GroupRepository {
     }
 
     /**
+     * 删除该租户成员的直接入组关系，并递增所属用户组版本。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @return 被删除的入组行数
+     */
+    public int removeTenantMember(long tenantId, long memberId) {
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        BigInteger member = BigInteger.valueOf(memberId);
+        List<BigInteger> groupIds = tenantMembers.selectList(Wrappers.<IamTenantGroupMemberEntity>lambdaQuery()
+                .select(IamTenantGroupMemberEntity::getGroupId)
+                .eq(IamTenantGroupMemberEntity::getTenantId, tenant)
+                .eq(IamTenantGroupMemberEntity::getMemberId, member))
+                .stream().map(IamTenantGroupMemberEntity::getGroupId).distinct().toList();
+        int removed = tenantMembers.delete(Wrappers.<IamTenantGroupMemberEntity>lambdaQuery()
+                .eq(IamTenantGroupMemberEntity::getTenantId, tenant)
+                .eq(IamTenantGroupMemberEntity::getMemberId, member));
+        if (!groupIds.isEmpty()) {
+            tenantGroups.update(Wrappers.<IamTenantGroupEntity>lambdaUpdate()
+                    .eq(IamTenantGroupEntity::getTenantId, tenant)
+                    .in(IamTenantGroupEntity::getId, groupIds)
+                    .setSql("version = version + 1"));
+        }
+        return removed;
+    }
+
+    /**
      * 插入平台组成员。
      *
      * @param groupId 组 ID

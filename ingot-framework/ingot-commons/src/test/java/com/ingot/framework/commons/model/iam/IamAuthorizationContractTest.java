@@ -297,7 +297,7 @@ class IamAuthorizationContractTest {
                 RoleRevisionMetadataInput.class, RoleApplicationPrepareInput.class, RolePublishApplicationInput.class,
                 RoleApplicationChangeInput.class, RoleApplicationConfirmInput.class, RoleApplicationRefreshInput.class,
                 RoleApplicationTask.class, RoleApplicationItem.class, RoleRevisionDistribution.class,
-                UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, TenantMemberCreateInput.class, TenantMemberCreated.class, MemberProfileInput.class, PlatformMemberEditInput.class, PlatformMemberEditPreview.class, MemberBoundRole.class,
+                UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, TenantMemberCreateInput.class, TenantMemberRejoinInput.class, TenantMemberCreated.class, MemberProfileInput.class, PlatformMemberEditInput.class, PlatformMemberEditPreview.class, MemberBoundRole.class,
                 MemberRoleView.class, MemberRoleReplaceInput.class, MemberDepartmentInput.class,
                 TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class, DepartmentDraft.class,
                 DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class, ResourceDraft.class,
@@ -463,6 +463,11 @@ class IamAuthorizationContractTest {
         Schema<?> member = schemas.get("MemberRecord");
         assertNotNull(member.getProperties().get("loginPhone"));
         assertFalse(member.getRequired().contains("loginPhone"));
+        Schema<?> created = schemas.get("TenantMemberCreated");
+        assertTrue(created.getRequired().containsAll(List.of("id", "version", "accountCreated", "rejoined")));
+        assertNotNull(schemas.get("TenantMemberRejoinInput"));
+        assertTrue(schemas.get("TenantMemberRejoinInput").getRequired()
+                .containsAll(List.of("expectedVersion", "displayName", "phone", "departments")));
         for (var field : List.of("joinedAt", "lastLoginAt", "updatedAt")) {
             Schema<?> time = (Schema<?>) member.getProperties().get(field);
             assertEquals("string", time.getType());

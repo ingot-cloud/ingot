@@ -12,6 +12,7 @@ import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.AccountQueryRepository;
 import com.ingot.cloud.iam.persistence.MemberQueryRepository;
 import com.ingot.cloud.iam.persistence.entity.IamAccountEntity;
+import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.framework.authorization.field.FieldProjectionEngine;
@@ -22,7 +23,9 @@ import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberDepartmentBinding;
+import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.model.iam.TenantMemberCreateInput;
+import com.ingot.framework.commons.model.iam.TenantMemberCreated;
 import com.ingot.framework.security.account.domain.model.UserAccount;
 import com.ingot.framework.security.account.domain.port.inbound.RegisterUserUseCase;
 import com.ingot.framework.security.credential.service.InitialPasswordService;
@@ -66,6 +69,7 @@ class TenantMemberOnboardingTest {
     private MemberQueryRepository members;
     private RegisterUserUseCase registerUser;
     private InitialPasswordService initialPasswords;
+    private MemberRejoin rejoins;
     private TenantMemberOnboarding service;
 
     @BeforeEach
@@ -80,6 +84,7 @@ class TenantMemberOnboardingTest {
         IamAuditWriter audits = mock(IamAuditWriter.class);
         registerUser = mock(RegisterUserUseCase.class);
         initialPasswords = mock(InitialPasswordService.class);
+        rejoins = mock(MemberRejoin.class);
         AtomicLong ids = new AtomicLong(9000);
         when(access.require(AuthorizationDomain.TENANT, IamAction.TENANT_MEMBER_CREATE))
                 .thenReturn(new ActiveIdentity(TENANT, "0", "0", "0"));
@@ -87,8 +92,9 @@ class TenantMemberOnboardingTest {
         when(projection.submitted(any(), any(), eq(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)))
                 .thenReturn(Map.of());
         when(members.lockDepartment(anyLong(), anyLong())).thenReturn(true);
+        when(members.lockTenantByAccount(anyLong(), anyLong())).thenReturn(null);
         service = new TenantMemberOnboarding(access, scopes, assignments, members, accounts, projection, fieldWrites,
-                audits, registerUser, initialPasswords, passthroughTransactions());
+                audits, registerUser, initialPasswords, rejoins, passthroughTransactions());
     }
 
     @Test
@@ -103,6 +109,7 @@ class TenantMemberOnboardingTest {
 
         assertEquals("9001", result.id());
         assertTrue(result.accountCreated());
+        assertFalse(result.rejoined());
         assertEquals(PASSWORD, result.initialPassword());
         ArgumentCaptor<RegisterUserUseCase.RegisterUserCommand> command = ArgumentCaptor
                 .forClass(RegisterUserUseCase.RegisterUserCommand.class);
@@ -120,9 +127,50 @@ class TenantMemberOnboardingTest {
         var result = service.create(input());
 
         assertFalse(result.accountCreated());
+        assertFalse(result.rejoined());
         assertNull(result.initialPassword());
         verify(registerUser, never()).register(any());
         verify(members).insertTenant(9000L, 10L, 88L, "张三", null, PHONE, "a@example.com");
+        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void rejoinsRemovedMembership() {
+        when(accounts.listByPhone(PHONE)).thenReturn(List.of(account(88, PHONE, true)));
+        IamTenantMemberEntity removed = member(77, 88, MemberStatus.REMOVED);
+        when(members.lockTenantByAccount(10L, 88L)).thenReturn(removed);
+        when(rejoins.applyLocked(any(), eq(removed), eq("张三"), eq(PHONE), eq("a@example.com"), any()))
+                .thenReturn(new TenantMemberCreated("77", "2", false, null, true));
+
+        var result = service.create(input());
+
+        assertEquals("77", result.id());
+        assertTrue(result.rejoined());
+        assertFalse(result.accountCreated());
+        verify(members, never()).insertTenant(anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
+        verify(rejoins).applyLocked(any(), eq(removed), eq("张三"), eq(PHONE), eq("a@example.com"), any());
+    }
+
+    @Test
+    void rejectsActiveMembershipBeforeInsert() {
+        when(accounts.listByPhone(PHONE)).thenReturn(List.of(account(88, PHONE, true)));
+        when(members.lockTenantByAccount(10L, 88L)).thenReturn(member(77, 88, MemberStatus.ACTIVE));
+
+        BizException failure = assertThrows(BizException.class, () -> service.create(input()));
+        assertEquals(TenantMemberOnboarding.MEMBERSHIP_EXISTS, failure.getMessage());
+        verify(members, never()).insertTenant(anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
+        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void rejectsSuspendedMembershipBeforeInsert() {
+        when(accounts.listByPhone(PHONE)).thenReturn(List.of(account(88, PHONE, true)));
+        when(members.lockTenantByAccount(10L, 88L)).thenReturn(member(77, 88, MemberStatus.SUSPENDED));
+
+        BizException failure = assertThrows(BizException.class, () -> service.create(input()));
+        assertEquals(TenantMemberOnboarding.MEMBERSHIP_EXISTS, failure.getMessage());
+        verify(members, never()).insertTenant(anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
+        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -167,6 +215,17 @@ class TenantMemberOnboardingTest {
     private static TenantMemberCreateInput input() {
         return new TenantMemberCreateInput("张三", PHONE, "a@example.com",
                 List.of(new MemberDepartmentBinding("11", true)));
+    }
+
+    private static IamTenantMemberEntity member(long id, long accountId, MemberStatus status) {
+        IamTenantMemberEntity row = new IamTenantMemberEntity();
+        row.setId(BigInteger.valueOf(id));
+        row.setTenantId(BigInteger.TEN);
+        row.setAccountId(BigInteger.valueOf(accountId));
+        row.setStatus(status);
+        row.setVersion(BigInteger.ONE);
+        row.setDisplayName("旧名");
+        return row;
     }
 
     private static IamAccountEntity account(long id, String phone, boolean enabled) {

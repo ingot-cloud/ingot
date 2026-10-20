@@ -1,9 +1,9 @@
 package com.ingot.cloud.iam.persistence.entity;
 
 import java.math.BigInteger;
-import java.time.LocalDateTime;
-import com.baomidou.mybatisplus.annotation.*;
-import com.ingot.framework.commons.model.iam.MemberStatus;
+
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
 import lombok.Setter;
 

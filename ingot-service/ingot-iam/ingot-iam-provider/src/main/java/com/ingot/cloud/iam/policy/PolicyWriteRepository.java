@@ -616,6 +616,19 @@ public class PolicyWriteRepository {
         return ids;
     }
 
+    /**
+     * 删除该成员在当前租户全部策略选择器引用。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @return 被删除的选择器成员行数
+     */
+    public int removeSelectorMember(long tenantId, long memberId) {
+        return selectorMembers.delete(Wrappers.<IamPolicySelectorMemberEntity>lambdaQuery()
+                .eq(IamPolicySelectorMemberEntity::getTenantId, id(tenantId))
+                .eq(IamPolicySelectorMemberEntity::getMemberId, id(memberId)));
+    }
+
     private static BigInteger id(long value) {
         return BigInteger.valueOf(value);
     }

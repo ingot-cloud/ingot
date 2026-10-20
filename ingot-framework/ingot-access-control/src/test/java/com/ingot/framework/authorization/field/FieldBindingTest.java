@@ -69,6 +69,24 @@ class FieldBindingTest {
     }
 
     @Test
+    void tenantMemberRejoinAcceptsVersionAsPublicKey() {
+        assertDoesNotThrow(() -> registry.register(TenantMemberRejoinInput.class, MemberResources.TENANT_MEMBER,
+                IamAction.VALUE_TENANT_MEMBER_CREATE, FieldUse.WRITE));
+    }
+
+    @Test
+    void tenantMemberFilterAcceptsDepartmentAndStatusPublicKeys() throws Exception {
+        var plan = registry.register(TenantMemberFilter.class, MemberResources.TENANT_MEMBER,
+                IamAction.VALUE_TENANT_MEMBER_READ, FieldUse.FILTER);
+        assertDoesNotThrow(() -> FieldInputCollector.collect(
+                mapper.readTree("{\"page\":\"1\",\"pageSize\":\"20\",\"departmentId\":\"1001103\"}"), plan));
+        assertDoesNotThrow(() -> FieldInputCollector.collect(
+                mapper.readTree("{\"page\":\"1\",\"pageSize\":\"20\",\"status\":\"ACTIVE\"}"), plan));
+        assertThrows(SdkAuthorizationException.class, () -> FieldInputCollector.collect(
+                mapper.readTree("{\"unknown\":\"1\"}"), plan));
+    }
+
+    @Test
     void maskedEditableMayWriteAndClearButHiddenCannot() {
         var masked = Map.of(PHONE, new FieldAccess(FieldVisibility.MASKED, true));
         FieldPolicyProcessor.requireWritable(Map.of(PHONE, "new-value"), masked);

@@ -512,6 +512,55 @@ public class MemberQueryRepository {
     }
 
     /**
+     * 在调用方事务中锁定租户成员，包含已移出。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @return 锁定行，不存在时为空
+     */
+    public IamTenantMemberEntity lockTenantAny(long tenantId, long memberId) {
+        return tenantMembers.lockAny(BigInteger.valueOf(tenantId), BigInteger.valueOf(memberId));
+    }
+
+    /**
+     * 按账号锁定当前租户成员资格，包含已移出。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param accountId 全局账号 ID
+     * @return 锁定行，从未加入时为空
+     */
+    public IamTenantMemberEntity lockTenantByAccount(long tenantId, long accountId) {
+        return tenantMembers.lockByAccount(BigInteger.valueOf(tenantId), BigInteger.valueOf(accountId));
+    }
+
+    /**
+     * 将已移出成员改回在职并覆盖通讯录资料。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @param displayName 显示名称
+     * @param phone 组织通讯录手机号
+     * @param email 组织通讯录邮箱，可空
+     * @param version 锁定时读到的版本
+     * @return 受影响行数；为 0 表示版本冲突或资格已不是移出
+     */
+    public int rejoinTenant(long tenantId, long memberId, String displayName, String phone, String email,
+            BigInteger version) {
+        return tenantMembers.update(Wrappers.<IamTenantMemberEntity>lambdaUpdate()
+                .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .eq(IamTenantMemberEntity::getId, BigInteger.valueOf(memberId))
+                .eq(IamTenantMemberEntity::getVersion, version)
+                .eq(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED)
+                .set(IamTenantMemberEntity::getDisplayName, displayName)
+                .set(IamTenantMemberEntity::getAvatar, null)
+                .set(IamTenantMemberEntity::getPhone, phone)
+                .set(IamTenantMemberEntity::getEmail, email)
+                .set(IamTenantMemberEntity::getStatus, MemberStatus.ACTIVE)
+                .set(IamTenantMemberEntity::getVersion, version.add(BigInteger.ONE))
+                .set(IamTenantMemberEntity::getUpdatedAt, LocalDateTime.now(ZoneOffset.UTC)));
+    }
+
+    /**
      * 在调用方事务中锁定当前租户部门。
      *
      * @param tenantId 已授权租户 ID

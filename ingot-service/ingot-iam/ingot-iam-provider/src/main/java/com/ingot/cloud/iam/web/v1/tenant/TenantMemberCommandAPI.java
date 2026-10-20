@@ -9,6 +9,7 @@ import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
 import com.ingot.cloud.iam.organization.MemberCommandService;
 import com.ingot.cloud.iam.organization.MemberExportService;
 import com.ingot.cloud.iam.organization.MemberQueryService;
+import com.ingot.cloud.iam.organization.MemberRejoin;
 import com.ingot.cloud.iam.organization.TenantMemberOnboarding;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -17,6 +18,7 @@ import com.ingot.framework.commons.model.iam.ExportTask;
 import com.ingot.framework.commons.model.iam.GroupRecord;
 import com.ingot.framework.commons.model.iam.TenantMemberCreateInput;
 import com.ingot.framework.commons.model.iam.TenantMemberCreated;
+import com.ingot.framework.commons.model.iam.TenantMemberRejoinInput;
 import com.ingot.framework.commons.model.iam.MemberDepartmentInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
@@ -43,7 +45,7 @@ import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
 import com.ingot.framework.security.crypto.annotation.InEncrypt;
 
 /**
- * <p>提供租户成员列表、创建、资料、暂停、移出与任职替换，跨租户引用由服务端拒绝。</p>
+ * <p>提供租户成员列表、创建、重新加入、资料、暂停、移出与任职替换，跨租户引用由服务端拒绝。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -57,6 +59,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
     private final MemberQueryService queries;
     private final MemberExportService exports;
     private final TenantMemberOnboarding onboarding;
+    private final MemberRejoin rejoins;
     private final com.ingot.cloud.iam.organization.OrganizationMemberService picker;
 
     /** 同范围的最小有效人员候选，供组织业务表单选择使用。 */
@@ -193,6 +196,20 @@ public class TenantMemberCommandAPI implements RShortcuts {
     @PostMapping("/{id}/remove")
     public R<CreatedResource> remove(@PathVariable String id, @Valid @RequestBody VersionInput input) {
         return ok(members.remove(AuthorizationDomain.TENANT, id, input));
+    }
+
+    /**
+     * 把已移出租户成员重新加入当前组织。
+     *
+     * @param id 租户成员 ID
+     * @param input 姓名、联系方式、任职与预期版本
+     * @return 复用后的成员结果
+     */
+    @Operation(summary = "重新加入已移出成员")
+    @PostMapping("/{id}/rejoin")
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_CREATE, use = FieldUse.WRITE, valueType = TenantMemberRejoinInput.class)
+    public R<TenantMemberCreated> rejoin(@PathVariable String id, @Valid @RequestBody TenantMemberRejoinInput input) {
+        return ok(rejoins.rejoin(id, input));
     }
 
     /**

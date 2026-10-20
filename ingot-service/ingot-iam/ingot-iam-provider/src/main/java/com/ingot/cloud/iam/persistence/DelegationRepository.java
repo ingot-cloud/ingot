@@ -418,6 +418,48 @@ public class DelegationRepository {
                 .orderByAsc(IamRoleAssignmentEntity::getId));
     }
 
+    /**
+     * 列出该租户成员作为管理员且仍有效的委派。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @return 按 ID 排序的有效委派
+     */
+    public List<IamDelegationGrantEntity> listActiveAdministeredBy(long tenantId, long memberId) {
+        return grants.selectList(Wrappers.<IamDelegationGrantEntity>lambdaQuery()
+                .eq(IamDelegationGrantEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .eq(IamDelegationGrantEntity::getTenantAdministratorId, BigInteger.valueOf(memberId))
+                .eq(IamDelegationGrantEntity::getStatus, GrantStatus.ACTIVE)
+                .orderByAsc(IamDelegationGrantEntity::getId));
+    }
+
+    /**
+     * 删除该租户成员作为接收者的行，并递增所属委派版本。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @return 被删除的接收行数
+     */
+    public int removeRecipientMember(long tenantId, long memberId) {
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        BigInteger member = BigInteger.valueOf(memberId);
+        List<BigInteger> delegationIds = recipientMembers.selectList(
+                Wrappers.<IamDelegationRecipientMemberEntity>lambdaQuery()
+                        .select(IamDelegationRecipientMemberEntity::getDelegationId)
+                        .eq(IamDelegationRecipientMemberEntity::getTenantId, tenant)
+                        .eq(IamDelegationRecipientMemberEntity::getTenantMemberId, member))
+                .stream().map(IamDelegationRecipientMemberEntity::getDelegationId).distinct().toList();
+        int removed = recipientMembers.delete(Wrappers.<IamDelegationRecipientMemberEntity>lambdaQuery()
+                .eq(IamDelegationRecipientMemberEntity::getTenantId, tenant)
+                .eq(IamDelegationRecipientMemberEntity::getTenantMemberId, member));
+        if (!delegationIds.isEmpty()) {
+            grants.update(Wrappers.<IamDelegationGrantEntity>lambdaUpdate()
+                    .in(IamDelegationGrantEntity::getId, delegationIds)
+                    .setSql("version = version + 1"));
+        }
+        return removed;
+    }
+
     private static LambdaQueryWrapper<IamDelegationGrantEntity> scoped(AuthorizationDomain domain, Long tenantId) {
         LambdaQueryWrapper<IamDelegationGrantEntity> wrapper = Wrappers.<IamDelegationGrantEntity>lambdaQuery()
                 .eq(IamDelegationGrantEntity::getDomain, domain);

@@ -61,4 +61,16 @@ public interface IamDepartmentLeaderMapper {
     @Update("UPDATE iam_department SET version=version+1 WHERE tenant_id=#{tenant} AND id=#{department} AND version=#{version}")
     int incrementVersion(@Param("tenant") BigInteger tenant, @Param("department") BigInteger department,
                          @Param("version") BigInteger version);
+
+    /** 读取该成员当前负责的部门，供重新加入前清理。 */
+    @Select("SELECT department_id FROM iam_department_leader WHERE tenant_id=#{tenant} AND member_id=#{member} ORDER BY department_id")
+    List<BigInteger> departmentsOfMember(@Param("tenant") BigInteger tenant, @Param("member") BigInteger member);
+
+    /** 删除该成员在当前租户的全部负责人关系。 */
+    @Delete("DELETE FROM iam_department_leader WHERE tenant_id=#{tenant} AND member_id=#{member}")
+    int removeMember(@Param("tenant") BigInteger tenant, @Param("member") BigInteger member);
+
+    /** 清理负责人后递增部门版本，不匹配读取时的旧版本。 */
+    @Update("UPDATE iam_department SET version=version+1 WHERE tenant_id=#{tenant} AND id=#{department}")
+    int bumpVersion(@Param("tenant") BigInteger tenant, @Param("department") BigInteger department);
 }

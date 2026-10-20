@@ -684,6 +684,21 @@ public class AssignmentRepository {
                 com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE);
     }
 
+    /**
+     * 列出当前租户成员仍有效的直接角色分配。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @return 按 ID 排序的有效分配
+     */
+    public List<IamRoleAssignmentEntity> listActiveTenantMember(long tenantId, long memberId) {
+        return assignments.selectList(Wrappers.<IamRoleAssignmentEntity>lambdaQuery()
+                .eq(IamRoleAssignmentEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .eq(IamRoleAssignmentEntity::getTenantMemberId, BigInteger.valueOf(memberId))
+                .eq(IamRoleAssignmentEntity::getStatus, GrantStatus.ACTIVE)
+                .orderByAsc(IamRoleAssignmentEntity::getId));
+    }
+
     /** 当前事务写入后保留至少一个长期可用超级管理员。 */
     public void requireAvailableAdministrator() {
         if (assignments.availablePermanentAdministrators(

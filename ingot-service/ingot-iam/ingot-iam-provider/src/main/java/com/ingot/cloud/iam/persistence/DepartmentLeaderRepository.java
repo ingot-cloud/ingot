@@ -79,6 +79,24 @@ public class DepartmentLeaderRepository {
             throw new BizException(IamReasonCode.REVISION_CONFLICT);
         }
     }
+    /**
+     * 删除该成员在当前租户的全部负责人关系，并递增所属部门版本。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param memberId 租户成员 ID
+     * @return 被删除的关系数
+     */
+    public int removeMember(long tenantId, long memberId) {
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        BigInteger member = BigInteger.valueOf(memberId);
+        List<BigInteger> departments = mapper.departmentsOfMember(tenant, member);
+        int removed = mapper.removeMember(tenant, member);
+        for (BigInteger department : departments) {
+            mapper.bumpVersion(tenant, department);
+        }
+        return removed;
+    }
+
     private static BigInteger primary(Map<BigInteger, Boolean> relations) {
         return relations.entrySet().stream().filter(entry -> Boolean.TRUE.equals(entry.getValue()))
                 .map(Map.Entry::getKey).findFirst().orElse(null);

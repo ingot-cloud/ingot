@@ -13,6 +13,7 @@ import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.AccountQueryRepository;
 import com.ingot.cloud.iam.persistence.MemberQueryRepository;
 import com.ingot.cloud.iam.persistence.entity.IamAccountEntity;
+import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamIds;
@@ -25,6 +26,7 @@ import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberDepartmentBinding;
+import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.model.iam.TenantMemberCreateInput;
 import com.ingot.framework.commons.model.iam.TenantMemberCreated;
 import com.ingot.framework.commons.model.iam.extension.ScopeTarget;
@@ -40,7 +42,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * <p>
- * 按手机号把全局账号加入当前租户；没有账号时先签发初始密码再创建成员。
+ * 按手机号把全局账号加入当前租户；没有账号时先签发初始密码再创建成员。命中已移出资格时复用原成员行重新加入。
  * </p>
  *
  * @author jy
@@ -68,6 +70,7 @@ public class TenantMemberOnboarding {
     private final IamAuditWriter audits;
     private final RegisterUserUseCase registerUser;
     private final InitialPasswordService initialPasswords;
+    private final MemberRejoin rejoins;
     private final TransactionTemplate transaction;
 
     /**
@@ -86,12 +89,14 @@ public class TenantMemberOnboarding {
      * @param audits 同事务审计
      * @param registerUser 注册用例
      * @param initialPasswords 初始密码
+     * @param rejoins 已移出成员重新加入
      * @param transactionManager 同一数据源事务
      */
     public TenantMemberOnboarding(IamAccess access, ResourceAccess scopes, AssignmentService assignments,
             MemberQueryRepository members, AccountQueryRepository accounts, FieldProjectionEngine projection,
             FieldWriteExecutor fieldWrites, IamAuditWriter audits, RegisterUserUseCase registerUser,
-            InitialPasswordService initialPasswords, PlatformTransactionManager transactionManager) {
+            InitialPasswordService initialPasswords, MemberRejoin rejoins,
+            PlatformTransactionManager transactionManager) {
         this.access = access;
         this.scopes = scopes;
         this.assignments = assignments;
@@ -102,6 +107,7 @@ public class TenantMemberOnboarding {
         this.audits = audits;
         this.registerUser = registerUser;
         this.initialPasswords = initialPasswords;
+        this.rejoins = rejoins;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -129,8 +135,13 @@ public class TenantMemberOnboarding {
             assignments.lockAuthorization(AuthorizationDomain.TENANT);
             access.require(AuthorizationDomain.TENANT, IamAction.TENANT_MEMBER_CREATE);
             ResolvedAccount resolved = resolveAccount(actor, phone, email);
+            long tenantId = IamIds.require(actor.context().tenantId());
+            IamTenantMemberEntity existing = members.lockTenantByAccount(tenantId, resolved.accountId());
+            if (existing != null && existing.getStatus() != MemberStatus.REMOVED) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), MEMBERSHIP_EXISTS);
+            }
+            long id = existing == null ? access.nextId() : existing.getId().longValueExact();
             scopes.requireCreate(actor.context(), IamAction.TENANT_MEMBER_CREATE, departmentIds);
-            long id = access.nextId();
             var resource = BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
             var submitted = projection.submitted(input, input.suppliedFields(), resource).getOrDefault(resource,
                     Map.of());
@@ -138,7 +149,9 @@ public class TenantMemberOnboarding {
                     new ScopeTarget(IamIds.text(id), IamIds.text(id), actor.context().tenantId(),
                             List.copyOf(departmentIds)),
                     submitted);
-            long tenantId = IamIds.require(actor.context().tenantId());
+            if (existing != null) {
+                return rejoins.applyLocked(actor, existing, displayName, phone, email, departmentBindings);
+            }
             try {
                 members.insertTenant(id, tenantId, resolved.accountId(), displayName, null, phone, email);
                 replaceDepartments(tenantId, id, departmentBindings);
@@ -148,7 +161,7 @@ public class TenantMemberOnboarding {
             audits.write(actor.context(), access.nextId(), MEMBER_TARGET, IamIds.text(id), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, displayName), Map.of(MEMBER_TARGET, INITIAL_VERSION));
             return new TenantMemberCreated(IamIds.text(id), INITIAL_VERSION, resolved.created(),
-                    resolved.password());
+                    resolved.password(), Boolean.FALSE);
         });
     }
 
