@@ -19,6 +19,7 @@
 
 ## 2. 数据模型
 
+- `password_history`：保留自增id主键、`UNIQUE(user_id,sequence_number)`及`idx_created_at`，按用户查询可使用联合唯一键左前缀，不维护独立`idx_user_id`。环形槽位覆盖、version递增、历史校验和按用户删除行为保留；最近历史仍按created_at倒序及limit读取。框架权威DDL由`ingot-security-credential-data`维护，IAM共库结构与其一致，见[持久化契约](../../iam/database-persistence/SPEC.md)。
 - `password_expiration`（`ingot_core`）：`user_id`、`last_changed_at`、`expires_at`、`force_change TINYINT(1)`、`grace_login_remaining INT`、`next_warning_at`。
   - `force_change` 由迁移 `databases/migrations/008_add_force_change_password_expiration.sql` 补齐（存量按 `sys_user.must_change_pwd` 回填），回滚见 `rollback_008.sql`。
 - `sys_user` / `member_user`：`must_change_pwd`、`password_changed_at`（复用，未新增列）。

@@ -1,6 +1,6 @@
 # IAM 接收成员显式主键与密码历史索引精简
 
-> 状态：validating
+> 状态：completed
 
 - Change ID：`20261020-iam-recipient-primary-key-password-index`
 - 负责人：jy；创建日期：2026-10-20。
@@ -19,5 +19,9 @@
 ## 完成记录
 
 - 开发与隔离验证：2026-10-20完成；正常工作区18项Java、54项隔离MySQL及11项Python工具检查通过，两版本索引18组配置对照通过；详见验证记录。
-- 部署验收：待完成；验收前不更新 current 或归档。
-- 提交：用户未要求，不创建提交。
+- 部署/产品验收：2026-10-20，用户明确确认“验收完成，归档spec，并且提交代码”。
+- 实现提交：`57335bda130407d16f9ab51694a570a01fab0b77`（perf(iam)!: 减少关系重写并统一接收成员主键发号）。
+
+- 完成日期：2026-10-20。
+- 当前基线：[IAM数据结构与关系持久化](../../../../current/iam/database-persistence/README.md)、[租户成员](../../../../current/iam/tenant-members/SPEC.md)、[租户部门](../../../../current/iam/tenant-departments/SPEC.md)、[凭证安全](../../../../current/security/credential-security/SPEC.md)。
+- 设计差异：采用用户最终确认的Leaf/IdType.INPUT；未采用早期讨论的数据库自增方案，其他表结构未扩展。

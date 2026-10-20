@@ -1,6 +1,6 @@
 # IAM 字段说明、关系差量写入与主键评估
 
-> 状态：validating
+> 状态：completed
 
 - Change ID：`20261020-iam-schema-relations`
 - 负责人：jy
@@ -19,5 +19,9 @@
 ## 完成记录
 
 - 开发与隔离验证：2026-10-20完成；88个不同Java用例、54个隔离MySQL用例及11个Python工具用例通过，生成和链接核对通过。详见[验证记录](./VALIDATION.md)。
-- 部署验收：待完成；验证前不修改 current，不提前归档。
-- 提交：用户未要求，不创建提交。
+- 部署/产品验收：2026-10-20，用户明确确认“验收完成，归档spec，并且提交代码”。
+- 实现提交：`57335bda130407d16f9ab51694a570a01fab0b77`（perf(iam)!: 减少关系重写并统一接收成员主键发号）。
+
+- 完成日期：2026-10-20。
+- 当前基线：[IAM数据结构与关系持久化](../../../../current/iam/database-persistence/README.md)、[租户成员](../../../../current/iam/tenant-members/SPEC.md)、[租户部门](../../../../current/iam/tenant-departments/SPEC.md)、[凭证安全](../../../../current/security/credential-security/SPEC.md)。
+- 设计差异：本变更无范围偏离；后续Leaf主键与密码索引由[独立变更](../20261020-iam-recipient-primary-key-password-index/README.md)实施并一并验收。

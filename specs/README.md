@@ -188,15 +188,16 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [IAM 接收成员主键与密码索引](./changes/active/20261020-iam-recipient-primary-key-password-index/README.md)（validating；开发完成，待部署验收）
 
-- [IAM 字段说明与关系写入优化](./changes/active/20261020-iam-schema-relations/README.md)（validating；开发与隔离验证完成，待部署验收）
 
 - [租户拥有者动态全权限与角色即时生效](./changes/active/20261014-iam-tenant-live-authorization/README.md)（validating；2026-10-14 开发与隔离验证完成，待用户产品验收，2026-10-19已本地提交）
 - [IAM 多租户身份与访问管理重构](./changes/active/20260912-iam-identity-access-management/README.md)（implementing；全新系统授权补齐、框架复用与平台登录契约，历史迁移退出范围）
 - [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
 已归档（2026）：
+
+- [IAM 接收成员主键与密码索引](./changes/archive/2026/20261020-iam-recipient-primary-key-password-index/README.md)（completed，2026-10-20用户验收）；[当前持久化基线](./current/iam/database-persistence/README.md)
+- [IAM 字段说明与关系写入优化](./changes/archive/2026/20261020-iam-schema-relations/README.md)（completed，2026-10-20用户验收）；[当前持久化基线](./current/iam/database-persistence/README.md)
 
 - [部门负责人独立维护](./changes/archive/2026/20261019-iam-department-leaders/README.md)（completed，2026-10-20 用户确认验收完成）；[租户部门](./current/iam/tenant-departments/README.md)、[组织成员选择](./current/iam/organization-member-picker/README.md)
 
@@ -241,6 +242,8 @@ current/<domain>/<capability>/
 - [PMS 应用授权旧字段破坏性清理（发布 B）](./changes/archive/2026/20260622-pms-authorization-ddl-cleanup/README.md)
 
 对应 current 能力：
+
+- [iam/database-persistence](./current/iam/database-persistence/README.md)
 
 - [framework/time-contract](./current/framework/time-contract/README.md)
 

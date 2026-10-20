@@ -142,7 +142,7 @@ MySQL DDL不具备整批事务回滚，ALTER可能等待元数据锁；失败后
 
 ## 027/028 接收成员主键与密码历史索引
 
-027为`iam_delegation_recipient_member`新增非自增id，应用统一用IAM Leaf/IdType.INPUT；保留原关系唯一键、生成列、外键及身份检查。028删除`password_history.idx_user_id`，保留原自增主键、`uk_user_sequence(user_id,sequence_number)`及`idx_created_at`。删除已通过隔离MySQL 8.0.44/8.4三态对照；合成负载及执行计划见[验证记录](../../../specs/changes/active/20261020-iam-recipient-primary-key-password-index/VALIDATION.md)，不代表生产容量测量。
+027为`iam_delegation_recipient_member`新增非自增id，应用统一用IAM Leaf/IdType.INPUT；保留原关系唯一键、生成列、外键及身份检查。028删除`password_history.idx_user_id`，保留原自增主键、`uk_user_sequence(user_id,sequence_number)`及`idx_created_at`。删除已通过隔离MySQL 8.0.44/8.4三态对照；合成负载及执行计划见[验证记录](../../../specs/changes/archive/2026/20261020-iam-recipient-primary-key-password-index/VALIDATION.md)，不代表生产容量测量。
 
 新库使用最新manifest/bundle，跳过026/027/028。已有库尚未补注释时先按上一节在026基线执行026；027之后不要重放026。不要直接导入027/028或回退SQL：统一工具先核对两表完整定义及Leaf表定义，缺表、约束/类型/索引漂移、缺少iam发号标签、ID异常或号段溢出时，在任何DDL前退出。
 

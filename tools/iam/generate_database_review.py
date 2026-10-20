@@ -127,7 +127,7 @@ def render():
            '依据：[InnoDB聚簇与二级索引](https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html)、[索引页结构](https://dev.mysql.com/doc/refman/8.0/en/innodb-physical-structure.html)。', '',
            '## 本轮处理与后续候选','',
            '成员部门、两域用户组关系、菜单操作、套餐应用已实施差量；负责人未变主标记不再清空重设。公共API、版本、审计及授权失效规则保留；后续独立结构变更见下文。', '',
-           '接收成员表已新增Leaf显式主键；密码历史经隔离对照删除重叠索引，原主键保留。后续候选仍为宽字符串主键iam_migration_mapping，尚未调整；详见20261020-iam-recipient-primary-key-password-index的验证记录。', '',
+           '接收成员表已新增Leaf显式主键；密码历史经隔离对照删除重叠索引，原主键保留。后续候选仍为宽字符串主键iam_migration_mapping，尚未调整；详见[验证记录](../../../specs/changes/archive/2026/20261020-iam-recipient-primary-key-password-index/VALIDATION.md)。', '',
            '人群独立保存仍全量重写，整体开通替换会重建人群；两者需要统一并发和重置语义后另行设计。委派重建涉及派生授权重验，角色/策略新快照是首次写入，业务删除需要清关联；这些路径保留。', '',
            '## 逐表结论','']
     for t in model:

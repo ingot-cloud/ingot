@@ -72,4 +72,6 @@ python3 tools/iam/generate_database_review.py --check
 
 ## 验收状态
 
-保持validating。部署/产品验收尚未完成，V2未勾选，不更新current、不归档。应用回退必须停写并先执行结构回退，不能在非自增新表结构上直接启动旧代码。
+2026-10-20用户确认验收完成。V2已完成，current已按最终实现更新，状态completed并归档。应用回退必须停写并先执行结构回退，不能在非自增新表结构上直接启动旧代码。
+
+实现提交：`57335bda130407d16f9ab51694a570a01fab0b77`。归档与current更新随独立验收文档提交记录。
