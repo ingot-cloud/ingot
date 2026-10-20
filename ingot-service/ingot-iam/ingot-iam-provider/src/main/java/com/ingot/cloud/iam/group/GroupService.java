@@ -1,5 +1,6 @@
 package com.ingot.cloud.iam.group;
 
+import java.util.TreeMap;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -370,21 +371,18 @@ public class GroupService {
     private void replaceSelection(AuthorizationDomain domain, ActiveIdentity actor, long id, Selection selection) {
         requireMembers(domain, actor, selection.members());
         requireDepartments(domain, actor, selection.departments());
-        clearSelection(domain, actor, id);
+        List<Long> memberIds = selection.members().stream().map(IamIds::require).toList();
         if (domain == AuthorizationDomain.PLATFORM) {
-            for (String memberId : selection.members()) {
-                groups.insertPlatformMember(id, IamIds.require(memberId));
-            }
+            groups.replacePlatformMembers(id, memberIds);
             return;
         }
-        long tenantId = tenantId(actor);
-        for (String memberId : selection.members()) {
-            groups.insertTenantMember(tenantId, id, IamIds.require(memberId));
-        }
+        Map<Long, Boolean> departments = new TreeMap<>();
         for (DepartmentSelection department : selection.departments()) {
-            groups.insertTenantDepartment(tenantId, id, IamIds.require(department.id()),
-                    department.includeDescendants());
+            if (departments.putIfAbsent(IamIds.require(department.id()), department.includeDescendants()) != null) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
         }
+        groups.replaceTenantSelection(tenantId(actor), id, memberIds, departments);
     }
 
     private void clearSelection(AuthorizationDomain domain, ActiveIdentity actor, long id) {

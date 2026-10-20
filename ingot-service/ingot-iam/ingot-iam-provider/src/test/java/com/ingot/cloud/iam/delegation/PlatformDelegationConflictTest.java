@@ -154,6 +154,20 @@ class PlatformDelegationConflictTest {
         assertFalse(service.preview(DOMAIN, "60", new DelegationUpdateInput("0", valid())).valid());
     }
     @Test
+    void successfulReplacementAllocatesLeafIdsForEachRecipient() {
+        var sequence = new java.util.concurrent.atomic.AtomicLong(900000);
+        when(access.nextId()).thenAnswer(invocation -> sequence.incrementAndGet());
+        service.replace(DOMAIN, "60", new DelegationUpdateInput("0", valid()));
+        var rows = org.mockito.ArgumentCaptor.forClass(IamDelegationRecipientMemberEntity.class);
+        verify(store, times(2)).insertRecipientMember(rows.capture());
+        assertEquals(List.of(BigInteger.valueOf(900001), BigInteger.valueOf(900002)),
+                rows.getAllValues().stream().map(IamDelegationRecipientMemberEntity::getId).toList());
+        assertEquals(List.of(BigInteger.valueOf(1002), BigInteger.valueOf(1003)),
+                rows.getAllValues().stream().map(IamDelegationRecipientMemberEntity::getPlatformMemberId).toList());
+        verify(manager).commit(tx);
+    }
+
+    @Test
     void revocationRevokesDerivedAssignmentsAndCommitsTogether() {
         service.delete(DOMAIN, "60");
         verify(store).revoke(60, BigInteger.ZERO); verify(store).revokeDerivedAssignments(60); verify(manager).commit(tx);

@@ -457,6 +457,7 @@ public class DelegationService {
         }
         for (String memberId : input.recipientSelection().members()) {
             IamDelegationRecipientMemberEntity row = new IamDelegationRecipientMemberEntity();
+            row.setId(BigInteger.valueOf(access.nextId()));
             row.setDelegationId(BigInteger.valueOf(id));
             row.setDomain(domain);
             row.setTenantId(domain == AuthorizationDomain.TENANT

@@ -55,7 +55,7 @@ class MigrationSqlTest(unittest.TestCase):
           INSERT INTO iam_delegation_grant(id,domain,tenant_id,tenant_administrator_id,max_assignment_duration_seconds,max_assignment_duration_nanos,assignment_duration_mode) VALUES(20000,'TENANT',10,101,86400,0,'LIMITED');
           INSERT INTO iam_delegation_role(delegation_id,tenant_id,role_id,role_kind,role_tenant_key) VALUES(20000,10,1,'SHARED',0);
           INSERT INTO iam_delegation_resource_ceiling VALUES(20000,2,'[{"kind":"SELF"}]','{}');
-          INSERT INTO iam_delegation_recipient_member(domain,tenant_id,delegation_id,tenant_member_id) VALUES('TENANT',10,20000,102);
+          INSERT INTO iam_delegation_recipient_member(id,domain,tenant_id,delegation_id,tenant_member_id) VALUES(29001,'TENANT',10,20000,102);
 
         """)
         current=self.source();back=reverse(current,'sql-fixture');self.sql(back)

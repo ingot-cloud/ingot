@@ -38,6 +38,7 @@ public class MemberLifecycleRepository {
     private final IamTenantMemberMapper tenantMembers;
     private final IamDepartmentMapper departments;
     private final IamMemberDepartmentMapper memberDepartments;
+    private final MemberDepartmentWriteRepository departmentWrites;
 
     /**
      * 取得平台授权事务的首个写锁，租户事务仍使用原有组织锁。
@@ -161,17 +162,8 @@ public class MemberLifecycleRepository {
      * @param departments 目标任职
      */
     public void replaceDepartments(long tenantId, long memberId, Map<String, Boolean> departments) {
-        memberDepartments.delete(Wrappers.<IamMemberDepartmentEntity>lambdaQuery()
-                .eq(IamMemberDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId))
-                .eq(IamMemberDepartmentEntity::getMemberId, BigInteger.valueOf(memberId)));
-        departments.forEach((departmentId, primary) -> {
-            IamMemberDepartmentEntity row = new IamMemberDepartmentEntity();
-            row.setTenantId(BigInteger.valueOf(tenantId));
-            row.setMemberId(BigInteger.valueOf(memberId));
-            row.setDepartmentId(new BigInteger(departmentId));
-            row.setIsPrimary(Boolean.TRUE.equals(primary));
-            memberDepartments.insert(row);
-        });
+        java.util.Objects.requireNonNull(departments, "目标任职必填");
+        departmentWrites.replace(tenantId, memberId, departments);
     }
 
     /**

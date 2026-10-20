@@ -274,8 +274,8 @@ class IdentitySchemaTest(unittest.TestCase):
             INSERT INTO iam_delegation_grant (id, domain, tenant_id, tenant_administrator_id, max_assignment_duration_seconds)
                 VALUES (2, 'TENANT', 10, 101, 3600);
         """)
-        self.sql("INSERT INTO iam_delegation_recipient_member (delegation_id, domain, platform_member_id) VALUES (1, 'PLATFORM', 1001)")
-        self.sql("INSERT INTO iam_delegation_recipient_member (delegation_id, domain, tenant_id, tenant_member_id) VALUES (1, 'TENANT', 10, 101)", error=1452)
+        self.sql("INSERT INTO iam_delegation_recipient_member (id, delegation_id, domain, platform_member_id) VALUES (9001, 1, 'PLATFORM', 1001)")
+        self.sql("INSERT INTO iam_delegation_recipient_member (id, delegation_id, domain, tenant_id, tenant_member_id) VALUES (9002, 1, 'TENANT', 10, 101)", error=1452)
         self.sql("INSERT INTO iam_delegation_recipient_department VALUES (1, 10, 11, 1)", error=1452)
         self.sql("INSERT INTO iam_delegation_recipient_department VALUES (2, 10, 11, 1)")
         self.sql("UPDATE iam_delegation_grant SET max_assignment_duration_seconds = 0 WHERE id = 1", error=3819)

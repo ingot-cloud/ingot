@@ -188,6 +188,10 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [IAM 接收成员主键与密码索引](./changes/active/20261020-iam-recipient-primary-key-password-index/README.md)（validating；开发完成，待部署验收）
+
+- [IAM 字段说明与关系写入优化](./changes/active/20261020-iam-schema-relations/README.md)（validating；开发与隔离验证完成，待部署验收）
+
 - [租户拥有者动态全权限与角色即时生效](./changes/active/20261014-iam-tenant-live-authorization/README.md)（validating；2026-10-14 开发与隔离验证完成，待用户产品验收，2026-10-19已本地提交）
 - [IAM 多租户身份与访问管理重构](./changes/active/20260912-iam-identity-access-management/README.md)（implementing；全新系统授权补齐、框架复用与平台登录契约，历史迁移退出范围）
 - [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）

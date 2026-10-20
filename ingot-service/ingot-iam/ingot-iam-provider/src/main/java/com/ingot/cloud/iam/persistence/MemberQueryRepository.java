@@ -49,6 +49,7 @@ public class MemberQueryRepository {
     private final IamTenantMemberMapper tenantMembers;
     private final IamDepartmentMapper departments;
     private final IamMemberDepartmentMapper memberDepartments;
+    private final MemberDepartmentWriteRepository departmentWrites;
 
     /**
      * 分页列出未移出的平台成员。
@@ -485,22 +486,7 @@ public class MemberQueryRepository {
      * @param departments 目标任职，键为部门 ID
      */
     public void replaceDepartments(long tenantId, long memberId, Map<String, Boolean> departments) {
-        BigInteger tenant = BigInteger.valueOf(tenantId);
-        BigInteger member = BigInteger.valueOf(memberId);
-        memberDepartments.delete(Wrappers.<IamMemberDepartmentEntity>lambdaQuery()
-                .eq(IamMemberDepartmentEntity::getTenantId, tenant)
-                .eq(IamMemberDepartmentEntity::getMemberId, member));
-        if (departments == null) {
-            return;
-        }
-        departments.forEach((departmentId, primary) -> {
-            IamMemberDepartmentEntity row = new IamMemberDepartmentEntity();
-            row.setTenantId(tenant);
-            row.setMemberId(member);
-            row.setDepartmentId(new BigInteger(departmentId));
-            row.setIsPrimary(Boolean.TRUE.equals(primary));
-            memberDepartments.insert(row);
-        });
+        departmentWrites.replace(tenantId, memberId, departments);
     }
 
     /**

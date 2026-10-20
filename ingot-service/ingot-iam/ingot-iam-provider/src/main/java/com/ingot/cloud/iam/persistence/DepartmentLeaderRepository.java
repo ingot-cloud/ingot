@@ -1,5 +1,6 @@
 package com.ingot.cloud.iam.persistence;
 
+import java.util.Objects;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -69,12 +70,18 @@ public class DepartmentLeaderRepository {
     /** 统一编辑事务可延后版本递增，其他关系校验不变。 */
     public void save(BigInteger tenant, BigInteger department, Map<BigInteger, Boolean> before,
                      Map<BigInteger, Boolean> after, BigInteger version, boolean advanceVersion) {
-        mapper.clearPrimary(tenant, department);
+        boolean primaryChanged = !Objects.equals(primary(before), primary(after));
+        if (primaryChanged) mapper.clearPrimary(tenant, department);
         before.keySet().stream().filter(id -> !after.containsKey(id)).forEach(id -> mapper.remove(tenant, department, id));
         after.keySet().stream().filter(id -> !before.containsKey(id)).forEach(id -> mapper.add(tenant, department, id));
-        after.forEach((id, primary) -> { if (primary) mapper.primary(tenant, department, id); });
+        if (primaryChanged) after.forEach((id, primary) -> { if (primary) mapper.primary(tenant, department, id); });
         if (advanceVersion && mapper.incrementVersion(tenant, department, version) != 1) {
             throw new BizException(IamReasonCode.REVISION_CONFLICT);
         }
     }
+    private static BigInteger primary(Map<BigInteger, Boolean> relations) {
+        return relations.entrySet().stream().filter(entry -> Boolean.TRUE.equals(entry.getValue()))
+                .map(Map.Entry::getKey).findFirst().orElse(null);
+    }
+
 }

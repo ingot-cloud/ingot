@@ -307,9 +307,10 @@ public interface TenantLiveMapper {
     @Select("SELECT CAST(department_id AS CHAR) AS id,include_descendants FROM iam_delegation_recipient_department WHERE tenant_id=#{tenantId} AND delegation_id=#{id} ORDER BY department_id")
     List<DepartmentSelection> recipientDepartments(@Param("tenantId") BigInteger tenantId, @Param("id") BigInteger id);
 
-    /** 接收人群写入在同一来源事务内。 */
-    @Insert("INSERT INTO iam_delegation_recipient_member(delegation_id,domain,tenant_id,tenant_member_id) VALUES(#{id},'TENANT',#{tenantId},#{memberId})")
-    int recipientMember(@Param("tenantId") BigInteger tenantId, @Param("id") BigInteger id, @Param("memberId") BigInteger memberId);
+    /** 接收人群写入在同一来源事务内，rowId由IAM Leaf发号器预先分配。 */
+    @Insert("INSERT INTO iam_delegation_recipient_member(id,delegation_id,domain,tenant_id,tenant_member_id) VALUES(#{rowId},#{id},'TENANT',#{tenantId},#{memberId})")
+    int recipientMember(@Param("rowId") BigInteger rowId, @Param("tenantId") BigInteger tenantId,
+                        @Param("id") BigInteger id, @Param("memberId") BigInteger memberId);
 
     /** 接收部门写入。 */
     @Insert("INSERT INTO iam_delegation_recipient_department(delegation_id,tenant_id,department_id,include_descendants) VALUES(#{id},#{tenantId},#{departmentId},#{descendants})")

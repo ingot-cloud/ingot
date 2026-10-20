@@ -19,6 +19,10 @@ import lombok.Setter;
 @Setter
 @TableName(value = "iam_delegation_recipient_member", autoResultMap = true)
 public class IamDelegationRecipientMemberEntity {
+    /** 关系记录 ID，由 IAM Leaf 发号器在插入前分配。 */
+    @TableId(value = "id", type = IdType.INPUT)
+    private BigInteger id;
+
     /** 委派 ID。 */
     @TableField("delegation_id")
     private BigInteger delegationId;

@@ -138,7 +138,8 @@ public final class IamMybatisTestAccess {
     public static MemberQueryRepository memberQueries(DataSource source) {
         return new MemberQueryRepository(mapper(source, IamAccountMapper.class),
                 mapper(source, IamPlatformMemberMapper.class), mapper(source, IamTenantMemberMapper.class),
-                mapper(source, IamDepartmentMapper.class), mapper(source, IamMemberDepartmentMapper.class));
+                mapper(source, IamDepartmentMapper.class), mapper(source, IamMemberDepartmentMapper.class),
+                new MemberDepartmentWriteRepository(mapper(source, IamMemberDepartmentMapper.class)));
     }
 
     /** 在当前夹具数据源上建立冷启动平台身份 Repository。 */
@@ -162,7 +163,8 @@ public final class IamMybatisTestAccess {
     public static MemberLifecycleRepository members(DataSource source) {
         return new MemberLifecycleRepository(mapper(source, IamTenantMapper.class),
                 mapper(source, IamPlatformMemberMapper.class), mapper(source, IamTenantMemberMapper.class),
-                mapper(source, IamDepartmentMapper.class), mapper(source, IamMemberDepartmentMapper.class));
+                mapper(source, IamDepartmentMapper.class), mapper(source, IamMemberDepartmentMapper.class),
+                new MemberDepartmentWriteRepository(mapper(source, IamMemberDepartmentMapper.class)));
     }
 
     /** 在当前夹具数据源上建立开通与人群 Repository。 */
@@ -371,6 +373,12 @@ public final class IamMybatisTestAccess {
         return SESSIONS.computeIfAbsent(source, IamMybatisTestAccess::create).getMapper(type);
     }
 
+    /** 在夹具创建执行器前安装观察器，用实际 MyBatis 执行记录验证写入成本。 */
+    public static void observeSql(DataSource source, org.apache.ibatis.plugin.Interceptor observer) {
+        SESSIONS.computeIfAbsent(source, IamMybatisTestAccess::create)
+                .getSqlSessionFactory().getConfiguration().addInterceptor(observer);
+    }
+
     private static SqlSessionTemplate create(DataSource source) {
         try {
             var configuration = new MybatisConfiguration();
@@ -392,6 +400,7 @@ public final class IamMybatisTestAccess {
             factory.afterPropertiesSet();
             SqlSessionFactory sessions = factory.getObject();
             for (Class<?> mapper : new Class<?>[] { IamAccountMapper.class, AccountLockStateMapper.class,
+                    com.ingot.framework.security.credential.data.mapper.PasswordHistoryMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.TenantLiveMapper.class, IamTenantMapper.class, IamTenantMemberMapper.class, IamPlatformMemberMapper.class,
                     IamMemberDepartmentMapper.class, IamDepartmentMapper.class, com.ingot.cloud.iam.persistence.mapper.IamDepartmentLeaderMapper.class, IamAuthorizationAuditMapper.class,
                     IamApplicationMapper.class, IamRoleDefinitionMapper.class, IamRoleRevisionMapper.class,

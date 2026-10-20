@@ -12,9 +12,9 @@
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS account_lock_state (
-  id              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  user_id         BIGINT       NOT NULL               COMMENT '用户ID',
-  user_type       VARCHAR(20)  NOT NULL DEFAULT '0'   COMMENT '用户类型（同 UserTypeEnum.value：0-系统用户 1-C端用户）',
+  id              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '安全框架账号锁定状态记录标识；数据库自增',
+  user_id         BIGINT       NOT NULL COMMENT '被锁定的安全用户ID，与user_type共同唯一标识用户',
+  user_type       VARCHAR(20)  NOT NULL DEFAULT '0' COMMENT '安全用户类型，对应UserTypeEnum：0系统账号、1会员账号',
 
   -- 锁定状态
   locked          TINYINT(1)   NOT NULL DEFAULT 0     COMMENT '是否锁定（0-否 1-是）',
@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS account_lock_state (
   lock_reason_detail VARCHAR(500) DEFAULT NULL         COMMENT '锁定原因详情',
 
   -- 锁定时间信息
-  locked_at       DATETIME     DEFAULT NULL            COMMENT '锁定时间',
-  locked_until    DATETIME     DEFAULT NULL            COMMENT '锁定到期时间（NULL=永久锁定）',
+  locked_at       DATETIME     DEFAULT NULL COMMENT '锁定时间；时间点按UTC保存',
+  locked_until    DATETIME     DEFAULT NULL COMMENT '锁定到期时间（NULL=永久锁定）；时间点按UTC保存',
 
   -- 操作信息（手动锁定时填写）
   operator_id     BIGINT       DEFAULT NULL            COMMENT '操作人ID',
@@ -32,11 +32,11 @@ CREATE TABLE IF NOT EXISTS account_lock_state (
 
   -- 登录失败计数
   failed_login_count INT        NOT NULL DEFAULT 0    COMMENT '连续登录失败次数',
-  last_failed_at  DATETIME     DEFAULT NULL            COMMENT '最后一次失败时间',
+  last_failed_at  DATETIME     DEFAULT NULL COMMENT '最后一次失败时间；时间点按UTC保存',
 
   -- 时间戳
-  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP                    COMMENT '创建时间',
-  updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间点，UTC',
+  updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录最后更新时间点，UTC',
 
   PRIMARY KEY (id),
   UNIQUE KEY uk_user_id_type (user_id, user_type)       COMMENT '用户ID + 用户类型联合唯一',

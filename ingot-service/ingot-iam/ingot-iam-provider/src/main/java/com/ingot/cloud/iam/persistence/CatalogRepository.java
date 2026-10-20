@@ -1,5 +1,10 @@
 package com.ingot.cloud.iam.persistence;
 
+import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.error.BizException;
+import java.util.stream.Collectors;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -798,21 +803,23 @@ public class CatalogRepository {
      * @param actionIds 精确操作 ID，可空表示清空
      */
     public void replaceMenuActions(long applicationId, long menuId, List<Long> actionIds) {
+        var after = uniqueRelationIds(actionIds);
+        var before = menuActionIds(applicationId, menuId);
         BigInteger application = BigInteger.valueOf(applicationId);
         BigInteger menu = BigInteger.valueOf(menuId);
-        menuActions.delete(Wrappers.<IamMenuActionEntity>lambdaQuery()
-                .eq(IamMenuActionEntity::getApplicationId, application)
-                .eq(IamMenuActionEntity::getMenuId, menu));
-        if (actionIds == null) {
-            return;
-        }
-        for (Long actionId : actionIds) {
-            IamMenuActionEntity link = new IamMenuActionEntity();
-            link.setApplicationId(application);
-            link.setMenuId(menu);
-            link.setActionId(BigInteger.valueOf(actionId));
-            menuActions.insert(link);
-        }
+        before.stream().filter(id -> !after.contains(id.longValueExact())).forEach(id ->
+                menuActions.delete(Wrappers.<IamMenuActionEntity>lambdaQuery()
+                        .eq(IamMenuActionEntity::getApplicationId, application)
+                        .eq(IamMenuActionEntity::getMenuId, menu)
+                        .eq(IamMenuActionEntity::getActionId, id)));
+        var oldIds = before.stream().map(BigInteger::longValueExact).collect(Collectors.toSet());
+        after.stream().filter(id -> !oldIds.contains(id)).forEach(id -> {
+            var row = new IamMenuActionEntity();
+            row.setApplicationId(application);
+            row.setMenuId(menu);
+            row.setActionId(BigInteger.valueOf(id));
+            menuActions.insert(row);
+        });
     }
 
     /**
@@ -954,18 +961,20 @@ public class CatalogRepository {
      * @param applicationIds 应用 ID
      */
     public void replacePlanApplications(long planId, List<Long> applicationIds) {
+        var after = uniqueRelationIds(applicationIds);
+        var before = planApplicationIds(planId);
         BigInteger plan = BigInteger.valueOf(planId);
-        planApplications.delete(Wrappers.<IamPlanApplicationEntity>lambdaQuery()
-                .eq(IamPlanApplicationEntity::getPlanId, plan));
-        if (applicationIds == null) {
-            return;
-        }
-        for (Long applicationId : applicationIds) {
-            IamPlanApplicationEntity link = new IamPlanApplicationEntity();
-            link.setPlanId(plan);
-            link.setApplicationId(BigInteger.valueOf(applicationId));
-            planApplications.insert(link);
-        }
+        before.stream().filter(id -> !after.contains(id.longValueExact())).forEach(id ->
+                planApplications.delete(Wrappers.<IamPlanApplicationEntity>lambdaQuery()
+                        .eq(IamPlanApplicationEntity::getPlanId, plan)
+                        .eq(IamPlanApplicationEntity::getApplicationId, id)));
+        var oldIds = before.stream().map(BigInteger::longValueExact).collect(Collectors.toSet());
+        after.stream().filter(id -> !oldIds.contains(id)).forEach(id -> {
+            var row = new IamPlanApplicationEntity();
+            row.setPlanId(plan);
+            row.setApplicationId(BigInteger.valueOf(id));
+            planApplications.insert(row);
+        });
     }
 
     /**
@@ -995,4 +1004,15 @@ public class CatalogRepository {
                         .select(IamApplicationEntity::getId))
                 .stream().map(IamApplicationEntity::getId).toList();
     }
+
+    private static SortedSet<Long> uniqueRelationIds(List<Long> ids) {
+        if (ids == null) return new TreeSet<>();
+        var result = new TreeSet<>(ids);
+        if (result.size() != ids.size()) {
+            throw new BizException(
+                    IamReasonCode.INVALID_ARGUMENT);
+        }
+        return result;
+    }
+
 }

@@ -119,3 +119,52 @@ mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migra
 仅将 `iam-tenant/member` 目录中 `displayName.filterable` 补为 true，并在实际变化时递增资源版本；按字段 key 定位，不依赖 JSON 数组顺序，可重复执行。不改通讯录、平台资源、角色/分配、历史默认策略版本或租户字段规则。该值是已接入能力上限，普通用户仍需字段策略允许筛选且整个查询范围内姓名完整可见。真实拥有者也受平台显式操作上限限制。
 
 已有库执行 `025_member_picker_name_filter.sql`，与含 `OrganizationMemberNameFilter` 执行清单的后端同批部署；广播既有配置失效或等待最长元数据缓存窗口后验证。未补齐目录或清单时继续拒绝姓名筛选。新库使用最新006/bundle。回退应用时可保留目录能力，由旧清单继续收紧；若回退目录，将该字段 filterable 恢复备份值并递增资源版本。不要重建现有库，也不要通过删除字段筛选门禁解决403。
+
+## 026 字段说明升级
+
+`026_schema_comments.sql`只补齐或完善63张表的中文COMMENT。脚本及`026_schema_comments_baseline.json`固定在027/028之前的版本，生成入口只校验其摘要，不按最新DDL重写。完整保留该版本的类型、可空性、默认值、生成表达式、自增属性及约束。框架共库表仍归各框架模块所有。
+
+先完成目标库到026基线的既有升级（尚未执行027/028），备份后选择维护窗口、停止写入并禁止并行DDL。使用mysql客户端可读取的连接配置文件；不要把口令放入命令行或报告。下面的数据库名只是明确选库的示例：
+
+```sh
+# 全部表只读结构核对，不创建任何数据库、不执行ALTER
+python3 tools/iam/schema_comments.py --database ingot_iam --defaults-file /absolute/path/mysql-client.cnf
+# 同样先完成全量核对，再执行注释ALTER
+python3 tools/iam/schema_comments.py --database ingot_iam --defaults-file /absolute/path/mysql-client.cnf --apply
+```
+
+026预检读取SHOW CREATE，对比固定历史基线；当前最新结构另保存在schema_structure.json，不参与026匹配。历史脚本摘要不匹配时拒绝运行。预检仅忽略COMMENT、自增高水位、无语义的约束排序，以及MySQL MODIFY后ASCII检查常量的等价字符集引导符（_utf8mb4/_ascii）；不忽略列字符集、COLLATE、非ASCII文字或表达式变化。缺表、缺列、类型/默认/生成列/约束/索引漂移或历史脚本摘要不匹配时，在任何ALTER之前退出。不会自动补结构，不操作清单外表，不依赖默认数据库，不关闭外键。已在隔离MySQL 8.0.44和8.4验证。其他MySQL版本产生的未识别结构差异也保守拒绝，需先在对应隔离版本核对，不能跳过预检。
+
+MySQL DDL不具备整批事务回滚，ALTER可能等待元数据锁；失败后按错误处理再重跑，不使用`--force`。已完成的注释不影响应用回退；如需恢复旧注释，应从先前版本权威源在隔离库生成并验证专用脚本，禁止重建目标表。
+
+开发期刷新结构快照使用`python3 tools/iam/refresh_schema_snapshot.py`，只启动本地已有`mysql:8.4`镜像的无网络、无端口、无卷临时容器，结束清理；它不接受实际数据库连接。正常生成和`--check`不启动MySQL。历史迁移脚本原样保留，新库依然只按manifest构建。
+
+
+## 027/028 接收成员主键与密码历史索引
+
+027为`iam_delegation_recipient_member`新增非自增id，应用统一用IAM Leaf/IdType.INPUT；保留原关系唯一键、生成列、外键及身份检查。028删除`password_history.idx_user_id`，保留原自增主键、`uk_user_sequence(user_id,sequence_number)`及`idx_created_at`。删除已通过隔离MySQL 8.0.44/8.4三态对照；合成负载及执行计划见[验证记录](../../../specs/changes/active/20261020-iam-recipient-primary-key-password-index/VALIDATION.md)，不代表生产容量测量。
+
+新库使用最新manifest/bundle，跳过026/027/028。已有库尚未补注释时先按上一节在026基线执行026；027之后不要重放026。不要直接导入027/028或回退SQL：统一工具先核对两表完整定义及Leaf表定义，缺表、约束/类型/索引漂移、缺少iam发号标签、ID异常或号段溢出时，在任何DDL前退出。
+
+先备份目标库，停止全部IAM节点及其他目标库写入，禁止并发DDL。连接文件须为mysql客户端可读配置，显式选库，不把口令写在命令行：
+
+```sh
+# 只读预检，不预留ID，不执行DDL
+python3 tools/iam/schema_key_upgrade.py --database ingot_iam --defaults-file /absolute/path/mysql-client.cnf
+# 备份并停止全部写入后执行；标志表示操作者已完成停写检查
+python3 tools/iam/schema_key_upgrade.py --database ingot_iam --defaults-file /absolute/path/mysql-client.cnf --apply --writers-stopped
+```
+
+工具需目标库SHOW/SELECT、ALTER、CREATE ROUTINE/ALTER ROUTINE/EXECUTE、CREATE TEMPORARY TABLES及UPDATE权限。027先添加可空id，再锁定`biz_leaf_alloc.biz_tag='iam'`，按待填行数N原子预留`[原max_id, 原max_id+N)`，高水位与ID填充同事务提交，最后收紧非空并建立主键。仅增加iam发号高水位，不修改其他标签；空表不消费号段。新ID不是时间或业务顺序。两表业务字段及数据量不变。
+
+MySQL DDL会自动提交，不能整体ROLLBACK；新增主键涉及重建，需按实际表量预留维护窗口。中断后保持停写，修正错误再完整重跑：工具识别原结构、可空id中间态、已完成结构及索引已删除状态；已填ID不重新分配，号段不重复消费。工具显式禁止force及自动重连。完成后重启全部新后端（丢弃旧进程发号缓存），验证委派创建/更新、跨租户拒绝、密码历史读取/覆盖/删除。无前端/API升级，不运行006重写业务授权。
+
+**回退必须先停止全部新写入，不能只回退应用。** 旧代码不填写非自增id。完整备份后使用同一工具恢复索引、删除新增主键及id，再启动旧后端：
+
+```sh
+python3 tools/iam/schema_key_upgrade.py --database ingot_iam --defaults-file /absolute/path/mysql-client.cnf --rollback --writers-stopped
+```
+
+回退预检拒绝新增id外键引用或其他未知结构；保留原唯一键、外键、CHECK及全部关系/密码历史，**永不降低Leaf高水位**。回退可重跑，重新升级从新的高水位预留。若维护期间已有不在本方案内的DDL，先核对并制定专项处理，不能绕过预检。026注释无需随结构回退撤销。
+
+隔离演练：`python3 tools/iam/test_schema_key_upgrade_mysql.py`；通过`IAM_SCHEMA_MYSQL_IMAGE`选择本地已有8.0.44镜像。索引验证入口`python3 tools/iam/verify_password_history_index.py --output /absolute/path/evidence.json`只启动无网络临时容器，不接受业务库连接。

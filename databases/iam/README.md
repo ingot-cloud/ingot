@@ -11,7 +11,7 @@
 | `003_assignment_delegation.sql` | 分配、委派、人群及逐操作上限；已包含LIMITED/UNLIMITED模式。 |
 | `004_policy_audit_migration.sql` | 默认策略、租户通讯录/字段规则、导出任务、审计及迁移记录；已包含分配创建审计索引和原007导出建表内容。平台字段权限在角色版本中保存，不再建独立策略表。 |
 | `005_auxiliary.sql` | 字典、发号、社会化、历史安全事件及套餐辅助结构；不带开发数据。 |
-| `006_bootstrap.sql` | 唯一正式种子：3应用、36资源、138操作、30菜单、54菜单关联、2治理角色及固定版本、默认策略与发号起点。 |
+| `006_bootstrap.sql` | 唯一正式种子：4应用、42资源、155操作、38菜单、70菜单关联、2治理角色及固定版本、默认策略与发号起点。 |
 
 平台成员的phone/email为独立联系资料；已有库按需执行014一次性增加并回填，新建库001已包含，账号登录资料不与成员资料同步。
 
@@ -34,7 +34,7 @@ python3 tools/iam/generate_database.py --check
 mysql --database=ingot_iam < databases/ingot_iam.sql
 ```
 
-库须事先创建，连接/凭证按本机配置提供。完整SQL先按逆序对manifest内56张表执行 `DROP TABLE IF EXISTS`，然后建表并写入正式治理目录；不创建/删除数据库、不切换数据库、不删除清单外表。循环外键要求仅删除阶段临时关闭外键检查，建表与种子阶段开启，结束后恢复原会话设置。DDL无法整体回滚，导入失败后修正原因重新执行；需要恢复原数据时使用备份。
+库须事先创建，连接/凭证按本机配置提供。完整SQL先按逆序对manifest内63张表执行 `DROP TABLE IF EXISTS`，然后建表并写入正式治理目录；不创建/删除数据库、不切换数据库、不删除清单外表。循环外键要求仅删除阶段临时关闭外键检查，建表与种子阶段开启，结束后恢复原会话设置。DDL无法整体回滚，导入失败后修正原因重新执行；需要恢复原数据时使用备份。
 
 001–005权威结构源本身不执行重置，仅完整文件负责删除编排。分片仅适用于空库，按manifest的001–005→框架CREATE→006顺序；框架源中的固定USE不能原样执行到其他库，优先使用已投影到当前库的完整文件。
 
@@ -43,7 +43,7 @@ mysql --database=ingot_iam < databases/ingot_iam.sql
 - 不含账号、凭证、业务组织、角色分配、审计或登录运行状态。受控平台首账号通过 `ingot.iam.bootstrap` 启动器及安全框架注册用例创建，开关默认关闭。
 - 单独执行006时存在即跳过：按自然键判断并解析父行，保留既有业务修改。只给本次新建的治理版本初始化授权，不向已有不可变版本追加权限。完整文件会先删除旧表，不能用其保留业务修改。
 - 一级 DIRECTORY 默认 `view_path = 'layout.main'`；有子菜单的二级 DIRECTORY 默认 `layout.simple`。PAGE 使用对应页面注册键；完整初始化和正式种子保持一致。
-- 正式应用的9个一级目录在 `iam_menu.icon` 保存 `ep:*` Iconify名称，两管理台已离线打包该图标集。已有目录的空图标通过 [019_root_menu_icons.sql](./migrations/019_root_menu_icons.sql) 补齐；单独重跑006仍跳过既有记录。
+- 正式应用的10个一级目录在 `iam_menu.icon` 保存 `ep:*` Iconify名称，两管理台已离线打包该图标集。已有目录的空图标通过 [019_root_menu_icons.sql](./migrations/019_root_menu_icons.sql) 补齐；单独重跑006仍跳过既有记录。
 - 平台治理应用 `iam-platform` 的“平台管理”包含全局账号、平台人员、角色与授权。独立平台应用 `platform:develop` 为开发者平台，包含生成二维码、客户端管理、社交管理、业务ID管理，沿用 `platform.develop.*` 页面键。租户治理仍为 `iam-tenant`，不包含平台开发者功能。
 - 社交/业务ID目录位于开发者应用，API仍使用原 `iam-platform:social-config:*` / `iam-platform:id-allocation:*` 的8个精确操作码；客户端沿用Auth注解的6个 `platform:develop:client:*` 精确操作码；星号仅是文档概括，种子不存通配码。菜单和操作同应用关联。新建平台治理版本覆盖全部平台正式应用，租户治理仅覆盖租户域，不因菜单存在自动授予其他成员权限。
 - 保留标识小于发号起点1000000。原ingot_iam.sql开发快照已移出正式初始化，可从Git历史查阅。
@@ -97,3 +97,16 @@ MySQL回归比较完整文件与分片的所有表定义及种子行数，验证
 角色版本字段JSON为非空对象。正式治理版本显式冻结成员字段默认：phone/email脱敏，displayName/avatar完整可见及可编辑；目录和注册能力仍可收窄。字段完整可见须发布并分配角色，治理身份不绕过。未声明字段隐藏，缺失快照拒绝求值；角色发布不自动升级已有分配。租户字段策略与通讯录结构保留。
 
 [人工验收](../../specs/changes/active/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md) 和 [接入样板](../../examples/iam-ops/README.md) 已按唯一角色字段闭环更新。
+
+## 字段字典与主键评估
+
+正式清单当前为63张表、495个字段（包含3张框架共库表）。字段说明只在权威DDL维护，完整初始化与[数据字典](../../docs/modules/iam/DATA-DICTIONARY.md)由`generate_database.py`同步生成；[逐表主键索引评估](../../docs/modules/iam/DATABASE-REVIEW.md)由`generate_database_review.py`生成。接收成员表新增Leaf显式主键；密码历史精简重复索引，公共API保持原样。已有库见[027/028升级说明](./migrations/README.md#027028-接收成员主键与密码历史索引)。
+
+已有库只补注释时，先阅读[026升级说明](./migrations/README.md#026-字段说明升级)。不要导入完整初始化文件，也不要直接绕过预检导入026。注释工具不连接任何默认库，必须显式选择目标并提供mysql配置文件；默认仅只读核对全部表，`--apply`才修改注释。
+
+```sh
+python3 tools/iam/generate_database.py --check
+python3 tools/iam/generate_database_review.py --check
+python3 tools/iam/test_schema_comments.py
+python3 tools/iam/test_schema_comments_mysql.py
+```

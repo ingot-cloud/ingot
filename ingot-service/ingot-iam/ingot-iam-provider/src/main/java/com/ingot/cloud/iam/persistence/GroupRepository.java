@@ -1,5 +1,11 @@
 package com.ingot.cloud.iam.persistence;
 
+import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.error.BizException;
+import java.util.stream.Collectors;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.TreeMap;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -320,6 +326,63 @@ public class GroupRepository {
                 .eq(IamTenantGroupDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId))
                 .eq(IamTenantGroupDepartmentEntity::getGroupId, BigInteger.valueOf(groupId))
                 .orderByAsc(IamTenantGroupDepartmentEntity::getDepartmentId));
+    }
+
+    /** 在父用户组持锁事务内差量保存平台成员；重复目标拒绝。 */
+    public void replacePlatformMembers(long groupId, List<Long> memberIds) {
+        var after = uniqueMembers(memberIds);
+        var before = platformMemberIds(groupId);
+        before.stream().filter(id -> !after.contains(id.longValueExact())).forEach(id ->
+                platformMembers.delete(Wrappers.<IamPlatformGroupMemberEntity>lambdaQuery()
+                        .eq(IamPlatformGroupMemberEntity::getGroupId, BigInteger.valueOf(groupId))
+                        .eq(IamPlatformGroupMemberEntity::getMemberId, id)));
+        var oldIds = before.stream().map(BigInteger::longValueExact).collect(Collectors.toSet());
+        after.stream().filter(id -> !oldIds.contains(id)).forEach(id -> insertPlatformMember(groupId, id));
+    }
+
+    /** 在租户用户组持锁事务内保存完整目标，仅更新变化的部门来源属性。 */
+    public void replaceTenantSelection(long tenantId, long groupId, List<Long> memberIds,
+                                       Map<Long, Boolean> selectedDepartments) {
+        var after = uniqueMembers(memberIds);
+        var before = tenantMemberIds(tenantId, groupId);
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        BigInteger group = BigInteger.valueOf(groupId);
+        before.stream().filter(id -> !after.contains(id.longValueExact())).forEach(id ->
+                tenantMembers.delete(Wrappers.<IamTenantGroupMemberEntity>lambdaQuery()
+                        .eq(IamTenantGroupMemberEntity::getTenantId, tenant)
+                        .eq(IamTenantGroupMemberEntity::getGroupId, group)
+                        .eq(IamTenantGroupMemberEntity::getMemberId, id)));
+        var oldIds = before.stream().map(BigInteger::longValueExact).collect(Collectors.toSet());
+        after.stream().filter(id -> !oldIds.contains(id)).forEach(id -> insertTenantMember(tenantId, groupId, id));
+        Map<Long, Boolean> oldDepartments = new TreeMap<>();
+        tenantDepartments(tenantId, groupId).forEach(row -> oldDepartments.put(
+                row.getDepartmentId().longValueExact(), Boolean.TRUE.equals(row.getIncludeDescendants())));
+        oldDepartments.forEach((id, descendants) -> {
+            if (!selectedDepartments.containsKey(id)) {
+                departmentLinks.delete(Wrappers.<IamTenantGroupDepartmentEntity>lambdaQuery()
+                        .eq(IamTenantGroupDepartmentEntity::getTenantId, tenant)
+                        .eq(IamTenantGroupDepartmentEntity::getGroupId, group)
+                        .eq(IamTenantGroupDepartmentEntity::getDepartmentId, BigInteger.valueOf(id)));
+            } else if (!Objects.equals(descendants, selectedDepartments.get(id))) {
+                departmentLinks.update(Wrappers.<IamTenantGroupDepartmentEntity>lambdaUpdate()
+                        .eq(IamTenantGroupDepartmentEntity::getTenantId, tenant)
+                        .eq(IamTenantGroupDepartmentEntity::getGroupId, group)
+                        .eq(IamTenantGroupDepartmentEntity::getDepartmentId, BigInteger.valueOf(id))
+                        .set(IamTenantGroupDepartmentEntity::getIncludeDescendants, selectedDepartments.get(id)));
+            }
+        });
+        new TreeMap<>(selectedDepartments).forEach((id, descendants) -> {
+            if (!oldDepartments.containsKey(id)) insertTenantDepartment(tenantId, groupId, id, descendants);
+        });
+    }
+
+    private static SortedSet<Long> uniqueMembers(List<Long> ids) {
+        var result = new TreeSet<>(ids);
+        if (result.size() != ids.size()) {
+            throw new BizException(
+                    IamReasonCode.INVALID_ARGUMENT);
+        }
+        return result;
     }
 
     /**
