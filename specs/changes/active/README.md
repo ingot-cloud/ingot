@@ -16,4 +16,4 @@
 - [IAM 多租户身份与访问管理重构](./20260912-iam-identity-access-management/README.md)（implementing；主变更状态以其 README 为准，旧 PMS 迁移已退出必需范围）
 - [DataScope SQL 谓词规模升级](./20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
-- [部门负责人独立维护](./20261019-iam-department-leaders/README.md)（validating；2026-10-19 专用浏览及姓名搜索修复验证完成，待部署验收）
+已完成的[部门负责人独立维护](../archive/2026/20261019-iam-department-leaders/README.md)于2026-10-20按用户验收确认移入archive。

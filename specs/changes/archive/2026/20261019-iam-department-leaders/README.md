@@ -1,6 +1,17 @@
 # 部门负责人独立维护
 
-> 状态：validating
+> 状态：completed（已验收，已更新 current，已归档）
+
+## 完成与归档（2026-10-20）
+
+- 验收依据：用户明确要求“归档相关spec 20261019-iam-department-leaders，已经验收完成”。据此关闭A01，前后端配套变更一起结项。
+- 完成与归档日期：2026-10-20（Asia/Shanghai）。下方validating、待验收及未提交描述为各轮历史记录，以本次结项为准；本轮未代用户重跑业务验收、迁移或部署。
+- 关联后端提交：实现 `37061df9`、头像 `3776e113`；Spec记录 `db434993`、`70b94cfc`。配套前端代码 `c01be53`、`e58ca31`、`826196e`、`b58e5bb`，无PR。
+- 更新当前能力：[租户部门目录](../../../../current/iam/tenant-departments/README.md)、[组织成员选择](../../../../current/iam/organization-member-picker/README.md)。
+- 对应前端归档：`ingot-admin/specs/changes/archive/2026/20261019-org-department-leaders/`；IAM总体重构与即时授权等其他active变更继续按其自身状态维护。
+- 最终设计差异：经用户批准改为无Tab统一编辑及一次版本原子保存；新增场景化组织浏览、选择器专用根投影、外部首屏复用和追加加载；详情聚合父名称/负责人首屏；头像沿原字段权限及OSS签发。配套前端使用主负责人标签与“和其他X人”，并移除详情更多操作。负责人仍不授予任何权限、范围或Token属性。
+
+## 历史实施记录
 
 创建日期：2026-10-19（Asia/Shanghai）。负责人：jy。
 

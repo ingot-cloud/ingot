@@ -188,13 +188,13 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [部门负责人独立维护](./changes/active/20261019-iam-department-leaders/README.md)（validating；2026-10-19 专用浏览及姓名搜索修复验证完成，待部署验收）
-
 - [租户拥有者动态全权限与角色即时生效](./changes/active/20261014-iam-tenant-live-authorization/README.md)（validating；2026-10-14 开发与隔离验证完成，待用户产品验收，2026-10-19已本地提交）
 - [IAM 多租户身份与访问管理重构](./changes/active/20260912-iam-identity-access-management/README.md)（implementing；全新系统授权补齐、框架复用与平台登录契约，历史迁移退出范围）
 - [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
 已归档（2026）：
+
+- [部门负责人独立维护](./changes/archive/2026/20261019-iam-department-leaders/README.md)（completed，2026-10-20 用户确认验收完成）；[租户部门](./current/iam/tenant-departments/README.md)、[组织成员选择](./current/iam/organization-member-picker/README.md)
 
 - [租户按手机号添加成员](./changes/archive/2026/20261018-iam-tenant-member-onboarding/README.md)（completed，2026-10-19 用户要求归档）；[当前能力](./current/iam/tenant-members/README.md)
 
