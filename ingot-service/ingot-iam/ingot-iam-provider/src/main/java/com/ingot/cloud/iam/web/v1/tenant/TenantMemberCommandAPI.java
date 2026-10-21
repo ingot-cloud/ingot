@@ -10,12 +10,19 @@ import com.ingot.cloud.iam.organization.MemberCommandService;
 import com.ingot.cloud.iam.organization.MemberExportService;
 import com.ingot.cloud.iam.organization.MemberQueryService;
 import com.ingot.cloud.iam.organization.MemberRejoin;
+import com.ingot.cloud.iam.organization.MemberWorkbookService;
 import com.ingot.cloud.iam.organization.TenantMemberOnboarding;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.ExportTask;
 import com.ingot.framework.commons.model.iam.GroupRecord;
+import com.ingot.framework.commons.model.iam.MemberWorkbookArtifact;
+import com.ingot.framework.commons.model.iam.MemberWorkbookExportInput;
+import com.ingot.framework.commons.model.iam.MemberWorkbookFile;
+import com.ingot.framework.commons.model.iam.MemberWorkbookHistoryItem;
+import com.ingot.framework.commons.model.iam.MemberWorkbookMode;
+import com.ingot.framework.commons.model.iam.MemberWorkbookTask;
 import com.ingot.framework.commons.model.iam.TenantMemberCreateInput;
 import com.ingot.framework.commons.model.iam.TenantMemberCreated;
 import com.ingot.framework.commons.model.iam.TenantMemberRejoinInput;
@@ -41,11 +48,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
 import com.ingot.framework.security.crypto.annotation.InEncrypt;
 
 /**
- * <p>提供租户成员列表、创建、重新加入、资料、暂停、移出与任职替换，跨租户引用由服务端拒绝。</p>
+ * <p>提供租户成员列表、创建、重新加入、资料、暂停、移出、任职替换与表格导入导出，跨租户引用由服务端拒绝。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -58,6 +66,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
     private final MemberCommandService members;
     private final MemberQueryService queries;
     private final MemberExportService exports;
+    private final MemberWorkbookService workbooks;
     private final TenantMemberOnboarding onboarding;
     private final MemberRejoin rejoins;
     private final com.ingot.cloud.iam.organization.OrganizationMemberService picker;
@@ -262,5 +271,83 @@ public class TenantMemberCommandAPI implements RShortcuts {
     @GetMapping("/export/{id}")
     public R<PageResponse<ResourceDetail<MemberRecord>>> downloadExport(@PathVariable String id) {
         return ok(exports.download(id));
+    }
+
+    /**
+     * 下载创建成员空白模板。
+     *
+     * @return 模板文件
+     */
+    @Operation(summary = "下载成员导入模板")
+    @IamReadOnlyRequest
+    @GetMapping("/workbook/template")
+    public R<MemberWorkbookFile> workbookTemplate() {
+        return ok(workbooks.template());
+    }
+
+    /**
+     * 登记更新导出任务。
+     *
+     * @param input 组织版本与可选成员范围
+     * @return 任务 ID
+     */
+    @Operation(summary = "导出成员表格")
+    @PostMapping("/workbook/export")
+    public R<CreatedResource> exportWorkbook(@Valid @RequestBody MemberWorkbookExportInput input) {
+        return ok(workbooks.export(input));
+    }
+
+    /**
+     * 登记导入任务。
+     *
+     * @param file xlsx
+     * @param mode 创建或更新
+     * @return 任务 ID
+     */
+    @Operation(summary = "导入成员表格")
+    @PostMapping("/workbook/import")
+    public R<CreatedResource> importWorkbook(@RequestParam("file") MultipartFile file,
+            @RequestParam("mode") MemberWorkbookMode mode) {
+        return ok(workbooks.importWorkbook(file, mode));
+    }
+
+    /**
+     * 返回当前操作者最近导入任务。
+     *
+     * @return 历史摘要
+     */
+    @Operation(summary = "成员导入历史")
+    @IamReadOnlyRequest
+    @GetMapping("/workbook/history")
+    public R<java.util.List<MemberWorkbookHistoryItem>> workbookHistory() {
+        return ok(workbooks.history());
+    }
+
+    /**
+     * 读取表格任务状态。
+     *
+     * @param id 任务 ID
+     * @return 任务状态
+     */
+    @Operation(summary = "查询成员表格任务")
+    @IamReadOnlyRequest
+    @GetMapping("/workbook/{id}/status")
+    public R<MemberWorkbookTask> workbookStatus(@PathVariable String id) {
+        return ok(workbooks.status(id));
+    }
+
+    /**
+     * 下载表格任务产物。
+     *
+     * @param id 任务 ID
+     * @param artifact 产物类型
+     * @return 文件
+     */
+    @Operation(summary = "下载成员表格产物")
+    @IamReadOnlyRequest
+    @GetMapping("/workbook/{id}/file")
+    public R<MemberWorkbookFile> workbookFile(@PathVariable String id,
+            @RequestParam("artifact") MemberWorkbookArtifact artifact) {
+        return ok(workbooks.file(id, artifact));
     }
 }

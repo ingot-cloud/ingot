@@ -2,7 +2,7 @@
 
 <!-- 自动生成：python3 tools/iam/generate_database.py；说明在权威 DDL 维护。 -->
 
-manifest 管理 63 张表、495 个字段。
+manifest 管理 65 张表、525 个字段。
 
 ## 阅读约定
 
@@ -1256,6 +1256,81 @@ PRIMARY KEY (id)
 KEY idx_iam_member_export_tenant_status (tenant_id, status, expires_at)
 CONSTRAINT ck_iam_member_export_status CHECK (status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'EXPIRED'))
 CONSTRAINT ck_iam_member_export_ids CHECK (member_ids IS NULL OR JSON_TYPE(member_ids) = 'ARRAY')
+```
+
+## iam_member_workbook
+
+租户成员表格导入导出任务
+
+权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
+
+| 字段 | 定义 | 说明 |
+|---|---|---|
+| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 租户成员表格导入或导出任务标识 |
+| `tenant_id` | ``tenant_id BIGINT UNSIGNED NOT NULL`` | 所属租户组织ID |
+| `actor_member_id` | ``actor_member_id BIGINT UNSIGNED NOT NULL`` | 发起操作的当前域成员ID |
+| `kind` | ``kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 任务种类；取值EXPORT,IMPORT |
+| `mode` | ``mode VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 表格模式；取值CREATE,UPDATE |
+| `status` | ``status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 当前业务记录状态，合法值由本表CHECK及对应业务枚举限定；取值PENDING,RUNNING,SUCCEEDED,FAILED,EXPIRED |
+| `tenant_version` | ``tenant_version VARCHAR(32) COLLATE utf8mb4_bin NOT NULL`` | 登记任务时的组织版本，取iam_tenant.version |
+| `member_ids` | ``member_ids JSON NULL`` | 导出范围成员ID的JSON数组；导入或尚未快照时可空 |
+| `result` | ``result JSON NULL`` | 成功失败计数与逐行原因，不含初始密码明文 |
+| `password_downloaded` | ``password_downloaded TINYINT(1) NOT NULL DEFAULT 0`` | 初始密码是否已一次性下载 |
+| `failure_reason` | ``failure_reason VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL`` | 整份任务失败的安全原因，不包含凭证及敏感原值 |
+| `created_at` | ``created_at DATETIME(6) NOT NULL`` | 记录创建时间点，UTC |
+| `completed_at` | ``completed_at DATETIME(6) NULL`` | 任务完成时间点，UTC；未完成时为空 |
+| `expires_at` | ``expires_at DATETIME(6) NOT NULL`` | 到期时间点，UTC |
+
+约束与索引：
+
+```sql
+workbook MEDIUMBLOB NULL COMMENT '导出或上传校验后的xlsx工作簿'
+error_report MEDIUMBLOB NULL COMMENT '逐行失败报告xlsx；无失败时为空'
+password_file MEDIUMBLOB NULL COMMENT '新账号一次性初始密码xlsx；下载后清除'
+PRIMARY KEY (id)
+KEY idx_iam_member_workbook_actor (tenant_id, actor_member_id, created_at)
+KEY idx_iam_member_workbook_status (tenant_id, status, expires_at)
+CONSTRAINT ck_iam_member_workbook_kind CHECK (kind IN ('EXPORT', 'IMPORT'))
+CONSTRAINT ck_iam_member_workbook_mode CHECK (mode IN ('CREATE', 'UPDATE'))
+CONSTRAINT ck_iam_member_workbook_status CHECK (status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'EXPIRED'))
+CONSTRAINT ck_iam_member_workbook_ids CHECK (member_ids IS NULL OR JSON_TYPE(member_ids) = 'ARRAY')
+CONSTRAINT ck_iam_member_workbook_downloaded CHECK (password_downloaded IN (0, 1))
+```
+
+## iam_download_task
+
+下载中心导出任务
+
+权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
+
+| 字段 | 定义 | 说明 |
+|---|---|---|
+| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 下载任务标识 |
+| `domain` | ``domain VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 发起人的认证域；取值PLATFORM,TENANT |
+| `tenant_id` | ``tenant_id BIGINT UNSIGNED NULL`` | 所属租户组织ID；平台域为空 |
+| `actor_member_id` | ``actor_member_id BIGINT UNSIGNED NOT NULL`` | 发起导出的当前域成员ID |
+| `source` | ``source VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 导出来源编码，下载时据此复核权限 |
+| `title` | ``title VARCHAR(128) NOT NULL`` | 列表展示名称 |
+| `status` | ``status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 当前业务记录状态，合法值由本表CHECK及对应业务枚举限定；取值PENDING,RUNNING,SUCCEEDED,FAILED,EXPIRED |
+| `filename` | ``filename VARCHAR(255) NULL`` | 下载文件名；成功后有值 |
+| `content_type` | ``content_type VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NULL`` | 文件MIME类型 |
+| `file_size` | ``file_size BIGINT UNSIGNED NULL`` | 文件字节数 |
+| `object_path` | ``object_path VARCHAR(512) COLLATE utf8mb4_bin NULL`` | 对象存储路径bucket/objectName；过期删除后清空 |
+| `failure_reason` | ``failure_reason VARCHAR(255) NULL`` | 可展示的失败原因，不包含异常堆栈及敏感原值 |
+| `created_at` | ``created_at DATETIME(6) NOT NULL`` | 记录创建时间点，UTC |
+| `started_at` | ``started_at DATETIME(6) NULL`` | 开始生成时间点，UTC |
+| `completed_at` | ``completed_at DATETIME(6) NULL`` | 任务完成时间点，UTC；未完成时为空 |
+| `expires_at` | ``expires_at DATETIME(6) NOT NULL`` | 文件到期时间点，UTC |
+
+约束与索引：
+
+```sql
+PRIMARY KEY (id)
+KEY idx_iam_download_task_owner (tenant_id, actor_member_id, created_at)
+KEY idx_iam_download_task_status (status, expires_at)
+CONSTRAINT ck_iam_download_task_domain CHECK (domain IN ('PLATFORM', 'TENANT'))
+CONSTRAINT ck_iam_download_task_status CHECK (status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'EXPIRED'))
+CONSTRAINT ck_iam_download_task_tenant CHECK ((domain = 'TENANT' AND tenant_id IS NOT NULL) OR (domain = 'PLATFORM' AND tenant_id IS NULL))
 ```
 
 ## iam_authorization_audit

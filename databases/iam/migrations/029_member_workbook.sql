@@ -1,0 +1,28 @@
+-- 已有库补齐成员表格导入导出任务，与 JSON 导出分离。新建库使用 004，不执行本补丁。
+CREATE TABLE IF NOT EXISTS iam_member_workbook (
+    id BIGINT UNSIGNED NOT NULL COMMENT '租户成员表格导入或导出任务标识',
+    tenant_id BIGINT UNSIGNED NOT NULL COMMENT '所属租户组织ID',
+    actor_member_id BIGINT UNSIGNED NOT NULL COMMENT '发起操作的当前域成员ID',
+    kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '任务种类；取值EXPORT,IMPORT',
+    mode VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '表格模式；取值CREATE,UPDATE',
+    status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '当前业务记录状态，合法值由本表CHECK及对应业务枚举限定；取值PENDING,RUNNING,SUCCEEDED,FAILED,EXPIRED',
+    tenant_version VARCHAR(32) COLLATE utf8mb4_bin NOT NULL COMMENT '登记任务时的组织版本，取iam_tenant.version',
+    member_ids JSON NULL COMMENT '导出范围成员ID的JSON数组；导入或尚未快照时可空',
+    result JSON NULL COMMENT '成功失败计数与逐行原因，不含初始密码明文',
+    workbook MEDIUMBLOB NULL COMMENT '导出或上传校验后的xlsx工作簿',
+    error_report MEDIUMBLOB NULL COMMENT '逐行失败报告xlsx；无失败时为空',
+    password_file MEDIUMBLOB NULL COMMENT '新账号一次性初始密码xlsx；下载后清除',
+    password_downloaded TINYINT(1) NOT NULL DEFAULT 0 COMMENT '初始密码是否已一次性下载',
+    failure_reason VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL COMMENT '整份任务失败的安全原因，不包含凭证及敏感原值',
+    created_at DATETIME(6) NOT NULL COMMENT '记录创建时间点，UTC',
+    completed_at DATETIME(6) NULL COMMENT '任务完成时间点，UTC；未完成时为空',
+    expires_at DATETIME(6) NOT NULL COMMENT '到期时间点，UTC',
+    PRIMARY KEY (id),
+    KEY idx_iam_member_workbook_actor (tenant_id, actor_member_id, created_at),
+    KEY idx_iam_member_workbook_status (tenant_id, status, expires_at),
+    CONSTRAINT ck_iam_member_workbook_kind CHECK (kind IN ('EXPORT', 'IMPORT')),
+    CONSTRAINT ck_iam_member_workbook_mode CHECK (mode IN ('CREATE', 'UPDATE')),
+    CONSTRAINT ck_iam_member_workbook_status CHECK (status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'EXPIRED')),
+    CONSTRAINT ck_iam_member_workbook_ids CHECK (member_ids IS NULL OR JSON_TYPE(member_ids) = 'ARRAY'),
+    CONSTRAINT ck_iam_member_workbook_downloaded CHECK (password_downloaded IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='租户成员表格导入导出任务';

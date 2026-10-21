@@ -1,0 +1,25 @@
+-- 已有库补齐下载中心任务表。新建库使用 004，不执行本补丁。
+CREATE TABLE IF NOT EXISTS iam_download_task (
+    id BIGINT UNSIGNED NOT NULL COMMENT '下载任务标识',
+    domain VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '发起人的认证域；取值PLATFORM,TENANT',
+    tenant_id BIGINT UNSIGNED NULL COMMENT '所属租户组织ID；平台域为空',
+    actor_member_id BIGINT UNSIGNED NOT NULL COMMENT '发起导出的当前域成员ID',
+    source VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '导出来源编码，下载时据此复核权限',
+    title VARCHAR(128) NOT NULL COMMENT '列表展示名称',
+    status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '当前业务记录状态，合法值由本表CHECK及对应业务枚举限定；取值PENDING,RUNNING,SUCCEEDED,FAILED,EXPIRED',
+    filename VARCHAR(255) NULL COMMENT '下载文件名；成功后有值',
+    content_type VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NULL COMMENT '文件MIME类型',
+    file_size BIGINT UNSIGNED NULL COMMENT '文件字节数',
+    object_path VARCHAR(512) COLLATE utf8mb4_bin NULL COMMENT '对象存储路径bucket/objectName；过期删除后清空',
+    failure_reason VARCHAR(255) NULL COMMENT '可展示的失败原因，不包含异常堆栈及敏感原值',
+    created_at DATETIME(6) NOT NULL COMMENT '记录创建时间点，UTC',
+    started_at DATETIME(6) NULL COMMENT '开始生成时间点，UTC',
+    completed_at DATETIME(6) NULL COMMENT '任务完成时间点，UTC；未完成时为空',
+    expires_at DATETIME(6) NOT NULL COMMENT '文件到期时间点，UTC',
+    PRIMARY KEY (id),
+    KEY idx_iam_download_task_owner (tenant_id, actor_member_id, created_at),
+    KEY idx_iam_download_task_status (status, expires_at),
+    CONSTRAINT ck_iam_download_task_domain CHECK (domain IN ('PLATFORM', 'TENANT')),
+    CONSTRAINT ck_iam_download_task_status CHECK (status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'EXPIRED')),
+    CONSTRAINT ck_iam_download_task_tenant CHECK ((domain = 'TENANT' AND tenant_id IS NOT NULL) OR (domain = 'PLATFORM' AND tenant_id IS NULL))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='下载中心导出任务';

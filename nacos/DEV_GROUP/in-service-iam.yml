@@ -88,6 +88,14 @@ ingot:
       url: ${RUSTFS_URL:http://ingot-cloud:19000}
       accessKey: ${RUSTFS_ACCESS_KEY:7eYdiTxLbcpsfaNoKSQ0}
       secretKey: ${RUSTFS_SECRET_KEY:PgXcoiT9bmYBrIUj6S7QHltf0w8KDzWaC5FMqLsx}
+  # 下载中心：导出文件存入该 bucket（需预先创建），7 天后删除文件，30 天后删除记录。
+  download:
+    bucket: ${DOWNLOAD_BUCKET:ingot-download}
+    retention: 7d
+    record-retention: 30d
+    link-ttl: 5m
+    run-timeout: 30m
+    cleanup-interval: 1h
   social:
     wechat:
       miniProgramAppId: wx18dc0ea8c6ca1d7d

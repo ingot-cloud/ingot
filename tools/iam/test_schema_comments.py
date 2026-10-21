@@ -11,8 +11,8 @@ from database_sources import ROOT
 class SchemaCommentsTest(unittest.TestCase):
     def test_all_manifest_tables_and_columns_have_documentation(self):
         definitions = tables()
-        self.assertEqual(63, len(definitions))
-        self.assertEqual(495, sum(len(t.columns) for t in definitions))
+        self.assertEqual(65, len(definitions))
+        self.assertEqual(525, sum(len(t.columns) for t in definitions))
         for table in definitions:
             self.assertTrue(comment(table.options), table.name)
             for name, definition in table.columns.items():
@@ -33,7 +33,7 @@ class SchemaCommentsTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '未执行任何 ALTER'):
             preflight(query, snapshot)
         self.assertEqual(1, len(calls))
-        self.assertEqual(63,calls[0].count("SHOW CREATE"))
+        self.assertEqual(65,calls[0].count("SHOW CREATE"))
         self.assertTrue(all(sql.startswith('SHOW CREATE') for sql in calls))
         with self.assertRaisesRegex(ValueError, '快照'):
             preflight(query, {**snapshot, 'source_digest': 'outdated'})

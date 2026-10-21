@@ -1,0 +1,17 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    api project(ingot.framework_commons)
+
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.framework_context)
+    implementation(deps.spring.framework_tx)
+    implementation(deps.spring.security_core)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.jakarta_servlet_api)
+}
+
+test {
+    useJUnitPlatform()
+}

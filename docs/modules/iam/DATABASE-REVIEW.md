@@ -675,6 +675,38 @@
 
 后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
 
+### iam_member_workbook — 需要运行数据验证（P2）
+
+租户成员表格导入导出任务
+
+- 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
+- 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
+- 主要访问/写入：[MemberWorkbookRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/MemberWorkbookRepository.java), [IamMemberWorkbookEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamMemberWorkbookEntity.java), [IamMemberWorkbookMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamMemberWorkbookMapper.java)。
+- 有效二级索引/业务唯一键：``KEY `idx_iam_member_workbook_actor` (`tenant_id`,`actor_member_id`,`created_at`)``；``KEY `idx_iam_member_workbook_status` (`tenant_id`,`status`,`expires_at`)``。
+- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
+- 被其他表引用：未声明入向外键。
+- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
+- 判断：任务按ID定位，操作者与状态索引支持历史和过期清理；工作簿BLOB与一次性密码需按24小时保留期清理。
+- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_member_workbook)。
+
+后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
+
+### iam_download_task — 需要运行数据验证（P2）
+
+下载中心导出任务
+
+- 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
+- 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
+- 主要访问/写入：受控迁移/建库工具，未发现在线业务写入入口。
+- 有效二级索引/业务唯一键：``KEY `idx_iam_download_task_owner` (`tenant_id`,`actor_member_id`,`created_at`)``；``KEY `idx_iam_download_task_status` (`status`,`expires_at`)``。
+- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
+- 被其他表引用：未声明入向外键。
+- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
+- 判断：任务按ID定位，租户/成员/创建时间支持我的下载分页，状态/到期索引支持清理；文件在对象存储，7天删除对象、30天删除记录。
+- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_download_task)。
+
+后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
+
 ### iam_authorization_audit — 需要运行数据验证（P2）
 
 授权与组织操作脱敏审计及投递状态

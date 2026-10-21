@@ -43,6 +43,7 @@ import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMenuActionMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMenuMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMemberExportMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamMemberWorkbookMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamPlanApplicationMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamPlanMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamPlatformGroupMapper;
@@ -237,6 +238,18 @@ public final class IamMybatisTestAccess {
         return new MemberExportRepository(mapper(source, IamMemberExportMapper.class));
     }
 
+    /** 在当前夹具数据源上建立下载中心任务存储。 */
+    public static IamDownloadTaskStore downloads(DataSource source,
+            com.ingot.cloud.iam.identity.InitializationIdAllocator ids) {
+        return new IamDownloadTaskStore(mapper(source,
+                com.ingot.cloud.iam.persistence.mapper.IamDownloadTaskMapper.class), ids);
+    }
+
+    /** 在当前夹具数据源上建立成员表格任务 Repository。 */
+    public static MemberWorkbookRepository workbooks(DataSource source) {
+        return new MemberWorkbookRepository(mapper(source, IamMemberWorkbookMapper.class));
+    }
+
     /** 在当前夹具数据源上建立字段策略求值器。 */
     public static FieldAccessEvaluator fields(DataSource source) {
         return new FieldAccessEvaluator(policies(source), mapper(source, IamMemberDepartmentMapper.class),
@@ -417,6 +430,8 @@ public final class IamMybatisTestAccess {
                     IamRoleDeltaMapper.class, IamRoleParameterMapper.class, IamTenantGroupDepartmentMapper.class,
                     IamDirectoryRuleMapper.class, IamPolicySelectorMapper.class, IamResourceMapper.class,
                     IamMemberExportMapper.class,
+                    IamMemberWorkbookMapper.class,
+                    com.ingot.cloud.iam.persistence.mapper.IamDownloadTaskMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.IamRoleApplicationTaskMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.IamRoleApplicationItemMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.AuthorizationCandidateMapper.class,

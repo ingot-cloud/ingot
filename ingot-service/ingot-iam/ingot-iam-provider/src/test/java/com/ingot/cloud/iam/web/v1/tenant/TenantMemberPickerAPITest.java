@@ -48,7 +48,8 @@ class TenantMemberPickerAPITest {
     void setUp() {
         var controllers = List.of(new TenantMemberPickerAPI(browse),
                 new TenantMemberCommandAPI(mock(MemberCommandService.class), mock(MemberQueryService.class),
-                        mock(MemberExportService.class), mock(TenantMemberOnboarding.class),
+                        mock(MemberExportService.class), mock(MemberWorkbookService.class),
+                        mock(TenantMemberOnboarding.class),
                         mock(com.ingot.cloud.iam.organization.MemberRejoin.class), members),
                 new TenantDepartmentAPI(mock(DepartmentService.class), leaders,
                         mock(DepartmentEditService.class), mock(DepartmentNavigationService.class)));

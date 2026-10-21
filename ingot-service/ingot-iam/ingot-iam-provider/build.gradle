@@ -28,8 +28,10 @@ dependencies {
     implementation project(ingot.framework_security_event_store_mysql)
     implementation project(ingot.framework_dict_client)
     implementation project(ingot.framework_cache)
+    implementation project(ingot.framework_download)
     compileOnly(deps.spring.spring_boot.data_redis_starter)
     implementation project(ingot.member_api)
     implementation project(ingot.iam_api)
+    implementation(deps.alibaba.easyexcel)
 }
 
