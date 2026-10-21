@@ -17,6 +17,7 @@ import com.ingot.cloud.iam.persistence.entity.IamRoleAssignmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.support.IamAccess;
+import com.ingot.cloud.iam.support.SensitiveConfirmationGuard;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamFilters;
@@ -61,6 +62,7 @@ public class TenantQueryService {
     private final AuthorizationChangeNotifier changes;
     private final TenantRepository tenants;
     private final AssignmentRepository assignments;
+    private final SensitiveConfirmationGuard confirmations;
     private final TransactionTemplate transaction;
 
     /**
@@ -72,16 +74,19 @@ public class TenantQueryService {
      * @param changes 授权热缓存失效
      * @param tenants 组织持久化
      * @param assignments 角色分配
+     * @param confirmations 转交前的登录密码确认
      * @param transactionManager 同一数据源事务
      */
     public TenantQueryService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
                               TenantRepository tenants, AssignmentRepository assignments,
+                              SensitiveConfirmationGuard confirmations,
                               PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
         this.changes = changes;
         this.tenants = tenants;
         this.assignments = assignments;
+        this.confirmations = confirmations;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -177,21 +182,27 @@ public class TenantQueryService {
     }
 
     /**
-     * 原子转交当前所有者身份，独立角色分配保留，提交后动态权限按新身份求值。
+     * 原子转交当前所有者身份。登录密码确认通过后才锁行改库；独立角色分配保留。
      *
-     * @param input 新所有者
+     * @param input 新所有者与内嵌登录密码
      * @return 提交后版本
      */
     public CreatedResource transferOwner(OwnerTransferInput input) {
         ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_SETTINGS_OWNER_TRANSFER);
         long tenantId = IamIds.require(actor.context().tenantId());
+        ResourceDetail<TenantRecord> visible = load(tenantId);
+        if (!actor.context().memberId().equals(visible.record().ownerMemberId())) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        confirmations.require(actor, input.confirmation());
         long newOwner = IamIds.require(input.newOwnerMemberId());
         return transaction.execute(status -> {
             ResourceDetail<TenantRecord> current = lock(tenantId);
             IamIds.requireVersion(input.expectedVersion(), current.version());
             long oldOwner = IamIds.require(current.record().ownerMemberId());
-            if (!actor.context().memberId().equals(current.record().ownerMemberId()))
+            if (!actor.context().memberId().equals(current.record().ownerMemberId())) {
                 throw new BizException(IamReasonCode.ACTION_DENIED);
+            }
             if (oldOwner == newOwner) {
                 return new CreatedResource(IamIds.text(tenantId), current.version());
             }

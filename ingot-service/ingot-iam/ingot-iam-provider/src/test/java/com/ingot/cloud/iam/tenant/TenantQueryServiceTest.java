@@ -13,12 +13,16 @@ import com.ingot.cloud.iam.identity.ActiveIdentityService;
 import com.ingot.cloud.iam.identity.CurrentIdentityService;
 import com.ingot.cloud.iam.persistence.IamMybatisTestAccess;
 import com.ingot.cloud.iam.support.IamAccess;
+import com.ingot.cloud.iam.support.SensitiveConfirmationGuard;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.OwnerTransferInput;
+import com.ingot.framework.commons.model.iam.SensitiveConfirmation;
+import com.ingot.framework.commons.model.iam.SensitiveConfirmationKind;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.security.account.domain.ConfirmPasswordFailedException;
 import com.ingot.framework.security.core.userdetails.InUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +46,7 @@ class TenantQueryServiceTest {
     private JdbcTemplate jdbc;
     private TenantQueryService service;
     private final AtomicInteger invalidations = new AtomicInteger();
+    private final AtomicInteger passwordChecks = new AtomicInteger();
     private static final AuthorizationContext TENANT =
             new AuthorizationContext(AuthorizationDomain.TENANT, "10", "1", "101");
     private static final AuthorizationContext PLATFORM =
@@ -84,6 +89,7 @@ class TenantQueryServiceTest {
         assignment(50, 101, 12, "SYSTEM", "INITIALIZATION");
         assignment(51, 101, 32, "TENANT_CUSTOM", "MANUAL");
         invalidations.set(0);
+        passwordChecks.set(0);
         var identities = new ActiveIdentityService(IamMybatisTestAccess.identity(dataSource));
         IamActionAuthorizer authorizer = (actor, action) -> new IamActionAuthorizer.Admission(true);
         var access = new IamAccess(new CurrentIdentityService(identities), authorizer,
@@ -91,6 +97,12 @@ class TenantQueryServiceTest {
         service = new TenantQueryService(access, IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> invalidations.incrementAndGet()),
                 IamMybatisTestAccess.tenants(dataSource), IamMybatisTestAccess.assignments(dataSource),
+                new SensitiveConfirmationGuard(command -> {
+                    passwordChecks.incrementAndGet();
+                    if (!"ok".equals(command.getPassword())) {
+                        throw new ConfirmPasswordFailedException();
+                    }
+                }),
                 new DataSourceTransactionManager(dataSource));
         authenticate(TENANT);
     }
@@ -102,7 +114,7 @@ class TenantQueryServiceTest {
 
     @Test
     void transferChangesOwnerWithoutChangingRoleAssignments() {
-        var result = service.transferOwner(new OwnerTransferInput("0", "102"));
+        var result = service.transferOwner(transfer("0", "102"));
 
         assertEquals("10", result.id());
         assertEquals("1", result.version());
@@ -122,7 +134,7 @@ class TenantQueryServiceTest {
     void transferReusesExistingAssignmentOnNewOwner() {
         assignment(52, 102, 12, "SYSTEM", "MANUAL");
 
-        service.transferOwner(new OwnerTransferInput("0", "102"));
+        service.transferOwner(transfer("0", "102"));
 
         assertEquals("ACTIVE", status(50));
         assertEquals("ACTIVE", status(52));
@@ -136,12 +148,12 @@ class TenantQueryServiceTest {
     void transferRejectsInactiveNewOwnerAndStaleVersion() {
         jdbc.update("UPDATE iam_tenant_member SET status='SUSPENDED' WHERE id=102");
         BizException missing = assertThrows(BizException.class,
-                () -> service.transferOwner(new OwnerTransferInput("0", "102")));
+                () -> service.transferOwner(transfer("0", "102")));
         assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), missing.getCode());
         jdbc.update("UPDATE iam_tenant_member SET status='ACTIVE' WHERE id=102");
 
         BizException stale = assertThrows(BizException.class,
-                () -> service.transferOwner(new OwnerTransferInput("7", "102")));
+                () -> service.transferOwner(transfer("7", "102")));
         assertEquals(IamReasonCode.REVISION_CONFLICT.getCode(), stale.getCode());
         assertEquals(101L, jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10", Long.class));
         assertEquals("ACTIVE", status(50));
@@ -151,14 +163,14 @@ class TenantQueryServiceTest {
     @Test
     void transferWorksWithoutAnInitializationAssignment() {
         jdbc.update("DELETE FROM iam_role_assignment WHERE id=50");
-        service.transferOwner(new OwnerTransferInput("0","102"));
+        service.transferOwner(transfer("0", "102"));
         assertEquals(102L,jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10",Long.class));
         assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment",Integer.class));
     }
 
     @Test
     void transferringToCurrentOwnerIsNoOp() {
-        var result = service.transferOwner(new OwnerTransferInput("0", "101"));
+        var result = service.transferOwner(transfer("0", "101"));
         assertEquals("0", result.version());
         assertEquals("ACTIVE", status(50));
         assertEquals(0, invalidations.get());
@@ -215,6 +227,32 @@ class TenantQueryServiceTest {
         assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), invalid.getCode());
     }
 
+    @Test
+    void missingOrWrongPasswordDoesNotTransfer() {
+        BizException missing = assertThrows(BizException.class,
+                () -> service.transferOwner(new OwnerTransferInput("0", "102", null)));
+        assertEquals(IamReasonCode.STEP_UP_FAILED.getCode(), missing.getCode());
+
+        BizException wrong = assertThrows(BizException.class, () -> service.transferOwner(new OwnerTransferInput("0",
+                "102", new SensitiveConfirmation(SensitiveConfirmationKind.LOGIN_PASSWORD, "wrong"))));
+        assertEquals(IamReasonCode.STEP_UP_FAILED.getCode(), wrong.getCode());
+
+        BizException sameOwner = assertThrows(BizException.class,
+                () -> service.transferOwner(new OwnerTransferInput("0", "101", null)));
+        assertEquals(IamReasonCode.STEP_UP_FAILED.getCode(), sameOwner.getCode());
+
+        assertEquals(101L, jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10", Long.class));
+        assertEquals(0, invalidations.get());
+        assertEquals(1, passwordChecks.get());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit WHERE change_type="
+                + "'OWNER_TRANSFER'", Integer.class));
+    }
+
+    private static OwnerTransferInput transfer(String version, String memberId) {
+        return new OwnerTransferInput(version, memberId,
+                new SensitiveConfirmation(SensitiveConfirmationKind.LOGIN_PASSWORD, "ok"));
+    }
+
     private void assignment(long id, long memberId, long revisionId, String kind, String source) {
         jdbc.update("INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,tenant_member_id,revision_id,"
                         + "revision_kind,scope_bindings,valid_from,status,source,version) VALUES "
@@ -225,14 +263,15 @@ class TenantQueryServiceTest {
     @Test
     void ordinaryMemberCannotTransferEvenWithTheAction() {
         authenticate(new AuthorizationContext(AuthorizationDomain.TENANT,"10","2","102"));
-        assertEquals(IamReasonCode.ACTION_DENIED.getCode(),assertThrows(BizException.class,()->service.transferOwner(new OwnerTransferInput("0","102"))).getCode());
+        assertEquals(IamReasonCode.ACTION_DENIED.getCode(),assertThrows(BizException.class,()->service.transferOwner(transfer("0", "102"))).getCode());
         assertEquals(101L,jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10",Long.class));
+        assertEquals(0, passwordChecks.get());
     }
 
     @Test
     void disabledTargetAccountCannotReceiveOwnership() {
         jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=2");
-        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(),assertThrows(BizException.class,()->service.transferOwner(new OwnerTransferInput("0","102"))).getCode());
+        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(),assertThrows(BizException.class,()->service.transferOwner(transfer("0", "102"))).getCode());
     }
     private String status(long id) {
         return jdbc.queryForObject("SELECT status FROM iam_role_assignment WHERE id=?", String.class, id);

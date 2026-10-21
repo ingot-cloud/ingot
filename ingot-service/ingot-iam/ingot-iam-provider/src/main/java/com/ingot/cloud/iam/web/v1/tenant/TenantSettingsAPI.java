@@ -2,12 +2,12 @@ package com.ingot.cloud.iam.web.v1.tenant;
 
 import com.ingot.cloud.iam.tenant.TenantQueryService;
 import com.ingot.framework.commons.model.iam.CreatedResource;
-import com.ingot.framework.commons.model.iam.OwnerTransferInput;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.TenantRecord;
 import com.ingot.framework.commons.model.iam.TenantSettingsInput;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -56,14 +56,15 @@ public class TenantSettingsAPI implements RShortcuts {
     }
 
     /**
-     * 原子转交所有者。
+     * 确认当前账号登录密码后原子转交所有者。
      *
-     * @param input 新所有者
+     * @param input 新所有者与内嵌确认
      * @return 提交后版本
      */
     @Operation(summary = "转交所有者")
     @PostMapping("/owner-transfer")
-    public R<CreatedResource> transfer(@Valid @RequestBody OwnerTransferInput input) {
-        return ok(tenants.transferOwner(input));
+    @InCryptoHybridContext
+    public R<CreatedResource> transfer(@Valid @RequestBody OwnerTransferRequest input) {
+        return ok(tenants.transferOwner(input.toInput()));
     }
 }
