@@ -25786,6 +25786,136 @@
           }
         ]
       }
+    },
+    "/v1/tenant/groups/{id}/effective-members": {
+      "get": {
+        "operationId": "tenantGroupEffectiveMembers",
+        "summary": "组织组有效成员",
+        "tags": [
+          "TENANT"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "TENANT",
+        "x-iam-action": "iam-tenant:group:read",
+        "x-iam-execution": "有效成员按任职实时展开后分页；同时应用成员读取范围与字段投影；返回直接与部门来源标记；不回查全量ID",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageResponseGroupEffectiveMemberRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -36891,6 +37021,111 @@
             "enum": [
               false
             ]
+          }
+        }
+      },
+      "GroupEffectiveMemberRecord": {
+        "required": [
+          "member",
+          "membership"
+        ],
+        "type": "object",
+        "properties": {
+          "member": {
+            "$ref": "#/components/schemas/MemberRecord"
+          },
+          "membership": {
+            "$ref": "#/components/schemas/GroupMembership"
+          }
+        },
+        "description": "租户组有效成员及其来源，成员资料已经字段策略投影"
+      },
+      "GroupMembership": {
+        "required": [
+          "departments",
+          "direct"
+        ],
+        "type": "object",
+        "properties": {
+          "direct": {
+            "type": "boolean",
+            "description": "是否存在显式组成员关系"
+          },
+          "departments": {
+            "type": "array",
+            "description": "命中的组部门规则",
+            "items": {
+              "$ref": "#/components/schemas/GroupMembershipDepartment"
+            }
+          }
+        },
+        "description": "成员进入租户组的来源，直接绑定与部门规则可同时成立"
+      },
+      "GroupMembershipDepartment": {
+        "required": [
+          "id",
+          "includeDescendants"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "组上配置的部门 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "可见部门名称；无权查看时省略"
+          },
+          "includeDescendants": {
+            "type": "boolean",
+            "description": "该规则是否连带下级"
+          }
+        },
+        "description": "令成员进入租户组的部门规则；名称仅在可见时填写"
+      },
+      "PageResponseGroupEffectiveMemberRecord": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupEffectiveMemberRecord"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageResponseGroupEffectiveMemberRecord": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResponseGroupEffectiveMemberRecord"
+          },
+          "success": {
+            "type": "boolean"
           }
         }
       }

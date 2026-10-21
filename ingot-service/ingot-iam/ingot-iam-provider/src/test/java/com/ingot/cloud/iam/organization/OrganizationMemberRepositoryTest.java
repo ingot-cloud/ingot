@@ -26,9 +26,10 @@ class OrganizationMemberRepositoryTest {
         var source = new DriverManagerDataSource("jdbc:h2:mem:"+UUID.randomUUID()+";DB_CLOSE_DELAY=-1","sa","");
         jdbc = new JdbcTemplate(source);
         jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,enabled BOOLEAN,deleted_at TIMESTAMP)");
-        jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,display_name VARCHAR(64),avatar VARCHAR(512),status VARCHAR(16))");
+        jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,display_name VARCHAR(64),avatar VARCHAR(512),phone VARCHAR(32),email VARCHAR(64),status VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_member_department(tenant_id BIGINT,member_id BIGINT,department_id BIGINT,is_primary BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_tenant_group_member(tenant_id BIGINT,group_id BIGINT,member_id BIGINT)");
+        jdbc.execute("CREATE TABLE iam_tenant_group_department(tenant_id BIGINT,group_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_department(id BIGINT PRIMARY KEY,tenant_id BIGINT,parent_id BIGINT,name VARCHAR(64),sort_order INT,version BIGINT,created_at TIMESTAMP,updated_at TIMESTAMP)");
         jdbc.update("INSERT INTO iam_account VALUES(1,TRUE,NULL),(2,TRUE,NULL),(3,FALSE,NULL),(4,TRUE,NULL)");
         jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(101,10,1,'张一','ACTIVE'),(102,10,2,'张二','SUSPENDED'),(103,10,3,'停用','ACTIVE'),(201,20,4,'跨租户','ACTIVE')");
@@ -69,7 +70,6 @@ class OrganizationMemberRepositoryTest {
     void departmentFilterIntersectsDelegatedRecipientsBeforeCountAndPage() {
         jdbc.execute("CREATE TABLE iam_delegation_recipient_department(tenant_id BIGINT,delegation_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_delegation_recipient_member(tenant_id BIGINT,delegation_id BIGINT,tenant_member_id BIGINT,domain VARCHAR(16))");
-        jdbc.execute("CREATE TABLE iam_tenant_group_department(tenant_id BIGINT,group_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
         jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(104,10,4,'接收人','ACTIVE'),(105,10,1,'非接收人','ACTIVE')");
         jdbc.update("INSERT INTO iam_member_department VALUES(10,104,12,TRUE),(10,105,12,TRUE)");
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(10,61,101,'TENANT'),(10,61,104,'TENANT'),(20,61,201,'TENANT')");
@@ -116,7 +116,6 @@ class OrganizationMemberRepositoryTest {
     void delegatedPickerRootCannotBroadenRecipientsOrIncludeTheActor() {
         jdbc.execute("CREATE TABLE iam_delegation_recipient_department(tenant_id BIGINT,delegation_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_delegation_recipient_member(tenant_id BIGINT,delegation_id BIGINT,tenant_member_id BIGINT,domain VARCHAR(16))");
-        jdbc.execute("CREATE TABLE iam_tenant_group_department(tenant_id BIGINT,group_id BIGINT,department_id BIGINT,include_descendants BOOLEAN)");
         jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(104,10,1,'可接收零任职','ACTIVE'),(105,10,1,'不可接收零任职','ACTIVE'),(106,10,1,'可接收根及研发','ACTIVE')");
         jdbc.update("INSERT INTO iam_member_department VALUES(10,106,1,TRUE),(10,106,11,FALSE)");
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(10,61,101,'TENANT'),(10,61,104,'TENANT'),(10,61,106,'TENANT')");
@@ -137,5 +136,36 @@ class OrganizationMemberRepositoryTest {
         var intersection=ObjectScope.of(List.of(new ObjectScopeClause(Set.of(id(101)),List.of(Set.of(id(11)),Set.of(id(99))))));
         assertTrue(memberQueries.visibleTenantIds(10,ids,intersection,true).isEmpty());
     }
+
+    @Test
+    void effectiveMembersFollowDepartmentAssignmentAndIncludeDescendants() {
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status) VALUES(104,10,4,'子部门','ACTIVE')");
+        jdbc.update("INSERT INTO iam_member_department VALUES(10,104,12,TRUE)");
+        jdbc.update("INSERT INTO iam_tenant_group_department VALUES(10,41,11,FALSE)");
+        var onlyDirectDept = members.pageEffective(10, ObjectScope.all(), null, 41, 1, 20);
+        assertEquals(List.of(id(101), id(102)), onlyDirectDept.getRecords().stream().map(row -> row.getId()).toList());
+        assertEquals(2, onlyDirectDept.getTotal());
+
+        jdbc.update("UPDATE iam_tenant_group_department SET include_descendants=TRUE WHERE group_id=41");
+        var withChild = members.pageEffective(10, ObjectScope.all(), null, 41, 1, 20);
+        assertEquals(List.of(id(101), id(102), id(104)), withChild.getRecords().stream().map(row -> row.getId()).toList());
+
+        jdbc.update("DELETE FROM iam_member_department WHERE tenant_id=10 AND member_id=104");
+        jdbc.update("INSERT INTO iam_member_department VALUES(10,104,11,TRUE)");
+        var afterMove = members.pageEffective(10, ObjectScope.all(), "子", 41, 1, 20);
+        assertEquals(List.of(id(104)), afterMove.getRecords().stream().map(row -> row.getId()).toList());
+        assertEquals(0, members.page(10, ObjectScope.all(), null, null, List.of(), 1, 20, 41L).getRecords().size());
+        assertEquals(2, members.page(10, ObjectScope.all(), null, null, List.of(), 1, 20, 31L).getTotal());
+    }
+
+    @Test
+    void effectiveMembersKeepDisabledAccountAndRemovedStatus() {
+        jdbc.update("INSERT INTO iam_tenant_group_department VALUES(10,42,11,FALSE)");
+        jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=2");
+        jdbc.update("UPDATE iam_tenant_member SET status='REMOVED' WHERE id=101");
+        var result = members.pageEffective(10, ObjectScope.all(), null, 42, 1, 20);
+        assertEquals(List.of(id(101), id(102)), result.getRecords().stream().map(row -> row.getId()).toList());
+    }
+
     private static BigInteger id(long value) { return BigInteger.valueOf(value); }
 }

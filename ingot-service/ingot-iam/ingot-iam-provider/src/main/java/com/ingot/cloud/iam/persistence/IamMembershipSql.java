@@ -3,9 +3,9 @@ package com.ingot.cloud.iam.persistence;
 /**
  * <p>集中定义按部门任职展开成员归属的递归 SQL 片段，保证授权求值、开通判定、人数统计与委派接收人使用同一套规则。</p>
  *
- * <p>组、人群和委派接收人都可以按部门授予，部门规则可声明是否连带下级。成员归属不做物化，
- * 每次求值都从任职关系与部门树推导，任职变化立即生效。片段是编译期常量，
- * 供 {@code @Select} 拼接；使用时必须绑定 {@code tenantId} 与 {@code memberId}。</p>
+     * <p>组、人群和委派接收人都可以按部门授予，部门规则可声明是否连带下级。成员归属不做物化，
+     * 每次求值都从任职关系与部门树推导，任职变化立即生效。片段是编译期常量，
+     * 供 {@code @Select} 拼接或 Wrapper EXISTS；使用时必须绑定可信 {@code tenantId} 与组/成员 ID。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -135,6 +135,13 @@ public final class IamMembershipSql {
               JOIN group_reach g ON g.id=md.department_id
              WHERE md.tenant_id=#{tenantId}
             """;
+
+    /**
+     * Wrapper 可用的有效成员判定：绑定 {@code {0}=tenantId}、{@code {1}=groupId}，规则与 {@link #GROUP_MEMBERSHIP} 相同。
+     */
+    public static final String MEMBERSHIP_EXISTS = "EXISTS(SELECT 1 FROM ("
+            + GROUP_MEMBERSHIP.replace("#{tenantId}", "{0}").replace("#{groupId}", "{1}")
+            + ") membership WHERE membership.member_id=iam_tenant_member.id)";
 
     private IamMembershipSql() { }
 }

@@ -11029,6 +11029,111 @@
           }
         },
         "description": "携带独立命令的乐观锁版本"
+      },
+      "GroupEffectiveMemberRecord": {
+        "required": [
+          "member",
+          "membership"
+        ],
+        "type": "object",
+        "properties": {
+          "member": {
+            "$ref": "#/components/schemas/MemberRecord"
+          },
+          "membership": {
+            "$ref": "#/components/schemas/GroupMembership"
+          }
+        },
+        "description": "租户组有效成员及其来源，成员资料已经字段策略投影"
+      },
+      "GroupMembership": {
+        "required": [
+          "departments",
+          "direct"
+        ],
+        "type": "object",
+        "properties": {
+          "direct": {
+            "type": "boolean",
+            "description": "是否存在显式组成员关系"
+          },
+          "departments": {
+            "type": "array",
+            "description": "命中的组部门规则",
+            "items": {
+              "$ref": "#/components/schemas/GroupMembershipDepartment"
+            }
+          }
+        },
+        "description": "成员进入租户组的来源，直接绑定与部门规则可同时成立"
+      },
+      "GroupMembershipDepartment": {
+        "required": [
+          "id",
+          "includeDescendants"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "组上配置的部门 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "可见部门名称；无权查看时省略"
+          },
+          "includeDescendants": {
+            "type": "boolean",
+            "description": "该规则是否连带下级"
+          }
+        },
+        "description": "令成员进入租户组的部门规则；名称仅在可见时填写"
+      },
+      "PageResponseGroupEffectiveMemberRecord": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupEffectiveMemberRecord"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageResponseGroupEffectiveMemberRecord": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResponseGroupEffectiveMemberRecord"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
       }
     }
   }

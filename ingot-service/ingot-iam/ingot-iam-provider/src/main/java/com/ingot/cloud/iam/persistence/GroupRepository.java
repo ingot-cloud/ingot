@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -301,6 +302,27 @@ public class GroupRepository {
                         .eq(IamTenantGroupMemberEntity::getGroupId, BigInteger.valueOf(groupId))
                         .orderByAsc(IamTenantGroupMemberEntity::getMemberId))
                 .stream().map(IamTenantGroupMemberEntity::getMemberId).toList();
+    }
+
+    /**
+     * 判断当前页成员中哪些是该组的显式绑定，不把全组 ID 读出后再求交。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param groupId 组 ID
+     * @param memberIds 当前页成员
+     * @return 其中的直接成员
+     */
+    public Set<BigInteger> tenantMemberIdsIn(long tenantId, long groupId, Collection<BigInteger> memberIds) {
+        if (memberIds == null || memberIds.isEmpty()) {
+            return Set.of();
+        }
+        return tenantMembers.selectList(Wrappers.<IamTenantGroupMemberEntity>lambdaQuery()
+                        .select(IamTenantGroupMemberEntity::getMemberId)
+                        .eq(IamTenantGroupMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
+                        .eq(IamTenantGroupMemberEntity::getGroupId, BigInteger.valueOf(groupId))
+                        .in(IamTenantGroupMemberEntity::getMemberId, memberIds))
+                .stream().map(IamTenantGroupMemberEntity::getMemberId)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     /**

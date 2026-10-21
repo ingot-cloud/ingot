@@ -154,6 +154,27 @@ public class DepartmentQueryRepository {
     }
 
     /**
+     * 按 ID 读取当前租户部门名称，不应用对象范围。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param ids 部门 ID
+     * @return 部门 ID 到名称
+     */
+    public Map<BigInteger, String> names(long tenantId, Collection<BigInteger> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        Map<BigInteger, String> result = new LinkedHashMap<>();
+        for (IamDepartmentEntity row : departments.selectList(Wrappers.<IamDepartmentEntity>lambdaQuery()
+                .select(IamDepartmentEntity::getId, IamDepartmentEntity::getName)
+                .eq(IamDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .in(IamDepartmentEntity::getId, ids))) {
+            result.put(row.getId(), row.getName());
+        }
+        return result;
+    }
+
+    /**
      * 锁定当前租户部门，调用方须处于事务中。
      *
      * @param tenantId 已授权租户 ID

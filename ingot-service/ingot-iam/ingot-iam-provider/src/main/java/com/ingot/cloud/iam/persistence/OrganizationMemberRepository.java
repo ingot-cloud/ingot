@@ -56,6 +56,34 @@ public class OrganizationMemberRepository {
         }
         return members.selectPage(new Page<>(page, size), query.orderByAsc(IamTenantMemberEntity::getId));
     }
+
+    /**
+     * 按组有效成员分页，展开规则与 {@link IamMembershipSql#GROUP_MEMBERSHIP} 一致，不额外排除停用账号或已移出资格。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param scope 成员读取范围
+     * @param keyword 显示名包含匹配，可空
+     * @param groupId 组 ID
+     * @param page 页码
+     * @param size 页大小
+     * @return 当前页成员
+     */
+    public Page<IamTenantMemberEntity> pageEffective(long tenantId, ObjectScope scope, String keyword, long groupId,
+            int page, int size) {
+        var query = Wrappers.<IamTenantMemberEntity>lambdaQuery()
+                .select(IamTenantMemberEntity::getId, IamTenantMemberEntity::getDisplayName,
+                        IamTenantMemberEntity::getAvatar, IamTenantMemberEntity::getPhone,
+                        IamTenantMemberEntity::getEmail, IamTenantMemberEntity::getStatus)
+                .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId));
+        ObjectScopeSql.restrictTenantMembers(query, scope, BigInteger.valueOf(tenantId));
+        query.apply(IamMembershipSql.MEMBERSHIP_EXISTS, tenantId, groupId);
+        if (keyword != null && !keyword.isBlank()) {
+            String search = "%" + keyword.trim().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+            query.apply("display_name LIKE {0} ESCAPE '!'", search);
+        }
+        return members.selectPage(new Page<>(page, size), query.orderByAsc(IamTenantMemberEntity::getId));
+    }
+
     /** 批量判断真实零任职，不使用过滤后的可见部门投影推断。 */
     public java.util.Set<BigInteger> unassigned(long tenantId, List<BigInteger> ids) {
         return unassigned(tenantId, ids, ObjectScope.all());

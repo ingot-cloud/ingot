@@ -286,7 +286,7 @@ class IamAuthorizationContractTest {
                 RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class, FieldAccess.class,
                 FieldRule.class, DirectoryRule.class, CreatedResource.class, ObjectCapability.class, Bootstrap.class,
                 CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class, DepartmentTreeNode.class,
-                GroupRecord.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
+                GroupRecord.class, GroupEffectiveMemberRecord.class, GroupMembership.class, GroupMembershipDepartment.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
                 EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
                 DelegationRecord.class, PlanRecord.class, PlanApplication.class, EntitlementRecord.class,
                 DirectoryPolicyInput.class, FieldPolicyInput.class, PolicyPreviewInput.class, PolicyPreviewResult.class,
@@ -347,6 +347,7 @@ class IamAuthorizationContractTest {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<OrganizationMemberPickerPage>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<DepartmentNavigationPage>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<MemberRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<GroupEffectiveMemberRecord>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<DepartmentLeaderPage>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<TenantMemberCreated>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CurrentCapabilities>>() {
@@ -461,6 +462,12 @@ class IamAuthorizationContractTest {
         assertNotNull(departmentTree.getProperties().get("children"));
         assertTrue(departmentTree.getRequired().contains("children"));
         Schema<?> member = schemas.get("MemberRecord");
+        Schema<?> effective = schemas.get("GroupEffectiveMemberRecord");
+        assertEquals("#/components/schemas/MemberRecord",
+                ((Schema<?>) effective.getProperties().get("member")).get$ref());
+        assertEquals("#/components/schemas/GroupMembership",
+                ((Schema<?>) effective.getProperties().get("membership")).get$ref());
+        assertNotNull(schemas.get("RPageResponseGroupEffectiveMemberRecord"));
         assertNotNull(member.getProperties().get("loginPhone"));
         assertFalse(member.getRequired().contains("loginPhone"));
         Schema<?> created = schemas.get("TenantMemberCreated");

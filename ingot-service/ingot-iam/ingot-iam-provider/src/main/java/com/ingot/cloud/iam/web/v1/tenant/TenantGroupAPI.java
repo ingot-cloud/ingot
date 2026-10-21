@@ -69,6 +69,25 @@ public class TenantGroupAPI implements RShortcuts {
     }
 
     /**
+     * 分页读取组的有效成员，含部门来源实时展开，并标出直接与部门来源。
+     *
+     * @param id 组 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param name 显示名包含匹配，可空
+     * @return 有效成员页
+     */
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
+    @GetMapping("/{id}/effective-members")
+    @Operation(summary = "组织组有效成员")
+    public R<PageResponse<com.ingot.framework.commons.model.iam.GroupEffectiveMemberRecord>> effectiveMembers(
+            @PathVariable String id, @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name) {
+        return ok(memberPicker.effectiveMembers(id, page, pageSize, name));
+    }
+
+    /**
      * 创建租户用户组。
      *
      * @param input 组草稿

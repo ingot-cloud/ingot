@@ -2154,6 +2154,46 @@
     ]
   },
   {
+    "path": "/v1/tenant/groups/{id}/effective-members",
+    "method": "get",
+    "operationId": "tenantGroupEffectiveMembers",
+    "summary": "组织组有效成员",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:read",
+    "request": null,
+    "response": "RPageResponseGroupEffectiveMemberRecord",
+    "execution": "有效成员按任职实时展开后分页；同时应用成员读取范围与字段投影；返回直接与部门来源标记；不回查全量ID",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
     "path": "/v1/tenant/members/picker",
     "method": "get",
     "operationId": "tenantMemberPickerCandidates",
