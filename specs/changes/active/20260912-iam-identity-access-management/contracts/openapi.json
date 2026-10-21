@@ -30614,6 +30614,7 @@
       },
       "OwnerTransferInput": {
         "required": [
+          "confirmation",
           "expectedVersion",
           "newOwnerMemberId"
         ],
@@ -30626,9 +30627,12 @@
           "newOwnerMemberId": {
             "type": "string",
             "description": "当前组织内有效的新所有者成员 ID"
+          },
+          "confirmation": {
+            "$ref": "#/components/schemas/SensitiveConfirmation"
           }
         },
-        "description": "在当前组织内原子转交所有者职责"
+        "description": "在当前组织内原子转交所有者职责。确认必须与转交出现在同一次请求"
       },
       "PageResponseCurrentRoleCatalogAction": {
         "required": [

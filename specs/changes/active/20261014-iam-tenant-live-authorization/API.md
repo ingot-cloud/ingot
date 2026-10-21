@@ -130,7 +130,7 @@ mine 返回 `{id,allowedRoles:[{id,name,kind}],recipientSummary,validFrom?,valid
 ## 6. 会话、拥有者、诊断与资源契约
 
 - `/v1/me/bootstrap` 与 `/v1/me/capabilities` 保持现有包装、actionCodes/version/expiresAt；bootstrap 增加 `tenantOwner:boolean`（平台恒 false），仅用于身份展示。前端仍按服务器 actionCodes/capabilities 判断按钮，不能以该标志 bypass。
-- `/v1/tenant/settings` 继续返回 ownerMemberId 及显示名，配置 version 为并发锁。`POST /v1/tenant/settings/owner-transfer` 输入 `{expectedVersion,newOwnerMemberId}`，返回 CreatedResource；只允许当前拥有者和同组织有效目标。创建组织 ownerAccountId 输入保持。
+- `/v1/tenant/settings` 继续返回 ownerMemberId 及显示名，配置 version 为并发锁。`POST /v1/tenant/settings/owner-transfer` 输入 `{expectedVersion,newOwnerMemberId,confirmation}`，`confirmation` 为同一次请求内的登录密码确认，返回 CreatedResource；只允许当前拥有者和同组织有效目标。缺密码或密码错误不转交。创建组织 ownerAccountId 输入保持。
 - 应用和菜单读取拥有者按有效开通过滤，普通成员按人群及权限过滤；期限不延长。共有的应用/ACTION/资源目录仍逐域校验。
 - 诊断保留 `/v1/tenant/authorization/diagnose`；租户来源输出角色 ID/名称及委派资源限制，拥有者解释为当前组织拥有者，不返回角色业务版本或伪造 assignmentId。历史审计可保留当时 revisionId，仅在历史说明中使用，不能拿去分配。
 - 资源授权 v2 请求与 ActionDecision 包装保持；拥有者返回本租户 ALL/FULL 的真实范围与字段条款，platformAdministrator 恒为平台专用；未注册资源拒绝，不允许客户端提交 tenantOwner。
