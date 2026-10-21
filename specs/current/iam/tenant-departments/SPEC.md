@@ -65,6 +65,22 @@
 
 带子集的二级及以下目录默认 `view_path=layout.simple`。顶层目录仍用 `layout.main`。组织管理排序为成员与部门、用户组、组织设置。
 
+## 表格导入与导出
+
+`/v1/tenant/departments/workbook/*` 不改部门 JSON 接口。列名、路径分隔符、1000 行上限和 24 小时保留期都是命名常量。创建模板列为部门名称、上级部门、排序。更新导出在最前增加「部门 ID」。不导出人数、负责人或导航骨架。表头前有填写须知，解析按「部门名称」定位表头。
+
+上级部门必填，写从根开始的名称路径，用 `/` 分层。路径不存在、同级重名导致不唯一，或会形成环，该行失败，不自动补中间部门。同一上级下名称必须唯一，含本文件中已成功的前序行；单条创建接口不因此改严。名称不能含 `/`，最长 128。排序留空按 0。根部门可以改名称和排序，不能改上级，也不能通过导入再造根。创建行填写了部门 ID 则该行失败。更新时列不在表头则不改该字段；名称或上级在表头但为空则该行失败。
+
+`GET /workbook/template` 要 `iam-tenant:department:create`，同步返回空白模板。
+
+`POST /workbook/export` 要 `iam-tenant:department:export`。请求为组织版本和可选 `departmentIds`；空或省略表示当前可见的全部部门。登记、版本校验和审计在同一事务内交给下载中心，返回下载任务 ID。来源 `iam.department-workbook`，标题「部门导出」，文件名 `部门信息.xlsx`。工作线程重新校验导出权限，按部门树展开勾选部门及其下级，并按树前序写出，保证上级行在下级之前。文件生成与下载见 [公共下载中心](../../framework/download-center/SPEC.md)。
+
+`POST /workbook/import` 接收 multipart `file` 和 `mode`（`CREATE` 或 `UPDATE`）。创建要 `department:create`，更新要 `department:update`。非 xlsx、空文件、无法解析、缺少表头或超过 1000 行时整份拒绝，不登记任务。通过后在事务内写入 `iam_department_workbook` 的 `PENDING` 行，记下组织版本和审计，提交后再异步逐行调用现有创建或更新。每行读取当前部门版本再更新，冲突只失败该行。一行失败不回滚其他行。逐行处理结束即标 `SUCCEEDED`，结果含成功数、失败数和失败明细；执行异常才标 `FAILED`。
+
+任务只对发起成员可见。读写时把到期任务标为 `EXPIRED` 并删除对象。`GET /workbook/history` 返回当前操作者最近 10 条导入。`GET /workbook/{id}/status` 与 `/file?artifact=` 只服务导入：产物为工作簿或错误报告，没有一次性密码；进行中下载返回 503，失败、过期或不存在返回 404。原始工作簿和错误报告存对象存储，库内只留 `bucket/objectName`。
+
+`iam-tenant:department:export` 写入引导种子并授给租户治理模板角色。已有自定义角色不自动补权；拥有者仍走现有动态授权。已有库执行 `031_department_workbook.sql`。
+
 ## 兼容与回滚
 
 `memberCount`、负责人摘要、详情聚合及头像为可选响应字段，旧客户端可忽略；原 DTO 构造方式和独立更新/关联接口保留兼容。负责人关系独立于角色和授权表；应用回退不得删除已有关系或重建业务库。数据库升级依据见[迁移说明](../../../../databases/iam/migrations/README.md)。

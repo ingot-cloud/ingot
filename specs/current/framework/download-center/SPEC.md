@@ -37,3 +37,7 @@ IAM 租户接口：
 `POST /v1/tenant/members/workbook/export` 请求不变。返回的 ID 是下载任务 ID，来源 `iam.member-workbook`，标题「成员导出」，文件名 `成员通讯录.xlsx`。登记前在同一事务内校验租户设置版本并写审计。
 
 `/workbook/{id}/status` 与 `/file` 只服务导入。导入、错误报告和一次性密码仍在 `iam_member_workbook`。
+
+## 5. 部门表格导出
+
+`POST /v1/tenant/departments/workbook/export` 登记下载任务，来源 `iam.department-workbook`，标题「部门导出」，文件名 `部门信息.xlsx`。`departmentIds` 空或省略表示当前可见的全部部门；非空时由工作线程展开该部门及其下级。登记前在同一事务内校验组织版本并写审计。签发链接前复核 `iam-tenant:department:export`。部门导入任务仍在 `iam_department_workbook`。

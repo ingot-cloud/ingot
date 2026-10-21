@@ -196,6 +196,8 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [租户部门表格导入导出](./changes/archive/2026/20261021-iam-department-workbook/README.md)（completed，2026-10-21 用户确认测试通过）；[当前能力](./current/iam/tenant-departments/README.md)
+
 - [租户成员表格导入导出](./changes/archive/2026/20261020-iam-member-batch/README.md)（completed，2026-10-21 用户确认验证成功）；[当前能力](./current/iam/tenant-members/README.md)
 
 - [公共下载中心](./changes/archive/2026/20261021-framework-download-center/README.md)（completed，2026-10-21 用户确认验收）；[当前能力](./current/framework/download-center/README.md)
