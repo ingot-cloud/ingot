@@ -2,7 +2,7 @@
 
 <!-- 自动生成：python3 tools/iam/generate_database.py；说明在权威 DDL 维护。 -->
 
-manifest 管理 65 张表、525 个字段。
+manifest 管理 66 张表、540 个字段。
 
 ## 阅读约定
 
@@ -1295,6 +1295,42 @@ CONSTRAINT ck_iam_member_workbook_mode CHECK (mode IN ('CREATE', 'UPDATE'))
 CONSTRAINT ck_iam_member_workbook_status CHECK (status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'EXPIRED'))
 CONSTRAINT ck_iam_member_workbook_ids CHECK (member_ids IS NULL OR JSON_TYPE(member_ids) = 'ARRAY')
 CONSTRAINT ck_iam_member_workbook_downloaded CHECK (password_downloaded IN (0, 1))
+```
+
+## iam_department_workbook
+
+租户部门表格导入任务
+
+权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
+
+| 字段 | 定义 | 说明 |
+|---|---|---|
+| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 租户部门表格导入任务标识 |
+| `tenant_id` | ``tenant_id BIGINT UNSIGNED NOT NULL`` | 所属租户组织ID |
+| `actor_member_id` | ``actor_member_id BIGINT UNSIGNED NOT NULL`` | 发起操作的当前域成员ID |
+| `kind` | ``kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 任务种类；取值IMPORT |
+| `mode` | ``mode VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 表格模式；取值CREATE,UPDATE |
+| `status` | ``status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 当前业务记录状态，合法值由本表CHECK及对应业务枚举限定；取值PENDING,RUNNING,SUCCEEDED,FAILED,EXPIRED |
+| `tenant_version` | ``tenant_version VARCHAR(32) COLLATE utf8mb4_bin NOT NULL`` | 登记任务时的组织版本，取iam_tenant.version |
+| `department_ids` | ``department_ids JSON NULL`` | 导入预留范围；可空 |
+| `result` | ``result JSON NULL`` | 成功失败计数与逐行原因 |
+| `workbook_path` | ``workbook_path VARCHAR(512) COLLATE utf8mb4_bin NULL`` | 原始工作簿对象路径bucket/objectName |
+| `error_report_path` | ``error_report_path VARCHAR(512) COLLATE utf8mb4_bin NULL`` | 错误报告对象路径bucket/objectName；无失败时为空 |
+| `failure_reason` | ``failure_reason VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL`` | 整份任务失败的安全原因，不包含凭证及敏感原值 |
+| `created_at` | ``created_at DATETIME(6) NOT NULL`` | 记录创建时间点，UTC |
+| `completed_at` | ``completed_at DATETIME(6) NULL`` | 任务完成时间点，UTC；未完成时为空 |
+| `expires_at` | ``expires_at DATETIME(6) NOT NULL`` | 到期时间点，UTC |
+
+约束与索引：
+
+```sql
+PRIMARY KEY (id)
+KEY idx_iam_department_workbook_actor (tenant_id, actor_member_id, created_at)
+KEY idx_iam_department_workbook_status (tenant_id, status, expires_at)
+CONSTRAINT ck_iam_department_workbook_kind CHECK (kind IN ('IMPORT'))
+CONSTRAINT ck_iam_department_workbook_mode CHECK (mode IN ('CREATE', 'UPDATE'))
+CONSTRAINT ck_iam_department_workbook_status CHECK (status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'EXPIRED'))
+CONSTRAINT ck_iam_department_workbook_ids CHECK (department_ids IS NULL OR JSON_TYPE(department_ids) = 'ARRAY')
 ```
 
 ## iam_download_task

@@ -7,6 +7,7 @@
 | 007_member_export.sql | 还没有iam_member_export表；一次建表。 | 004 |
 | 029_member_workbook.sql | 还没有iam_member_workbook表；一次建表。 | 004 |
 | 030_download_task.sql | 还没有iam_download_task表；一次建表，回退用030_download_task.rollback.sql。 | 004 |
+| 031_department_workbook.sql | 还没有iam_department_workbook表或department:export操作；一次建表并补操作与治理模板授权，回退用031_department_workbook.rollback.sql。 | 004/006 |
 | 008_platform_accounts_menu.sql | 历史目录缺少全局账号菜单；按该补丁原菜单约定补齐。 | 006正式菜单 |
 | 009_tenant_plan.sql | iam_tenant尚无plan_id列；一次ALTER。 | 001 |
 | 010_assignment_audit_index.sql | 分配审计索引缺失；重复执行会检查并跳过。 | 004 |

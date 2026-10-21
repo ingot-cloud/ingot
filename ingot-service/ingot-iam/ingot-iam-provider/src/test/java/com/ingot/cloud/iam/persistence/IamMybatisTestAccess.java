@@ -34,6 +34,7 @@ import com.ingot.cloud.iam.persistence.mapper.IamDelegationRecipientDepartmentMa
 import com.ingot.cloud.iam.persistence.mapper.IamDelegationRecipientMemberMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDelegationRoleRevisionMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamDepartmentWorkbookMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDirectoryPolicyMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDirectoryRuleMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamFieldPolicyMapper;
@@ -250,6 +251,11 @@ public final class IamMybatisTestAccess {
         return new MemberWorkbookRepository(mapper(source, IamMemberWorkbookMapper.class));
     }
 
+    /** 在当前夹具数据源上建立部门表格任务 Repository。 */
+    public static DepartmentWorkbookRepository departmentWorkbooks(DataSource source) {
+        return new DepartmentWorkbookRepository(mapper(source, IamDepartmentWorkbookMapper.class));
+    }
+
     /** 在当前夹具数据源上建立字段策略求值器。 */
     public static FieldAccessEvaluator fields(DataSource source) {
         return new FieldAccessEvaluator(policies(source), mapper(source, IamMemberDepartmentMapper.class),
@@ -431,6 +437,7 @@ public final class IamMybatisTestAccess {
                     IamDirectoryRuleMapper.class, IamPolicySelectorMapper.class, IamResourceMapper.class,
                     IamMemberExportMapper.class,
                     IamMemberWorkbookMapper.class,
+                    IamDepartmentWorkbookMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.IamDownloadTaskMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.IamRoleApplicationTaskMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.IamRoleApplicationItemMapper.class,

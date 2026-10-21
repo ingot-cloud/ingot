@@ -94,6 +94,7 @@
   "iam-tenant:department:delete": 120093,
   "iam-tenant:department:read": 120094,
   "iam-tenant:department:update": 120095,
+  "iam-tenant:department:export": 121200,
   "iam-tenant:directory:read": 120096,
   "iam-tenant:directory-policy:read": 120097,
   "iam-tenant:directory-policy:update": 120098,

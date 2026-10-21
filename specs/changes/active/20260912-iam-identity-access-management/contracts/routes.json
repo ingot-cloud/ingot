@@ -2306,6 +2306,91 @@
     "implemented": true
   },
   {
+    "path": "/v1/tenant/departments/workbook/template",
+    "method": "get",
+    "operationId": "tenantDepartmentWorkbookTemplate",
+    "summary": "下载部门导入模板",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RMemberWorkbookFile",
+    "execution": "空白创建模板，同步返回",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/export",
+    "method": "post",
+    "operationId": "tenantDepartmentWorkbookExport",
+    "summary": "导出部门表格",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:export",
+    "request": "DepartmentWorkbookExportInput",
+    "response": "RCreatedResource",
+    "execution": "登记下载中心任务；空范围表示可见全部部门，服务端展开下级",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/import",
+    "method": "post",
+    "operationId": "tenantDepartmentWorkbookImport",
+    "summary": "导入部门表格",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "multipart file 与 mode；创建要 create，更新要 update",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/history",
+    "method": "get",
+    "operationId": "tenantDepartmentWorkbookHistory",
+    "summary": "部门导入历史",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RListMemberWorkbookHistoryItem",
+    "execution": "当前操作者最近10条导入",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/{id}/status",
+    "method": "get",
+    "operationId": "tenantDepartmentWorkbookStatus",
+    "summary": "查询部门表格任务",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RMemberWorkbookTask",
+    "execution": "仅发起人可见",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/{id}/file",
+    "method": "get",
+    "operationId": "tenantDepartmentWorkbookFile",
+    "summary": "下载部门表格产物",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RMemberWorkbookFile",
+    "execution": "artifact=WORKBOOK|ERRORS",
+    "implemented": true,
+    "query": [
+      {
+        "name": "artifact",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "WORKBOOK",
+            "ERRORS"
+          ]
+        }
+      }
+    ]
+  },
+  {
     "path": "/v1/tenant/settings",
     "method": "get",
     "operationId": "tenantGetSettings",

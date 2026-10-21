@@ -23,7 +23,10 @@ APPLICATION_BASE = 100000
 RESOURCE_BASE = 110000
 ACTION_BASE = 120000
 # 新增操作固定保留号；避免改变历史目录操作的标识。
-ADDITIONAL_ACTION_IDS = {'iam-tenant:department:leaders': 120999}
+ADDITIONAL_ACTION_IDS = {
+    'iam-tenant:department:leaders': 120999,
+    'iam-tenant:department:export': 121200,
+}
 MENU_BASE = 130000
 ROLE_BASE = 140000
 REVISION_BASE = 141000

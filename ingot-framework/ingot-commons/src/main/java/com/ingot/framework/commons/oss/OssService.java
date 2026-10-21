@@ -40,6 +40,15 @@ public interface OssService {
     void getFile(String bucket, String fileName, HttpServletResponse response);
 
     /**
+     * 读取对象字节，供导入任务回读工作簿与错误报告。
+     *
+     * @param bucket   bucket name
+     * @param fileName object name
+     * @return 文件内容
+     */
+    byte[] getObjectBytes(String bucket, String fileName);
+
+    /**
      * 将库内存储路径转换为带过期时间的临时访问 URL。
      *
      * @param url 当前存储路径，兼容全路径和 {@code bucket/objectName}；{@code null} 或空串原样返回

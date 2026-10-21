@@ -15,6 +15,14 @@ public final class IamDownloadSources {
      * 成员表格导出的列表名称。
      */
     public static final String MEMBER_WORKBOOK_TITLE = "成员导出";
+    /**
+     * 部门表格导出。
+     */
+    public static final String DEPARTMENT_WORKBOOK = "iam.department-workbook";
+    /**
+     * 部门表格导出的列表名称。
+     */
+    public static final String DEPARTMENT_WORKBOOK_TITLE = "部门导出";
 
     private IamDownloadSources() {
     }

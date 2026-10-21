@@ -58,6 +58,7 @@ NOTES = {
 'iam_field_rule': '按租户/场景/字段读取可见性规则；viewer_selector及target_scope是不同维度，不并入主键。',
 'iam_member_export': '任务按ID定位，租户/status/到期时间索引支持状态及清理；JSON成员快照可能较大，需要实际任务量及保留周期。',
     'iam_member_workbook': '任务按ID定位，操作者与状态索引支持历史和过期清理；工作簿BLOB与一次性密码需按24小时保留期清理。',
+    'iam_department_workbook': '任务按ID定位，操作者与状态索引支持历史和过期清理；原始工作簿与错误报告存对象存储，24小时保留后删除对象。',
     'iam_download_task': '任务按ID定位，租户/成员/创建时间支持我的下载分页，状态/到期索引支持清理；文件在对象存储，7天删除对象、30天删除记录。',
 'iam_authorization_audit': '审计按租户时间、操作者、分配创建及待投递分别检索；event_id唯一承担幂等。需实际保留量、写入速率和执行计划才能判断索引增删。',
 'iam_migration_batch': '迁移工具显式指定字符串批次标识，不是在线高频写入表；状态与verified_at共同限制验收过程。',
@@ -77,7 +78,7 @@ NOTES = {
 'password_history': '保留原自增主键及user_id/sequence_number业务唯一键；经隔离MySQL三态对照后删除重叠idx_user_id。实际PasswordHistoryServiceImpl按用户查询/覆盖槽位/删除；最近历史仍按created_at排序，本轮不改变环形历史行为。',
 'password_expiration': '自增ID，user_id唯一，expires_at和next_warning_at服务到期和提醒扫描；宽时效扫描成本需实际用户量及调度统计。',
 }
-RUNTIME = {'iam_role_parameter','iam_role_assignment','iam_member_export','iam_member_workbook','iam_download_task','iam_authorization_audit','security_event','password_expiration','sys_user_social'}
+RUNTIME = {'iam_role_parameter','iam_role_assignment','iam_member_export','iam_member_workbook','iam_department_workbook','iam_download_task','iam_authorization_audit','security_event','password_expiration','sys_user_social'}
 CANDIDATES = {'iam_migration_mapping'}
 REWRITES = {'iam_member_department':'已改为共享差量写入', 'iam_department_leader':'已为差量；本轮跳过不变主标记',
  'iam_platform_group_member':'已改为差量写入','iam_tenant_group_member':'已改为差量写入','iam_tenant_group_department':'已改为差量写入及属性UPDATE',

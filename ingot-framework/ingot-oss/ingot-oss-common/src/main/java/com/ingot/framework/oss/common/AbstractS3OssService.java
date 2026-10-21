@@ -67,6 +67,16 @@ public abstract class AbstractS3OssService implements OssService {
     }
 
     @Override
+    public byte[] getObjectBytes(String bucket, String fileName) {
+        try (InputStream inputStream = getS3Client().getObject(bucket, fileName)) {
+            return IoUtil.readBytes(inputStream);
+        } catch (Exception e) {
+            log.error("文件读取异常", e);
+            throw new RuntimeException("文件读取失败: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public String getObjectURL(String url) {
         return presignOrOriginal(url, getDefaultExpiredTime());
     }
