@@ -25,6 +25,7 @@
 - [gateway / header-conventions](./gateway/header-conventions/README.md)：网关自定义 Header 命名与内部头安全约定。
 - [pms / application-authorization](./pms/application-authorization/README.md)：应用中心化授权（应用、菜单、权限归属与租户授权、权限匹配语义；菜单 `view_path` 为页面注册键）。
 - [framework / oss](./framework/oss/README.md)：对象访问 URL 预签名与失败回退原始路径。
+- [framework / download-center](./framework/download-center/README.md)：导出任务异步生成、按人隔离保存，并在保留期内签发下载链接。
 
 
 - [framework / field-access-control](./framework/field-access-control/README.md)：集中字段目录、注解绑定、逐对象可见性、编辑/筛选门禁与缓存。

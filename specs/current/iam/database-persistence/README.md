@@ -1,6 +1,6 @@
 # IAM 数据结构与关系持久化
 
-manifest 管理 IAM 共库的 63 张表和 495 个字段。中文说明在权威 DDL 维护，关系保存按差量执行；委派接收成员关系使用 IAM Leaf 显式主键。
+manifest 管理 IAM 共库的 65 张表和 525 个字段。中文说明在权威 DDL 维护，关系保存按差量执行；委派接收成员关系使用 IAM Leaf 显式主键。下载任务表 `iam_download_task` 归 [公共下载中心](../../framework/download-center/README.md)。
 
 - 负责人：jy；验收日期：2026-10-20。
 - 关联模块：`ingot-iam-provider`、`ingot-security-credential-data`、`ingot-id`。

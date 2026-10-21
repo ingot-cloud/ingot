@@ -196,6 +196,8 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [公共下载中心](./changes/archive/2026/20261021-framework-download-center/README.md)（completed，2026-10-21 用户确认验收）；[当前能力](./current/framework/download-center/README.md)
+
 - [已移出租户成员重新加入](./changes/archive/2026/20261020-iam-tenant-member-rejoin/README.md)（completed，2026-10-20）；[当前能力](./current/iam/tenant-members/README.md)
 - [IAM 接收成员主键与密码索引](./changes/archive/2026/20261020-iam-recipient-primary-key-password-index/README.md)（completed，2026-10-20用户验收）；[当前持久化基线](./current/iam/database-persistence/README.md)
 - [IAM 字段说明与关系写入优化](./changes/archive/2026/20261020-iam-schema-relations/README.md)（completed，2026-10-20用户验收）；[当前持久化基线](./current/iam/database-persistence/README.md)
