@@ -20,6 +20,7 @@
 
 本轮已验收归档：
 
+- [20261020-iam-member-batch](../archive/2026/20261020-iam-member-batch/README.md)（completed，2026-10-21）
 - [20261020-iam-tenant-member-rejoin](../archive/2026/20261020-iam-tenant-member-rejoin/README.md)（completed，2026-10-20）
 - [20261020-iam-recipient-primary-key-password-index](../archive/2026/20261020-iam-recipient-primary-key-password-index/README.md)（completed，2026-10-20）
 - [20261020-iam-schema-relations](../archive/2026/20261020-iam-schema-relations/README.md)（completed，2026-10-20）

@@ -37,7 +37,7 @@
 
 ## 关联变更
 
-- 依赖并修改未发布的 [租户成员表格导入导出](../../../active/20261020-iam-member-batch/README.md) 的导出部分
+- 依赖并修改 [租户成员表格导入导出](../20261020-iam-member-batch/README.md) 的导出部分；该变更已于 2026-10-21 验收归档
 - 前端：`ingot-admin/specs/changes/archive/2026/20261021-common-download-center/`
 
 ## 完成记录
