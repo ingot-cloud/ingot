@@ -5,7 +5,8 @@ description: >-
   constructor injection, named constants, and association-list queries. Use when
   writing or changing Java business code, time fields, createdAt/updatedAt,
   enums, JavaDoc, OSS/avatar/attachment fields, Spring Bean injection, magic
-  literals, IAM custom-resource integration, or APIs that list a target's bound or related records.
+  literals, IAM custom-resource integration, APIs that list a target's bound or related records,
+  or batch import/export (xlsx workbook, template, download center, import task).
 ---
 
 # Ingot 框架编码规范
@@ -24,6 +25,7 @@ description: >-
 - [ ] 注入：private final + @RequiredArgsConstructor；不新增字段/Setter 注入
 - [ ] JavaDoc：类型、对外方法、对外字段按 docs/standards/Javadoc.md 一并写上
 - [ ] 关联列表：target 的绑定数据走独立接口，SQL 按关联表过滤分页，禁止用 ids 回查父列表
+- [ ] 批量导入导出：导出走 DownloadCenter；导入同步预检、提交后异步、逐行复用单条入口独立失败；敏感产物只取一次
 ```
 
 ## 索引
@@ -38,6 +40,7 @@ description: >-
 | 类型或对外 API 注释 | [references/javadoc.md](references/javadoc.md) |
 | 自定义资源、多应用权限、对象范围、字段脱敏/编辑控制 | [references/iam-resource-extension.md](references/iam-resource-extension.md) |
 | 关联对象列表、绑定查询、ids 回显 | [references/association-lists.md](references/association-lists.md) |
+| 批量导入、导出、xlsx 模板、导入任务 | [references/batch-import-export.md](references/batch-import-export.md) |
 
 ## Examples
 
