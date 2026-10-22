@@ -221,7 +221,7 @@ public interface TenantLiveMapper {
     @Update("UPDATE iam_role_definition SET current_revision_id=NULL WHERE id=#{id} AND domain='TENANT'")
     int clearCurrent(@Param("id") BigInteger id);
 
-    /** 分页操作候选，参数在服务器目录中确定。 */
+    /** 列出指定应用下的全部操作候选，参数在服务器目录中确定。 */
     @Select("<script>SELECT " + TenantLiveSql.ACTION_COLUMNS + """
          FROM iam_action a JOIN iam_application app ON app.id=a.application_id
          JOIN iam_resource r ON r.id=a.resource_id AND r.application_id=app.id
@@ -229,23 +229,10 @@ public interface TenantLiveMapper {
           AND EXISTS(SELECT 1 FROM iam_tenant_app_entitlement e WHERE e.tenant_id=#{tenantId} AND e.application_id=app.id AND e.enabled=TRUE AND (e.valid_from IS NULL OR e.valid_from&lt;=CURRENT_TIMESTAMP(6)) AND (e.valid_until IS NULL OR e.valid_until>CURRENT_TIMESTAMP(6)))
           <if test="keyword != null"> AND a.name LIKE #{keyword}</if>
           <if test="ids != null and !ids.isEmpty()"> AND a.id IN <foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach></if>
-        ORDER BY r.id,a.id LIMIT #{limit} OFFSET #{offset}</script>
+        ORDER BY r.id,a.id</script>
         """)
     List<TenantLiveRows.Action> catalog(@Param("tenantId") BigInteger tenantId, @Param("applicationId") BigInteger applicationId,
-                                      @Param("keyword") String keyword, @Param("ids") List<BigInteger> ids,
-                                      @Param("limit") int limit, @Param("offset") int offset);
-
-    /** 在相同目录和筛选边界内计数操作候选。 */
-    @Select("""
-        <script>SELECT COUNT(*) FROM iam_action a JOIN iam_application app ON app.id=a.application_id
-         JOIN iam_resource r ON r.id=a.resource_id AND r.application_id=app.id
-        WHERE app.domain='TENANT' AND app.id=#{applicationId} AND app.enabled=TRUE AND r.enabled=TRUE AND a.enabled=TRUE
-          AND EXISTS(SELECT 1 FROM iam_tenant_app_entitlement e WHERE e.tenant_id=#{tenantId} AND e.application_id=app.id AND e.enabled=TRUE AND (e.valid_from IS NULL OR e.valid_from&lt;=CURRENT_TIMESTAMP(6)) AND (e.valid_until IS NULL OR e.valid_until>CURRENT_TIMESTAMP(6)))
-          <if test="keyword != null"> AND a.name LIKE #{keyword}</if>
-          <if test="ids != null and !ids.isEmpty()"> AND a.id IN <foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach></if></script>
-        """)
-    long catalogCount(@Param("tenantId") BigInteger tenantId, @Param("applicationId") BigInteger applicationId,
-                      @Param("keyword") String keyword, @Param("ids") List<BigInteger> ids);
+                                      @Param("keyword") String keyword, @Param("ids") List<BigInteger> ids);
     /** 读取一条同组织当前角色分配。 */
     @Select("SELECT " + TenantLiveSql.ASSIGNMENT_COLUMNS + TenantLiveSql.ASSIGNMENT_FROM + " WHERE ra.domain='TENANT' AND ra.tenant_id=#{tenantId} AND ra.id=#{id}")
     TenantLiveRows.Assignment assignment(@Param("tenantId") BigInteger tenantId, @Param("id") BigInteger id);

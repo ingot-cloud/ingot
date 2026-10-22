@@ -194,6 +194,15 @@ public class FieldAccessEvaluator {
     }
 
     /**
+     * 当前成员是否为租户拥有者。拥有者字段覆盖不与角色快照求交。
+     * @param actor 可信身份
+     * @return 是否为当前拥有者
+     */
+    public boolean currentOwner(com.ingot.framework.commons.model.iam.AuthorizationContext actor) {
+        return policies.currentOwner(IamIds.require(actor.tenantId()), IamIds.require(actor.memberId()));
+    }
+
+    /**
      * 按未保存草稿组装字段策略快照，与提交后求值使用同一合并规则。
      *
      * @param tenantId 当前租户

@@ -102,11 +102,11 @@ public class RoleFieldPermissionService {
      * @param kind 角色种类
      * @param grants 完整操作授权
      * @param input 可空草稿
-     * @return 固定版本快照；其他管理域为空对象
+     * @return 字段快照；系统角色为空对象，通讯录资源不写入当前角色快照
      */
     public Map<String, ResourceFieldDefinition> freeze(RoleKind kind, List<ActionGrant> grants,
             Map<String, ResourceFieldDefinition> input) {
-        if (kind != RoleKind.PLATFORM_CUSTOM) {
+        if (kind != RoleKind.PLATFORM_CUSTOM && kind != RoleKind.TENANT_CUSTOM && kind != RoleKind.SHARED) {
             if (input != null && !input.isEmpty())
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             return Map.of();
@@ -144,7 +144,8 @@ public class RoleFieldPermissionService {
                 visibility.put(field.key(), value);
                 operations.put(field.key(), ability);
             }
-            if (!visibility.isEmpty())
+            if (!visibility.isEmpty() && (kind == RoleKind.PLATFORM_CUSTOM
+                    || !BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE.equals(descriptor.key())))
                 result.put(key, new ResourceFieldDefinition(visibility, operations));
         }
         return Map.copyOf(result);
@@ -177,12 +178,82 @@ public class RoleFieldPermissionService {
     /** 执行端显式选择服务器确定的 fresh 写模式，不能由浏览器指定。 */
     public Map<String, FieldPolicyDecision> evaluate(ResourceKey key, AuthorizationContext actor,
             AuthorizationView view, Collection<String> actionCodes, boolean fresh) {
+        return evaluate(key, actor, view, actionCodes, fresh, false);
+    }
+
+    /**
+     * 按当前角色快照求值。数据库里的空快照按资源默认值，显式快照缺少的字段仍隐藏。
+     * @param key 完整资源键
+     * @param actor 可信身份
+     * @param view 同次授权视图
+     * @param actionCodes 精确操作
+     * @param fresh 写操作是否读取最新事实
+     * @return 按操作区分的字段结论
+     */
+    public Map<String, FieldPolicyDecision> evaluateCurrent(ResourceKey key, AuthorizationContext actor,
+            AuthorizationView view, Collection<String> actionCodes, boolean fresh) {
+        return evaluate(key, actor, view, actionCodes, fresh, true);
+    }
+
+    /**
+     * 成员策略只能在角色并集上限内再收紧。全部来源都是旧空快照时保持原策略。
+     * @param policy 成员字段策略
+     * @param view 同次授权视图
+     * @param key 成员资源
+     * @return 收紧后的策略
+     */
+    public FieldPolicyDecision constrain(FieldPolicyDecision policy, AuthorizationView view, ResourceKey key) {
+        var entry = metadata.require(key, view.platformAdministrator());
+        var ids = view.fieldSources().stream().map(source -> BigInteger.valueOf(source.revisionId())).distinct().toList();
+        if (ids.isEmpty()) return policy;
+        var rows = roles.findRevisions(ids);
+        if (rows.size() != ids.size()) throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        if (rows.stream().allMatch(row -> absent(row.getResourceFieldPermissions()))) return policy;
+        Map<String, FieldAccess> union = new LinkedHashMap<>();
+        Map<String, Boolean> editable = new LinkedHashMap<>();
+        Map<String, Boolean> filterable = new LinkedHashMap<>();
+        for (var row : rows) {
+            if (absent(row.getResourceFieldPermissions())) {
+                for (var field : policy.defaults().keySet()) {
+                    var ceiling = policy.ceilings().getOrDefault(field, policy.defaults().get(field));
+                    union.put(field, broader(union.get(field), ceiling));
+                    var ability = policy.operations().getOrDefault(field, FieldOperations.NONE);
+                    editable.merge(field, ability.editable() || ceiling.editable(), Boolean::logicalOr);
+                    filterable.merge(field, ability.filterable(), Boolean::logicalOr);
+                }
+                continue;
+            }
+            var fields = snapshot(row.getResourceFieldPermissions()).getOrDefault(entry.id(), ResourceFieldDefinition.EMPTY);
+            for (var field : policy.defaults().keySet()) {
+                var visibility = fields.visibility().getOrDefault(field, FieldVisibility.HIDDEN);
+                var ability = fields.operations().getOrDefault(field, FieldOperations.NONE);
+                union.put(field, broader(union.get(field), new FieldAccess(visibility, ability.editable() && visibility != FieldVisibility.HIDDEN)));
+                editable.merge(field, ability.editable(), Boolean::logicalOr);
+                filterable.merge(field, ability.filterable(), Boolean::logicalOr);
+            }
+        }
+        Map<String, FieldAccess> ceilings = new LinkedHashMap<>();
+        Map<String, FieldOperations> operations = new LinkedHashMap<>();
+        for (var field : policy.defaults().keySet()) {
+            var cap = union.getOrDefault(field, HIDDEN);
+            ceilings.put(field, stricter(policy.ceilings().get(field), cap));
+            var ability = policy.operations().getOrDefault(field, FieldOperations.NONE);
+            operations.put(field, new FieldOperations(
+                    ability.editable() && editable.getOrDefault(field, false) && cap.visibility() != FieldVisibility.HIDDEN,
+                    ability.filterable() && filterable.getOrDefault(field, false) && cap.visibility() == FieldVisibility.FULL));
+        }
+        return new FieldPolicyDecision(policy.defaults(), ceilings, policy.rules(), operations, policy.masks(), policy.mergeMode(), policy.expiresAt());
+    }
+
+    private Map<String, FieldPolicyDecision> evaluate(ResourceKey key, AuthorizationContext actor,
+            AuthorizationView view, Collection<String> actionCodes, boolean fresh, boolean legacyDefaults) {
         var entry = fresh ? metadata.requireFresh(key, view.platformAdministrator()) : metadata.require(key, view.platformAdministrator());
         var descriptor = entry.descriptor();
         var sources = view.fieldSources().stream().filter(source -> actionCodes.contains(source.actionCode())).toList();
         String versionKey = IamJson.array(sources.stream().map(source -> BigInteger.valueOf(source.revisionId())).distinct().sorted().toList());
-        var configured = cache.getIfAvailable();
-        var versions = (configured == null ? loadVersions(versionKey) : configured.get(versionKey)).values();
+        Map<Long, Map<String, ResourceFieldDefinition>> versions = legacyDefaults
+                ? loadCurrent(versionKey, entry.id(), descriptor)
+                : loadFrozen(versionKey);
         var manifest = manifests.require(key);
         Map<String, FieldAccess> ceilings = new LinkedHashMap<>();
         Map<String, FieldAccess> hidden = new LinkedHashMap<>();
@@ -257,6 +328,52 @@ public class RoleFieldPermissionService {
         roles.findRevisions(ids).forEach(row -> values.put(row.getId().longValueExact(), snapshot(row.getResourceFieldPermissions())));
         if (values.size() != ids.size()) throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
         return new FrozenVersions(values);
+    }
+
+    private Map<Long, Map<String, ResourceFieldDefinition>> loadFrozen(String key) {
+        var configured = cache.getIfAvailable();
+        return (configured == null ? loadVersions(key) : configured.get(key)).values();
+    }
+
+    /** 当前角色缺失快照时用资源默认值填充该资源，显式 JSON 仍按快照求值。 */
+    private Map<Long, Map<String, ResourceFieldDefinition>> loadCurrent(String key, String resourceId,
+            com.ingot.framework.commons.model.iam.extension.ResourceDescriptor descriptor) {
+        List<BigInteger> ids = IamJson.read(key, new TypeReference<List<BigInteger>>() { });
+        if (ids == null) throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        var defaults = defaultsOf(descriptor);
+        Map<Long, Map<String, ResourceFieldDefinition>> values = new LinkedHashMap<>();
+        roles.findRevisions(ids).forEach(row -> values.put(row.getId().longValueExact(), absent(row.getResourceFieldPermissions())
+                ? Map.of(resourceId, defaults) : snapshot(row.getResourceFieldPermissions())));
+        if (values.size() != ids.size()) throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        return values;
+    }
+
+    private static ResourceFieldDefinition defaultsOf(com.ingot.framework.commons.model.iam.extension.ResourceDescriptor descriptor) {
+        Map<String, FieldVisibility> visibility = new LinkedHashMap<>();
+        Map<String, FieldOperations> operations = new LinkedHashMap<>();
+        for (var field : descriptor.fields()) {
+            var value = descriptor.defaults().get(field.key());
+            visibility.put(field.key(), value.visibility());
+            operations.put(field.key(), new FieldOperations(value.editable(), field.filterable()));
+        }
+        return new ResourceFieldDefinition(visibility, operations);
+    }
+
+    private static boolean absent(String json) {
+        return json == null || json.isBlank() || "null".equals(json.trim());
+    }
+
+    private static FieldAccess broader(FieldAccess left, FieldAccess right) {
+        if (left == null) return right;
+        var visibility = left.visibility().ordinal() >= right.visibility().ordinal() ? left.visibility() : right.visibility();
+        return new FieldAccess(visibility, (left.editable() || right.editable()) && visibility != FieldVisibility.HIDDEN);
+    }
+
+    private static FieldAccess stricter(FieldAccess left, FieldAccess right) {
+        if (left == null) return right;
+        if (right == null) return left;
+        var visibility = left.visibility().ordinal() <= right.visibility().ordinal() ? left.visibility() : right.visibility();
+        return new FieldAccess(visibility, left.editable() && right.editable() && visibility != FieldVisibility.HIDDEN);
     }
 
     /**

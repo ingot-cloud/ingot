@@ -67,15 +67,22 @@ public class LocalResourceAuthorizationClient implements AuthorizationClient {
             throw new BizException(IamReasonCode.ACTION_DENIED);
         var view = evaluator.evaluateForExecution(actor.context(),
                 !preview && request.actionCodes().stream().anyMatch(c -> modes.get(c) == ExecutionMode.MUTATING));
+        boolean fresh = !preview && request.actionCodes().stream().anyMatch(code -> modes.get(code) == ExecutionMode.MUTATING);
         Map<String, com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision> fieldDecisions = new LinkedHashMap<>();
         if (actor.context().domain() == com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM)
-            fieldDecisions.putAll(roleFields.evaluate(request.resource(), actor.context(), view, request.actionCodes(),
-                    !preview && request.actionCodes().stream().anyMatch(code -> modes.get(code) == ExecutionMode.MUTATING)));
-        else for (var code : request.actionCodes()) {
-            // 对象范围由同次可信授权视图提供；租户字段规则不独立开放对象。
-            fieldDecisions.put(code, tenantFields.decision(actor.context(), request.resource(), code,
-                    objectScopes.members(actor.context(), view.scope(code)), !preview && modes.get(code) == ExecutionMode.MUTATING));
-        }
+            fieldDecisions.putAll(roleFields.evaluate(request.resource(), actor.context(), view, request.actionCodes(), fresh));
+        else if (request.resource().equals(BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE)) {
+            for (var code : request.actionCodes())
+                fieldDecisions.put(code, tenantFields.decision(actor.context(), request.resource(), code,
+                        objectScopes.members(actor.context(), view.scope(code)), !preview && modes.get(code) == ExecutionMode.MUTATING));
+        } else if (request.resource().equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)) {
+            for (var code : request.actionCodes()) {
+                var policy = tenantFields.decision(actor.context(), request.resource(), code,
+                        objectScopes.members(actor.context(), view.scope(code)), !preview && modes.get(code) == ExecutionMode.MUTATING);
+                fieldDecisions.put(code, tenantFields.currentOwner(actor.context()) ? policy
+                        : roleFields.constrain(policy, view, request.resource()));
+            }
+        } else fieldDecisions.putAll(roleFields.evaluateCurrent(request.resource(), actor.context(), view, request.actionCodes(), fresh));
         Map<String, ActionDecision> actions = new LinkedHashMap<>();
         for (var code : request.actionCodes())
             actions.put(code, new ActionDecision(view.actionCodes().contains(code), view.governedCodes().contains(code),

@@ -1134,30 +1134,9 @@
     "domain": "PLATFORM",
     "action": "iam-platform:action:read",
     "request": null,
-    "response": "RPageResponseGrantCatalogResource",
-    "execution": "启用资源和操作；按资源分页",
-    "implemented": true,
-    "query": [
-      {
-        "name": "page",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 1
-        }
-      },
-      {
-        "name": "pageSize",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 200,
-          "default": 20
-        }
-      }
-    ]
+    "response": "RListGrantCatalogResource",
+    "execution": "一次返回该应用全部启用资源及其启用操作",
+    "implemented": true
   },
   {
     "path": "/v1/platform/applications/{id}/menus/{menuId}/actions",
@@ -4959,34 +4938,30 @@
     "domain": "TENANT",
     "action": "iam-tenant:role:create",
     "request": null,
-    "response": "RPageResponseCurrentRoleCatalogAction",
-    "execution": "可信当前租户；本人有效来源或独立治理；过滤后分页回显",
+    "response": "RListCurrentRoleCatalogAction",
+    "execution": "选定应用后一次返回全部已开通操作",
     "implemented": false,
     "query": [
-      {
-        "name": "page",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 1
-        }
-      },
-      {
-        "name": "pageSize",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 200,
-          "default": 20
-        }
-      },
       {
         "name": "applicationId",
         "required": true,
         "schema": {
           "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     ]

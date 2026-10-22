@@ -324,7 +324,7 @@ class IamAuthorizationContractTest {
                     new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<TenantDelegationRecord>>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<List<TenantDelegationMine>>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<TenantAssignmentOption>>>() { }.getType(),
-                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<CurrentRoleCatalogAction>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<CurrentRoleCatalogAction>>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<RoleApplicationTask>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<RoleApplicationTask>>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<RoleApplicationItem>>>() { }.getType(),
@@ -391,7 +391,7 @@ class IamAuthorizationContractTest {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionLookupRecord>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ActionCatalogView>>() {
                     }.getType(),
-                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<GrantCatalogResource>>>() {
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<GrantCatalogResource>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AssignmentContext>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationCandidatePage>>() {
                     }.getType(),

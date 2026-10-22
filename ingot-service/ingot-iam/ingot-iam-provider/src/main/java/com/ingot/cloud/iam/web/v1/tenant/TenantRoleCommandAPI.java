@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
 import java.util.List;
+import com.ingot.cloud.iam.assignment.TenantLiveAssignmentService;
 import com.ingot.cloud.iam.identity.CurrentIdentityService;
 import com.ingot.cloud.iam.role.TenantCurrentRoleService;
 import com.ingot.cloud.iam.support.IamPages;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class TenantRoleCommandAPI implements RShortcuts {
     private final TenantCurrentRoleService roles;
+    private final TenantLiveAssignmentService assignments;
     private final CurrentIdentityService identities;
 
     /** 按归属及筛选分页列出当前角色。 */
@@ -93,15 +95,67 @@ public class TenantRoleCommandAPI implements RShortcuts {
     @DeleteMapping("/{id}")
     public R<CreatedResource> delete(@PathVariable String id) { return ok(roles.delete(false, id)); }
 
-    /** 分页列出当前组织已开通的可编辑操作目录。 */
+    /** 一次返回指定应用下当前组织已开通的全部可编辑操作。 */
     @Operation(summary = "当前角色操作候选")
     @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
     @GetMapping("/grant-catalog")
-    public R<PageResponse<CurrentRoleCatalogAction>> catalog(@RequestParam String applicationId,
-            @RequestParam(required = false) String keyword, @RequestParam(required = false) List<String> ids,
+    public R<List<CurrentRoleCatalogAction>> catalog(@RequestParam String applicationId,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) List<String> ids) {
+        return ok(roles.catalog(applicationId, keyword, ids));
+    }
+
+    /**
+     * 查询该角色当前有效成员，包含可见用户组继承。
+     *
+     * @param id 可见角色 ID
+     * @param keyword 成员名称
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 去重有效成员页
+     */
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
+    @GetMapping("/{id}/members")
+    @Operation(summary = "角色有效成员")
+    public R<RoleSubjectPage> members(@PathVariable String id, @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(roles.catalog(applicationId, keyword, ids, page, pageSize));
+        return ok(assignments.subjects(id, SubjectType.MEMBER, keyword, page, pageSize));
+    }
+
+    /**
+     * 查询该角色当前有效分配的可见用户组。
+     *
+     * @param id 可见角色 ID
+     * @param keyword 用户组名称
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 有效用户组页
+     */
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
+    @GetMapping("/{id}/groups")
+    @Operation(summary = "角色有效用户组")
+    public R<RoleSubjectPage> groups(@PathVariable String id, @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(assignments.subjects(id, SubjectType.GROUP, keyword, page, pageSize));
+    }
+
+    /**
+     * 分页查看成员的直接或组继承来源，修改和撤销仍使用分配 ID。
+     *
+     * @param id 可见角色 ID
+     * @param memberId 成员 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 当前有效来源页
+     */
+    @com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest
+    @GetMapping("/{id}/members/{memberId}/assignments")
+    @Operation(summary = "角色成员有效分配来源")
+    public R<PageResponse<ResourceDetail<TenantAssignmentRecord>>> sources(@PathVariable String id,
+            @PathVariable String memberId, @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(assignments.sources(id, memberId, page, pageSize));
     }
 
     /** 已认证旧入口明确退出，不解释或转换旧版本标识。 */

@@ -29,8 +29,10 @@ public class TenantLiveAssignmentService {
     private static final String SCOPE_FIELD = "scopeBindings";
     private static final TypeReference<Map<String,ScopeBinding>> BINDINGS = new TypeReference<>() { };
     private static final TypeReference<List<ScopeExpression>> SCOPES = new TypeReference<>() { };
+    private static final TypeReference<List<String>> SOURCE_TYPES = new TypeReference<>() { };
     private final IamAccess access;
     private final TenantLiveMapper live;
+    private final TenantRoleWorkspaceMapper workspace;
     private final TenantCurrentRoleRepository roles;
     private final TenantCurrentRoleService roleService;
     private final ResourceAccess resources;
@@ -49,6 +51,48 @@ public class TenantLiveAssignmentService {
         List<BigInteger> sources=admission.governed()?null:live.mine(tenant(actor),member(actor)).stream().map(TenantLiveRows.Delegation::id).toList();
         var items=live.assignments(tenant(actor),visible,sources,type,search(keyword),size,IamPages.offset(page,size)).stream().map(row->detail(actor,row)).toList();
         return IamPages.details(items,live.assignmentsCount(tenant(actor),visible,sources,type,search(keyword)),page,size);
+    }
+
+    /**
+     * 查询角色当前有效成员或用户组，组继承在 SQL 中展开并去重。
+     *
+     * @param roleId 可见角色 ID
+     * @param type 成员或用户组
+     * @param keyword 主体名称
+     * @param page 页码
+     * @param size 页大小
+     * @return 可见主体；组读取受限时标记继承来源受限
+     */
+    public RoleSubjectPage subjects(String roleId, SubjectType type, String keyword, int page, int size) {
+        roleService.get(false, roleId);
+        var admission = access.admit(AuthorizationDomain.TENANT, IamAction.TENANT_ASSIGNMENT_READ);
+        IamPages.require(page, size);
+        var actor = admission.actor();
+        var groups = visibleGroups(actor);
+        var query = workspaceQuery(actor, admission, roleId, type, null, keyword, page, size, groups);
+        var items = workspace.page(query).stream().map(row -> new RoleSubjectSummary(row.id().toString(),
+                row.name() == null || row.name().isBlank() ? row.id().toString() : row.name(), List.of(),
+                sourceTypes(row.sourceTypes()), row.sourceCount())).toList();
+        return new RoleSubjectPage(items, workspace.count(query), page, size, groups != null);
+    }
+
+    /**
+     * 查询一名成员持有该角色的直接分配和组继承来源。
+     *
+     * @param roleId 可见角色 ID
+     * @param memberId 成员 ID
+     * @param page 页码
+     * @param size 页大小
+     * @return 仍须按分配 ID 修改或撤销的来源页
+     */
+    public PageResponse<ResourceDetail<TenantAssignmentRecord>> sources(String roleId, String memberId, int page, int size) {
+        roleService.get(false, roleId);
+        var admission = access.admit(AuthorizationDomain.TENANT, IamAction.TENANT_ASSIGNMENT_READ);
+        IamPages.require(page, size);
+        var actor = admission.actor();
+        var query = workspaceQuery(actor, admission, roleId, SubjectType.MEMBER, memberId, null, page, size, visibleGroups(actor));
+        return IamPages.details(workspace.sources(query).stream().map(row -> detail(actor, row)).toList(),
+                workspace.sourceCount(query), page, size);
     }
 
     /** 原子提交批次，受限管理员只能使用同一条本人有效委派。 */
@@ -133,7 +177,7 @@ public class TenantLiveAssignmentService {
         var allowed=actions.stream().map(CurrentRoleCatalogAction::actionId).collect(java.util.stream.Collectors.toSet());
         var grants=list.definition().grants().stream().filter(g->allowed.contains(g.actionId())).toList();
         var used=grants.stream().flatMap(g->g.scopes().stream()).map(ScopeExpression::parameterKey).filter(Objects::nonNull).collect(java.util.stream.Collectors.toSet());
-        return new CurrentRoleGrantList(actions,new CurrentRoleDefinition(grants,list.definition().parameterDefinitions().stream().filter(p->used.contains(p.key())).toList()));
+        return new CurrentRoleGrantList(actions,new CurrentRoleDefinition(grants,list.definition().parameterDefinitions().stream().filter(p->used.contains(p.key())).toList(),list.definition().resourceFieldPermissions()));
     }
 
     /** 当前角色参数候选；未知业务资源返回明确不支持。 */
@@ -261,7 +305,7 @@ public class TenantLiveAssignmentService {
             .filter(a->Boolean.TRUE.equals(a.enabled()) && opened.contains(a.applicationId())).map(a->a.actionId().toString()).collect(java.util.stream.Collectors.toSet());
         var grants=definition.grants().stream().filter(g->ids.contains(g.actionId())).toList();
         var keys=grants.stream().flatMap(g->g.scopes().stream()).map(ScopeExpression::parameterKey).filter(Objects::nonNull).collect(java.util.stream.Collectors.toSet());
-        return new CurrentRoleDefinition(grants,definition.parameterDefinitions().stream().filter(p->keys.contains(p.key())).toList());
+        return new CurrentRoleDefinition(grants,definition.parameterDefinitions().stream().filter(p->keys.contains(p.key())).toList(),definition.resourceFieldPermissions());
     }
 
     private ResourceDetail<TenantAssignmentRecord> detail(ActiveIdentity actor,TenantLiveRows.Assignment row) {
@@ -319,6 +363,27 @@ public class TenantLiveAssignmentService {
     }
     private void lock(ActiveIdentity actor,IamAction action){if(live.lockTenant(tenant(actor))==null)missing();access.require(AuthorizationDomain.TENANT,action);}
     private List<BigInteger> visible(ActiveIdentity actor,IamAction action){var scope=resources.objects(actor.context(),action);return scope.coversAll()?null:scope.clauses().stream().flatMap(c->c.requiredIds().stream()).distinct().toList();}
+    private List<BigInteger> visibleGroups(ActiveIdentity actor) {
+        if (!access.capabilities(actor, List.of(IamAction.TENANT_GROUP_READ)).allows(IamAction.TENANT_GROUP_READ, false)) return List.of();
+        var scope = resources.objects(actor.context(), IamAction.TENANT_GROUP_READ);
+        if (scope.coversAll()) return null;
+        return scope.clauses().stream().filter(clause -> clause.departmentSets().isEmpty())
+                .flatMap(clause -> clause.requiredIds().stream()).distinct().toList();
+    }
+    private TenantRoleWorkspaceSql.Query workspaceQuery(ActiveIdentity actor, IamAdmission admission, String roleId,
+            SubjectType type, String memberId, String keyword, int page, int size, List<BigInteger> groups) {
+        List<BigInteger> visible = admission.governed() ? visible(actor, IamAction.TENANT_ASSIGNMENT_READ) : null;
+        List<BigInteger> sources = admission.governed() ? null : live.mine(tenant(actor), member(actor)).stream().map(TenantLiveRows.Delegation::id).toList();
+        String name = IamFilters.containsName(keyword);
+        String search = name == null ? "%" : "%" + name.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        return new TenantRoleWorkspaceSql.Query(tenant(actor), BigInteger.valueOf(IamIds.require(roleId)),
+                memberId == null ? null : BigInteger.valueOf(IamIds.require(memberId)), type, visible, sources, groups,
+                search, IamPages.offset(page, size), size);
+    }
+    private static List<SubjectType> sourceTypes(String json) {
+        if (json == null || json.isBlank()) return List.of();
+        return IamJson.read(json, SOURCE_TYPES).stream().map(SubjectType::valueOf).distinct().sorted().toList();
+    }
     private TenantScopeObjectResource target(CurrentRoleParameter p){if(p.kind()==ScopeBindingKind.DEPARTMENTS)return TenantScopeObjectResource.DEPARTMENT;var row=live.resource(new BigInteger(p.resourceId()));return row==null||!TenantAuthorizationConstants.CORE_APPLICATION.equals(row.applicationCode())?null:TenantScopeObjectResource.find(row.resourceCode());}
     private TenantLiveRows.Assignment row(ActiveIdentity actor,long id,BigInteger version,TenantAssignmentInput input,TenantLiveRows.Role role){return new TenantLiveRows.Assignment(BigInteger.valueOf(id),tenant(actor),input.subject().type(),input.subject().type()==SubjectType.MEMBER?new BigInteger(input.subject().id()):null,input.subject().type()==SubjectType.GROUP?new BigInteger(input.subject().id()):null,role.id(),role.kind(),role.currentRevisionId(),IamJson.object(input.scopeBindings()),input.delegationGrantId()==null?null:new BigInteger(input.delegationGrantId()),time(input.validFrom()==null?Instant.now():input.validFrom()),time(input.validUntil()),GrantStatus.ACTIVE,AssignmentSource.MANUAL,version,null,null,null);}
     private void audit(ActiveIdentity actor,TenantLiveRows.Assignment before,TenantLiveRows.Assignment after,AuditChangeType type) {

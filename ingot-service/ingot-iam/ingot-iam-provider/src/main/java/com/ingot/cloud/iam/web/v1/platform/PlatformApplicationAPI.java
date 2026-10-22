@@ -291,21 +291,16 @@ public class PlatformApplicationAPI implements RShortcuts {
     }
 
     /**
-     * 按资源分页返回启用资源及其启用操作，供角色权限选择器组树。
+     * 一次返回应用内全部启用资源及其启用操作，供角色权限选择器组树。
      *
      * @param id 应用 ID
-     * @param page 从 1 开始的页码
-     * @param pageSize 每页资源数
-     * @return 授权选择目录页
+     * @return 授权选择目录
      */
     @Operation(summary = "授权选择目录")
     @GetMapping("/{id}/grant-catalog")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_READ)
-    public R<PageResponse<GrantCatalogResource>> pageGrantCatalog(
-            @PathVariable String id,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(catalog.pageGrantCatalog(id, page, pageSize));
+    public R<List<GrantCatalogResource>> listGrantCatalog(@PathVariable String id) {
+        return ok(catalog.listGrantCatalog(id));
     }
 
     /**

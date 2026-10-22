@@ -186,12 +186,13 @@ def current_routes(routes):
         if item['path']=='/v1/tenant/assignments/scope-candidates':
             item['query']=[{**q,'name':'roleId'} if q['name']=='revisionId' else q for q in item.get('query',[])]+[{'name':'delegationGrantId','schema':{'type':'string'}}]
     for path, operation, response, query, action in [
-      ('/v1/tenant/roles/grant-catalog','tenantCurrentCatalog','RPageResponseCurrentRoleCatalogAction',PAGE+[{'name':'applicationId','required':True,'schema':{'type':'string'}}],'iam-tenant:role:create'),
+      ('/v1/tenant/roles/grant-catalog','tenantCurrentCatalog','RListCurrentRoleCatalogAction',[{'name':'applicationId','required':True,'schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}],'iam-tenant:role:create'),
       ('/v1/tenant/assignments/options','tenantAssignmentOptions','RPageResponseTenantAssignmentOption',PAGE+[{'name':'departmentId','schema':{'type':'string'}},{'name':'kind','required':True,'schema':{'type':'string','enum':['ROLE','MEMBER','GROUP','RESOURCE']}},{'name':'delegationGrantId','schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}],'iam-tenant:assignment:read'),
       ('/v1/tenant/assignments/roles/{id}','tenantAssignmentRole','RCurrentRoleGrantList',[{'name':'delegationGrantId','schema':{'type':'string'}}],'iam-tenant:assignment:read'),
       ('/v1/tenant/delegations/mine','tenantMyDelegations','RListTenantDelegationMine',None,None),
       ('/v1/tenant/delegations/scope-candidates','tenantDelegationScopeCandidates','RAuthorizationCandidatePage',PAGE+[{'name':'resourceId','required':True,'schema':{'type':'string'}},{'name':'parameterKey','required':True,'schema':{'type':'string'}}],'iam-tenant:delegation:create')]:
-        routes.append(route(path,'get',operation,'租户当前授权候选','TENANT',action,None,response,'可信当前租户；本人有效来源或独立治理；过滤后分页回显',query=query))
+        execution='选定应用后一次返回全部已开通操作' if path=='/v1/tenant/roles/grant-catalog' else '可信当前租户；本人有效来源或独立治理；过滤后分页回显'
+        routes.append(route(path,'get',operation,'租户当前授权候选','TENANT',action,None,response,execution,query=query))
     return routes
 
 
@@ -317,7 +318,7 @@ def build():
         route('/v1/platform/applications/{id}/action-catalog', 'get', 'platformActionCatalog', '应用操作目录', 'PLATFORM',
               'iam-platform:action:read', None, 'RActionCatalogView', '本应用资源及操作目录'),
         route('/v1/platform/applications/{id}/grant-catalog', 'get', 'platformGrantCatalog', '授权选择目录', 'PLATFORM',
-              'iam-platform:action:read', None, 'RPageResponseGrantCatalogResource', '启用资源和操作；按资源分页', query=PAGE),
+              'iam-platform:action:read', None, 'RListGrantCatalogResource', '一次返回该应用全部启用资源及其启用操作'),
         route('/v1/platform/applications/{id}/menus/{menuId}/actions', 'get', 'platformMenuActions', '菜单关联操作', 'PLATFORM',
               'iam-platform:menu:read', None, 'RListMenuActionRecord', '本应用本菜单操作关联'),
         route('/v1/platform/actions/lookup', 'post', 'platformLookupActions', '解析操作标识', 'PLATFORM',

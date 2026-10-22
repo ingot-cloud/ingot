@@ -514,7 +514,7 @@ class CatalogServiceTest {
     }
 
     @Test
-    void pageGrantCatalogNestsEnabledActionsAndSkipsDisabled() {
+    void listGrantCatalogNestsEnabledActionsAndSkipsDisabled() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
         jdbc.update(
@@ -525,16 +525,14 @@ class CatalogServiceTest {
                 + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0)," + "(12,1,21,'demo:member:off','停用查看',FALSE,0),"
                 + "(13,1,22,'demo:hidden:read','查看隐藏',TRUE,0)," + "(14,1,23,'demo:dept:read','查看部门',TRUE,0)");
 
-        var first = catalog.pageGrantCatalog("1", 1, 1);
-        assertEquals(2, first.total());
-        assertEquals("21", first.items().getFirst().id());
-        assertEquals(List.of(ScopeKind.ALL), first.items().getFirst().scopeCapabilities());
-        assertEquals(1, first.items().getFirst().actions().size());
-        assertEquals("查看成员", first.items().getFirst().actions().getFirst().name());
-
-        var second = catalog.pageGrantCatalog("1", 2, 1);
-        assertEquals("23", second.items().getFirst().id());
-        assertEquals(1, second.items().getFirst().actions().size());
+        var items = catalog.listGrantCatalog("1");
+        assertEquals(2, items.size());
+        assertEquals("21", items.getFirst().id());
+        assertEquals(List.of(ScopeKind.ALL), items.getFirst().scopeCapabilities());
+        assertEquals(1, items.getFirst().actions().size());
+        assertEquals("查看成员", items.getFirst().actions().getFirst().name());
+        assertEquals("23", items.get(1).id());
+        assertEquals(1, items.get(1).actions().size());
     }
 
     @Test

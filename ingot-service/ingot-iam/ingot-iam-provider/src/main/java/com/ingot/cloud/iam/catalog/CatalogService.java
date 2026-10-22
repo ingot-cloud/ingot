@@ -553,26 +553,22 @@ public class CatalogService {
     }
 
     /**
-     * 按资源分页返回启用资源及其启用操作，供角色权限选择器组树。
+     * 一次返回应用内全部启用资源及其启用操作，供角色权限选择器组树。
+     *
      * @param applicationId 应用 ID
-     * @param page 从 1 开始的页码
-     * @param pageSize 每页资源数
-     * @return 授权选择目录页
+     * @return 授权选择目录
      */
-    public PageResponse<GrantCatalogResource> pageGrantCatalog(String applicationId, int page, int pageSize) {
+    public List<GrantCatalogResource> listGrantCatalog(String applicationId) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
         long appId = IamIds.require(applicationId);
         requireApplication(appId);
-        IamPages.require(page, pageSize);
-        Page<IamResourceEntity> rows = catalog.pageEnabledResources(appId, page, pageSize);
-        List<Long> resourceIds = rows.getRecords().stream().map(row -> row.getId().longValue()).toList();
+        List<IamResourceEntity> rows = catalog.listEnabledResources(appId);
         Map<BigInteger, List<IamActionEntity>> actions = new LinkedHashMap<>();
-        for (IamActionEntity row : catalog.listEnabledActionsByResourceIds(appId, resourceIds)) {
+        for (IamActionEntity row : catalog.listEnabledActions(appId)) {
             actions.computeIfAbsent(row.getResourceId(), key -> new ArrayList<>()).add(row);
         }
-        var descriptors = fieldMetadata.describe(rows.getRecords());
-        List<GrantCatalogResource> items = rows.getRecords()
-            .stream()
+        var descriptors = fieldMetadata.describe(rows);
+        return rows.stream()
             .map(resource -> new GrantCatalogResource(text(resource.getId()), resource.getCode(), resource.getName(),
                     scopesOf(resource),
                     actions.getOrDefault(resource.getId(), List.of()).stream().map(this::grantCatalogAction).toList(),
@@ -581,7 +577,6 @@ public class CatalogService {
                     descriptors.containsKey(text(resource.getId())) ? descriptors.get(text(resource.getId())).defaults()
                             : Map.of()))
             .toList();
-        return IamPages.of(items, rows.getTotal(), page, pageSize);
     }
 
     /**

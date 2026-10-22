@@ -4709,64 +4709,6 @@
         },
         "description": "在当前组织内原子转交所有者职责。确认必须与转交出现在同一次请求"
       },
-      "PageResponseCurrentRoleCatalogAction": {
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CurrentRoleCatalogAction"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "PageResponseGrantCatalogResource": {
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/GrantCatalogResource"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
       "PageResponseMemberBoundRole": {
         "required": [
           "items",
@@ -6584,6 +6526,26 @@
           }
         }
       },
+      "RListCurrentRoleCatalogAction": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurrentRoleCatalogAction"
+            }
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RListDepartmentTreeNode": {
         "type": "object",
         "properties": {
@@ -6597,6 +6559,26 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DepartmentTreeNode"
+            }
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RListGrantCatalogResource": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GrantCatalogResource"
             }
           },
           "success": {
@@ -6695,40 +6677,6 @@
           },
           "data": {
             "$ref": "#/components/schemas/OrganizationMemberPickerPage"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        }
-      },
-      "RPageResponseCurrentRoleCatalogAction": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/PageResponseCurrentRoleCatalogAction"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        }
-      },
-      "RPageResponseGrantCatalogResource": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/PageResponseGrantCatalogResource"
           },
           "success": {
             "type": "boolean"

@@ -37,6 +37,8 @@ public class TenantCurrentRoleService {
     private final TenantLiveTransaction transactions;
     private final IamAuditWriter audits;
     private final AuthorizationChangeNotifier changes;
+    private final com.ingot.cloud.iam.extension.RoleFieldPermissionService roleFields;
+    private final com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata;
 
     /** 分页列出当前租户共享和私有角色，平台入口仅列共享。 */
     public PageResponse<ResourceDetail<CurrentRoleSummary>> list(boolean shared, int page, int pageSize,
@@ -90,13 +92,13 @@ public class TenantCurrentRoleService {
         return transactions.execute(tx -> {
             lockActor(actor, shared, createAction(shared));
             if(live.roleCodeExists(shared?null:tenant(actor,false),input.code().trim())>0)invalid();
-            requireValid(validate(actor, shared, null, input.definition()));
+            requireValid(validate(actor, shared, null, frozen(shared, input.definition())));
             long id = access.nextId();
             try {
                 roles.insert(id, shared ? null : IamIds.require(actor.context().tenantId()),
                         shared ? RoleKind.SHARED : RoleKind.TENANT_CUSTOM, input);
                 var row = live.lockRole(BigInteger.valueOf(id));
-                if (!roles.save(row, access.nextId(), input.definition())) conflict();
+                if (!roles.save(row, access.nextId(), frozen(shared, input.definition()))) conflict();
             } catch (DataIntegrityViolationException failure) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT, "角色编码已存在或定义引用不合法");
             }
@@ -125,9 +127,9 @@ public class TenantCurrentRoleService {
             lockActor(actor, shared, updateAction(shared));
             var row = writable(actor, shared, id, true);
             IamIds.requireVersion(input.expectedVersion(), row.version().toString());
-            requireValid(validate(actor, shared, row, input.definition()));
+            requireValid(validate(actor, shared, row, frozen(shared, input.definition())));
             long snapshot = access.nextId();
-            if (!roles.save(row, snapshot, input.definition())) conflict();
+            if (!roles.save(row, snapshot, frozen(shared, input.definition()))) conflict();
             String next = row.version().add(BigInteger.ONE).toString();
             audits.write(actor.context(), access.nextId(), ROLE_TARGET, id, AuditChangeType.UPDATE,
                     Map.of(AuditField.ROLE_REVISION, row.currentRevisionId().toString()),
@@ -175,48 +177,65 @@ public class TenantCurrentRoleService {
         });
     }
 
-    /** 返回本组织可编辑的已开通操作分页目录。 */
-    public PageResponse<CurrentRoleCatalogAction> catalog(String applicationId, String keyword, List<String> ids,
-                                                         int page, int pageSize) {
+    /**
+     * 返回指定应用下本组织可编辑的全部已开通操作。
+     *
+     * @param applicationId 应用 ID
+     * @param keyword 操作名称包含匹配，空白表示不限制
+     * @param ids 限定操作 ID，空表示不限制
+     * @return 操作候选
+     */
+    public List<CurrentRoleCatalogAction> catalog(String applicationId, String keyword, List<String> ids) {
         var actor = access.requireCurrent();
         if (actor.context().domain() != AuthorizationDomain.TENANT ||
                 !access.allows(AuthorizationDomain.TENANT, IamAction.TENANT_ROLE_CREATE, true)
                 && !access.allows(AuthorizationDomain.TENANT, IamAction.TENANT_ROLE_UPDATE, true)
                 && !access.allows(AuthorizationDomain.TENANT, IamAction.TENANT_ROLE_PREVIEW, true))
             throw new BizException(IamReasonCode.ACTION_DENIED);
-        IamPages.require(page, pageSize);
         List<BigInteger> selected = ids == null ? List.of() : ids.stream().map(IamIds::require).map(BigInteger::valueOf).distinct().toList();
         String search = keyword == null || keyword.isBlank() ? null : "%" + escapeSearch(keyword.trim()) + "%";
         var tenant = new BigInteger(actor.context().tenantId());
         var app = BigInteger.valueOf(IamIds.require(applicationId));
-        return new PageResponse<>(live.catalog(tenant, app, search, selected, pageSize, IamPages.offset(page, pageSize))
-                .stream().map(row -> action(row, List.of())).toList(), live.catalogCount(tenant, app, search, selected), page, pageSize);
+        var rows = live.catalog(tenant, app, search, selected);
+        var described = fieldMetadata.load(rows.stream().map(TenantLiveRows.Action::resourceId).distinct().toList());
+        return rows.stream().map(row -> action(row, List.of(), described.get(row.resourceId().toString()))).toList();
     }
 
     private CurrentRoleGrantList grants(TenantLiveRows.Role row) {
         var definition = roles.definition(row);
         var ids = definition.grants().stream().map(ActionGrant::actionId).map(BigInteger::new).toList();
-        return new CurrentRoleGrantList(ids.isEmpty() ? List.of() : live.actions(ids).stream()
-                .map(value -> action(value, definition.parameterDefinitions())).toList(), definition);
+        var actions = ids.isEmpty() ? List.<TenantLiveRows.Action>of() : live.actions(ids);
+        var described = fieldMetadata.load(actions.stream().map(TenantLiveRows.Action::resourceId).distinct().toList());
+        return new CurrentRoleGrantList(actions.stream()
+                .map(value -> action(value, definition.parameterDefinitions(), described.get(value.resourceId().toString()))).toList(), definition);
     }
 
     private Preview<CurrentRolePreviewResult> previewResult(ActiveIdentity actor, boolean shared, TenantLiveRows.Role row,
                                                            CurrentRoleDefinition next) {
-        var errors = validate(actor, shared, row, next);
+        CurrentRoleDefinition resolved;
+        try {
+            resolved = frozen(shared, next);
+        } catch (BizException failure) {
+            return new Preview<>(row == null ? java.util.HexFormat.of().formatHex(hash(actionsDependency(next))) : row.version().toString(), false,
+                    List.of(issue("字段权限超出资源能力")), List.of(),
+                    new ImpactSummary(null, null, null, true),
+                    new CurrentRolePreviewResult(next, List.of(), List.of(), List.of(), null));
+        }
+        var errors = validate(actor, shared, row, resolved);
         var before = row == null ? new CurrentRoleDefinition(List.of(), List.of()) : roles.definition(row);
         var old = before.grants().stream().collect(Collectors.toMap(ActionGrant::actionId, Function.identity()));
-        var current = next.grants().stream().collect(Collectors.toMap(ActionGrant::actionId, Function.identity(), (left, right) -> left));
+        var current = resolved.grants().stream().collect(Collectors.toMap(ActionGrant::actionId, Function.identity(), (left, right) -> left));
         var added = current.keySet().stream().filter(id -> !old.containsKey(id)).toList();
         var removed = old.keySet().stream().filter(id -> !current.containsKey(id)).toList();
         var changed = current.keySet().stream().filter(id -> old.containsKey(id) && !old.get(id).scopes().equals(current.get(id).scopes())).toList();
         var warnings = new ArrayList<ValidationIssue>();
-        if (row != null && next.parameterDefinitions().stream().anyMatch(p -> before.parameterDefinitions().stream().noneMatch(oldParameter -> oldParameter.equals(p))))
+        if (row != null && resolved.parameterDefinitions().stream().anyMatch(p -> before.parameterDefinitions().stream().noneMatch(oldParameter -> oldParameter.equals(p))))
             warnings.add(new ValidationIssue(DEFINITION_FIELD, IamReasonCode.DATA_SCOPE_DENIED, "新增资源参数未补齐的分配仅关闭对应操作，请通过普通分配编辑补齐"));
         // 无治理租户读取资格时不披露跨组织人数或授权清单。
         boolean restricted=shared || row!=null && (!access.allows(AuthorizationDomain.TENANT,IamAction.TENANT_ASSIGNMENT_READ,true) || !resources.objects(actor.context(),IamAction.TENANT_ASSIGNMENT_READ).coversAll());
-        return new Preview<>(row == null ? java.util.HexFormat.of().formatHex(hash(actionsDependency(next))) : row.version().toString(), errors.isEmpty(), errors, warnings,
+        return new Preview<>(row == null ? java.util.HexFormat.of().formatHex(hash(actionsDependency(resolved))) : row.version().toString(), errors.isEmpty(), errors, warnings,
                 new ImpactSummary(null, restricted ? null : row == null ? 0L : live.roleAssignments(row.id()), null, restricted),
-                new CurrentRolePreviewResult(next, added, removed, changed, null));
+                new CurrentRolePreviewResult(resolved, added, removed, changed, null));
     }
 
     private String actionsDependency(CurrentRoleDefinition definition) {
@@ -282,7 +301,8 @@ public class TenantCurrentRoleService {
                 Boolean.TRUE.equals(row.enabled()) ? ConfigurationStatus.ENABLED : ConfigurationStatus.DISABLED);
     }
 
-    private CurrentRoleCatalogAction action(TenantLiveRows.Action row, List<CurrentRoleParameter> parameters) {
+    private CurrentRoleCatalogAction action(TenantLiveRows.Action row, List<CurrentRoleParameter> parameters,
+                                            com.ingot.framework.commons.model.iam.extension.ResourceDescriptor descriptor) {
         List<ScopeKind> kinds = IamJson.read(row.scopeCapabilities(), SCOPE_KINDS);
         var options = new ArrayList<>(parameters.stream().filter(p -> p.resourceId().equals(row.resourceId().toString())).toList());
         for (var kind : List.of(ScopeBindingKind.DEPARTMENTS, ScopeBindingKind.OBJECTS)) {
@@ -290,8 +310,17 @@ public class TenantCurrentRoleService {
             if (kinds.contains(scopeKind) && options.stream().noneMatch(p -> p.kind() == kind))
                 options.add(new CurrentRoleParameter(TenantAuthorizationConstants.resourceParameterKey(row.resourceId().toString(),kind), kind, row.resourceId().toString()));
         }
+        var directory = descriptor != null && com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE.equals(descriptor.key());
         return new CurrentRoleCatalogAction(row.actionId().toString(), row.actionCode(), row.actionName(), row.applicationId().toString(),
-                row.applicationName(), row.resourceId().toString(), row.resourceName(), Boolean.TRUE.equals(row.enabled()), kinds, options);
+                row.applicationName(), row.resourceId().toString(), row.resourceName(), Boolean.TRUE.equals(row.enabled()), kinds, options,
+                directory || descriptor == null ? List.of() : descriptor.fields(),
+                directory || descriptor == null ? Map.of() : descriptor.defaults());
+    }
+
+    /** 按资源声明固化当前字段快照，创建、预览和保存共用。 */
+    private CurrentRoleDefinition frozen(boolean shared, CurrentRoleDefinition definition) {
+        var snapshot = roleFields.freeze(shared ? RoleKind.SHARED : RoleKind.TENANT_CUSTOM, definition.grants(), definition.resourceFieldPermissions());
+        return new CurrentRoleDefinition(definition.grants(), definition.parameterDefinitions(), snapshot);
     }
 
     private TenantLiveRows.Role require(ActiveIdentity actor, boolean shared, String id) {

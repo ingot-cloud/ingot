@@ -53,7 +53,7 @@ public class TenantCurrentRoleRepository {
         row.setKind(role.kind());
         row.setRevision(live.nextRevision(role.id()));
         row.setMetadataOverrides(IamJson.object(null));
-        row.setResourceFieldPermissions(IamJson.object(null));
+        row.setResourceFieldPermissions(IamJson.object(definition.resourceFieldPermissions()));
         row.setMetadataVersion(BigInteger.ZERO);
         row.setPublishedAt(LocalDateTime.now(ZoneOffset.UTC));
         revisions.insert(row);
@@ -86,7 +86,9 @@ public class TenantCurrentRoleRepository {
                 .toList();
         List<CurrentRoleParameter> definitions = live.parameters(role.currentRevisionId()).stream()
                 .map(row -> new CurrentRoleParameter(row.key(), row.kind(), row.resourceId().toString())).toList();
-        return new CurrentRoleDefinition(values, definitions);
+        var revision = revisions.selectById(role.currentRevisionId());
+        return new CurrentRoleDefinition(values, definitions,
+                revision == null ? Map.of() : fieldsOf(revision.getResourceFieldPermissions()));
     }
 
     /** 当前请求批量读取不可变定义，避免按分配逐角色查询。 */
@@ -99,9 +101,18 @@ public class TenantCurrentRoleRepository {
         var parsed=new HashMap<String,List<ScopeExpression>>();
         for(var item:live.snapshotGrants(ids))granted.computeIfAbsent(item.snapshotId(),key->new ArrayList<>()).add(new ActionGrant(item.actionId().toString(),parsed.computeIfAbsent(item.scopes(),json->IamJson.read(json,new com.fasterxml.jackson.core.type.TypeReference<List<ScopeExpression>>() { }))));
         for(var item:live.snapshotParameters(ids))parameters.computeIfAbsent(item.snapshotId(),key->new ArrayList<>()).add(new CurrentRoleParameter(item.key(),item.kind(),item.resourceId().toString()));
+        var fields=new HashMap<BigInteger,Map<String,ResourceFieldDefinition>>();
+        revisions.selectBatchIds(ids).forEach(row->fields.put(row.getId(),fieldsOf(row.getResourceFieldPermissions())));
         var result=new LinkedHashMap<BigInteger,CurrentRoleDefinition>();
-        heads.forEach(role->result.put(role.id(),new CurrentRoleDefinition(granted.getOrDefault(role.currentRevisionId(),List.of()),parameters.getOrDefault(role.currentRevisionId(),List.of()))));
+        heads.forEach(role->result.put(role.id(),new CurrentRoleDefinition(granted.getOrDefault(role.currentRevisionId(),List.of()),parameters.getOrDefault(role.currentRevisionId(),List.of()),fields.getOrDefault(role.currentRevisionId(),Map.of()))));
         return result;
+    }
+
+    /** 旧空快照读成空映射；显式 JSON 保持原样，求值另行区分缺失与空对象。 */
+    private static Map<String, ResourceFieldDefinition> fieldsOf(String json) {
+        if (json == null || json.isBlank() || "null".equals(json.trim())) return Map.of();
+        var value = IamJson.read(json, new com.fasterxml.jackson.core.type.TypeReference<Map<String, ResourceFieldDefinition>>() { });
+        return value == null ? Map.of() : value;
     }
 
     /** 删除未被实际外部引用的角色，历史审计行不清理。 */

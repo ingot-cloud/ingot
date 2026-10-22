@@ -314,15 +314,13 @@ public class CatalogRepository {
     }
 
     /**
-     * 分页列出应用内启用资源，供授权选择目录。
+     * 列出应用内全部启用资源，供角色权限选择一次组树。
      *
      * @param applicationId 应用 ID
-     * @param page 从 1 开始
-     * @param pageSize 页大小
-     * @return 启用资源页
+     * @return 启用资源行
      */
-    public Page<IamResourceEntity> pageEnabledResources(long applicationId, int page, int pageSize) {
-        return resources.selectPage(new Page<>(page, pageSize), Wrappers.<IamResourceEntity>lambdaQuery()
+    public List<IamResourceEntity> listEnabledResources(long applicationId) {
+        return resources.selectList(Wrappers.<IamResourceEntity>lambdaQuery()
                 .eq(IamResourceEntity::getApplicationId, BigInteger.valueOf(applicationId))
                 .eq(IamResourceEntity::getEnabled, true)
                 .orderByAsc(IamResourceEntity::getId));
@@ -481,6 +479,19 @@ public class CatalogRepository {
     public List<IamActionEntity> listActions(long applicationId) {
         return actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
                 .eq(IamActionEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .orderByAsc(IamActionEntity::getId));
+    }
+
+    /**
+     * 列出应用内全部启用操作，供角色权限选择一次组树。
+     *
+     * @param applicationId 应用 ID
+     * @return 启用操作行
+     */
+    public List<IamActionEntity> listEnabledActions(long applicationId) {
+        return actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
+                .eq(IamActionEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .eq(IamActionEntity::getEnabled, true)
                 .orderByAsc(IamActionEntity::getId));
     }
 
