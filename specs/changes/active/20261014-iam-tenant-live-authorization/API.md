@@ -68,7 +68,7 @@ ScopeExpression 沿用 `{kind,parameterKey?,includeDescendants?}`：ALL/SELF 不
 | GET {rolePath}/{id}/grants | id | CurrentRoleGrantList | READ；服务器读当前定义，不接受 revisionId |
 | POST {rolePath}/{id}/preview | CurrentRolePermissionInput | Preview<CurrentRolePreviewResult> | PREVIEW 与独立治理；校验当前锁及影响，warnings 不伪造 errors |
 | PUT {rolePath}/{id}/grants | CurrentRolePermissionInput | CurrentRolePermissionResult | UPDATE 与独立治理；提交重验，修改当前权限并自动生效 |
-| GET /v1/tenant/roles/grant-catalog | applicationId,page/pageSize,keyword?,ids? | PageResponse<CurrentRoleCatalogAction> | CREATE/UPDATE/PREVIEW 任一独立资格；已选回显不绕过资源边界 |
+| GET /v1/tenant/roles/grant-catalog | applicationId,keyword?,ids? | List<CurrentRoleCatalogAction> | CREATE/UPDATE/PREVIEW 任一独立资格；选定应用后一次返回全部操作；已选回显不绕过资源边界 |
 
 平台共享角色的候选目录继续复用平台已授权的应用/资源/ACTION 目录接口；不新增跨平台读取捷径。预览影响摘要不能枚举其他租户私有成员资料，平台仅按其组织管理可见边界披露计数；隐藏部分 restricted=true。
 
