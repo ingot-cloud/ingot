@@ -470,6 +470,16 @@ def build():
         route('/v1/tenant/authorization/diagnose', 'post', 'tenantDiagnose', '受限授权诊断', 'TENANT',
               'iam-tenant:authorization:diagnose', 'DiagnoseInput', 'RDecision',
               '可信当前域解析身份；精确应用操作；限制对象及来源披露；无实际操作'),
+        route('/v1/tenant/authorization/diagnose/candidates', 'get', 'tenantDiagnoseCandidates', '诊断候选',
+              'TENANT', 'iam-tenant:authorization:diagnose', None, 'RAuthorizationCandidatePage',
+              '精确 DIAGNOSE 操作；成员按成员读取范围、应用为已开通、操作为已启用、对象与诊断目标校验同口径；未接入对象显式不支持',
+              query=PAGE + [
+                  {'name': 'kind', 'required': True,
+                   'schema': {'type': 'string', 'enum': ['MEMBER', 'APPLICATION', 'ACTION', 'OBJECT']}},
+                  *[{'name': name, 'required': False, 'schema': {'type': 'string'}}
+                    for name in ['applicationId', 'actionId', 'keyword']],
+                  {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
+              ]),
         route('/v1/tenant/authorization/audits', 'get', 'tenantListAudits', '租户审计', 'TENANT',
               'iam-tenant:audit:read', None, 'RPageResponseResourceDetailAuditEntry',
               '可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),

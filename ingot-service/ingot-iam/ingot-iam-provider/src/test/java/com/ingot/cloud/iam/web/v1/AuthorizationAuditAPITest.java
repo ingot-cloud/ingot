@@ -33,7 +33,8 @@ class AuthorizationAuditAPITest {
         when(service.listAudits(any(), anyInt(), anyInt(), any())).thenReturn(new PageResponse<>(List.of(), 0L, 1, 20));
         var conversion = new DefaultFormattingConversionService();
         new ApiTimeFormatterRegistrar().registerFormatters(conversion);
-        var mvc = MockMvcBuilders.standaloneSetup(new PlatformAuthorizationAPI(service), new TenantAuthorizationAPI(service))
+        var mvc = MockMvcBuilders.standaloneSetup(new PlatformAuthorizationAPI(service), new TenantAuthorizationAPI(service,
+                        mock(com.ingot.cloud.iam.diagnose.TenantDiagnoseCandidates.class)))
                 .setConversionService(conversion)
                 .setControllerAdvice(new IamErrorHandler(), new GlobalExceptionHandlerResolver()).build();
         for (var domain : AuthorizationDomain.values()) {

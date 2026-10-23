@@ -63,6 +63,26 @@ public class DepartmentQueryRepository {
         return departments.selectPage(new Page<>(page, size), wrapper);
     }
 
+    /**
+     * 分页列出范围内部门候选，按名称包含匹配并可按 ID 回显。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param scope 已编译范围
+     * @param name 名称包含匹配，空白表示不限制
+     * @param ids 部门 ID，空表示不按 ID 限制
+     * @param page 从 1 开始的页码
+     * @param size 页大小
+     * @return 部门页
+     */
+    public Page<IamDepartmentEntity> pageCandidates(long tenantId, ObjectScope scope, String name,
+                                                    Collection<BigInteger> ids, int page, int size) {
+        LambdaQueryWrapper<IamDepartmentEntity> wrapper = scoped(tenantId, scope)
+                .like(name != null && !name.isBlank(), IamDepartmentEntity::getName, name)
+                .in(ids != null && !ids.isEmpty(), IamDepartmentEntity::getId, ids)
+                .orderByAsc(IamDepartmentEntity::getSortOrder, IamDepartmentEntity::getId);
+        return departments.selectPage(new Page<>(page, size), wrapper);
+    }
+
     /** 仅提供当前读取范围内的组织根名称，不回退到隐藏祖先。 */
     public IamDepartmentEntity navigationRoot(long tenantId, ObjectScope scope) {
         var result = departments.selectPage(new Page<>(1, 1), scoped(tenantId, scope)

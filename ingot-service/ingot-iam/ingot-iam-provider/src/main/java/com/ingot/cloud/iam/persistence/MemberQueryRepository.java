@@ -199,6 +199,26 @@ public class MemberQueryRepository {
     }
 
     /**
+     * 分页列出范围内未移出的租户成员候选，按显示名包含匹配并可按 ID 回显。
+     *
+     * @param tenantId 已授权租户 ID
+     * @param scope 已编译范围
+     * @param name 显示名包含匹配，空白表示不限制
+     * @param ids 成员 ID，空表示不按 ID 限制
+     * @param page 从 1 开始的页码
+     * @param size 页大小
+     * @return 成员页
+     */
+    public Page<IamTenantMemberEntity> pageTenantCandidates(long tenantId, ObjectScope scope, String name,
+                                                            Collection<BigInteger> ids, int page, int size) {
+        LambdaQueryWrapper<IamTenantMemberEntity> wrapper = tenantFilter(tenantId, scope, null, null, null, null)
+                .like(name != null && !name.isBlank(), IamTenantMemberEntity::getDisplayName, name)
+                .in(ids != null && !ids.isEmpty(), IamTenantMemberEntity::getId, ids)
+                .orderByAsc(IamTenantMemberEntity::getId);
+        return tenantMembers.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    /**
      * 按快照 ID 读取仍落入当前范围的未移出成员，条件全部下推到 SQL。
      *
      * @param tenantId 已授权租户 ID

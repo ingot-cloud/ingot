@@ -1,11 +1,16 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
 import java.time.Instant;
+import java.util.List;
 
+import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
 import com.ingot.cloud.iam.diagnose.DiagnoseAuditService;
 import com.ingot.cloud.iam.diagnose.AuthorizationAuditQuery;
+import com.ingot.cloud.iam.diagnose.TenantDiagnoseCandidates;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuditEntry;
+import com.ingot.framework.commons.model.iam.AuthorizationCandidateKind;
+import com.ingot.framework.commons.model.iam.AuthorizationCandidatePage;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.Decision;
 import com.ingot.framework.commons.model.iam.DiagnoseInput;
@@ -36,6 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TenantAuthorizationAPI implements RShortcuts {
     private final DiagnoseAuditService diagnoses;
+    private final TenantDiagnoseCandidates candidates;
 
     /**
      * 对租户成员做只读诊断。
@@ -47,6 +53,29 @@ public class TenantAuthorizationAPI implements RShortcuts {
     @PostMapping("/diagnose")
     public R<Decision> diagnose(@Valid @RequestBody DiagnoseInput input) {
         return ok(diagnoses.diagnose(AuthorizationDomain.TENANT, input));
+    }
+
+    /**
+     * 查询诊断候选，口径与诊断校验一致。
+     *
+     * @param kind 候选类型：成员、应用、操作、目标对象
+     * @param applicationId 操作所属应用，查询操作时必填
+     * @param actionId 目标对象所属操作，查询对象时必填
+     * @param keyword 名称包含匹配
+     * @param ids 已选回显
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 候选页
+     */
+    @IamReadOnlyRequest
+    @Operation(summary = "诊断候选")
+    @GetMapping("/diagnose/candidates")
+    public R<AuthorizationCandidatePage> diagnoseCandidates(@RequestParam AuthorizationCandidateKind kind,
+            @RequestParam(required = false) String applicationId, @RequestParam(required = false) String actionId,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) List<String> ids,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(candidates.list(kind, applicationId, actionId, keyword, ids, page, pageSize));
     }
 
     /**

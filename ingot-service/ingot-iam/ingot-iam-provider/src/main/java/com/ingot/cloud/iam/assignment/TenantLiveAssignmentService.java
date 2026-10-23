@@ -70,9 +70,14 @@ public class TenantLiveAssignmentService {
         var actor = admission.actor();
         var groups = visibleGroups(actor);
         var query = workspaceQuery(actor, admission, roleId, type, null, keyword, page, size, groups);
-        var items = workspace.page(query).stream().map(row -> new RoleSubjectSummary(row.id().toString(),
+        var rows = workspace.page(query);
+        var departments = type == SubjectType.MEMBER
+                ? memberDepartments.visible(actor, rows.stream().map(TenantRoleWorkspaceMapper.Row::id).toList())
+                : Map.<BigInteger, List<MemberDepartmentView>>of();
+        var items = rows.stream().map(row -> new RoleSubjectSummary(row.id().toString(),
                 row.name() == null || row.name().isBlank() ? row.id().toString() : row.name(), List.of(),
-                sourceTypes(row.sourceTypes()), row.sourceCount())).toList();
+                sourceTypes(row.sourceTypes()), row.sourceCount(), Map.of(),
+                departments.getOrDefault(row.id(), List.of()))).toList();
         return new RoleSubjectPage(items, workspace.count(query), page, size, groups != null);
     }
 

@@ -2869,6 +2869,83 @@
     "implemented": true
   },
   {
+    "path": "/v1/tenant/authorization/diagnose/candidates",
+    "method": "get",
+    "operationId": "tenantDiagnoseCandidates",
+    "summary": "诊断候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:authorization:diagnose",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "精确 DIAGNOSE 操作；成员按成员读取范围、应用为已开通、操作为已启用、对象与诊断目标校验同口径；未接入对象显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "APPLICATION",
+            "ACTION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "applicationId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
     "path": "/v1/tenant/authorization/audits",
     "method": "get",
     "operationId": "tenantListAudits",
