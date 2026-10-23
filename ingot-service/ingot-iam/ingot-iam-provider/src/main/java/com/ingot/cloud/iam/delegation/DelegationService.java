@@ -385,8 +385,8 @@ public class DelegationService {
                 duration(grant), grant.getAssignmentDurationMode());
         Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> capabilities = new java.util.LinkedHashMap<>();
         if (domain != AuthorizationDomain.PLATFORM) {
-            return IamDetails.of(new DelegationRecord(IamIds.text(id), input, grant.getStatus(), administratorName),
-                    version(grant.getVersion()));
+            return IamDetails.of(new DelegationRecord(IamIds.text(id), input, grant.getStatus(), administratorName,
+                    instant(grant.getCreatedAt())), version(grant.getVersion()));
         }
         for (AccessKind kind : List.of(AccessKind.READ, AccessKind.UPDATE, AccessKind.DELETE, AccessKind.PREVIEW)) {
             IamAction operation = action(domain, kind);
@@ -395,8 +395,8 @@ public class DelegationService {
             capabilities.put(operation.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(
                     allowed, allowed ? null : IamReasonCode.ACTION_DENIED, allowed ? null : "当前身份不可操作该委派"));
         }
-        return IamDetails.of(new DelegationRecord(IamIds.text(id), input, grant.getStatus(), administratorName),
-                capabilities, version(grant.getVersion()));
+        return IamDetails.of(new DelegationRecord(IamIds.text(id), input, grant.getStatus(), administratorName,
+                instant(grant.getCreatedAt())), capabilities, version(grant.getVersion()));
     }
 
     private ResourceDetail<DelegationRecord> lock(AuthorizationDomain domain, ActiveIdentity actor, long id) {

@@ -17,7 +17,7 @@ public final class TenantLiveSql {
     /** 分配真实关联表。 */
     public static final String ASSIGNMENT_FROM = " FROM iam_role_assignment ra JOIN iam_role_definition d ON d.id=ra.role_id LEFT JOIN iam_tenant_member m ON m.tenant_id=ra.tenant_id AND m.id=ra.tenant_member_id LEFT JOIN iam_tenant_group g ON g.tenant_id=ra.tenant_id AND g.id=ra.tenant_group_id ";
     /** 委派列。 */
-    public static final String DELEGATION_COLUMNS = "dl.id,dl.tenant_id,dl.tenant_administrator_id AS administrator_member_id,dl.valid_from,dl.valid_until,dl.max_assignment_duration_seconds AS duration_seconds,dl.max_assignment_duration_nanos AS duration_nanos,dl.status,dl.version,m.display_name AS administrator_name";
+    public static final String DELEGATION_COLUMNS = "dl.id,dl.tenant_id,dl.tenant_administrator_id AS administrator_member_id,dl.valid_from,dl.valid_until,dl.max_assignment_duration_seconds AS duration_seconds,dl.max_assignment_duration_nanos AS duration_nanos,dl.status,dl.version,m.display_name AS administrator_name,dl.created_at";
 
     /** 当前分配可见范围和来源条件；空集合恒拒绝。 */
     public static final String ASSIGNMENT_FILTER = """

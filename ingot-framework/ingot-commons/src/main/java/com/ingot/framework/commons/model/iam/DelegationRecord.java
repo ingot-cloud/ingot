@@ -1,5 +1,7 @@
 package com.ingot.framework.commons.model.iam;
 
+import java.time.Instant;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -14,6 +16,7 @@ import jakarta.validation.constraints.*;
  * @param delegation 当前委派限制
  * @param status 生效或撤销状态
  * @param administratorName 管理员显示名称，成员资料缺失时为空
+ * @param createdAt UTC创建瞬时，缺失时省略
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "返回可见委派定义及撤销状态")
@@ -25,5 +28,7 @@ public record DelegationRecord(
         @NotNull @Schema(description = "生效或撤销状态", requiredMode = Schema.RequiredMode.REQUIRED)
         GrantStatus status,
         @Schema(description = "管理员显示名称，成员资料缺失时省略")
-        String administratorName) {
+        String administratorName,
+        @Schema(description = "UTC创建瞬时，缺失时省略")
+        Instant createdAt) {
 }

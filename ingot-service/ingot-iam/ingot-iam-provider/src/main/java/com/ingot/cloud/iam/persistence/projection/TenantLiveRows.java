@@ -42,7 +42,8 @@ public final class TenantLiveRows {
     /** <p>组织有限期限委派及管理员身份。</p> @author jy @since 1.0.0 */
     public record Delegation(BigInteger id, BigInteger tenantId, BigInteger administratorMemberId,
                             LocalDateTime validFrom, LocalDateTime validUntil, BigInteger durationSeconds,
-                            Integer durationNanos, GrantStatus status, BigInteger version, String administratorName) { }
+                            Integer durationNanos, GrantStatus status, BigInteger version, String administratorName,
+                            LocalDateTime createdAt) { }
 
     /** <p>委派资源上限的JSON存储投影。</p> @author jy @since 1.0.0 */
     public record Ceiling(BigInteger resourceId, String scopes, String scopeBindings) { }
