@@ -23,6 +23,7 @@
 - `GET /v1/tenant/roles/{id}/members/{memberId}/assignments`
 - 组继承含显式成员和部门展开
 - 租户角色与平台共享角色的当前字段快照、目录字段能力和求值取舍
+- `GET /v1/tenant/authorization/diagnose/candidates`：组织权限诊断的成员、应用、操作、目标对象候选
 
 不包含：
 

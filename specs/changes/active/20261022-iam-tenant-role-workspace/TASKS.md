@@ -8,6 +8,8 @@
 - [x] T4：`TenantRoleCommandAPI` 三个只读接口
 - [x] T5：测试构造函数补入 Mapper
 - [x] T6：当前角色契约、目录和求值接受字段快照
+- [x] T7：`TenantDiagnoseCandidates` 与 `GET /v1/tenant/authorization/diagnose/candidates`，路由与契约同步
+- [x] T8：`TenantDiagnoseCandidateTest` 覆盖成员范围、应用开通、对象范围
 
 ## 验证任务
 

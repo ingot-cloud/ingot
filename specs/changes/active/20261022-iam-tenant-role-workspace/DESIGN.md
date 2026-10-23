@@ -8,7 +8,7 @@
 
 ## 数据模型与接口
 
-`RoleSubjectPage` / `RoleSubjectSummary` 复用 commons。租户响应里 `revisionNumbers` 为空，`versionNames` 为空。
+`RoleSubjectPage` / `RoleSubjectSummary` 复用 commons。租户响应里 `revisionNumbers` 为空，`versionNames` 为空。成员页在当前页 ID 上批量附带可见部门，不回查角色列表；没有成员或部门读取资格时 `departments` 省略。用户组页不附带部门。
 
 | 方法 | 路径 | 响应 |
 |---|---|---|
@@ -48,6 +48,19 @@
 - 通讯录继续走字段策略。
 - 成员资源先算字段策略，再与角色快照并集求交。全部来源都是旧空快照时不收紧。拥有者不求交。
 - 其他业务资源走当前角色快照。旧空快照按资源默认值，显式快照缺少的字段隐藏。
+
+## 诊断候选
+
+`TenantAuthorizationAPI` 增加 `GET /diagnose/candidates`（`IamReadOnlyRequest`），参数 `kind`、`applicationId`、`actionId`、`keyword`、`ids`、`page`、`pageSize`，返回 `AuthorizationCandidatePage`。实现放在新类 `TenantDiagnoseCandidates`，先 `access.require(TENANT, TENANT_AUTHORIZATION_DIAGNOSE)`。
+
+| kind | 来源 | 可见性 |
+|---|---|---|
+| MEMBER | `MemberQueryRepository.pageTenantCandidates` | `ResourceAccess.memberRead(TENANT_MEMBER_READ)`，与 `requireVisibleMember` 同一范围 |
+| APPLICATION | `TenantLiveMapper.applications` | 当前有效开通，内存过滤名称与 ID 后分页 |
+| ACTION | `TenantLiveMapper.catalog` | 已开通应用的启用操作，内存分页 |
+| OBJECT | 按 `TenantLiveMapper.actions` 与 `resource` 判定资源 | member、department 分别用成员、部门读取范围；其他核心资源用 `TenantScopeCandidateSql`，ID 限于操作者该操作的 `objectIds`，`all` 时不限；非核心资源不支持 |
+
+成员与部门的读取范围为空时返回空页，不抛错，前端可提示无可选。
 
 ## 测试策略
 
