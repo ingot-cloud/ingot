@@ -28569,6 +28569,11 @@
           "administratorName": {
             "type": "string",
             "description": "管理员显示名称，成员资料缺失时省略"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC创建瞬时，缺失时省略"
           }
         },
         "description": "返回可见委派定义及撤销状态"

@@ -112,7 +112,7 @@ TenantAssignmentOption 为 `{id,name,kind,roleKind?}`，kind 为上述六值；R
 - allowedRoleIds 非空且不重复，只允许共享/本地私有；新建委派须为当前白名单涉及的每个可执行资源补齐上限。后续角色增加新资源可使旧委派产生待补提示，新增操作不需逐操作上限。
 - assignmentDurationMode 缺省 LIMITED，租户不接受 UNLIMITED；maxAssignmentDuration 为正 ISO-8601 Duration。派生分配结束时间必填且不超过允许时长；执行始终受来源有效期约束。
 
-`TenantDelegationRecord={id,delegation:TenantDelegationInput,status,administratorName?,scopeIssues}`。Update 为 `{expectedVersion,delegation:TenantDelegationInput}`。删除是撤销，不清历史。
+`TenantDelegationRecord={id,delegation:TenantDelegationInput,status,administratorName?,createdAt?,scopeIssues}`。`createdAt` 为记录写入时间，UTC `Z`。生效窗口仍在 `delegation.validFrom` / `delegation.validUntil`：空开始表示立即生效，空结束表示长期有效。Update 为 `{expectedVersion,delegation:TenantDelegationInput}`。删除是撤销，不清历史。
 
 | 方法与路径 | 请求 | data / 资格 |
 |---|---|---|
