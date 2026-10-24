@@ -2,8 +2,10 @@ package com.ingot.cloud.iam.support;
 
 import com.ingot.framework.commons.jackson.InJackson2ObjectMapperBuilderCustomizer;
 import com.ingot.framework.commons.model.iam.ApplicationRecord;
+import com.ingot.framework.commons.model.iam.AudienceMemberView;
 import com.ingot.framework.commons.model.iam.ApplicationSummary;
 import com.ingot.framework.commons.model.iam.CurrentProfile;
+import com.ingot.framework.commons.model.iam.EntitlementRecord;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
@@ -30,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 public class IamOssJacksonConfiguration {
 
     /**
-     * 为成员、组织与当前资料的 {@code avatar}，以及应用 Logo 路径的 {@code icon} 注册读写 mixin。
+     * 为成员、组织、当前资料与可用人群成员的 {@code avatar}，以及应用和开通记录 Logo 路径的 {@code icon} 注册读写 mixin。
      *
      * @return ObjectMapper 定制器
      */
@@ -38,12 +40,14 @@ public class IamOssJacksonConfiguration {
     public InJackson2ObjectMapperBuilderCustomizer iamOssAvatarMixins() {
         return builder -> {
             builder.mixIn(MemberRecord.class, ReadAvatar.class);
+            builder.mixIn(AudienceMemberView.class, ReadAvatar.class);
             builder.mixIn(DepartmentLeaderRecord.class, ReadAvatar.class);
             builder.mixIn(OrganizationMemberPickerOption.class, ReadAvatar.class);
             builder.mixIn(TenantRecord.class, ReadAvatar.class);
             builder.mixIn(CurrentProfile.class, ReadAvatar.class);
             builder.mixIn(ApplicationRecord.class, ReadIcon.class);
             builder.mixIn(ApplicationSummary.class, ReadIcon.class);
+            builder.mixIn(EntitlementRecord.class, ReadIcon.class);
             builder.mixIn(MemberCreateInput.class, SaveAvatar.class);
             builder.mixIn(MemberCreateInput.JacksonInput.class, SaveAvatar.class);
             builder.mixIn(MemberProfileInput.class, SaveAvatar.class);

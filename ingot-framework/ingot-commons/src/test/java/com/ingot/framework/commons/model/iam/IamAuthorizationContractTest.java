@@ -399,6 +399,7 @@ class IamAuthorizationContractTest {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DelegationRecord>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AudienceDraft>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AudienceView>>>() {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantRecord>>>>() {
                     }.getType(),

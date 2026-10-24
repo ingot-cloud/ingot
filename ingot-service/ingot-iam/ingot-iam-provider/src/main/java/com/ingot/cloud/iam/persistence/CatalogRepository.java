@@ -109,28 +109,52 @@ public class CatalogRepository {
     }
 
     /**
-     * 按应用 ID 批量读取目录名称，供开通列表展示。
+     * 按应用 ID 批量读取目录名称与图标，供开通列表展示。
      *
      * @param applicationIds 应用 ID，可含空值与重复
-     * @return 非空名称；找不到应用或名为空白时不入表
+     * @return 有名称或图标的目录项；找不到应用，或名称与图标都空白时不入表
      */
-    public Map<BigInteger, String> applicationNames(Collection<BigInteger> applicationIds) {
-        Map<BigInteger, String> names = new LinkedHashMap<>();
+    public Map<BigInteger, ApplicationDisplay> applicationDisplays(Collection<BigInteger> applicationIds) {
+        Map<BigInteger, ApplicationDisplay> displays = new LinkedHashMap<>();
         if (applicationIds == null || applicationIds.isEmpty()) {
-            return names;
+            return displays;
         }
         List<BigInteger> ids = applicationIds.stream().filter(Objects::nonNull).distinct().toList();
         if (ids.isEmpty()) {
-            return names;
+            return displays;
         }
         for (IamApplicationEntity row : applications.selectList(Wrappers.<IamApplicationEntity>lambdaQuery()
-                .select(IamApplicationEntity::getId, IamApplicationEntity::getName)
+                .select(IamApplicationEntity::getId, IamApplicationEntity::getName, IamApplicationEntity::getIcon)
                 .in(IamApplicationEntity::getId, ids))) {
-            if (row.getName() != null && !row.getName().isBlank()) {
-                names.put(row.getId(), row.getName());
+            String name = blankToNull(row.getName());
+            String icon = blankToNull(row.getIcon());
+            if (name != null || icon != null) {
+                displays.put(row.getId(), new ApplicationDisplay(name, icon));
             }
         }
-        return names;
+        return displays;
+    }
+
+    /**
+     * 按目录名称包含匹配应用 ID，供开通列表筛选。
+     *
+     * @param name 已规范化的名称关键字
+     * @return 命中的应用 ID；关键字空白时为空
+     */
+    public List<BigInteger> applicationIdsByName(String name) {
+        String keyword = IamFilters.containsName(name);
+        if (keyword == null) {
+            return List.of();
+        }
+        return applications.selectList(Wrappers.<IamApplicationEntity>lambdaQuery()
+                .select(IamApplicationEntity::getId)
+                .like(IamApplicationEntity::getName, keyword)).stream()
+                .map(IamApplicationEntity::getId)
+                .toList();
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 
     /**

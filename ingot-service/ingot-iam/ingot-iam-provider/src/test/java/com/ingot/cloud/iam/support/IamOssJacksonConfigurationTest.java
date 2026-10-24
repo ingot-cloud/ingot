@@ -14,7 +14,10 @@ import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.jsontype.TypeIdResolver;
 import com.fasterxml.jackson.databind.jsontype.TypeResolverBuilder;
 import com.ingot.framework.commons.model.iam.ApplicationRecord;
+import com.ingot.framework.commons.model.iam.AudienceMemberView;
 import com.ingot.framework.commons.model.iam.ApplicationSummary;
+import com.ingot.framework.commons.model.iam.EntitlementRecord;
+import com.ingot.framework.commons.model.iam.EntitlementSource;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.ConfigurationStatus;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
@@ -65,6 +68,8 @@ class IamOssJacksonConfigurationTest {
                 List.of(), null, "ingot/user/avatar/a.png");
         assertTrue(mapper.writeValueAsString(leader).contains("https://signed.example/ingot/user/avatar/a.png"));
         assertTrue(mapper.writeValueAsString(candidate).contains("https://signed.example/ingot/user/avatar/a.png"));
+        var audienceMember = new AudienceMemberView("50", "张三", "ingot/user/avatar/a.png");
+        assertTrue(mapper.writeValueAsString(audienceMember).contains("https://signed.example/ingot/user/avatar/a.png"));
     }
 
     @Test
@@ -75,8 +80,14 @@ class IamOssJacksonConfigurationTest {
         ApplicationRecord record = new ApplicationRecord("1", "contacts", AuthorizationDomain.TENANT, "通讯录",
                 null, "ingot/app/icon/a.png", 0, false, ConfigurationStatus.ENABLED);
         ApplicationSummary named = new ApplicationSummary("2", "iam-platform", "平台治理", "ep:menu", 0);
+        EntitlementRecord entitlement = new EntitlementRecord("3", "1", "通讯录", "ingot/app/icon/a.png",
+                ConfigurationStatus.ENABLED, EntitlementSource.INITIALIZATION, null, null, null);
+        EntitlementRecord namedEntitlement = new EntitlementRecord("4", "2", "平台治理", "ep:menu",
+                ConfigurationStatus.ENABLED, EntitlementSource.MANUAL, null, null, null);
         assertTrue(mapper.writeValueAsString(record).contains("https://signed.example/ingot/app/icon/a.png"));
         assertTrue(mapper.writeValueAsString(named).contains("ep:menu"));
+        assertTrue(mapper.writeValueAsString(entitlement).contains("https://signed.example/ingot/app/icon/a.png"));
+        assertTrue(mapper.writeValueAsString(namedEntitlement).contains("ep:menu"));
     }
 
     private static ObjectMapper mapper(OssService oss) {

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,23 +14,33 @@ import java.util.Set;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
+import com.ingot.cloud.iam.persistence.ApplicationDisplay;
 import com.ingot.cloud.iam.persistence.CatalogRepository;
 import com.ingot.cloud.iam.persistence.EntitlementRepository;
 import com.ingot.cloud.iam.persistence.TenantRepository;
 import com.ingot.cloud.iam.persistence.entity.IamActionEntity;
 import com.ingot.cloud.iam.persistence.entity.IamAppAudienceEntity;
-import com.ingot.cloud.iam.persistence.entity.IamAudienceDepartmentEntity;
+import com.ingot.cloud.iam.persistence.entity.IamApplicationEntity;
+import com.ingot.cloud.iam.persistence.entity.IamResourceEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantAppEntitlementEntity;
 import com.ingot.cloud.iam.support.IamAccess;
+import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.ActionCatalogItem;
+import com.ingot.framework.commons.model.iam.ActionCatalogResource;
+import com.ingot.framework.commons.model.iam.ActionCatalogView;
 import com.ingot.framework.commons.model.iam.ActionRecord;
+import com.ingot.framework.commons.model.iam.AudienceDepartmentView;
 import com.ingot.framework.commons.model.iam.AudienceDraft;
+import com.ingot.framework.commons.model.iam.AudienceGroupView;
 import com.ingot.framework.commons.model.iam.AudienceKind;
+import com.ingot.framework.commons.model.iam.AudienceMemberView;
 import com.ingot.framework.commons.model.iam.AudienceUpdateInput;
+import com.ingot.framework.commons.model.iam.AudienceView;
 import com.ingot.framework.commons.model.iam.AuditChangeType;
 import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -116,11 +127,12 @@ public class EntitlementService {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 应用目录名称包含匹配，空白表示不限制
      * @return 开通页
      */
-    public PageResponse<ResourceDetail<EntitlementRecord>> listForTenant(int page, int pageSize) {
+    public PageResponse<ResourceDetail<EntitlementRecord>> listForTenant(int page, int pageSize, String name) {
         ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_APPLICATION_READ);
-        return list(IamIds.require(actor.context().tenantId()), page, pageSize);
+        return list(IamIds.require(actor.context().tenantId()), page, pageSize, name);
     }
 
     /**
@@ -144,6 +156,43 @@ public class EntitlementService {
         List<ResourceDetail<ActionRecord>> items = rows.getRecords().stream()
                 .map(row -> IamDetails.of(action(row), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    /**
+     * 一次返回已开通应用中仍有启用操作的资源树，供详情展示，不授予这些操作。
+     *
+     * @param applicationId 应用 ID
+     * @return 资源及其操作
+     */
+    public ActionCatalogView tenantActionCatalog(String applicationId) {
+        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_APPLICATION_READ);
+        long tenantId = IamIds.require(actor.context().tenantId());
+        long appId = IamIds.require(applicationId);
+        if (!entitlements.entitled(tenantId, appId)) {
+            throw new BizException(IamReasonCode.APPLICATION_UNAVAILABLE);
+        }
+        IamApplicationEntity application = catalog.findApplication(appId);
+        if (application == null) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        Map<BigInteger, List<ActionCatalogItem>> actions = new LinkedHashMap<>();
+        for (IamActionEntity row : catalog.listEnabledActions(appId)) {
+            if (row.getResourceId() == null) {
+                continue;
+            }
+            actions.computeIfAbsent(row.getResourceId(), key -> new ArrayList<>()).add(catalogItem(row));
+        }
+        List<ActionCatalogResource> resources = new ArrayList<>();
+        for (IamResourceEntity resource : catalog.listEnabledResources(appId)) {
+            List<ActionCatalogItem> items = actions.getOrDefault(resource.getId(), List.of());
+            if (items.isEmpty()) {
+                continue;
+            }
+            resources.add(new ActionCatalogResource(text(resource.getId()), resource.getCode(),
+                    label(resource.getName(), resource.getCode()), items));
+        }
+        return new ActionCatalogView(text(application.getId()), application.getCode(),
+                label(application.getName(), application.getCode()), resources);
     }
 
     /**
@@ -223,12 +272,12 @@ public class EntitlementService {
     }
 
     /**
-     * 读取应用可用人群。
+     * 读取应用可用人群的展示快照。
      *
      * @param applicationId 应用 ID
-     * @return 人群配置
+     * @return 含名称的人群快照
      */
-    public ResourceDetail<AudienceDraft> getAudience(String applicationId) {
+    public ResourceDetail<AudienceView> getAudience(String applicationId) {
         ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_AUDIENCE_READ);
         long tenantId = IamIds.require(actor.context().tenantId());
         long appId = IamIds.require(applicationId);
@@ -240,9 +289,9 @@ public class EntitlementService {
      *
      * @param applicationId 应用 ID
      * @param input 完整人群与版本
-     * @return 更新后配置
+     * @return 更新后的展示快照
      */
-    public ResourceDetail<AudienceDraft> putAudience(String applicationId, AudienceUpdateInput input) {
+    public ResourceDetail<AudienceView> putAudience(String applicationId, AudienceUpdateInput input) {
         ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_AUDIENCE_UPDATE);
         long tenantId = IamIds.require(actor.context().tenantId());
         long appId = IamIds.require(applicationId);
@@ -255,7 +304,7 @@ public class EntitlementService {
             if (!entitlements.entitled(tenantId, appId)) {
                 throw new BizException(IamReasonCode.APPLICATION_UNAVAILABLE);
             }
-            ResourceDetail<AudienceDraft> current = loadAudience(tenantId, appId);
+            ResourceDetail<AudienceView> current = loadAudience(tenantId, appId);
             IamIds.requireVersion(input.expectedVersion(), current.version());
             entitlements.deleteAudienceSelections(tenantId, appId);
             entitlements.updateAudience(tenantId, appId, audience.kind(), new BigInteger(current.version()));
@@ -270,13 +319,19 @@ public class EntitlementService {
     }
 
     private PageResponse<ResourceDetail<EntitlementRecord>> list(long tenantId, int page, int pageSize) {
+        return list(tenantId, page, pageSize, null);
+    }
+
+    private PageResponse<ResourceDetail<EntitlementRecord>> list(long tenantId, int page, int pageSize, String name) {
         requireTenant(tenantId);
         IamPages.require(page, pageSize);
-        Page<IamTenantAppEntitlementEntity> rows = entitlements.pageEntitlements(tenantId, page, pageSize);
-        Map<BigInteger, String> names = catalog.applicationNames(rows.getRecords().stream()
+        String keyword = IamFilters.containsName(name);
+        Page<IamTenantAppEntitlementEntity> rows = entitlements.pageEntitlements(tenantId, page, pageSize,
+                keyword == null ? null : catalog.applicationIdsByName(keyword));
+        Map<BigInteger, ApplicationDisplay> displays = catalog.applicationDisplays(rows.getRecords().stream()
                 .map(IamTenantAppEntitlementEntity::getApplicationId).toList());
         List<ResourceDetail<EntitlementRecord>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(entitlement(row, names), version(row.getVersion()))).toList();
+                .map(row -> IamDetails.of(entitlement(row, displays), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
@@ -312,7 +367,7 @@ public class EntitlementService {
         return value == null || value.isBlank();
     }
 
-    private ResourceDetail<AudienceDraft> loadAudience(long tenantId, long applicationId) {
+    private ResourceDetail<AudienceView> loadAudience(long tenantId, long applicationId) {
         if (!entitlements.entitled(tenantId, applicationId)) {
             throw new BizException(IamReasonCode.APPLICATION_UNAVAILABLE);
         }
@@ -321,16 +376,26 @@ public class EntitlementService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         if (row.getAudienceKind() == AudienceKind.ALL) {
-            return IamDetails.of(new AudienceDraft(AudienceKind.ALL, null, List.of()), version(row.getVersion()));
+            return IamDetails.of(new AudienceView(AudienceKind.ALL, List.of(), List.of(), List.of()),
+                    version(row.getVersion()));
         }
-        List<String> members = entitlements.audienceMemberIds(tenantId, applicationId).stream()
-                .map(EntitlementService::text).toList();
-        List<DepartmentSelection> departments = entitlements.audienceDepartments(tenantId, applicationId).stream()
-                .map(EntitlementService::department).toList();
-        List<String> groups = entitlements.audienceGroupIds(tenantId, applicationId).stream()
-                .map(EntitlementService::text).toList();
-        return IamDetails.of(new AudienceDraft(AudienceKind.SELECTED, new Selection(members, departments), groups),
+        List<AudienceMemberView> members = entitlements.audienceMembers(tenantId, applicationId).stream()
+                .map(item -> new AudienceMemberView(text(item.id()), label(item.name(), AudienceView.RESTRICTED_NAME),
+                        blankToNull(item.avatar())))
+                .toList();
+        List<AudienceDepartmentView> departments = entitlements.audienceDepartments(tenantId, applicationId).stream()
+                .map(item -> new AudienceDepartmentView(text(item.id()), label(item.name(), AudienceView.RESTRICTED_NAME),
+                        Boolean.TRUE.equals(item.includeDescendants())))
+                .toList();
+        List<AudienceGroupView> groups = entitlements.audienceGroups(tenantId, applicationId).stream()
+                .map(item -> new AudienceGroupView(text(item.id()), label(item.name(), AudienceView.RESTRICTED_NAME)))
+                .toList();
+        return IamDetails.of(new AudienceView(AudienceKind.SELECTED, members, departments, groups),
                 version(row.getVersion()));
+    }
+
+    private static String blankToNull(String value) {
+        return blank(value) ? null : value;
     }
 
     private void writeSelection(long tenantId, long applicationId, AudienceDraft audience) {
@@ -365,22 +430,29 @@ public class EntitlementService {
         }
     }
 
-    private static EntitlementRecord entitlement(IamTenantAppEntitlementEntity row, Map<BigInteger, String> names) {
+    private static EntitlementRecord entitlement(IamTenantAppEntitlementEntity row,
+                                                 Map<BigInteger, ApplicationDisplay> displays) {
         BigInteger applicationId = row.getApplicationId();
+        ApplicationDisplay display = applicationId == null ? null : displays.get(applicationId);
         return new EntitlementRecord(text(row.getId()), text(applicationId),
-                applicationId == null ? null : names.get(applicationId),
+                display == null ? null : display.name(), display == null ? null : display.icon(),
                 statusOf(row.getEnabled()), row.getSource(),
                 row.getSourceId() == null ? null : row.getSourceId().toString(),
                 instant(row.getValidFrom()), instant(row.getValidUntil()));
     }
 
+    private static ActionCatalogItem catalogItem(IamActionEntity row) {
+        return new ActionCatalogItem(text(row.getId()), text(row.getResourceId()), row.getCode(),
+                label(row.getName(), row.getCode()), statusOf(row.getEnabled()));
+    }
+
+    private static String label(String name, String fallback) {
+        return name == null || name.isBlank() ? fallback : name;
+    }
+
     private static ActionRecord action(IamActionEntity row) {
         return new ActionRecord(text(row.getId()), text(row.getApplicationId()), text(row.getResourceId()),
                 row.getCode(), row.getName(), statusOf(row.getEnabled()));
-    }
-
-    private static DepartmentSelection department(IamAudienceDepartmentEntity row) {
-        return new DepartmentSelection(text(row.getDepartmentId()), Boolean.TRUE.equals(row.getIncludeDescendants()));
     }
 
     private static ConfigurationStatus statusOf(Boolean enabled) {

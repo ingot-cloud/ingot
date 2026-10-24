@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.persistence;
 
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,7 @@ import com.ingot.cloud.iam.persistence.mapper.IamTenantAppEntitlementMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantGroupMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
+import com.ingot.cloud.iam.persistence.projection.AudienceBindingRows;
 import com.ingot.framework.commons.model.iam.AudienceKind;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import lombok.RequiredArgsConstructor;
@@ -66,11 +68,19 @@ public class EntitlementRepository {
      * @param tenantId 已校验组织 ID
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param applicationIds 限定应用；{@code null} 不限制，空集合返回空页
      * @return 开通页
      */
-    public Page<IamTenantAppEntitlementEntity> pageEntitlements(long tenantId, int page, int pageSize) {
+    public Page<IamTenantAppEntitlementEntity> pageEntitlements(long tenantId, int page, int pageSize,
+                                                                Collection<BigInteger> applicationIds) {
+        if (applicationIds != null && applicationIds.isEmpty()) {
+            Page<IamTenantAppEntitlementEntity> empty = new Page<>(page, pageSize, 0);
+            empty.setRecords(List.of());
+            return empty;
+        }
         return entitlements.selectPage(new Page<>(page, pageSize), Wrappers.<IamTenantAppEntitlementEntity>lambdaQuery()
                 .eq(IamTenantAppEntitlementEntity::getTenantId, id(tenantId))
+                .in(applicationIds != null, IamTenantAppEntitlementEntity::getApplicationId, applicationIds)
                 .select(IamTenantAppEntitlementEntity::getId, IamTenantAppEntitlementEntity::getApplicationId,
                         IamTenantAppEntitlementEntity::getEnabled, IamTenantAppEntitlementEntity::getSource,
                         IamTenantAppEntitlementEntity::getSourceId, IamTenantAppEntitlementEntity::getValidFrom,
@@ -201,51 +211,36 @@ public class EntitlementRepository {
     }
 
     /**
-     * 按成员 ID 排序读取人群成员。
+     * 按绑定行连接成员显示名，不按成员 ID 回查成员表。
      *
      * @param tenantId 已授权租户 ID
      * @param applicationId 应用 ID
-     * @return 成员 ID
+     * @return 按成员 ID 排序的绑定展示行
      */
-    public List<BigInteger> audienceMemberIds(long tenantId, long applicationId) {
-        return audienceMembers.selectList(Wrappers.<IamAudienceMemberEntity>lambdaQuery()
-                        .eq(IamAudienceMemberEntity::getTenantId, id(tenantId))
-                        .eq(IamAudienceMemberEntity::getApplicationId, id(applicationId))
-                        .select(IamAudienceMemberEntity::getMemberId)
-                        .orderByAsc(IamAudienceMemberEntity::getMemberId))
-                .stream().map(IamAudienceMemberEntity::getMemberId).toList();
+    public List<AudienceBindingRows.Member> audienceMembers(long tenantId, long applicationId) {
+        return audienceMembers.listBound(id(tenantId), id(applicationId));
     }
 
     /**
-     * 按部门 ID 排序读取人群部门选择。
+     * 按绑定行连接部门名称，含下级标记取自绑定行。
      *
      * @param tenantId 已授权租户 ID
      * @param applicationId 应用 ID
-     * @return 部门选择行
+     * @return 按部门 ID 排序的绑定展示行
      */
-    public List<IamAudienceDepartmentEntity> audienceDepartments(long tenantId, long applicationId) {
-        return audienceDepartments.selectList(Wrappers.<IamAudienceDepartmentEntity>lambdaQuery()
-                .eq(IamAudienceDepartmentEntity::getTenantId, id(tenantId))
-                .eq(IamAudienceDepartmentEntity::getApplicationId, id(applicationId))
-                .select(IamAudienceDepartmentEntity::getDepartmentId,
-                        IamAudienceDepartmentEntity::getIncludeDescendants)
-                .orderByAsc(IamAudienceDepartmentEntity::getDepartmentId));
+    public List<AudienceBindingRows.Department> audienceDepartments(long tenantId, long applicationId) {
+        return audienceDepartments.listBound(id(tenantId), id(applicationId));
     }
 
     /**
-     * 按组 ID 排序读取人群组。
+     * 按绑定行连接用户组名称，不按组 ID 回查组表。
      *
      * @param tenantId 已授权租户 ID
      * @param applicationId 应用 ID
-     * @return 组 ID
+     * @return 按组 ID 排序的绑定展示行
      */
-    public List<BigInteger> audienceGroupIds(long tenantId, long applicationId) {
-        return audienceGroups.selectList(Wrappers.<IamAudienceGroupEntity>lambdaQuery()
-                        .eq(IamAudienceGroupEntity::getTenantId, id(tenantId))
-                        .eq(IamAudienceGroupEntity::getApplicationId, id(applicationId))
-                        .select(IamAudienceGroupEntity::getGroupId)
-                        .orderByAsc(IamAudienceGroupEntity::getGroupId))
-                .stream().map(IamAudienceGroupEntity::getGroupId).toList();
+    public List<AudienceBindingRows.Group> audienceGroups(long tenantId, long applicationId) {
+        return audienceGroups.listBound(id(tenantId), id(applicationId));
     }
 
     /**

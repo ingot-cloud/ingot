@@ -14,6 +14,7 @@ import jakarta.validation.constraints.*;
  * @param id 开通记录 ID
  * @param applicationId 应用 ID
  * @param applicationName 应用目录名称；应用缺失或名为空时省略
+ * @param icon 应用目录图标，Iconify 名或对象路径；未设置时省略
  * @param status 显式开通或停用状态
  * @param source 开通来源
  * @param sourceId 来源记录 ID，可空
@@ -29,6 +30,8 @@ public record EntitlementRecord(
         String applicationId,
          @Schema(description = "应用目录名称；应用缺失或名为空时省略")
         String applicationName,
+         @Schema(description = "应用目录图标，Iconify 名或对象路径；未设置时省略")
+        String icon,
         @NotNull @Schema(description = "显式开通或停用状态", requiredMode = Schema.RequiredMode.REQUIRED)
         ConfigurationStatus status,
         @NotNull @Schema(description = "开通来源", requiredMode = Schema.RequiredMode.REQUIRED)

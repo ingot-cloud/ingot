@@ -2,9 +2,10 @@ package com.ingot.cloud.iam.web.v1.tenant;
 
 import com.ingot.cloud.iam.catalog.EntitlementService;
 import com.ingot.cloud.iam.support.IamPages;
+import com.ingot.framework.commons.model.iam.ActionCatalogView;
 import com.ingot.framework.commons.model.iam.ActionRecord;
-import com.ingot.framework.commons.model.iam.AudienceDraft;
 import com.ingot.framework.commons.model.iam.AudienceUpdateInput;
+import com.ingot.framework.commons.model.iam.AudienceView;
 import com.ingot.framework.commons.model.iam.EntitlementRecord;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * <p>提供当前租户已开通应用、操作候选与可用人群，开通不授予业务操作。</p>
+ * <p>提供当前租户已开通应用、权限树、操作候选与可用人群，开通不授予业务操作。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -40,40 +41,54 @@ public class TenantApplicationAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 应用目录名称包含匹配，空白表示不限制
      * @return 开通页
      */
     @Operation(summary = "已开通应用")
     @GetMapping
     public R<PageResponse<ResourceDetail<EntitlementRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(entitlements.listForTenant(page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name) {
+        return ok(entitlements.listForTenant(page, pageSize, name));
     }
 
     /**
-     * 读取应用可用人群。
+     * 读取应用可用人群的展示快照。
      *
      * @param id 应用 ID
-     * @return 人群配置
+     * @return 含名称的人群快照
      */
     @Operation(summary = "应用可用人群")
     @GetMapping("/{id}/audience")
-    public R<ResourceDetail<AudienceDraft>> getAudience(@PathVariable String id) {
+    public R<ResourceDetail<AudienceView>> getAudience(@PathVariable String id) {
         return ok(entitlements.getAudience(id));
     }
 
     /**
-     * 更新应用可用人群。
+     * 替换应用可用人群，响应为更新后的展示快照。
      *
      * @param id 应用 ID
-     * @param input 完整人群
-     * @return 更新后配置
+     * @param input 完整人群，只提交 ID
+     * @return 更新后的展示快照
      */
     @Operation(summary = "更新可用人群")
     @PutMapping("/{id}/audience")
-    public R<ResourceDetail<AudienceDraft>> putAudience(@PathVariable String id,
-                                                        @Valid @RequestBody AudienceUpdateInput input) {
+    public R<ResourceDetail<AudienceView>> putAudience(@PathVariable String id,
+                                                       @Valid @RequestBody AudienceUpdateInput input) {
         return ok(entitlements.putAudience(id, input));
+    }
+
+    /**
+     * 一次返回已开通应用的启用资源及启用操作树。
+     *
+     * @param id 应用 ID
+     * @return 权限树
+     */
+    @Operation(summary = "已开通应用权限树")
+    @GetMapping("/{id}/action-catalog")
+    public R<ActionCatalogView> actionCatalog(@PathVariable String id) {
+        return ok(entitlements.tenantActionCatalog(id));
     }
 
     /**
