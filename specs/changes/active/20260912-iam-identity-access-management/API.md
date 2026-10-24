@@ -136,7 +136,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/departments | GET 必填 `purpose=MANAGED_DEPARTMENT` 及分页；POST；/{id} GET/PUT/DELETE |
 | /v1/tenant/groups | GET 列表可选 `name` 包含匹配组名；POST 创建；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响 |
 | /v1/tenant/settings | GET/PUT 组织设置（GET 含所有者显示名）；所有者转交使用独立 /owner-transfer POST |
-| /v1/tenant/applications | GET 已开通应用；/{id}/audience GET/PUT 可用人群 |
+| /v1/tenant/applications | GET 已开通应用；/{id}/audience GET/PUT 响应为 `AudienceView`（kind 与成员、部门、用户组展示项，缺失名称记为「信息受限」） |
 | /v1/tenant/applications/{id}/actions | GET 当前已开通应用的操作与范围能力候选；仅供配置，不授予这些操作 |
 
 平台账号管理与现有安全、字典、发号等保留能力同步迁到 IAM 命名，不改变其领域语义；新授权动作必须列入资源目录。账户创建/邀请按账号与成员分离处理，既有账号不能被直接重新设置凭证，返回信息不得枚举其他组织身份。
@@ -218,7 +218,7 @@ AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、�
 - PolicyDraft 为 `{kind, directory?, field?}`，DIRECTORY/FIELD 必须且只能携带匹配配置。PolicyPreviewInput 为 `{policyDraft, viewerMemberId, target?}`，target 为可选目标成员 ID。预览返回 Preview<PolicyPreviewResult>，含经过操作者权限限制的成员样例、部门导航骨架及 restricted 标志；没有总人数泄露。
 - DiagnoseInput 为 `{memberId?, accountId?, applicationId, actionId, targetId?}`；两种身份必须二选一且非空。accountId 仅在当前可信域中解析成员，不支持切换或聚合域。
 - MemberStatusInput 为 `{status, expectedVersion}`，只允许 ACTIVE/SUSPENDED，REMOVED 通过独立 remove 命令；ConfigurationStatusInput 使用 ENABLED/DISABLED。OwnerTransferInput 为 `{expectedVersion,newOwnerMemberId,confirmation}`，`confirmation` 为登录密码内嵌确认。
-- GroupUpdateInput 为 `{expectedVersion,group:{name,description?,selection}}`；AudienceUpdateInput 为 `{expectedVersion,audience:{kind,selection?,groupIds[]}}`，ALL 不携带选择器或组，SELECTED 携带选择器和组列表。平台组的部门限制仍须按可信域校验。
+- GroupUpdateInput 为 `{expectedVersion,group:{name,description?,selection}}`；AudienceUpdateInput 为 `{expectedVersion,audience:{kind,selection?,groupIds[]}}`，ALL 不携带选择器或组，SELECTED 携带选择器和组列表。GET 与 PUT 响应为 `ResourceDetail<AudienceView>`，展示名不写回 `AudienceDraft`。平台组的部门限制仍须按可信域校验。
 - AssignmentUpdateInput / DelegationUpdateInput 分别为 `{expectedVersion,assignment}` / `{expectedVersion,delegation}`；服务端重验原委派来源、接收对象和所有派生授权，DTO 不赋予绕过资格。分配预览返回 Preview<AssignmentPreviewResult>，逐主体列出 allowed、errors、可披露 grants。
 - RoleCreateInput 为 `{code,name,description?,groupName?,kind,baseRevisionId?,definition}`；kind 只允许 SHARED/PLATFORM_CUSTOM/TENANT_CUSTOM。仅 TENANT_CUSTOM 可绑定共享基础，此时 grants 必须为空。RoleDefinitionDraft 为 `{grants,deltas,parameterDefinitions,metadataOverrides?}`，完整版本与差异不能同时非空。RolePublishInput 为 `{expectedVersion,definition}`，发布不自动升级授权。预览待发布定义直接提交 RoleDefinitionDraft。RoleUpdateInput 为 `{expectedVersion,name?,description?,groupName?,status}`，平台角色与共享角色 PATCH 共用；名称空白时只改启停。
 - UpgradePreviewInput 为 `{newBaseRevisionId,resolutions?}`；UpgradeInput 为 `{expectedVersion,newBaseRevisionId,resolutions,assignmentIds[]}`。UpgradeResolution 为 `{key,choice,scopes?}`，choice 为 ACCEPT_BASE/KEEP_DELTA/REPLACE_SCOPE，只有替换范围必须携带 scopes。未解决冲突拒绝提交；默认不选择既有授权。
