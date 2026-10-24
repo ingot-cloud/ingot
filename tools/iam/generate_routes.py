@@ -23,7 +23,9 @@ PAGE = [
     {'name': 'page', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'default': 1}},
     {'name': 'pageSize', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 200, 'default': 20}},
 ]
-AUDIT_QUERY = PAGE + [
+AUDIT_QUERY = [
+    {'name': 'limit', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 100, 'default': 20}},
+    {'name': 'cursor', 'required': False, 'schema': {'type': 'string', 'maxLength': 64}},
     {'name': 'actorMemberId', 'required': False, 'schema': {'type': 'string', 'pattern': '^[1-9][0-9]*$'}},
     {'name': 'targetType', 'required': False, 'schema': {'type': 'string', 'maxLength': 64}},
     {'name': 'targetId', 'required': False, 'schema': {'type': 'string', 'maxLength': 128}},
@@ -338,8 +340,8 @@ def build():
               'iam-platform:authorization:diagnose', 'DiagnoseInput', 'RDecision',
               '可信当前域解析身份；精确应用操作；限制对象及来源披露；无实际操作'),
         route('/v1/platform/authorization/audits', 'get', 'platformListAudits', '平台审计', 'PLATFORM',
-              'iam-platform:audit:read', None, 'RPageResponseResourceDetailAuditEntry',
-              '可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
+              'iam-platform:audit:read', None, 'RAuditCursorPage',
+              '可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
     ]
     routes += member_routes('TENANT', '/v1/tenant', 'iam-tenant', PAGE + PHONE_EMAIL)
     routes += [
@@ -481,8 +483,8 @@ def build():
                   {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
               ]),
         route('/v1/tenant/authorization/audits', 'get', 'tenantListAudits', '租户审计', 'TENANT',
-              'iam-tenant:audit:read', None, 'RPageResponseResourceDetailAuditEntry',
-              '可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
+              'iam-tenant:audit:read', None, 'RAuditCursorPage',
+              '可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
     ]
     routes += delegation_routes('TENANT', '/v1/tenant', 'iam-tenant')
     retained = '保留既有领域实现；平台精确 ACTION；不改存储语义'

@@ -103,7 +103,9 @@ class ContractTest(unittest.TestCase):
         for domain in ('platform', 'tenant'):
             operation = self.document['paths'][f'/v1/{domain}/authorization/audits']['get']
             parameters = {item['name']: item for item in operation['parameters']}
-            self.assertEqual({'page', 'pageSize', 'actorMemberId', 'targetType', 'targetId', 'changeType', 'from', 'until'}, set(parameters))
+            self.assertEqual({'limit', 'cursor', 'actorMemberId', 'targetType', 'targetId', 'changeType', 'from', 'until'}, set(parameters))
+            self.assertEqual(100, parameters['limit']['schema']['maximum'])
+            self.assertEqual('#/components/schemas/RAuditCursorPage', operation['responses']['200']['content']['application/json']['schema']['$ref'])
             self.assertTrue(all(not item['required'] for item in parameters.values()))
             for point in ('from', 'until'):
                 self.assertEqual('date-time', parameters[point]['schema']['format'])

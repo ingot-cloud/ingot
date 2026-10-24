@@ -288,6 +288,7 @@ class IamAuthorizationContractTest {
                 CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class, DepartmentTreeNode.class,
                 GroupRecord.class, GroupEffectiveMemberRecord.class, GroupMembership.class, GroupMembershipDepartment.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
                 EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
+                DepartmentWorkbookExportInput.class,
                 DelegationRecord.class, PlanRecord.class, PlanApplication.class, EntitlementRecord.class,
                 DirectoryPolicyInput.class, FieldPolicyInput.class, PolicyPreviewInput.class, PolicyPreviewResult.class,
                 DiagnoseInput.class, ConfigurationStatusInput.class, MemberStatusInput.class, VersionInput.class,
@@ -431,7 +432,12 @@ class IamAuthorizationContractTest {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DelegationRecord>>>>() {
                     }.getType(),
-                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AuditEntry>>>>() {
+                    new com.fasterxml.jackson.core.type.TypeReference<R<AuditCursorPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<MemberWorkbookFile>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<MemberWorkbookTask>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<MemberWorkbookHistoryItem>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ExportTask>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AccountSelfProfile>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AccountSecret>>() {
@@ -511,6 +517,12 @@ class IamAuthorizationContractTest {
         assertTrue(schemas.get("AccountLookupInput").getProperties().containsKey("domain"));
         assertFalse(schemas.get("AccountLookupInput").getProperties().containsKey("exactlyOneCriterion"));
         assertFalse(schemas.get("AccountLookupInput").getProperties().containsKey("isExactlyOneCriterion"));
+        Schema<?> auditPage = schemas.get("AuditCursorPage");
+        assertTrue(auditPage.getRequired().containsAll(List.of("items", "hasMore", "references")));
+        assertFalse(auditPage.getProperties().containsKey("total"));
+        assertEquals(List.of("VISIBLE", "HIDDEN", "DELETED"),
+                ((Schema<?>) schemas.get("AuditReference").getProperties().get("state")).getEnum());
+        assertNotNull(schemas.get("RAuditCursorPage"));
         assertNotNull(schemas.get("RExportTask"));
         assertNotNull(schemas.get("RAccountSelfProfile"));
         assertNotNull(schemas.get("RAccountSecret"));

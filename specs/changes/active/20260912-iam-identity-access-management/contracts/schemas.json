@@ -1379,6 +1379,29 @@
           }
         }
       },
+      "AudienceDepartmentView": {
+        "required": [
+          "id",
+          "includeDescendants",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "部门 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "部门名称；缺失时为信息受限"
+          },
+          "includeDescendants": {
+            "type": "boolean",
+            "description": "是否包含下级部门"
+          }
+        },
+        "description": "展示当前应用已绑定的一个部门"
+      },
       "AudienceDraft": {
         "required": [
           "groupIds",
@@ -1408,6 +1431,46 @@
         },
         "description": "声明应用的有效人群，开通不自动授予操作"
       },
+      "AudienceGroupView": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "用户组 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "组名称；缺失时为信息受限"
+          }
+        },
+        "description": "展示当前应用已绑定的一个用户组"
+      },
+      "AudienceMemberView": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "租户成员 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "显示名称；缺失时为信息受限"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "库存头像路径，可空"
+          }
+        },
+        "description": "展示当前应用已绑定的一名成员"
+      },
       "AudienceUpdateInput": {
         "required": [
           "audience",
@@ -1424,6 +1487,47 @@
           }
         },
         "description": "提交应用人群完整配置并检查配置版本"
+      },
+      "AudienceView": {
+        "required": [
+          "departments",
+          "groups",
+          "kind",
+          "members"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "人群种类",
+            "enum": [
+              "ALL",
+              "SELECTED"
+            ]
+          },
+          "members": {
+            "type": "array",
+            "description": "已绑定成员；ALL 为空列表",
+            "items": {
+              "$ref": "#/components/schemas/AudienceMemberView"
+            }
+          },
+          "departments": {
+            "type": "array",
+            "description": "已绑定部门；ALL 为空列表",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDepartmentView"
+            }
+          },
+          "groups": {
+            "type": "array",
+            "description": "已绑定用户组；ALL 为空列表",
+            "items": {
+              "$ref": "#/components/schemas/AudienceGroupView"
+            }
+          }
+        },
+        "description": "当前应用可用人群的展示快照，不参与保存"
       },
       "AuditActor": {
         "required": [
@@ -1446,6 +1550,39 @@
           }
         },
         "description": "描述审计操作者身份，显示名称仅在允许披露时返回"
+      },
+      "AuditCursorPage": {
+        "required": [
+          "hasMore",
+          "items",
+          "references"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "本页审计",
+            "items": {
+              "$ref": "#/components/schemas/ResourceDetailAuditEntry"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "description": "下一页游标；仅在还有更多时返回"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "是否还有下一页"
+          },
+          "references": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AuditReference"
+            },
+            "description": "以 type:id 为键的对象名称"
+          }
+        },
+        "description": "授权审计游标页"
       },
       "AuditEntry": {
         "required": [
@@ -1532,6 +1669,51 @@
           }
         },
         "description": "返回已脱敏的授权变更审计，前后值只允许白名单配置字段"
+      },
+      "AuditReference": {
+        "required": [
+          "id",
+          "state",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "对象类型",
+            "enum": [
+              "member",
+              "department",
+              "group",
+              "role",
+              "role-revision",
+              "assignment",
+              "delegation",
+              "tenant",
+              "account",
+              "application",
+              "role-application-task"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "对象 ID"
+          },
+          "state": {
+            "type": "string",
+            "description": "披露状态",
+            "enum": [
+              "VISIBLE",
+              "HIDDEN",
+              "DELETED"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "名称；仅可见或已删除且有快照时返回"
+          }
+        },
+        "description": "审计中出现的对象按查看人权限解析后的名称"
       },
       "AuditTarget": {
         "required": [
@@ -2076,9 +2258,21 @@
             "items": {
               "$ref": "#/components/schemas/CurrentRoleParameter"
             }
+          },
+          "fieldCapabilities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldCapability"
+            }
+          },
+          "fieldDefaults": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldAccess"
+            }
           }
         },
-        "description": "返回操作所属资源、真实范围能力与稳定参数"
+        "description": "返回操作所属资源、真实范围能力、字段能力与稳定参数"
       },
       "CurrentRoleCreateInput": {
         "required": [
@@ -2118,7 +2312,8 @@
       "CurrentRoleDefinition": {
         "required": [
           "grants",
-          "parameterDefinitions"
+          "parameterDefinitions",
+          "resourceFieldPermissions"
         ],
         "type": "object",
         "properties": {
@@ -2133,10 +2328,16 @@
             "items": {
               "$ref": "#/components/schemas/CurrentRoleParameter"
             }
+          },
+          "resourceFieldPermissions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
+            }
           }
         },
         "additionalProperties": false,
-        "description": "保存完整当前操作及资源参数，不承载共享继承或业务版本"
+        "description": "保存完整当前操作、资源参数和字段快照，不承载共享继承或业务版本"
       },
       "CurrentRoleGrantList": {
         "type": "object",
@@ -2470,11 +2671,11 @@
           "assignmentDurationMode": {
             "type": "string",
             "description": "单次期限模式，省略按 LIMITED",
+            "default": "LIMITED",
             "enum": [
               "LIMITED",
               "UNLIMITED"
-            ],
-            "default": "LIMITED"
+            ]
           }
         },
         "description": "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
@@ -2508,8 +2709,8 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time",
-            "description": "UTC创建瞬时，缺失时省略"
+            "description": "UTC创建瞬时，缺失时省略",
+            "format": "date-time"
           }
         },
         "description": "返回可见委派定义及撤销状态"
@@ -2897,6 +3098,27 @@
         },
         "description": "整体更新部门资料并重验子树循环"
       },
+      "DepartmentWorkbookExportInput": {
+        "required": [
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string",
+            "description": "组织版本"
+          },
+          "departmentIds": {
+            "type": "array",
+            "description": "部分部门 ID；空或省略表示全部可见部门，服务端展开下级",
+            "items": {
+              "type": "string",
+              "description": "部分部门 ID；空或省略表示全部可见部门，服务端展开下级"
+            }
+          }
+        },
+        "description": "登记部门更新导出任务；空部门列表表示当前可见的全部部门"
+      },
       "DiagnoseInput": {
         "required": [
           "actionId",
@@ -3188,6 +3410,10 @@
           "applicationName": {
             "type": "string",
             "description": "应用目录名称；应用缺失或名为空时省略"
+          },
+          "icon": {
+            "type": "string",
+            "description": "应用目录图标，Iconify 名或对象路径；未设置时省略"
           },
           "status": {
             "type": "string",
@@ -3680,6 +3906,65 @@
           }
         },
         "description": "声明当前域静态组内容，修改后必须重验委派派生授权"
+      },
+      "GroupEffectiveMemberRecord": {
+        "required": [
+          "member",
+          "membership"
+        ],
+        "type": "object",
+        "properties": {
+          "member": {
+            "$ref": "#/components/schemas/MemberRecord"
+          },
+          "membership": {
+            "$ref": "#/components/schemas/GroupMembership"
+          }
+        },
+        "description": "租户组有效成员及其来源，成员资料已经字段策略投影"
+      },
+      "GroupMembership": {
+        "required": [
+          "departments",
+          "direct"
+        ],
+        "type": "object",
+        "properties": {
+          "direct": {
+            "type": "boolean",
+            "description": "是否存在显式组成员关系"
+          },
+          "departments": {
+            "type": "array",
+            "description": "命中的组部门规则",
+            "items": {
+              "$ref": "#/components/schemas/GroupMembershipDepartment"
+            }
+          }
+        },
+        "description": "成员进入租户组的来源，直接绑定与部门规则可同时成立"
+      },
+      "GroupMembershipDepartment": {
+        "required": [
+          "id",
+          "includeDescendants"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "组上配置的部门 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "可见部门名称；无权查看时省略"
+          },
+          "includeDescendants": {
+            "type": "boolean",
+            "description": "该规则是否连带下级"
+          }
+        },
+        "description": "令成员进入租户组的部门规则；名称仅在可见时填写"
       },
       "GroupRecord": {
         "required": [
@@ -4208,6 +4493,172 @@
         },
         "description": "暂停或恢复当前域成员资格，移出使用独立命令"
       },
+      "MemberWorkbookFile": {
+        "required": [
+          "contentBase64",
+          "contentType",
+          "filename"
+        ],
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "下载文件名"
+          },
+          "contentType": {
+            "type": "string",
+            "description": "MIME"
+          },
+          "contentBase64": {
+            "type": "string",
+            "description": "文件内容"
+          }
+        },
+        "description": "返回表格任务产物的 Base64 内容"
+      },
+      "MemberWorkbookHistoryItem": {
+        "required": [
+          "createdAt",
+          "expiresAt",
+          "id",
+          "kind",
+          "mode",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "任务 ID"
+          },
+          "kind": {
+            "type": "string",
+            "description": "导出或导入",
+            "enum": [
+              "EXPORT",
+              "IMPORT"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "description": "创建或更新",
+            "enum": [
+              "CREATE",
+              "UPDATE"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "生命周期状态",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "EXPIRED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "登记时间，UTC",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "过期时间，UTC",
+            "format": "date-time"
+          },
+          "successCount": {
+            "type": "integer",
+            "description": "成功行数",
+            "format": "int32"
+          },
+          "failCount": {
+            "type": "integer",
+            "description": "失败行数",
+            "format": "int32"
+          }
+        },
+        "description": "返回当前操作者最近一次导入任务摘要"
+      },
+      "MemberWorkbookTask": {
+        "required": [
+          "createdAt",
+          "expiresAt",
+          "id",
+          "kind",
+          "mode",
+          "status",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "任务 ID"
+          },
+          "kind": {
+            "type": "string",
+            "description": "导出或导入",
+            "enum": [
+              "EXPORT",
+              "IMPORT"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "description": "创建或更新",
+            "enum": [
+              "CREATE",
+              "UPDATE"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "生命周期状态",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "EXPIRED"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "description": "登记时的组织版本"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "登记时间，UTC",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "过期时间，UTC",
+            "format": "date-time"
+          },
+          "failureCode": {
+            "type": "string",
+            "description": "整份失败粗码；仅 FAILED 出现"
+          },
+          "successCount": {
+            "type": "integer",
+            "description": "已成功行数",
+            "format": "int32"
+          },
+          "failCount": {
+            "type": "integer",
+            "description": "失败行数",
+            "format": "int32"
+          },
+          "passwordAvailable": {
+            "type": "boolean",
+            "description": "是否仍可下载一次性密码"
+          }
+        },
+        "description": "返回成员表格任务状态与计数，供轮询"
+      },
       "MenuActionRecord": {
         "required": [
           "code",
@@ -4714,6 +5165,35 @@
         },
         "description": "在当前组织内原子转交所有者职责。确认必须与转交出现在同一次请求"
       },
+      "PageResponseGroupEffectiveMemberRecord": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupEffectiveMemberRecord"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PageResponseMemberBoundRole": {
         "required": [
           "items",
@@ -4901,35 +5381,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ResourceDetailAssignmentRecord"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "PageResponseResourceDetailAuditEntry": {
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ResourceDetailAuditEntry"
             }
           },
           "total": {
@@ -6270,6 +6721,23 @@
           }
         }
       },
+      "RAuditCursorPage": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AuditCursorPage"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RAuthorizationCandidatePage": {
         "type": "object",
         "properties": {
@@ -6611,6 +7079,26 @@
           }
         }
       },
+      "RListMemberWorkbookHistoryItem": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberWorkbookHistoryItem"
+            }
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RListMenuActionRecord": {
         "type": "object",
         "properties": {
@@ -6671,6 +7159,40 @@
           }
         }
       },
+      "RMemberWorkbookFile": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MemberWorkbookFile"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RMemberWorkbookTask": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MemberWorkbookTask"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "ROrganizationMemberPickerPage": {
         "type": "object",
         "properties": {
@@ -6682,6 +7204,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/OrganizationMemberPickerPage"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RPageResponseGroupEffectiveMemberRecord": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResponseGroupEffectiveMemberRecord"
           },
           "success": {
             "type": "boolean"
@@ -6784,23 +7323,6 @@
           },
           "data": {
             "$ref": "#/components/schemas/PageResponseResourceDetailAssignmentRecord"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        }
-      },
-      "RPageResponseResourceDetailAuditEntry": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/PageResponseResourceDetailAuditEntry"
           },
           "success": {
             "type": "boolean"
@@ -7413,6 +7935,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/ResourceDetailAudienceDraft"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RResourceDetailAudienceView": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResourceDetailAudienceView"
           },
           "success": {
             "type": "boolean"
@@ -8046,6 +8585,35 @@
           }
         }
       },
+      "ResourceDetailAudienceView": {
+        "required": [
+          "capabilities",
+          "fieldAccess",
+          "record",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/AudienceView"
+          },
+          "fieldAccess": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldAccess"
+            }
+          },
+          "capabilities": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ObjectCapability"
+            }
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
       "ResourceDetailAuditEntry": {
         "required": [
           "capabilities",
@@ -8073,7 +8641,8 @@
           "version": {
             "type": "string"
           }
-        }
+        },
+        "description": "本页审计"
       },
       "ResourceDetailCurrentRoleSummary": {
         "required": [
@@ -9662,6 +10231,7 @@
       },
       "RoleSubjectSummary": {
         "required": [
+          "departments",
           "id",
           "name",
           "revisionNumbers",
@@ -9700,6 +10270,12 @@
             "type": "object",
             "additionalProperties": {
               "type": "string"
+            }
+          },
+          "departments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberDepartmentView"
             }
           }
         }
@@ -10422,6 +10998,10 @@
           "administratorName": {
             "type": "string"
           },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
           "scopeIssues": {
             "type": "array",
             "items": {
@@ -10483,17 +11063,18 @@
         "required": [
           "accountCreated",
           "id",
+          "rejoined",
           "version"
         ],
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "新成员 ID"
+            "description": "成员 ID"
           },
           "version": {
             "type": "string",
-            "description": "创建后的版本"
+            "description": "提交后的版本"
           },
           "accountCreated": {
             "type": "boolean",
@@ -10502,9 +11083,49 @@
           "initialPassword": {
             "type": "string",
             "description": "新建账号时的一次性明文，HTTP 传输由信封加密"
+          },
+          "rejoined": {
+            "type": "boolean",
+            "description": "是否复用已移出成员行重新加入"
           }
         },
-        "description": "租户添加成员结果；仅新建账号时返回一次性初始密码"
+        "description": "租户添加或重新加入成员结果；仅新建账号时返回一次性初始密码"
+      },
+      "TenantMemberRejoinInput": {
+        "required": [
+          "departments",
+          "displayName",
+          "expectedVersion",
+          "phone"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string",
+            "description": "读取时的成员版本"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "当前租户显示名"
+          },
+          "phone": {
+            "pattern": "^1[3-9]\\d{9}$",
+            "type": "string",
+            "description": "11 位大陆手机号，写入组织通讯录"
+          },
+          "email": {
+            "type": "string",
+            "description": "组织通讯录邮箱，可空"
+          },
+          "departments": {
+            "type": "array",
+            "description": "任职部门，可空且最多一个主部门",
+            "items": {
+              "$ref": "#/components/schemas/MemberDepartmentBinding"
+            }
+          }
+        },
+        "description": "把已移出成员重新加入当前组织，覆盖通讯录并替换任职"
       },
       "TenantPreviewResult": {
         "required": [
@@ -10986,111 +11607,6 @@
           }
         },
         "description": "携带独立命令的乐观锁版本"
-      },
-      "GroupEffectiveMemberRecord": {
-        "required": [
-          "member",
-          "membership"
-        ],
-        "type": "object",
-        "properties": {
-          "member": {
-            "$ref": "#/components/schemas/MemberRecord"
-          },
-          "membership": {
-            "$ref": "#/components/schemas/GroupMembership"
-          }
-        },
-        "description": "租户组有效成员及其来源，成员资料已经字段策略投影"
-      },
-      "GroupMembership": {
-        "required": [
-          "departments",
-          "direct"
-        ],
-        "type": "object",
-        "properties": {
-          "direct": {
-            "type": "boolean",
-            "description": "是否存在显式组成员关系"
-          },
-          "departments": {
-            "type": "array",
-            "description": "命中的组部门规则",
-            "items": {
-              "$ref": "#/components/schemas/GroupMembershipDepartment"
-            }
-          }
-        },
-        "description": "成员进入租户组的来源，直接绑定与部门规则可同时成立"
-      },
-      "GroupMembershipDepartment": {
-        "required": [
-          "id",
-          "includeDescendants"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "组上配置的部门 ID"
-          },
-          "name": {
-            "type": "string",
-            "description": "可见部门名称；无权查看时省略"
-          },
-          "includeDescendants": {
-            "type": "boolean",
-            "description": "该规则是否连带下级"
-          }
-        },
-        "description": "令成员进入租户组的部门规则；名称仅在可见时填写"
-      },
-      "PageResponseGroupEffectiveMemberRecord": {
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/GroupEffectiveMemberRecord"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "RPageResponseGroupEffectiveMemberRecord": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/PageResponseGroupEffectiveMemberRecord"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        }
       }
     }
   }

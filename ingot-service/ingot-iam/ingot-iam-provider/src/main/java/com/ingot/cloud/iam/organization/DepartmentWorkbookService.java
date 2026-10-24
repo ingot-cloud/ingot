@@ -32,7 +32,6 @@ import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.cloud.iam.support.IamJson;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuditChangeType;
-import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.DepartmentDraft;
@@ -193,7 +192,7 @@ public class DepartmentWorkbookService {
             IamIds.requireVersion(input.expectedVersion(), version);
             long id = downloads.submit(request, () -> exportFile(actor, departmentIds));
             audits.write(actor.context(), access.nextId(), TARGET, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, TARGET), Map.of("tenant", version));
+                    Map.of(), Map.of(), Map.of("tenant", version));
             return new CreatedResource(IamIds.text(id), version);
         });
         if (created == null) {
@@ -308,7 +307,7 @@ public class DepartmentWorkbookService {
             row.setExpiresAt(utcNow().plus(DepartmentWorkbookLimits.RETENTION));
             workbooks.insert(row);
             audits.write(actor.context(), access.nextId(), TARGET, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, TARGET), Map.of("tenant", version));
+                    Map.of(), Map.of(), Map.of("tenant", version));
             return new CreatedResource(IamIds.text(id), version);
         });
         if (created == null) {

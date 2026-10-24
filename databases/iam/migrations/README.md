@@ -11,6 +11,7 @@
 | 008_platform_accounts_menu.sql | 历史目录缺少全局账号菜单；按该补丁原菜单约定补齐。 | 006正式菜单 |
 | 009_tenant_plan.sql | iam_tenant尚无plan_id列；一次ALTER。 | 001 |
 | 010_assignment_audit_index.sql | 分配审计索引缺失；重复执行会检查并跳过。 | 004 |
+| 032_authorization_audit_cursor_index.sql | 授权审计缺少按操作者、按对象的租户时间索引；在线新增，重复执行会检查并跳过，回退用032_authorization_audit_cursor_index.rollback.sql。须先于IAM游标分页版本执行。 | 004 |
 | 011_delegation_duration_mode.sql | 委派表仍是旧LIMITED结构、尚无assignment_duration_mode列；一次ALTER。 | 003 |
 | 015_menu_advanced_configuration.sql | iam_menu 尚无 hidden/is_cache/props/route_params 列；一次 ALTER，保留现有数据。 | 002 |
 | 014_platform_member_contacts.sql | 平台成员尚无phone/email列；停IAM写入后一次增加并从账号回填，后续不再同步。 | 001 |

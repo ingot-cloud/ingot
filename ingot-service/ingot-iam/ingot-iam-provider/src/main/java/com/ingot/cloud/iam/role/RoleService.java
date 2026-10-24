@@ -496,7 +496,8 @@ public class RoleService {
                 throw new BizException(IamReasonCode.ACTION_DENIED);
             }
             IamIds.requireVersion(input.expectedVersion(), version(current.version()));
-            long last = roles.maxRevision(roleId);
+            IamRoleRevisionEntity previous = roles.latestRevision(roleId);
+            long last = previous == null || previous.getRevision() == null ? 0L : previous.getRevision().longValue();
             String baseId = current.kind() == RoleKind.TENANT_CUSTOM ? currentBase(roleId) : null;
             if (input.sourceRevisionId() != null) {
                 var source = roles.findRevision(IamIds.require(input.sourceRevisionId()));
@@ -507,7 +508,7 @@ public class RoleService {
             long revisionId = publishRevision(roleId, current.kind(), last + 1, baseId, input.definition(), input.versionName(), input.remark());
             roles.incrementVersion(roleId, current.version());
             audits.write(actor.context(), access.nextId(), ROLE, id, AuditChangeType.UPDATE,
-                    Map.of(AuditField.ROLE_REVISION, String.valueOf(last)),
+                    previous == null ? Map.of() : Map.of(AuditField.ROLE_REVISION, previous.getId().toString()),
                     Map.of(AuditField.ROLE_REVISION, IamIds.text(revisionId)),
                     Map.of(ROLE, nextVersion(current.version())));
             return new CreatedResource(IamIds.text(revisionId), Long.toString(last + 1));

@@ -953,6 +953,8 @@ CREATE TABLE iam_authorization_audit (
     PRIMARY KEY (id),
     UNIQUE KEY uk_iam_audit_event (event_id),
     KEY idx_iam_audit_tenant_time (tenant_id, occurred_at, id),
+    KEY idx_iam_audit_tenant_actor_time (tenant_id, actor_member_id, occurred_at, id),
+    KEY idx_iam_audit_tenant_target_time (tenant_id, target_type, target_id, occurred_at, id),
     KEY idx_iam_audit_actor (actor_account_id, occurred_at, id),
     KEY idx_iam_audit_assignment_create (assignment_id, change_type, occurred_at, id),
     KEY idx_iam_audit_delivery (delivered_at, id),

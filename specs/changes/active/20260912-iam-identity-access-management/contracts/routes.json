@@ -1600,27 +1600,26 @@
     "domain": "PLATFORM",
     "action": "iam-platform:audit:read",
     "request": null,
-    "response": "RPageResponseResourceDetailAuditEntry",
-    "execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值",
+    "response": "RAuditCursorPage",
+    "execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值",
     "implemented": true,
     "query": [
       {
-        "name": "page",
+        "name": "limit",
         "required": false,
         "schema": {
           "type": "integer",
           "minimum": 1,
-          "default": 1
+          "maximum": 100,
+          "default": 20
         }
       },
       {
-        "name": "pageSize",
+        "name": "cursor",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 200,
-          "default": 20
+          "type": "string",
+          "maxLength": 64
         }
       },
       {
@@ -2953,27 +2952,26 @@
     "domain": "TENANT",
     "action": "iam-tenant:audit:read",
     "request": null,
-    "response": "RPageResponseResourceDetailAuditEntry",
-    "execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值",
+    "response": "RAuditCursorPage",
+    "execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值",
     "implemented": true,
     "query": [
       {
-        "name": "page",
+        "name": "limit",
         "required": false,
         "schema": {
           "type": "integer",
           "minimum": 1,
-          "default": 1
+          "maximum": 100,
+          "default": 20
         }
       },
       {
-        "name": "pageSize",
+        "name": "cursor",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 200,
-          "default": 20
+          "type": "string",
+          "maxLength": 64
         }
       },
       {

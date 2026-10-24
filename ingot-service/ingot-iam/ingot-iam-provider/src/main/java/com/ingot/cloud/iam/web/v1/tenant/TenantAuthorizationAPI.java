@@ -4,18 +4,17 @@ import java.time.Instant;
 import java.util.List;
 
 import com.ingot.cloud.iam.authorization.read.IamReadOnlyRequest;
+import com.ingot.cloud.iam.diagnose.AuthorizationAuditService;
 import com.ingot.cloud.iam.diagnose.DiagnoseAuditService;
 import com.ingot.cloud.iam.diagnose.AuthorizationAuditQuery;
 import com.ingot.cloud.iam.diagnose.TenantDiagnoseCandidates;
 import com.ingot.cloud.iam.support.IamPages;
-import com.ingot.framework.commons.model.iam.AuditEntry;
+import com.ingot.framework.commons.model.iam.AuditCursorPage;
 import com.ingot.framework.commons.model.iam.AuthorizationCandidateKind;
 import com.ingot.framework.commons.model.iam.AuthorizationCandidatePage;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.Decision;
 import com.ingot.framework.commons.model.iam.DiagnoseInput;
-import com.ingot.framework.commons.model.iam.PageResponse;
-import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TenantAuthorizationAPI implements RShortcuts {
     private final DiagnoseAuditService diagnoses;
+    private final AuthorizationAuditService audits;
     private final TenantDiagnoseCandidates candidates;
 
     /**
@@ -79,30 +79,30 @@ public class TenantAuthorizationAPI implements RShortcuts {
     }
 
     /**
-     * 分页列出租户脱敏审计。
+     * 按游标列出租户脱敏审计，不返回总数。
      *
-     * @param page 页码
-     * @param pageSize 页大小
+     * @param limit 每页条数，1–100
+     * @param cursor 上一页返回的 nextCursor，空表示第一页
      * @param actorMemberId 操作者成员 ID，精确匹配
      * @param targetType 目标资源编码，精确匹配
      * @param targetId 目标 ID，精确匹配
      * @param changeType 变更类型
      * @param from 时间起点，包含，ISO-8601 带时区
      * @param until 时间终点，不包含，ISO-8601 带时区
-     * @return 审计页
+     * @return 审计游标页及对象名称
      */
     @Operation(summary = "租户审计")
     @GetMapping("/audits")
-    public R<PageResponse<ResourceDetail<AuditEntry>>> audits(
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+    public R<AuditCursorPage> audits(
+            @RequestParam(defaultValue = "" + AuthorizationAuditService.DEFAULT_LIMIT) int limit,
+            @RequestParam(required = false) String cursor,
             @RequestParam(required = false) String actorMemberId,
             @RequestParam(required = false) String targetType,
             @RequestParam(required = false) String targetId,
             @RequestParam(required = false) String changeType,
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant until) {
-        return ok(diagnoses.listAudits(AuthorizationDomain.TENANT, page, pageSize,
+        return ok(audits.list(AuthorizationDomain.TENANT, limit, cursor,
                 AuthorizationAuditQuery.of(actorMemberId, targetType, targetId, changeType, from, until)));
     }
 }

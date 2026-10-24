@@ -195,7 +195,7 @@ public class DelegationService {
             insertGrant(domain, actor, id, input);
             replaceChildren(domain, actor, id, input);
             audits.write(actor.context(), access.nextId(), DELEGATION, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.RECIPIENT_SELECTION, "created"), Map.of(DELEGATION, "0"),
+                    Map.of(), Map.of(AuditField.RECIPIENT_SELECTION, input.recipientSelection()), Map.of(DELEGATION, "0"),
                     IamIds.text(id), null);
             changes.markAll();
             return new CreatedResource(IamIds.text(id), "0");
@@ -242,8 +242,8 @@ public class DelegationService {
             updateGrant(domain, actor, delegationId, input.delegation(), current.version());
             replaceChildren(domain, actor, delegationId, input.delegation());
             audits.write(actor.context(), access.nextId(), DELEGATION, id, AuditChangeType.UPDATE,
-                    Map.of(AuditField.RECIPIENT_SELECTION, "before"),
-                    Map.of(AuditField.RECIPIENT_SELECTION, "after"),
+                    Map.of(AuditField.RECIPIENT_SELECTION, current.record().delegation().recipientSelection()),
+                    Map.of(AuditField.RECIPIENT_SELECTION, input.delegation().recipientSelection()),
                     Map.of(DELEGATION, Long.toString(Long.parseLong(current.version()) + 1)),
                     id, null);
             changes.markAll();

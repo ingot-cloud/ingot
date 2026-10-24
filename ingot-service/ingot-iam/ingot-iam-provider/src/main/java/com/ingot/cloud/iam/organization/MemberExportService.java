@@ -22,7 +22,6 @@ import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuditChangeType;
-import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.ExportTask;
@@ -149,7 +148,7 @@ public class MemberExportService {
             row.setExpiresAt(now.plus(RETENTION));
             exports.insert(row);
             audits.write(actor.context(), exportId, TARGET, IamIds.text(tenantId), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, TARGET), Map.of("tenant", version));
+                    Map.of(), Map.of(), Map.of("tenant", version));
             return new CreatedResource(IamIds.text(exportId), version);
         });
         if (created == null) {

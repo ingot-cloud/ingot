@@ -1,61 +1,41 @@
 package com.ingot.cloud.iam.diagnose;
 
 import java.math.BigInteger;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluationRepository;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
-import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
 import com.ingot.cloud.iam.assignment.PlatformScopeObjectResource;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
-import com.ingot.cloud.iam.persistence.ObjectScopeSql;
 import com.ingot.cloud.iam.persistence.entity.IamApplicationEntity;
-import com.ingot.cloud.iam.persistence.entity.IamAuthorizationAuditEntity;
 import com.ingot.cloud.iam.persistence.entity.IamPlatformMemberEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.persistence.mapper.IamApplicationMapper;
-import com.ingot.cloud.iam.persistence.mapper.IamAuthorizationAuditMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamPlatformMemberMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
 import com.ingot.cloud.iam.persistence.projection.AuthorizationEvalRows;
 import com.ingot.cloud.iam.policy.FieldAccessEvaluator;
-import com.ingot.cloud.iam.policy.FieldPolicySnapshot;
 import com.ingot.cloud.iam.support.IamAccess;
-import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamIds;
-import com.ingot.cloud.iam.support.IamAuditValues;
-import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
-import com.ingot.framework.commons.model.iam.AuditActor;
-import com.ingot.framework.commons.model.iam.AuditEntry;
-import com.ingot.framework.commons.model.iam.AuditTarget;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.Decision;
 import com.ingot.framework.commons.model.iam.DecisionSource;
 import com.ingot.framework.commons.model.iam.DiagnoseInput;
 import com.ingot.framework.commons.model.iam.FieldAccess;
-import com.ingot.framework.commons.model.iam.FieldProjection;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
-import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.MemberStatus;
-import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.PolicyScenario;
-import com.ingot.framework.commons.model.iam.ResourceDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * <p>提供受限授权诊断与脱敏审计列表，不执行目标操作也不返回凭证明文。</p>
+ * <p>提供受限授权诊断，不执行目标操作也不返回凭证明文。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -69,7 +49,6 @@ public class DiagnoseAuditService {
     private final AuthorizationEvaluationRepository evaluations;
     private final ResourceAccess scopes;
     private final FieldAccessEvaluator fieldAccess;
-    private final IamAuthorizationAuditMapper audits;
     private final IamPlatformMemberMapper platformMembers;
     private final IamTenantMemberMapper tenantMembers;
     private final IamApplicationMapper applications;
@@ -126,78 +105,6 @@ public class DiagnoseAuditService {
         }
         return new Decision(allowed, denied, allowed ? "当前计算允许该操作" : denied.getText(), sources, SCOPE_SUMMARY,
                 discloseFields(actor, input.targetId()), view.version(), view.expiresAt());
-    }
-
-    /**
-     * 分页列出当前域脱敏审计。
-     *
-     * @param domain 接口管理域
-     * @param page 页码
-     * @param pageSize 页大小
-     * @return 审计页
-     */
-    public PageResponse<ResourceDetail<AuditEntry>> listAudits(AuthorizationDomain domain, int page, int pageSize) {
-        return listAudits(domain, page, pageSize, new AuthorizationAuditQuery(null, null, null, null, null, null));
-    }
-
-    /**
-     * 在可信域与租户边界内按精确条件和 UTC 半开时间范围分页，计数与列表使用相同 SQL 条件。
-     * @param domain 接口管理域
-     * @param page 页码
-     * @param pageSize 页大小
-     * @param query 已校验的筛选条件
-     * @return 脱敏审计页
-     */
-    public PageResponse<ResourceDetail<AuditEntry>> listAudits(AuthorizationDomain domain, int page, int pageSize,
-                                                             AuthorizationAuditQuery query) {
-        ActiveIdentity actor = access.require(domain, domain == AuthorizationDomain.PLATFORM
-                ? IamAction.PLATFORM_AUDIT_READ : IamAction.TENANT_AUDIT_READ);
-        IamPages.require(page, pageSize);
-        var wrapper = Wrappers.<IamAuthorizationAuditEntity>lambdaQuery()
-                .select(IamAuthorizationAuditEntity::getId, IamAuthorizationAuditEntity::getActorAccountId,
-                        IamAuthorizationAuditEntity::getActorMemberId, IamAuthorizationAuditEntity::getDomain,
-                        IamAuthorizationAuditEntity::getTenantId, IamAuthorizationAuditEntity::getTargetType,
-                        IamAuthorizationAuditEntity::getTargetId, IamAuthorizationAuditEntity::getChangeType,
-                        IamAuthorizationAuditEntity::getSafeBefore, IamAuthorizationAuditEntity::getSafeAfter,
-                        IamAuthorizationAuditEntity::getRevisions, IamAuthorizationAuditEntity::getDelegationId,
-                        IamAuthorizationAuditEntity::getAssignmentId, IamAuthorizationAuditEntity::getTraceId,
-                        IamAuthorizationAuditEntity::getOccurredAt)
-                .eq(IamAuthorizationAuditEntity::getDomain, domain);
-        if (domain == AuthorizationDomain.PLATFORM) {
-            wrapper.isNull(IamAuthorizationAuditEntity::getTenantId);
-        } else {
-            wrapper.eq(IamAuthorizationAuditEntity::getTenantId, id(IamIds.require(actor.context().tenantId())));
-        }
-        if (query.actorMemberId() != null) {
-            wrapper.eq(IamAuthorizationAuditEntity::getActorMemberId, id(IamIds.require(query.actorMemberId())));
-        }
-        if (query.targetType() != null) {
-            wrapper.eq(IamAuthorizationAuditEntity::getTargetType, query.targetType());
-        }
-        if (query.targetId() != null) {
-            wrapper.eq(IamAuthorizationAuditEntity::getTargetId, query.targetId());
-        }
-        if (query.changeType() != null) {
-            wrapper.eq(IamAuthorizationAuditEntity::getChangeType, query.changeType());
-        }
-        if (query.from() != null) {
-            wrapper.ge(IamAuthorizationAuditEntity::getOccurredAt,
-                    java.time.LocalDateTime.ofInstant(query.from(), ZoneOffset.UTC));
-        }
-        if (query.until() != null) {
-            wrapper.lt(IamAuthorizationAuditEntity::getOccurredAt,
-                    java.time.LocalDateTime.ofInstant(query.until(), ZoneOffset.UTC));
-        }
-        wrapper.orderByDesc(IamAuthorizationAuditEntity::getOccurredAt, IamAuthorizationAuditEntity::getId);
-        Page<IamAuthorizationAuditEntity> result = audits.selectPage(new Page<>(page, pageSize), wrapper);
-        Map<BigInteger, String> names = actorNames(domain, actor, result.getRecords());
-        FieldPolicySnapshot snapshot = domain == AuthorizationDomain.TENANT && !names.isEmpty()
-                ? fieldAccess.snapshot(IamIds.require(actor.context().tenantId()), PolicyScenario.MANAGEMENT) : null;
-        long viewerId = IamIds.require(actor.context().memberId());
-        List<ResourceDetail<AuditEntry>> items = result.getRecords().stream()
-                .map(row -> IamDetails.of(entry(row, names, snapshot, viewerId), row.getId().toString()))
-                .toList();
-        return IamPages.details(items, result.getTotal(), page, pageSize);
     }
 
     private String resolveMember(AuthorizationDomain domain, ActiveIdentity actor, DiagnoseInput input) {
@@ -318,78 +225,6 @@ public class DiagnoseAuditService {
             return "";
         }
         return actionCode.substring(first + 1, last);
-    }
-
-    private AuditEntry entry(IamAuthorizationAuditEntity row, Map<BigInteger, String> names,
-                             FieldPolicySnapshot snapshot, long viewerId) {
-        AuthorizationDomain domain = row.getDomain();
-        String tenantId = row.getTenantId() == null ? null : row.getTenantId().toString();
-        Instant occurred = row.getOccurredAt().toInstant(ZoneOffset.UTC);
-        String rawName = names.get(row.getActorMemberId());
-        String displayName = rawName == null ? null
-                : snapshot == null ? rawName
-                : FieldProjection.project(rawName, fieldAccess.access(snapshot, viewerId,
-                        row.getActorMemberId().longValueExact(), MemberFieldKey.VALUE_DISPLAY_NAME).visibility());
-        return new AuditEntry(row.getId().toString(),
-                new AuditActor(row.getActorAccountId().toString(), row.getActorMemberId().toString(), displayName),
-                new AuthorizationContext(domain, tenantId, row.getActorAccountId().toString(),
-                        row.getActorMemberId().toString()),
-                new AuditTarget(row.getTargetType(), row.getTargetId()),
-                row.getChangeType(),
-                IamAuditValues.readFields(row.getId().toString(), IamAuditValues.BEFORE_COLUMN, row.getSafeBefore()),
-                IamAuditValues.readFields(row.getId().toString(), IamAuditValues.AFTER_COLUMN, row.getSafeAfter()),
-                IamAuditValues.readRevisions(row.getId().toString(), row.getRevisions()),
-                text(row.getDelegationId()), text(row.getAssignmentId()), occurred, row.getTraceId());
-    }
-
-    private Map<BigInteger, String> actorNames(AuthorizationDomain domain, ActiveIdentity actor,
-                                               List<IamAuthorizationAuditEntity> rows) {
-        LinkedHashSet<BigInteger> ids = new LinkedHashSet<>();
-        for (IamAuthorizationAuditEntity row : rows) {
-            if (row.getActorMemberId() != null) {
-                ids.add(row.getActorMemberId());
-            }
-        }
-        if (ids.isEmpty()) {
-            return Map.of();
-        }
-        IamAction memberRead = domain == AuthorizationDomain.PLATFORM
-                ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ;
-        AuthorizationEvaluator.AuthorizationView view = evaluator.evaluate(actor.context());
-        if (!view.actionCodes().contains(memberRead.getCode())) {
-            return Map.of();
-        }
-        ObjectScope scope = scopes.memberRead(actor.context(), memberRead);
-        if (scope.coversNone()) {
-            return Map.of();
-        }
-        Map<BigInteger, String> names = new LinkedHashMap<>();
-        if (domain == AuthorizationDomain.PLATFORM) {
-            var wrapper = Wrappers.<IamPlatformMemberEntity>lambdaQuery()
-                    .select(IamPlatformMemberEntity::getId, IamPlatformMemberEntity::getDisplayName)
-                    .in(IamPlatformMemberEntity::getId, ids)
-                    .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED);
-            ObjectScopeSql.restrictPlatformMembers(wrapper, scope);
-            for (IamPlatformMemberEntity row : platformMembers.selectList(wrapper)) {
-                names.put(row.getId(), row.getDisplayName());
-            }
-            return names;
-        }
-        BigInteger tenant = id(IamIds.require(actor.context().tenantId()));
-        var wrapper = Wrappers.<IamTenantMemberEntity>lambdaQuery()
-                .select(IamTenantMemberEntity::getId, IamTenantMemberEntity::getDisplayName)
-                .eq(IamTenantMemberEntity::getTenantId, tenant)
-                .in(IamTenantMemberEntity::getId, ids)
-                .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED);
-        ObjectScopeSql.restrictTenantMembers(wrapper, scope, tenant);
-        for (IamTenantMemberEntity row : tenantMembers.selectList(wrapper)) {
-            names.put(row.getId(), row.getDisplayName());
-        }
-        return names;
-    }
-
-    private static String text(BigInteger value) {
-        return value == null ? null : value.toString();
     }
 
     private static BigInteger id(long value) {
