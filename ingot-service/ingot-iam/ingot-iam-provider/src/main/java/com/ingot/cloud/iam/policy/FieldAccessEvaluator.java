@@ -146,8 +146,7 @@ public class FieldAccessEvaluator {
             Map<String, FieldAccess> baseline, Map<String, FieldAccess> ceiling, List<FieldRuleRow> rules,
             List<FieldOperationRule> operationRules, Map<String, FieldOperations> defaults,
             Map<String, FieldOperations> operationCeiling, java.time.Instant expiresAt) {
-        var resource = scenario == PolicyScenario.DIRECTORY ? BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE
-                : BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
+        var resource = BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
         var entry = metadata.requireFresh(resource, false);
         var descriptor = entry.descriptor();
         Map<String, com.ingot.framework.commons.model.iam.MaskSpec> masks = new LinkedHashMap<>();
@@ -174,10 +173,9 @@ public class FieldAccessEvaluator {
             ObjectScope scope, boolean fresh) {
         if (policies.currentOwner(IamIds.require(actor.tenantId()), IamIds.require(actor.memberId())))
             return ownerDecision(resource, action);
-        var scenario = resource.equals(BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE) ? PolicyScenario.DIRECTORY : PolicyScenario.MANAGEMENT;
-        if (!resource.equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)
-                && !resource.equals(BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE))
+        if (!resource.equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE))
             throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        var scenario = PolicyScenario.MANAGEMENT;
         long tenantId = IamIds.require(actor.tenantId()), viewer = IamIds.require(actor.memberId());
         var snapshot = fresh ? snapshotFresh(tenantId, scenario) : snapshot(tenantId, scenario);
         var batch = prepare(snapshot, viewer, List.of());
@@ -474,9 +472,8 @@ public class FieldAccessEvaluator {
         if (submitted == null || submitted.isBlank() || scope == null || scope.coversNone()) {
             return;
         }
-        var resource = snapshot.scenario() == PolicyScenario.DIRECTORY ? BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE
-                : BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
-        var action = snapshot.scenario() == PolicyScenario.DIRECTORY ? IamAction.VALUE_TENANT_DIRECTORY_READ : IamAction.VALUE_TENANT_MEMBER_READ;
+        var resource = BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
+        var action = IamAction.VALUE_TENANT_MEMBER_READ;
         if (!operation(snapshot, viewerId, resource, action, fieldKey).filterable()
                 || !universallyFull(snapshot, viewerId, fieldKey, scope)) {
             throw new BizException(IamReasonCode.ACTION_DENIED);
@@ -758,7 +755,7 @@ public class FieldAccessEvaluator {
         Map<String, com.ingot.framework.commons.model.iam.MaskSpec> masks = new LinkedHashMap<>();
         Map<String,FieldAccess> platformCeiling=Map.of();
         Map<String,FieldOperations> platformOperations=Map.of();
-        if(resource.equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)||resource.equals(BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE)) {
+        if (resource.equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)) {
             try {
                 var latest=policies.latestRevision(DefaultPolicyKind.FIELD);
                 if(latest==null)throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);

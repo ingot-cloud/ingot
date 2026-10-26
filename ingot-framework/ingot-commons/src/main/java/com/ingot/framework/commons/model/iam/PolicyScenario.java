@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * <p>区分后台成员管理及普通通讯录的字段策略场景。</p>
+ * <p>限定后台成员管理的字段策略场景。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -18,8 +18,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PolicyScenario {
-    MANAGEMENT("MANAGEMENT"),
-    DIRECTORY("DIRECTORY");
+    MANAGEMENT("MANAGEMENT");
 
     /**
      * JSON 与数据库使用的稳定字面量。

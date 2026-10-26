@@ -71,7 +71,7 @@ class TenantScopeCandidatesTest {
     }
 
     @Test
-    void oldSharedKeyMaySpanResourcesWithTheSameMemberTarget() {
+    void removedDirectoryResourceDoesNotShareTheMemberTarget() {
         when(access.allows(eq(AuthorizationDomain.TENANT), eq(IamAction.TENANT_ASSIGNMENT_CREATE), eq(false)))
                 .thenReturn(true);
         when(roles.synthesizedGrants(50)).thenReturn(List.of(
@@ -82,9 +82,9 @@ class TenantScopeCandidatesTest {
                         new TenantScopeCandidateMapper.ActionResource(BigInteger.valueOf(30), "iam-tenant", "member", "成员"),
                         new TenantScopeCandidateMapper.ActionResource(BigInteger.valueOf(31), "iam-tenant", "directory", "通讯录")));
         var response = service.list("50", "objects_20", "", List.of(), 1, 20);
-        assertTrue(response.supported());
-        assertEquals("成员 / 通讯录", response.contextLabel());
-        verify(mapper).page(any());
+        assertFalse(response.supported());
+        assertEquals(0, response.total());
+        verify(mapper, never()).page(any());
     }
 
     @Test

@@ -3,17 +3,17 @@ SET time_zone = '+00:00';
 
 -- IAM 独立目标库：策略引用、审计事实与迁移记录，不初始化或授予任何默认权限。
 CREATE TABLE iam_default_policy_revision (
-    id BIGINT UNSIGNED NOT NULL COMMENT '默认通讯录或字段策略固定版本记录标识',
-    kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '默认策略类别：DIRECTORY通讯录、FIELD字段',
+    id BIGINT UNSIGNED NOT NULL COMMENT '默认字段策略固定版本记录标识',
+    kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '默认策略类别：FIELD字段',
     revision BIGINT UNSIGNED NOT NULL COMMENT '不可变快照的发布序号，从1开始；与记录乐观锁版本不同',
-    definition JSON NOT NULL COMMENT '默认策略不可变定义JSON对象，由对应通讯录或字段求值器解释',
+    definition JSON NOT NULL COMMENT '默认字段策略不可变定义JSON对象，由字段求值器解释',
     PRIMARY KEY (id),
     UNIQUE KEY uk_iam_default_policy_kind (id, kind),
     UNIQUE KEY uk_iam_default_policy_revision (kind, revision),
-    CONSTRAINT ck_iam_default_policy_kind CHECK (kind IN ('DIRECTORY', 'FIELD')),
+    CONSTRAINT ck_iam_default_policy_kind CHECK (kind IN ('FIELD')),
     CONSTRAINT ck_iam_default_policy_definition CHECK (JSON_TYPE(definition) = 'OBJECT'),
     CONSTRAINT ck_iam_default_policy_revision CHECK (revision > 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='默认通讯录或字段策略固定版本';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='默认字段策略固定版本';
 
 CREATE TABLE iam_policy_selector (
     id BIGINT UNSIGNED NOT NULL COMMENT '租户策略人员选择器记录标识',
@@ -43,42 +43,10 @@ CREATE TABLE iam_policy_selector_department (
     CONSTRAINT ck_iam_selector_descendants CHECK (include_descendants IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='策略选择器部门来源';
 
-CREATE TABLE iam_directory_policy (
-    tenant_id BIGINT UNSIGNED NOT NULL COMMENT '所属租户组织ID',
-    default_revision_id BIGINT UNSIGNED NOT NULL COMMENT '绑定的默认策略固定版本ID，与default_kind共同校验引用',
-    default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'DIRECTORY' COMMENT '默认策略种类，固定为当前策略表对应的DIRECTORY或FIELD',
-    default_scope VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NULL COMMENT '空表示继承固定默认版本',
-    default_selector_id BIGINT UNSIGNED NULL COMMENT '默认范围为SELECTED时的人员选择器ID，其他情况为空',
-    version BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '记录乐观锁版本；变更时按所属业务事务递增',
-    PRIMARY KEY (tenant_id),
-    CONSTRAINT fk_iam_directory_policy_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant (id),
-    CONSTRAINT fk_iam_directory_default FOREIGN KEY (default_revision_id, default_kind) REFERENCES iam_default_policy_revision (id, kind),
-    CONSTRAINT fk_iam_directory_default_selector FOREIGN KEY (tenant_id, default_selector_id) REFERENCES iam_policy_selector (tenant_id, id),
-    CONSTRAINT ck_iam_directory_default_kind CHECK (default_kind = 'DIRECTORY'),
-    CONSTRAINT ck_iam_directory_default_scope CHECK (
-        (default_scope IS NULL AND default_selector_id IS NULL) OR
-        (default_scope IS NOT NULL AND ((default_scope IN ('ALL', 'SELF') AND default_selector_id IS NULL) OR
-        (default_scope = 'SELECTED' AND default_selector_id IS NOT NULL))))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='租户通讯录策略及默认版本引用';
-
-CREATE TABLE iam_directory_rule (
-    id BIGINT UNSIGNED NOT NULL COMMENT '租户通讯录允许或拒绝规则记录标识',
-    tenant_id BIGINT UNSIGNED NOT NULL COMMENT '所属租户组织ID',
-    effect VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '通讯录规则效果：ALLOW允许、DENY拒绝；取值ALLOW,DENY',
-    viewer_selector_id BIGINT UNSIGNED NOT NULL COMMENT '规则适用的查看者选择器ID，须属于本租户',
-    target_selector_id BIGINT UNSIGNED NOT NULL COMMENT '通讯录可见目标的选择器ID，须属于本租户',
-    PRIMARY KEY (id),
-    KEY idx_iam_directory_rule (tenant_id, effect, id),
-    CONSTRAINT fk_iam_directory_rule_policy FOREIGN KEY (tenant_id) REFERENCES iam_directory_policy (tenant_id),
-    CONSTRAINT fk_iam_directory_rule_viewer FOREIGN KEY (tenant_id, viewer_selector_id) REFERENCES iam_policy_selector (tenant_id, id),
-    CONSTRAINT fk_iam_directory_rule_target FOREIGN KEY (tenant_id, target_selector_id) REFERENCES iam_policy_selector (tenant_id, id),
-    CONSTRAINT ck_iam_directory_effect CHECK (effect IN ('ALLOW', 'DENY'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='租户通讯录允许或拒绝规则';
-
 CREATE TABLE iam_field_policy (
     tenant_id BIGINT UNSIGNED NOT NULL COMMENT '所属租户组织ID',
     default_revision_id BIGINT UNSIGNED NOT NULL COMMENT '绑定的默认策略固定版本ID，与default_kind共同校验引用',
-    default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'FIELD' COMMENT '默认策略种类，固定为当前策略表对应的DIRECTORY或FIELD',
+    default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'FIELD' COMMENT '默认策略种类，固定为FIELD',
     operation_rules JSON NOT NULL DEFAULT (JSON_ARRAY()) COMMENT '租户字段操作规则JSON数组，限定已接入的编辑及筛选等能力',
     version BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '记录乐观锁版本；变更时按所属业务事务递增',
     PRIMARY KEY (tenant_id),
@@ -91,7 +59,7 @@ CREATE TABLE iam_field_policy (
 CREATE TABLE iam_field_rule (
     id BIGINT UNSIGNED NOT NULL COMMENT '租户场景字段可见性规则记录标识',
     tenant_id BIGINT UNSIGNED NOT NULL COMMENT '所属租户组织ID',
-    scenario VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '字段策略使用场景：MANAGEMENT管理、DIRECTORY通讯录；取值MANAGEMENT,DIRECTORY',
+    scenario VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '字段策略使用场景：MANAGEMENT管理；取值MANAGEMENT',
     field_key VARCHAR(128) COLLATE utf8mb4_bin NOT NULL COMMENT '资源字段稳定标识，用于匹配目录能力及字段规则',
     viewer_selector_id BIGINT UNSIGNED NOT NULL COMMENT '规则适用的查看者选择器ID，须属于本租户',
     target_scope JSON NOT NULL COMMENT '字段规则目标范围表达式JSON数组',
@@ -101,7 +69,7 @@ CREATE TABLE iam_field_rule (
     KEY idx_iam_field_rule_match (tenant_id, scenario, field_key, id),
     CONSTRAINT fk_iam_field_rule_policy FOREIGN KEY (tenant_id) REFERENCES iam_field_policy (tenant_id),
     CONSTRAINT fk_iam_field_rule_viewer FOREIGN KEY (tenant_id, viewer_selector_id) REFERENCES iam_policy_selector (tenant_id, id),
-    CONSTRAINT ck_iam_field_rule_scenario CHECK (scenario IN ('MANAGEMENT', 'DIRECTORY')),
+    CONSTRAINT ck_iam_field_rule_scenario CHECK (scenario IN ('MANAGEMENT')),
     CONSTRAINT ck_iam_field_rule_visibility CHECK (visibility IN ('HIDDEN', 'MASKED', 'FULL')),
     CONSTRAINT ck_iam_field_rule_scope CHECK (JSON_TYPE(target_scope) = 'ARRAY'),
     CONSTRAINT ck_iam_field_rule_bindings CHECK (JSON_TYPE(scope_bindings) = 'OBJECT')

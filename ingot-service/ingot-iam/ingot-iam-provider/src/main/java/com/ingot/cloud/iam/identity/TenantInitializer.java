@@ -73,26 +73,15 @@ public class TenantInitializer {
                     throw new BizException(IamReasonCode.APPLICATION_UNAVAILABLE);
                 }
             }
-            if (!repository.lockDefaultRevision(plan.directoryRevisionId(), DefaultPolicyKind.DIRECTORY)
-                    || !repository.lockDefaultRevision(plan.fieldRevisionId(), DefaultPolicyKind.FIELD)) {
+            if (!repository.lockDefaultRevision(plan.fieldRevisionId(), DefaultPolicyKind.FIELD)) {
                 throw new BizException(IamReasonCode.POLICY_CONFLICT);
             }
             String version = repository.insertOrganization(plan);
             audits.write(actor, plan.auditId(), TENANT_RESOURCE, Long.toString(plan.tenantId()),
                     AuditChangeType.CREATE, Map.of(),
                     Map.of(AuditField.NAME, plan.name(), AuditField.OWNER_MEMBER, Long.toString(plan.ownerMemberId())),
-                    Map.of(InitialReference.DIRECTORY.name(), Long.toString(plan.directoryRevisionId()),
-                            InitialReference.FIELD.name(), Long.toString(plan.fieldRevisionId())));
+                    Map.of(DefaultPolicyKind.FIELD.name(), Long.toString(plan.fieldRevisionId())));
             return new CreatedResource(Long.toString(plan.tenantId()), version);
         });
-    }
-
-    /**
-     * <p>区分初始化审计固定的三类基础引用。</p>
-     * @author jy
-     * @since 1.0.0
-     */
-    private enum InitialReference {
-        DIRECTORY, FIELD
     }
 }

@@ -172,9 +172,7 @@ public class TenantScopeCandidates {
             return null;
         }
         List<TenantScopeObjectResource> resources = rows.stream()
-                .map(row -> TenantScopeObjectResource.find(row.resourceCode()))
-                .map(resource -> resource == TenantScopeObjectResource.DIRECTORY
-                        ? TenantScopeObjectResource.MEMBER : resource).toList();
+                .map(row -> TenantScopeObjectResource.find(row.resourceCode())).toList();
         if (resources.contains(null) || resources.stream().distinct().count() != 1) {
             return null;
         }

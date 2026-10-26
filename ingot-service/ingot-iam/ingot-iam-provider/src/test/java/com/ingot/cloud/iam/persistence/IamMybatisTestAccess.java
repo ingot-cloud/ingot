@@ -35,8 +35,6 @@ import com.ingot.cloud.iam.persistence.mapper.IamDelegationRecipientMemberMapper
 import com.ingot.cloud.iam.persistence.mapper.IamDelegationRoleRevisionMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentWorkbookMapper;
-import com.ingot.cloud.iam.persistence.mapper.IamDirectoryPolicyMapper;
-import com.ingot.cloud.iam.persistence.mapper.IamDirectoryRuleMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamFieldPolicyMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamFieldRuleMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamIdentityMapper;
@@ -132,8 +130,7 @@ public final class IamMybatisTestAccess {
                 mapper(source, IamDefaultPolicyRevisionMapper.class), mapper(source, IamTenantMapper.class),
                 mapper(source, IamTenantMemberMapper.class), mapper(source, IamDepartmentMapper.class),
                 mapper(source, IamMemberDepartmentMapper.class),
-                mapper(source, IamTenantAppEntitlementMapper.class), mapper(source, IamAppAudienceMapper.class),
-                mapper(source, IamDirectoryPolicyMapper.class), mapper(source, IamFieldPolicyMapper.class));
+                mapper(source, IamTenantAppEntitlementMapper.class),                 mapper(source, IamAppAudienceMapper.class), mapper(source, IamFieldPolicyMapper.class));
     }
 
     /** 在当前夹具数据源上建立成员查询与写入 Repository。 */
@@ -262,21 +259,13 @@ public final class IamMybatisTestAccess {
                 new DepartmentClosure(mapper(source, IamDepartmentMapper.class)), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache(), com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), com.ingot.cloud.iam.persistence.FieldTestSupport.metadata(), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
     }
 
-    /** 在当前夹具数据源上建立通讯录与字段策略 Repository。 */
+    /** 在当前夹具数据源上建立字段策略 Repository。 */
     public static com.ingot.cloud.iam.policy.PolicyWriteRepository policies(DataSource source) {
-        return new com.ingot.cloud.iam.policy.PolicyWriteRepository(mapper(source, IamDirectoryPolicyMapper.class),
-                mapper(source, IamFieldPolicyMapper.class), mapper(source, IamDirectoryRuleMapper.class),
+        return new com.ingot.cloud.iam.policy.PolicyWriteRepository(mapper(source, IamFieldPolicyMapper.class),
                 mapper(source, IamFieldRuleMapper.class), mapper(source, IamPolicySelectorMapper.class),
                 mapper(source, IamPolicySelectorMemberMapper.class),
                 mapper(source, IamPolicySelectorDepartmentMapper.class), mapper(source, IamTenantMemberMapper.class),
-                mapper(source, IamMemberDepartmentMapper.class), mapper(source, IamDepartmentMapper.class),
                 mapper(source, IamDefaultPolicyRevisionMapper.class));
-    }
-
-    /** 在当前夹具数据源上建立通讯录可见性求值器。 */
-    public static com.ingot.cloud.iam.policy.DirectoryVisibilityEvaluator directory(DataSource source) {
-        return new com.ingot.cloud.iam.policy.DirectoryVisibilityEvaluator(policies(source),
-                new DepartmentClosure(mapper(source, IamDepartmentMapper.class)));
     }
 
     /** 在当前夹具数据源上建立授权求值 Repository。 */
@@ -426,7 +415,7 @@ public final class IamMybatisTestAccess {
                     IamDefaultPolicyRevisionMapper.class, IamPlanMapper.class, IamPlanApplicationMapper.class,
                     IamRoleAssignmentMapper.class, IamTenantAppEntitlementMapper.class, IamAppAudienceMapper.class,
                     IamAudienceMemberMapper.class, IamAudienceDepartmentMapper.class, IamAudienceGroupMapper.class,
-                    IamTenantGroupMapper.class, IamDirectoryPolicyMapper.class, IamFieldPolicyMapper.class,
+                    IamTenantGroupMapper.class, IamFieldPolicyMapper.class,
                     IamActionMapper.class, IamMenuMapper.class, IamMenuActionMapper.class, IamRoleGrantMapper.class,
                     IamFieldRuleMapper.class, IamPolicySelectorMemberMapper.class,
                     IamPolicySelectorDepartmentMapper.class, IamDelegationGrantMapper.class,
@@ -434,7 +423,7 @@ public final class IamMybatisTestAccess {
                     IamDelegationRecipientDepartmentMapper.class, IamDelegationActionCeilingMapper.class,
                     IamPlatformGroupMapper.class, IamPlatformGroupMemberMapper.class, IamTenantGroupMemberMapper.class,
                     IamRoleDeltaMapper.class, IamRoleParameterMapper.class, IamTenantGroupDepartmentMapper.class,
-                    IamDirectoryRuleMapper.class, IamPolicySelectorMapper.class, IamResourceMapper.class,
+                    IamPolicySelectorMapper.class, IamResourceMapper.class,
                     IamMemberExportMapper.class,
                     IamMemberWorkbookMapper.class,
                     IamDepartmentWorkbookMapper.class,

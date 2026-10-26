@@ -102,7 +102,7 @@ public class RoleFieldPermissionService {
      * @param kind 角色种类
      * @param grants 完整操作授权
      * @param input 可空草稿
-     * @return 字段快照；系统角色为空对象，通讯录资源不写入当前角色快照
+     * @return 字段快照；系统角色为空对象
      */
     public Map<String, ResourceFieldDefinition> freeze(RoleKind kind, List<ActionGrant> grants,
             Map<String, ResourceFieldDefinition> input) {
@@ -144,8 +144,7 @@ public class RoleFieldPermissionService {
                 visibility.put(field.key(), value);
                 operations.put(field.key(), ability);
             }
-            if (!visibility.isEmpty() && (kind == RoleKind.PLATFORM_CUSTOM
-                    || !BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE.equals(descriptor.key())))
+            if (!visibility.isEmpty())
                 result.put(key, new ResourceFieldDefinition(visibility, operations));
         }
         return Map.copyOf(result);

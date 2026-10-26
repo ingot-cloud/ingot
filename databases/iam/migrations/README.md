@@ -12,6 +12,7 @@
 | 009_tenant_plan.sql | iam_tenant尚无plan_id列；一次ALTER。 | 001 |
 | 010_assignment_audit_index.sql | 分配审计索引缺失；重复执行会检查并跳过。 | 004 |
 | 032_authorization_audit_cursor_index.sql | 授权审计缺少按操作者、按对象的租户时间索引；在线新增，重复执行会检查并跳过，回退用032_authorization_audit_cursor_index.rollback.sql。须先于IAM游标分页版本执行。 | 004 |
+| 033_remove_directory_browse.sql | 已有库仍有普通通讯录菜单、directory/directory-policy/policy 资源或 DIRECTORY 策略检查；按编码删除并收紧检查，可重复执行。新建库使用004/006，不执行本补丁。 | 004/006 |
 | 011_delegation_duration_mode.sql | 委派表仍是旧LIMITED结构、尚无assignment_duration_mode列；一次ALTER。 | 003 |
 | 015_menu_advanced_configuration.sql | iam_menu 尚无 hidden/is_cache/props/route_params 列；一次 ALTER，保留现有数据。 | 002 |
 | 014_platform_member_contacts.sql | 平台成员尚无phone/email列；停IAM写入后一次增加并从账号回填，后续不再同步。 | 001 |

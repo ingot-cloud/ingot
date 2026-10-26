@@ -320,14 +320,17 @@ class IdentitySchemaTest(unittest.TestCase):
         self.sql("INSERT INTO iam_delegation_role(delegation_id,tenant_id,role_id,role_kind,role_tenant_key) VALUES(50,20,2,'TENANT_CUSTOM',10)", error=3819)
 
     def test_policy_default_and_selector_domains_are_enforced(self):
-        self.sql("INSERT INTO iam_default_policy_revision VALUES (1, 'DIRECTORY', 1, '{}'), (2, 'FIELD', 1, '{}')")
+        self.sql("INSERT INTO iam_default_policy_revision VALUES (1, 'DIRECTORY', 1, '{}')", error=3819)
+        self.sql("INSERT INTO iam_default_policy_revision VALUES (2, 'FIELD', 1, '{}')")
         self.sql("INSERT INTO iam_policy_selector VALUES (1, 10), (2, 20)")
-        self.sql("INSERT INTO iam_directory_policy (tenant_id, default_revision_id) VALUES (10, 2)", error=1452)
-        self.sql("INSERT INTO iam_directory_policy (tenant_id, default_revision_id) VALUES (10, 1)")
-        self.sql("UPDATE iam_directory_policy SET default_selector_id = 1 WHERE tenant_id = 10", error=3819)
-        self.sql("UPDATE iam_directory_policy SET default_scope = 'SELECTED', default_selector_id = 2 WHERE tenant_id = 10", error=1452)
+        self.assertEqual('0', self.sql("""
+            SELECT COUNT(*) FROM information_schema.tables
+            WHERE table_schema = DATABASE() AND table_name IN ('iam_directory_policy', 'iam_directory_rule')
+        """))
         self.sql("INSERT INTO iam_policy_selector_member VALUES (10, 1, 201)", error=1452)
-        self.sql("INSERT INTO iam_directory_rule VALUES (1, 10, 'ALLOW', 1, 2)", error=1452)
+        self.sql("INSERT INTO iam_field_policy (tenant_id, default_revision_id) VALUES (10, 2)")
+        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 'DIRECTORY', 'phone', 1, '[]', '{}', 'MASKED')", error=3819)
+        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 'MANAGEMENT', 'phone', 1, '[]', '{}', 'MASKED')")
 
     def test_field_visibility_and_operations_are_independent(self):
         self.sql("INSERT INTO iam_default_policy_revision VALUES (2, 'FIELD', 1, '{}')")

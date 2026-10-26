@@ -19,7 +19,6 @@ import com.ingot.framework.commons.model.iam.EntitlementSource;
  * @param ownerDisplayName 所有者在本组织的显示名
  * @param rootDepartmentId 新根部门 ID
  * @param rootDepartmentName 根部门名称
- * @param directoryRevisionId 固定通讯录默认版本
  * @param fieldRevisionId 固定字段默认版本
  * @param applications 服务器解析后的初始开通
  * @param planId 选用套餐，可空
@@ -28,7 +27,6 @@ import com.ingot.framework.commons.model.iam.EntitlementSource;
 public record TenantInitializationPlan(long tenantId, String name, String avatar, long ownerAccountId,
                                        long ownerMemberId,
                                        String ownerDisplayName, long rootDepartmentId, String rootDepartmentName,
-                                       long directoryRevisionId,
                                        long fieldRevisionId, List<Application> applications, Long planId, long auditId) {
     /**
      * 校验服务器计划结构，避免空组织或重复基础开通；引用状态在事务中再次检查。
@@ -36,7 +34,6 @@ public record TenantInitializationPlan(long tenantId, String name, String avatar
      */
     public TenantInitializationPlan {
         if (tenantId <= 0 || ownerAccountId <= 0 || ownerMemberId <= 0 || rootDepartmentId <= 0
-                || directoryRevisionId <= 0
                 || fieldRevisionId <= 0 || auditId <= 0 || invalidName(name) || invalidName(ownerDisplayName)
                 || invalidName(rootDepartmentName) || applications == null || applications.isEmpty()) {
             throw new IllegalArgumentException("初始化计划必须包含有效身份、名称和基础目录引用");

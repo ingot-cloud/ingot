@@ -52,8 +52,6 @@ NOTES = {
 'iam_policy_selector': '选择器是租户内独立对象，成员及部门来源通过(tenant_id,id)引用；策略保存构造新选择器，不作为低风险差量目标。',
 'iam_policy_selector_member': 'tenant_id/selector_id/member_id支持选择器展开；成员反向索引由外键补建。新选择器快照的首次插入应保留。',
 'iam_policy_selector_department': '按选择器展开部门范围及下级，部门反向索引由外键补建；必须保留选择器与租户一致性。',
-'iam_directory_policy': '一租户一配置，以tenant_id直接作为主键；默认版本/选择器引用与本地版本锁分别承担不同语义。',
-'iam_directory_rule': '规则有独立ID，tenant_id/effect/id用于租户规则匹配；允许和拒绝不是简单双向多对多边。',
 'iam_field_policy': '一租户一字段策略，tenant_id主键即业务身份；operation_rules为数组，本轮不改变默认及合并规则。',
 'iam_field_rule': '按租户/场景/字段读取可见性规则；viewer_selector及target_scope是不同维度，不并入主键。',
 'iam_member_export': '任务按ID定位，租户/status/到期时间索引支持状态及清理；JSON成员快照可能较大，需要实际任务量及保留周期。',

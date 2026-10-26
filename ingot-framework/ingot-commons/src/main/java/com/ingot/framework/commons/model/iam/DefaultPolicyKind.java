@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * <p>区分固定默认策略版本的通讯录及字段职责。</p>
+ * <p>标识固定默认策略版本的字段职责。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum DefaultPolicyKind {
-    DIRECTORY("DIRECTORY"),
     FIELD("FIELD");
 
     /**

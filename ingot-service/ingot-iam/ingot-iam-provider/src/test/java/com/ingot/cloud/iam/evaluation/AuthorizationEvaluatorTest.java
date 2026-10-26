@@ -140,6 +140,13 @@ class AuthorizationEvaluatorTest {
         jdbc.execute("ALTER TABLE iam_role_definition ADD kind VARCHAR(24) DEFAULT 'PLATFORM_CUSTOM'");
         jdbc.execute("ALTER TABLE iam_role_definition ADD code VARCHAR(64)");
         jdbc.execute("ALTER TABLE iam_role_revision ADD kind VARCHAR(24) DEFAULT 'PLATFORM_CUSTOM'");
+        jdbc.execute("ALTER TABLE iam_role_revision ADD revision BIGINT DEFAULT 1");
+        jdbc.execute("ALTER TABLE iam_role_revision ADD metadata_overrides VARCHAR(1024) DEFAULT '{}'");
+        jdbc.execute("ALTER TABLE iam_role_revision ADD resource_field_permissions VARCHAR(4096) DEFAULT '{}'");
+        jdbc.execute("ALTER TABLE iam_role_revision ADD version_name VARCHAR(64)");
+        jdbc.execute("ALTER TABLE iam_role_revision ADD remark VARCHAR(256)");
+        jdbc.execute("ALTER TABLE iam_role_revision ADD metadata_version BIGINT DEFAULT 0");
+        jdbc.execute("ALTER TABLE iam_role_revision ADD published_at TIMESTAMP");
         jdbc.execute("ALTER TABLE iam_resource ADD application_id BIGINT DEFAULT 1");
         jdbc.execute("ALTER TABLE iam_application ADD code VARCHAR(64)");
         jdbc.update("UPDATE iam_application SET code='iam-platform' WHERE id=1");
@@ -176,11 +183,11 @@ class AuthorizationEvaluatorTest {
         jdbc.execute("CREATE TABLE iam_role_parameter(revision_id BIGINT,parameter_key VARCHAR(128),binding_kind VARCHAR(16),resource_id BIGINT)");
         jdbc.execute("ALTER TABLE iam_delegation_recipient_member ADD domain VARCHAR(16) DEFAULT 'TENANT'");
         jdbc.execute("ALTER TABLE iam_delegation_grant ADD tenant_administrator_id BIGINT DEFAULT 9999");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
         jdbc.execute("CREATE TABLE iam_delegation_role(delegation_id BIGINT,role_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_delegation_resource_ceiling(delegation_id BIGINT,resource_id BIGINT,scopes VARCHAR(1024),scope_bindings VARCHAR(1024))");
         for(var table:List.of("iam_application","iam_action","iam_resource","iam_account","iam_tenant_member","iam_department","iam_tenant_group","iam_tenant_app_entitlement","iam_app_audience"))jdbc.execute("ALTER TABLE "+table+" ADD version BIGINT DEFAULT 0");
         for(var table:List.of("iam_tenant_app_entitlement","iam_app_audience"))jdbc.execute("ALTER TABLE "+table+" ADD id BIGINT DEFAULT 0");
-        jdbc.execute("CREATE TABLE iam_directory_policy(tenant_id BIGINT,version BIGINT,default_revision_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_field_policy(tenant_id BIGINT,version BIGINT,default_revision_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_default_policy_revision(id BIGINT,revision BIGINT)");
         jdbc.execute("CREATE TABLE iam_menu(id BIGINT,application_id BIGINT,version BIGINT)");
@@ -509,10 +516,10 @@ class AuthorizationEvaluatorTest {
         var cached = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.evaluator(dataSource, cache);
         cache.seed(AuthorizationEvaluator.cacheKey(TENANT),
                 new AuthorizationEvaluator.AuthorizationView(
-                        List.of(IamAction.VALUE_TENANT_DIRECTORY_READ, IamAction.VALUE_TENANT_MEMBER_STATUS), List.of(),
+                        List.of(IamAction.VALUE_TENANT_FIELD_POLICY_READ, IamAction.VALUE_TENANT_MEMBER_STATUS), List.of(),
                         Map.of(), "stale", Instant.now().plus(MAX_HOT_WINDOW)));
 
-        assertEquals(IamReasonCode.ACTION_DENIED.getCode(),assertThrows(BizException.class,() -> cached.require(TENANT, IamAction.TENANT_DIRECTORY_READ)).getCode());
+        assertEquals(IamReasonCode.ACTION_DENIED.getCode(),assertThrows(BizException.class,() -> cached.require(TENANT, IamAction.TENANT_FIELD_POLICY_READ)).getCode());
         BizException failure = assertThrows(BizException.class,
                 () -> cached.require(TENANT, IamAction.TENANT_MEMBER_STATUS));
 

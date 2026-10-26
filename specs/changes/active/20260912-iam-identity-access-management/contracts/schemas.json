@@ -3149,93 +3149,6 @@
         },
         "description": "声明诊断目标身份，服务端在当前域解析且限制可披露来源"
       },
-      "DirectoryDefault": {
-        "required": [
-          "scope"
-        ],
-        "type": "object",
-        "properties": {
-          "scope": {
-            "type": "string",
-            "description": "默认范围种类",
-            "enum": [
-              "ALL",
-              "SELF",
-              "SELECTED"
-            ]
-          },
-          "selection": {
-            "$ref": "#/components/schemas/Selection"
-          }
-        },
-        "description": "描述独立于允许禁止规则的默认通讯录范围"
-      },
-      "DirectoryPolicyDraft": {
-        "required": [
-          "defaultRevisionId",
-          "rules"
-        ],
-        "type": "object",
-        "properties": {
-          "defaultRevisionId": {
-            "type": "string",
-            "description": "固定的通讯录默认策略版本 ID"
-          },
-          "defaultOverride": {
-            "$ref": "#/components/schemas/DirectoryDefault"
-          },
-          "rules": {
-            "type": "array",
-            "description": "完整允许禁止规则；空数组清除本地规则",
-            "items": {
-              "$ref": "#/components/schemas/DirectoryRule"
-            }
-          }
-        },
-        "description": "描述固定默认版本与本地通讯录规则，不产生有效授权"
-      },
-      "DirectoryPolicyInput": {
-        "required": [
-          "expectedVersion",
-          "policy"
-        ],
-        "type": "object",
-        "properties": {
-          "expectedVersion": {
-            "type": "string",
-            "description": "预览或读取获得的配置版本；提交时比较并重新鉴权"
-          },
-          "policy": {
-            "$ref": "#/components/schemas/DirectoryPolicyDraft"
-          }
-        },
-        "description": "整体替换通讯录策略，提交必须重验版本及授权"
-      },
-      "DirectoryRule": {
-        "required": [
-          "effect",
-          "targetSelection",
-          "viewerSelection"
-        ],
-        "type": "object",
-        "properties": {
-          "effect": {
-            "type": "string",
-            "description": "允许或禁止效果",
-            "enum": [
-              "ALLOW",
-              "DENY"
-            ]
-          },
-          "viewerSelection": {
-            "$ref": "#/components/schemas/Selection"
-          },
-          "targetSelection": {
-            "$ref": "#/components/schemas/Selection"
-          }
-        },
-        "description": "描述通讯录查看者对应的允许或禁止目标，默认范围单独保存"
-      },
       "EffectiveRole": {
         "required": [
           "grants",
@@ -3630,8 +3543,7 @@
           "scenario": {
             "type": "string",
             "enum": [
-              "MANAGEMENT",
-              "DIRECTORY"
+              "MANAGEMENT"
             ]
           },
           "actionCode": {
@@ -3765,8 +3677,7 @@
             "type": "string",
             "description": "后台或通讯录场景",
             "enum": [
-              "MANAGEMENT",
-              "DIRECTORY"
+              "MANAGEMENT"
             ]
           },
           "fieldKey": {
@@ -6158,88 +6069,6 @@
         },
         "description": "成员资料与角色差量预览，不包含字段原值"
       },
-      "PolicyDraft": {
-        "required": [
-          "kind"
-        ],
-        "type": "object",
-        "properties": {
-          "kind": {
-            "type": "string",
-            "description": "策略种类",
-            "enum": [
-              "DIRECTORY",
-              "FIELD"
-            ]
-          },
-          "directory": {
-            "$ref": "#/components/schemas/DirectoryPolicyDraft"
-          },
-          "field": {
-            "$ref": "#/components/schemas/FieldPolicyDraft"
-          }
-        },
-        "description": "按策略种类承载唯一的待预览配置"
-      },
-      "PolicyPreviewInput": {
-        "required": [
-          "policyDraft",
-          "viewerMemberId"
-        ],
-        "type": "object",
-        "properties": {
-          "policyDraft": {
-            "$ref": "#/components/schemas/PolicyDraft"
-          },
-          "viewerMemberId": {
-            "type": "string",
-            "description": "当前租户内待预览查看者的成员 ID"
-          },
-          "target": {
-            "type": "string",
-            "description": "可选目标成员 ID；必须在操作者可查看范围内"
-          }
-        },
-        "description": "为指定查看者执行受限只读策略预览"
-      },
-      "PolicyPreviewResult": {
-        "required": [
-          "departments",
-          "kind",
-          "members",
-          "restricted"
-        ],
-        "type": "object",
-        "properties": {
-          "kind": {
-            "type": "string",
-            "description": "策略种类",
-            "enum": [
-              "DIRECTORY",
-              "FIELD"
-            ]
-          },
-          "members": {
-            "type": "array",
-            "description": "经预览策略及操作者权限共同限制的成员样例",
-            "items": {
-              "$ref": "#/components/schemas/ResourceDetailMemberRecord"
-            }
-          },
-          "departments": {
-            "type": "array",
-            "description": "可见部门和必要祖先骨架",
-            "items": {
-              "$ref": "#/components/schemas/DepartmentRecord"
-            }
-          },
-          "restricted": {
-            "type": "boolean",
-            "description": "是否存在不可向操作者披露的结果"
-          }
-        },
-        "description": "返回策略预览的可见成员样例与必要部门骨架"
-      },
       "PreviewAssignmentPreviewResult": {
         "required": [
           "errors",
@@ -6453,42 +6282,6 @@
           },
           "effectiveResult": {
             "$ref": "#/components/schemas/PlatformMemberEditPreview"
-          }
-        }
-      },
-      "PreviewPolicyPreviewResult": {
-        "required": [
-          "errors",
-          "impactSummary",
-          "valid",
-          "version",
-          "warnings"
-        ],
-        "type": "object",
-        "properties": {
-          "version": {
-            "type": "string"
-          },
-          "valid": {
-            "type": "boolean"
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ValidationIssue"
-            }
-          },
-          "warnings": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ValidationIssue"
-            }
-          },
-          "impactSummary": {
-            "$ref": "#/components/schemas/ImpactSummary"
-          },
-          "effectiveResult": {
-            "$ref": "#/components/schemas/PolicyPreviewResult"
           }
         }
       },
@@ -7754,23 +7547,6 @@
           }
         }
       },
-      "RPreviewPolicyPreviewResult": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/PreviewPolicyPreviewResult"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        }
-      },
       "RPreviewReferenceImpactPreview": {
         "type": "object",
         "properties": {
@@ -8003,23 +7779,6 @@
           },
           "data": {
             "$ref": "#/components/schemas/ResourceDetailDepartmentRecord"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        }
-      },
-      "RResourceDetailDirectoryPolicyDraft": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/ResourceDetailDirectoryPolicyDraft"
           },
           "success": {
             "type": "boolean"
@@ -8713,35 +8472,6 @@
         "properties": {
           "record": {
             "$ref": "#/components/schemas/DepartmentRecord"
-          },
-          "fieldAccess": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/FieldAccess"
-            }
-          },
-          "capabilities": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ObjectCapability"
-            }
-          },
-          "version": {
-            "type": "string"
-          }
-        }
-      },
-      "ResourceDetailDirectoryPolicyDraft": {
-        "required": [
-          "capabilities",
-          "fieldAccess",
-          "record",
-          "version"
-        ],
-        "type": "object",
-        "properties": {
-          "record": {
-            "$ref": "#/components/schemas/DirectoryPolicyDraft"
           },
           "fieldAccess": {
             "type": "object",

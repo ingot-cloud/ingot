@@ -40,7 +40,7 @@ class FieldAccessMigrationTest(unittest.TestCase):
         old_fields = [{k: v for k, v in f.items() if k != 'mask'} | {'sortable': f['key'] == 'displayName'}
                       for f in MEMBER_FIELDS]
         self.sql("UPDATE iam_resource SET field_capabilities = " + self.literal(old_fields) +
-                 " WHERE code IN ('member','directory')")
+                 " WHERE code = 'member'")
         old_permissions = {'110011': {f['key']: {'visibility': 'FULL', 'editable': f['editable']}
                                     for f in MEMBER_FIELDS}}
         self.sql("UPDATE iam_role_revision SET resource_field_permissions = " + self.literal(old_permissions) +
@@ -73,6 +73,9 @@ class FieldAccessMigrationTest(unittest.TestCase):
             INSERT INTO iam_policy_selector (id, tenant_id) VALUES (501,10);
             INSERT INTO iam_policy_selector_member VALUES (10,501,101);
             INSERT INTO iam_policy_selector_department VALUES (10,501,21,TRUE);
+            ALTER TABLE iam_field_rule DROP CHECK ck_iam_field_rule_scenario;
+            ALTER TABLE iam_field_rule ADD CONSTRAINT ck_iam_field_rule_scenario
+                CHECK (scenario IN ('MANAGEMENT', 'DIRECTORY'));
             INSERT INTO iam_field_policy (tenant_id, default_revision_id) VALUES (10,150002);
             INSERT INTO iam_field_rule
                 (id,tenant_id,scenario,field_key,viewer_selector_id,target_scope,scope_bindings,visibility,editable) VALUES

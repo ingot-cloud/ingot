@@ -2,7 +2,6 @@ package com.ingot.cloud.iam.policy;
 
 import java.util.Map;
 
-import com.ingot.framework.commons.model.iam.DirectoryDefaultScope;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import org.junit.jupiter.api.Test;
@@ -12,19 +11,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * <p>验证空定义体回落到全组织与脱敏基线，以及平台上限缺省不额外收紧。</p>
+ * <p>验证空定义体回落到脱敏基线，以及平台上限缺省不额外收紧。</p>
  *
  * @author jy
  * @since 1.0.0
  */
 class DefaultPolicyDefinitionsTest {
-    @Test
-    void emptyDirectoryDefinitionMeansAll() {
-        assertEquals(DirectoryDefaultScope.ALL, DefaultPolicyDefinitions.directoryScope(null));
-        assertEquals(DirectoryDefaultScope.ALL, DefaultPolicyDefinitions.directoryScope("{}"));
-        assertEquals(DirectoryDefaultScope.SELF, DefaultPolicyDefinitions.directoryScope("{\"scope\":\"SELF\"}"));
-    }
-
     @Test
     void emptyFieldDefinitionMasksPhoneAndLeavesCeilingOpen() {
         var baseline = DefaultPolicyDefinitions.fieldAccess("{}");

@@ -62,7 +62,7 @@
 - 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/identity/AccountCredentialRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [MemberLifecycleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/MemberLifecycleRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_tenant_owner` (`id`,`owner_member_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_tenant_owner` FOREIGN KEY (`id`, `owner_member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
-- 被其他表引用：``iam_tenant_member(tenant_id) → (id)``；``iam_department(tenant_id) → (id)``；``iam_tenant_group(tenant_id) → (id)``；``iam_tenant_app_entitlement(tenant_id) → (id)``；``iam_role_definition(tenant_id) → (id)``；``iam_policy_selector(tenant_id) → (id)``；``iam_directory_policy(tenant_id) → (id)``；``iam_field_policy(tenant_id) → (id)``。
+- 被其他表引用：``iam_tenant_member(tenant_id) → (id)``；``iam_department(tenant_id) → (id)``；``iam_tenant_group(tenant_id) → (id)``；``iam_tenant_app_entitlement(tenant_id) → (id)``；``iam_role_definition(tenant_id) → (id)``；``iam_policy_selector(tenant_id) → (id)``；``iam_field_policy(tenant_id) → (id)``。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：组织ID是组织事务的锁定对象；(id,owner_member_id)支持所属组织拥有者复合引用，不因id已有主键就删除。
 - DDL证据：[001_identity.sql](../../../databases/iam/001_identity.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_tenant)。
@@ -525,7 +525,7 @@
 
 - 主键：`delegation_id / role_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[TenantLiveOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantLiveOptionSql.java), [TenantLiveMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/TenantLiveMapper.java), [migrate.py](../../../tools/iam/tenant_live/migrate.py)。
+- 主要访问/写入：[TenantLiveOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantLiveOptionSql.java), [TenantLiveMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/TenantLiveMapper.java), [TenantRoleWorkspaceSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/TenantRoleWorkspaceSql.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_live_delegation_role` (`domain`,`role_tenant_key`,`role_id`,`role_kind`)``；``KEY `fk_iam_live_delegation` (`tenant_id`,`delegation_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_live_delegation_role` FOREIGN KEY (`domain`, `role_tenant_key`, `role_id`, `role_kind`) REFERENCES `iam_role_definition` (`domain`, `tenant_key`, `id`, `kind`)``；``CONSTRAINT `fk_iam_live_delegation` FOREIGN KEY (`tenant_id`, `delegation_id`) REFERENCES `iam_delegation_grant` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -549,14 +549,14 @@
 
 ### iam_default_policy_revision — 保留（P3）
 
-默认通讯录或字段策略固定版本
+默认字段策略固定版本
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
 - 主要访问/写入：[InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/InitializationCatalogRepository.java), [PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamDefaultPolicyRevisionEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDefaultPolicyRevisionEntity.java)。
 - 有效二级索引/业务唯一键：``UNIQUE KEY `uk_iam_default_policy_kind` (`id`,`kind`)``；``UNIQUE KEY `uk_iam_default_policy_revision` (`kind`,`revision`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
-- 被其他表引用：``iam_directory_policy(default_revision_id, default_kind) → (id, kind)``；``iam_field_policy(default_revision_id, default_kind) → (id, kind)``。
+- 被其他表引用：``iam_field_policy(default_revision_id, default_kind) → (id, kind)``。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：策略kind/revision唯一，引用固定默认版本；发布为新快照，和关系原地替换不同。
 - DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_default_policy_revision)。
@@ -570,7 +570,7 @@
 - 主要访问/写入：[PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamPolicySelectorEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamPolicySelectorEntity.java)。
 - 有效二级索引/业务唯一键：``UNIQUE KEY `uk_iam_selector_tenant` (`tenant_id`,`id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_selector_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
-- 被其他表引用：``iam_policy_selector_member(tenant_id, selector_id) → (tenant_id, id)``；``iam_policy_selector_department(tenant_id, selector_id) → (tenant_id, id)``；``iam_directory_policy(tenant_id, default_selector_id) → (tenant_id, id)``；``iam_directory_rule(tenant_id, viewer_selector_id) → (tenant_id, id)``；``iam_directory_rule(tenant_id, target_selector_id) → (tenant_id, id)``；``iam_field_rule(tenant_id, viewer_selector_id) → (tenant_id, id)``。
+- 被其他表引用：``iam_policy_selector_member(tenant_id, selector_id) → (tenant_id, id)``；``iam_policy_selector_department(tenant_id, selector_id) → (tenant_id, id)``；``iam_field_rule(tenant_id, viewer_selector_id) → (tenant_id, id)``。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：选择器是租户内独立对象，成员及部门来源通过(tenant_id,id)引用；策略保存构造新选择器，不作为低风险差量目标。
 - DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_policy_selector)。
@@ -602,34 +602,6 @@
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：按选择器展开部门范围及下级，部门反向索引由外键补建；必须保留选择器与租户一致性。
 - DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_policy_selector_department)。
-
-### iam_directory_policy — 保留（P3）
-
-租户通讯录策略及默认版本引用
-
-- 主键：`tenant_id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[TenantInitializationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantInitializationRepository.java), [PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamDirectoryPolicyEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDirectoryPolicyEntity.java)。
-- 有效二级索引/业务唯一键：``KEY `fk_iam_directory_default_selector` (`tenant_id`,`default_selector_id`)``；``KEY `fk_iam_directory_default` (`default_revision_id`,`default_kind`)``。
-- 本表引用外键：``CONSTRAINT `fk_iam_directory_default_selector` FOREIGN KEY (`tenant_id`, `default_selector_id`) REFERENCES `iam_policy_selector` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_directory_default` FOREIGN KEY (`default_revision_id`, `default_kind`) REFERENCES `iam_default_policy_revision` (`id`, `kind`)``；``CONSTRAINT `fk_iam_directory_policy_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
-- 被其他表引用：``iam_directory_rule(tenant_id) → (tenant_id)``。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：一租户一配置，以tenant_id直接作为主键；默认版本/选择器引用与本地版本锁分别承担不同语义。
-- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_directory_policy)。
-
-### iam_directory_rule — 保留（P3）
-
-租户通讯录允许或拒绝规则
-
-- 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamDirectoryRuleEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDirectoryRuleEntity.java)。
-- 有效二级索引/业务唯一键：``KEY `fk_iam_directory_rule_target` (`tenant_id`,`target_selector_id`)``；``KEY `fk_iam_directory_rule_viewer` (`tenant_id`,`viewer_selector_id`)``；``KEY `idx_iam_directory_rule` (`tenant_id`,`effect`,`id`)``。
-- 本表引用外键：``CONSTRAINT `fk_iam_directory_rule_policy` FOREIGN KEY (`tenant_id`) REFERENCES `iam_directory_policy` (`tenant_id`)``；``CONSTRAINT `fk_iam_directory_rule_target` FOREIGN KEY (`tenant_id`, `target_selector_id`) REFERENCES `iam_policy_selector` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_directory_rule_viewer` FOREIGN KEY (`tenant_id`, `viewer_selector_id`) REFERENCES `iam_policy_selector` (`tenant_id`, `id`)``。
-- 被其他表引用：未声明入向外键。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：规则有独立ID，tenant_id/effect/id用于租户规则匹配；允许和拒绝不是简单双向多对多边。
-- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_directory_rule)。
 
 ### iam_field_policy — 保留（P3）
 
@@ -691,13 +663,29 @@
 
 后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
 
+### iam_department_workbook — 需要运行数据验证（P2）
+
+租户部门表格导入任务
+
+- 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
+- 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
+- 主要访问/写入：[DepartmentWorkbookRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DepartmentWorkbookRepository.java), [IamDepartmentWorkbookEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDepartmentWorkbookEntity.java), [IamDepartmentWorkbookMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamDepartmentWorkbookMapper.java)。
+- 有效二级索引/业务唯一键：``KEY `idx_iam_department_workbook_actor` (`tenant_id`,`actor_member_id`,`created_at`)``；``KEY `idx_iam_department_workbook_status` (`tenant_id`,`status`,`expires_at`)``。
+- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
+- 被其他表引用：未声明入向外键。
+- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
+- 判断：任务按ID定位，操作者与状态索引支持历史和过期清理；原始工作簿与错误报告存对象存储，24小时保留后删除对象。
+- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_department_workbook)。
+
+后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
+
 ### iam_download_task — 需要运行数据验证（P2）
 
 下载中心导出任务
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：受控迁移/建库工具，未发现在线业务写入入口。
+- 主要访问/写入：[IamDownloadTaskEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDownloadTaskEntity.java), [IamDownloadTaskMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamDownloadTaskMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_download_task_owner` (`tenant_id`,`actor_member_id`,`created_at`)``；``KEY `idx_iam_download_task_status` (`status`,`expires_at`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -714,7 +702,7 @@
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
 - 主要访问/写入：[IamAuthorizationAuditEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamAuthorizationAuditEntity.java), [IamRoleAssignmentMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamRoleAssignmentMapper.java)。
-- 有效二级索引/业务唯一键：``KEY `idx_iam_audit_actor` (`actor_account_id`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_assignment_create` (`assignment_id`,`change_type`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_delivery` (`delivered_at`,`id`)``；``KEY `idx_iam_audit_tenant_time` (`tenant_id`,`occurred_at`,`id`)``；``UNIQUE KEY `uk_iam_audit_event` (`event_id`)``。
+- 有效二级索引/业务唯一键：``KEY `idx_iam_audit_actor` (`actor_account_id`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_assignment_create` (`assignment_id`,`change_type`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_delivery` (`delivered_at`,`id`)``；``KEY `idx_iam_audit_tenant_actor_time` (`tenant_id`,`actor_member_id`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_tenant_target_time` (`tenant_id`,`target_type`,`target_id`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_tenant_time` (`tenant_id`,`occurred_at`,`id`)``；``UNIQUE KEY `uk_iam_audit_event` (`event_id`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
@@ -773,7 +761,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[RoleApplicationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/RoleApplicationRepository.java), [IamRoleApplicationTaskEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamRoleApplicationTaskEntity.java), [IamRoleDefinitionMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamRoleDefinitionMapper.java)。
+- 主要访问/写入：[RoleApplicationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/RoleApplicationRepository.java), [IamRoleApplicationTaskEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamRoleApplicationTaskEntity.java), [AuditReferenceMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/AuditReferenceMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_role_application_target` (`target_revision_id`)``；``KEY `ix_iam_role_application_claim` (`status`,`lease_until`,`id`)``；``KEY `ix_iam_role_application_role` (`role_id`,`id`)``；``UNIQUE KEY `uk_iam_role_application_prepare` (`role_id`,`prepare_key`)``；``UNIQUE KEY `uk_iam_role_application_running` (`running_role_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_role_application_role` FOREIGN KEY (`role_id`) REFERENCES `iam_role_definition` (`id`)``；``CONSTRAINT `fk_iam_role_application_target` FOREIGN KEY (`target_revision_id`) REFERENCES `iam_role_revision` (`id`)``。
 - 被其他表引用：``iam_role_application_item(task_id) → (id)``。

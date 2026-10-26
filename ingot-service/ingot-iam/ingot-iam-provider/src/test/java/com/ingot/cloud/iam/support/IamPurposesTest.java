@@ -17,16 +17,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class IamPurposesTest {
     @Test
     void matchingPurposeIsAccepted() {
-        IamPurposes.require(SelectionPurpose.DIRECTORY, SelectionPurpose.DIRECTORY);
+        IamPurposes.require(SelectionPurpose.MANAGED_DEPARTMENT, SelectionPurpose.MANAGED_DEPARTMENT);
     }
 
     @Test
     void missingOrMismatchedPurposeIsInvalidArgument() {
         BizException missing = assertThrows(BizException.class,
-                () -> IamPurposes.require(null, SelectionPurpose.DIRECTORY));
+                () -> IamPurposes.require(null, SelectionPurpose.MANAGED_DEPARTMENT));
         assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), missing.getCode());
         BizException mismatched = assertThrows(BizException.class,
-                () -> IamPurposes.require(SelectionPurpose.ASSIGN_RECIPIENT, SelectionPurpose.DIRECTORY));
+                () -> IamPurposes.require(SelectionPurpose.ASSIGN_RECIPIENT, SelectionPurpose.MANAGED_DEPARTMENT));
         assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), mismatched.getCode());
     }
 }

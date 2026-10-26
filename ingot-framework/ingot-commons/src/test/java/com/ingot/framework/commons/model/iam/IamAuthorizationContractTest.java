@@ -284,13 +284,13 @@ class IamAuthorizationContractTest {
                 AuthorizationContext.class, SubjectRef.class, Selection.class, RoleSubjectSummary.class,
                 RoleSubjectPage.class, RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class,
                 RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class, FieldAccess.class,
-                FieldRule.class, DirectoryRule.class, CreatedResource.class, ObjectCapability.class, Bootstrap.class,
+                FieldRule.class, CreatedResource.class, ObjectCapability.class, Bootstrap.class,
                 CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class, DepartmentTreeNode.class,
                 GroupRecord.class, GroupEffectiveMemberRecord.class, GroupMembership.class, GroupMembershipDepartment.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
                 EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
                 DepartmentWorkbookExportInput.class,
                 DelegationRecord.class, PlanRecord.class, PlanApplication.class, EntitlementRecord.class,
-                DirectoryPolicyInput.class, FieldPolicyInput.class, PolicyPreviewInput.class, PolicyPreviewResult.class,
+                FieldPolicyInput.class,
                 DiagnoseInput.class, ConfigurationStatusInput.class, MemberStatusInput.class, VersionInput.class,
                 GroupDraft.class, GroupUpdateInput.class, AudienceUpdateInput.class, AssignmentUpdateInput.class,
                 DelegationUpdateInput.class, AssignmentPreviewResult.class, OwnerTransferInput.class,
@@ -337,11 +337,7 @@ class IamAuthorizationContractTest {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<Preview<EffectiveRole>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PasswordChangeState>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Bootstrap>>() {
-                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<PolicyPreviewResult>>>() {
-                    }.getType(),
-                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<AssignmentPreviewResult>>>() {
-                    }.getType(),
-                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DirectoryPolicyDraft>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<AssignmentPreviewResult>>>() {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<FieldPolicyDraft>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CreatedResource>>() {

@@ -5,36 +5,22 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ingot.cloud.iam.support.IamJson;
-import com.ingot.framework.commons.model.iam.DirectoryDefaultScope;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.FieldOperations;
 
 /**
- * <p>解释固定默认策略版本的 JSON 定义体，空对象回落到全组织可见与手机邮箱脱敏。</p>
+ * <p>解释固定默认字段策略版本的 JSON 定义体，空对象回落到手机邮箱脱敏。</p>
  *
  * @author jy
  * @since 1.0.0
  */
 public final class DefaultPolicyDefinitions {
-    private static final TypeReference<DirectoryBody> DIRECTORY = new TypeReference<>() {
-    };
     private static final TypeReference<FieldBody> FIELD = new TypeReference<>() {
     };
 
     private DefaultPolicyDefinitions() {
-    }
-
-    /**
-     * 解析通讯录默认范围；缺省或空对象表示全组织。
-     *
-     * @param definition 版本定义 JSON；可空
-     * @return 默认范围
-     */
-    public static DirectoryDefaultScope directoryScope(String definition) {
-        DirectoryBody body = IamJson.read(definition, DIRECTORY);
-        return body == null || body.scope() == null ? DirectoryDefaultScope.ALL : body.scope();
     }
 
     /**
@@ -125,9 +111,6 @@ public final class DefaultPolicyDefinitions {
         }
         configured.forEach((key, value) -> access.putIfAbsent(key, value == null ? new FieldAccess(FieldVisibility.HIDDEN, false) : new FieldAccess(value, value != FieldVisibility.HIDDEN)));
         return Map.copyOf(access);
-    }
-
-    private record DirectoryBody(DirectoryDefaultScope scope) {
     }
 
     /** 读取固定操作默认或上限，未注册字段始终关闭。 */

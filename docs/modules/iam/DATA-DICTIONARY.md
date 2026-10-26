@@ -2,7 +2,7 @@
 
 <!-- 自动生成：python3 tools/iam/generate_database.py；说明在权威 DDL 维护。 -->
 
-manifest 管理 66 张表、540 个字段。
+manifest 管理 64 张表、529 个字段。
 
 ## 阅读约定
 
@@ -1039,16 +1039,16 @@ CONSTRAINT ck_iam_live_resource_bindings CHECK (JSON_TYPE(scope_bindings)='OBJEC
 
 ## iam_default_policy_revision
 
-默认通讯录或字段策略固定版本
+默认字段策略固定版本
 
 权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
 
 | 字段 | 定义 | 说明 |
 |---|---|---|
-| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 默认通讯录或字段策略固定版本记录标识 |
-| `kind` | ``kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 默认策略类别：DIRECTORY通讯录、FIELD字段 |
+| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 默认字段策略固定版本记录标识 |
+| `kind` | ``kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 默认策略类别：FIELD字段 |
 | `revision` | ``revision BIGINT UNSIGNED NOT NULL`` | 不可变快照的发布序号，从1开始；与记录乐观锁版本不同 |
-| `definition` | ``definition JSON NOT NULL`` | 默认策略不可变定义JSON对象，由对应通讯录或字段求值器解释 |
+| `definition` | ``definition JSON NOT NULL`` | 默认字段策略不可变定义JSON对象，由字段求值器解释 |
 
 约束与索引：
 
@@ -1056,7 +1056,7 @@ CONSTRAINT ck_iam_live_resource_bindings CHECK (JSON_TYPE(scope_bindings)='OBJEC
 PRIMARY KEY (id)
 UNIQUE KEY uk_iam_default_policy_kind (id, kind)
 UNIQUE KEY uk_iam_default_policy_revision (kind, revision)
-CONSTRAINT ck_iam_default_policy_kind CHECK (kind IN ('DIRECTORY', 'FIELD'))
+CONSTRAINT ck_iam_default_policy_kind CHECK (kind IN ('FIELD'))
 CONSTRAINT ck_iam_default_policy_definition CHECK (JSON_TYPE(definition) = 'OBJECT')
 CONSTRAINT ck_iam_default_policy_revision CHECK (revision > 0)
 ```
@@ -1122,60 +1122,6 @@ CONSTRAINT fk_iam_selector_dept_dept FOREIGN KEY (tenant_id, department_id) REFE
 CONSTRAINT ck_iam_selector_descendants CHECK (include_descendants IN (0, 1))
 ```
 
-## iam_directory_policy
-
-租户通讯录策略及默认版本引用
-
-权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
-
-| 字段 | 定义 | 说明 |
-|---|---|---|
-| `tenant_id` | ``tenant_id BIGINT UNSIGNED NOT NULL`` | 所属租户组织ID |
-| `default_revision_id` | ``default_revision_id BIGINT UNSIGNED NOT NULL`` | 绑定的默认策略固定版本ID，与default_kind共同校验引用 |
-| `default_kind` | ``default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'DIRECTORY'`` | 默认策略种类，固定为当前策略表对应的DIRECTORY或FIELD |
-| `default_scope` | ``default_scope VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NULL`` | 空表示继承固定默认版本 |
-| `default_selector_id` | ``default_selector_id BIGINT UNSIGNED NULL`` | 默认范围为SELECTED时的人员选择器ID，其他情况为空 |
-| `version` | ``version BIGINT UNSIGNED NOT NULL DEFAULT 0`` | 记录乐观锁版本；变更时按所属业务事务递增 |
-
-约束与索引：
-
-```sql
-PRIMARY KEY (tenant_id)
-CONSTRAINT fk_iam_directory_policy_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant (id)
-CONSTRAINT fk_iam_directory_default FOREIGN KEY (default_revision_id, default_kind) REFERENCES iam_default_policy_revision (id, kind)
-CONSTRAINT fk_iam_directory_default_selector FOREIGN KEY (tenant_id, default_selector_id) REFERENCES iam_policy_selector (tenant_id, id)
-CONSTRAINT ck_iam_directory_default_kind CHECK (default_kind = 'DIRECTORY')
-CONSTRAINT ck_iam_directory_default_scope CHECK (
-        (default_scope IS NULL AND default_selector_id IS NULL) OR
-        (default_scope IS NOT NULL AND ((default_scope IN ('ALL', 'SELF') AND default_selector_id IS NULL) OR
-        (default_scope = 'SELECTED' AND default_selector_id IS NOT NULL))))
-```
-
-## iam_directory_rule
-
-租户通讯录允许或拒绝规则
-
-权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
-
-| 字段 | 定义 | 说明 |
-|---|---|---|
-| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 租户通讯录允许或拒绝规则记录标识 |
-| `tenant_id` | ``tenant_id BIGINT UNSIGNED NOT NULL`` | 所属租户组织ID |
-| `effect` | ``effect VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 通讯录规则效果：ALLOW允许、DENY拒绝；取值ALLOW,DENY |
-| `viewer_selector_id` | ``viewer_selector_id BIGINT UNSIGNED NOT NULL`` | 规则适用的查看者选择器ID，须属于本租户 |
-| `target_selector_id` | ``target_selector_id BIGINT UNSIGNED NOT NULL`` | 通讯录可见目标的选择器ID，须属于本租户 |
-
-约束与索引：
-
-```sql
-PRIMARY KEY (id)
-KEY idx_iam_directory_rule (tenant_id, effect, id)
-CONSTRAINT fk_iam_directory_rule_policy FOREIGN KEY (tenant_id) REFERENCES iam_directory_policy (tenant_id)
-CONSTRAINT fk_iam_directory_rule_viewer FOREIGN KEY (tenant_id, viewer_selector_id) REFERENCES iam_policy_selector (tenant_id, id)
-CONSTRAINT fk_iam_directory_rule_target FOREIGN KEY (tenant_id, target_selector_id) REFERENCES iam_policy_selector (tenant_id, id)
-CONSTRAINT ck_iam_directory_effect CHECK (effect IN ('ALLOW', 'DENY'))
-```
-
 ## iam_field_policy
 
 租户字段策略及操作规则
@@ -1186,7 +1132,7 @@ CONSTRAINT ck_iam_directory_effect CHECK (effect IN ('ALLOW', 'DENY'))
 |---|---|---|
 | `tenant_id` | ``tenant_id BIGINT UNSIGNED NOT NULL`` | 所属租户组织ID |
 | `default_revision_id` | ``default_revision_id BIGINT UNSIGNED NOT NULL`` | 绑定的默认策略固定版本ID，与default_kind共同校验引用 |
-| `default_kind` | ``default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'FIELD'`` | 默认策略种类，固定为当前策略表对应的DIRECTORY或FIELD |
+| `default_kind` | ``default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'FIELD'`` | 默认策略种类，固定为FIELD |
 | `operation_rules` | ``operation_rules JSON NOT NULL DEFAULT (JSON_ARRAY())`` | 租户字段操作规则JSON数组，限定已接入的编辑及筛选等能力 |
 | `version` | ``version BIGINT UNSIGNED NOT NULL DEFAULT 0`` | 记录乐观锁版本；变更时按所属业务事务递增 |
 
@@ -1210,7 +1156,7 @@ CONSTRAINT ck_iam_field_operations CHECK (JSON_TYPE(operation_rules) = 'ARRAY')
 |---|---|---|
 | `id` | ``id BIGINT UNSIGNED NOT NULL`` | 租户场景字段可见性规则记录标识 |
 | `tenant_id` | ``tenant_id BIGINT UNSIGNED NOT NULL`` | 所属租户组织ID |
-| `scenario` | ``scenario VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 字段策略使用场景：MANAGEMENT管理、DIRECTORY通讯录；取值MANAGEMENT,DIRECTORY |
+| `scenario` | ``scenario VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 字段策略使用场景：MANAGEMENT管理；取值MANAGEMENT |
 | `field_key` | ``field_key VARCHAR(128) COLLATE utf8mb4_bin NOT NULL`` | 资源字段稳定标识，用于匹配目录能力及字段规则 |
 | `viewer_selector_id` | ``viewer_selector_id BIGINT UNSIGNED NOT NULL`` | 规则适用的查看者选择器ID，须属于本租户 |
 | `target_scope` | ``target_scope JSON NOT NULL`` | 字段规则目标范围表达式JSON数组 |
@@ -1224,7 +1170,7 @@ PRIMARY KEY (id)
 KEY idx_iam_field_rule_match (tenant_id, scenario, field_key, id)
 CONSTRAINT fk_iam_field_rule_policy FOREIGN KEY (tenant_id) REFERENCES iam_field_policy (tenant_id)
 CONSTRAINT fk_iam_field_rule_viewer FOREIGN KEY (tenant_id, viewer_selector_id) REFERENCES iam_policy_selector (tenant_id, id)
-CONSTRAINT ck_iam_field_rule_scenario CHECK (scenario IN ('MANAGEMENT', 'DIRECTORY'))
+CONSTRAINT ck_iam_field_rule_scenario CHECK (scenario IN ('MANAGEMENT'))
 CONSTRAINT ck_iam_field_rule_visibility CHECK (visibility IN ('HIDDEN', 'MASKED', 'FULL'))
 CONSTRAINT ck_iam_field_rule_scope CHECK (JSON_TYPE(target_scope) = 'ARRAY')
 CONSTRAINT ck_iam_field_rule_bindings CHECK (JSON_TYPE(scope_bindings) = 'OBJECT')

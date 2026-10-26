@@ -1023,13 +1023,13 @@ def build(
         mark("assignment:a:ordinary-a", "reused")
 
     policy = payload_data(
-        session.iam("GET", "/v1/tenant/policies/directory", owner_a_token, tenant=tenant_a)
+        session.iam("GET", "/v1/tenant/policies/fields", owner_a_token, tenant=tenant_a)
     )
-    objects["policy:a:directory"] = {
-        "id": str(policy.get("id") or "directory"),
+    objects["policy:a:field"] = {
+        "id": str(policy.get("id") or "field"),
         "version": str(policy.get("version") or "read"),
     }
-    mark("policy:a:directory", "created")
+    mark("policy:a:field", "created")
 
     _write_secrets(secrets_path(inventory_file), secrets)
     write_inventory(inventory_file, inventory)

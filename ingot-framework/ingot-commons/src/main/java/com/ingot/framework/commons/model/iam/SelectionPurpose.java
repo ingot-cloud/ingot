@@ -19,8 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum SelectionPurpose {
     ASSIGN_RECIPIENT("ASSIGN_RECIPIENT"),
-    MANAGED_DEPARTMENT("MANAGED_DEPARTMENT"),
-    DIRECTORY("DIRECTORY");
+    MANAGED_DEPARTMENT("MANAGED_DEPARTMENT");
 
     /**
      * JSON 与数据库使用的稳定字面量。

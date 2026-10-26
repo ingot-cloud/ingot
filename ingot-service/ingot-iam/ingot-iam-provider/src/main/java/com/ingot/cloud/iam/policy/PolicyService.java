@@ -8,46 +8,27 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
-import com.ingot.cloud.iam.persistence.entity.IamDepartmentEntity;
-import com.ingot.cloud.iam.persistence.entity.IamDirectoryPolicyEntity;
-import com.ingot.cloud.iam.persistence.entity.IamDirectoryRuleEntity;
 import com.ingot.cloud.iam.persistence.entity.IamFieldPolicyEntity;
 import com.ingot.cloud.iam.persistence.entity.IamFieldRuleEntity;
-import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.cloud.iam.support.IamJson;
-import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.cloud.iam.support.IamSelections;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuditChangeType;
 import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.DefaultPolicyKind;
-import com.ingot.framework.commons.model.iam.DepartmentRecord;
 import com.ingot.framework.commons.model.iam.DepartmentSelection;
-import com.ingot.framework.commons.model.iam.DirectoryDefault;
-import com.ingot.framework.commons.model.iam.DirectoryDefaultScope;
-import com.ingot.framework.commons.model.iam.DirectoryPolicyDraft;
-import com.ingot.framework.commons.model.iam.DirectoryPolicyInput;
-import com.ingot.framework.commons.model.iam.DirectoryRule;
+import com.ingot.framework.commons.model.iam.FieldOperationRule;
 import com.ingot.framework.commons.model.iam.FieldPolicyDraft;
 import com.ingot.framework.commons.model.iam.FieldPolicyInput;
 import com.ingot.framework.commons.model.iam.FieldRule;
-import com.ingot.framework.commons.model.iam.FieldOperationRule;
-import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
-import com.ingot.framework.commons.model.iam.ImpactSummary;
-import com.ingot.framework.commons.model.iam.MemberFieldKey;
-import com.ingot.framework.commons.model.iam.MemberRecord;
-import com.ingot.framework.commons.model.iam.PageResponse;
-import com.ingot.framework.commons.model.iam.PolicyPreviewInput;
-import com.ingot.framework.commons.model.iam.PolicyPreviewResult;
-import com.ingot.framework.commons.model.iam.PolicyScenario;
-import com.ingot.framework.commons.model.iam.Preview;
+import com.ingot.framework.commons.model.iam.MemberResources;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.ScopeBinding;
 import com.ingot.framework.commons.model.iam.ScopeExpression;
@@ -57,7 +38,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * <p>维护租户通讯录与字段策略，并按策略投影普通通讯录，不产生业务授权。</p>
+ * <p>维护租户成员字段策略，不产生业务授权。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -68,69 +49,34 @@ public class PolicyService {
     };
     private static final TypeReference<Map<String, ScopeBinding>> BINDINGS = new TypeReference<>() {
     };
-    private static final String DIRECTORY_POLICY = "directory-policy";
     private static final String FIELD_POLICY = "field-policy";
     private final IamAccess access;
     private final IamAuditWriter audits;
     private final FieldAccessEvaluator fields;
     private final com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata;
-    private final DirectoryVisibilityEvaluator directory;
     private final PolicyWriteRepository policies;
     private final TransactionTemplate transaction;
 
     /**
-     * 绑定身份、审计、字段求值、通讯录可见性与策略表。
+     * 绑定身份、审计、字段求值与策略表。
      * <p>TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。</p>
      *
      * @param access 当前身份
      * @param audits 同事务审计
      * @param fields 字段访问
-     * @param directory 通讯录可见性
      * @param policies 策略读写
      * @param transactionManager 同一数据源事务
+     * @param fieldMetadata 资源字段目录
      */
     public PolicyService(IamAccess access, IamAuditWriter audits, FieldAccessEvaluator fields,
-                             DirectoryVisibilityEvaluator directory, PolicyWriteRepository policies,
-                             PlatformTransactionManager transactionManager, com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata) {
+                         PolicyWriteRepository policies, PlatformTransactionManager transactionManager,
+                         com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata) {
         this.fieldMetadata = fieldMetadata;
         this.access = access;
         this.audits = audits;
         this.fields = fields;
-        this.directory = directory;
         this.policies = policies;
         this.transaction = new TransactionTemplate(transactionManager);
-    }
-
-    /**
-     * 读取通讯录策略。
-     *
-     * @return 策略详情
-     */
-    public ResourceDetail<DirectoryPolicyDraft> getDirectoryPolicy() {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DIRECTORY_POLICY_READ);
-        return loadDirectory(IamIds.require(actor.context().tenantId()));
-    }
-
-    /**
-     * 整体替换通讯录策略。
-     *
-     * @param input 完整配置
-     * @return 提交后详情
-     */
-    public ResourceDetail<DirectoryPolicyDraft> putDirectoryPolicy(DirectoryPolicyInput input) {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DIRECTORY_POLICY_UPDATE);
-        long tenantId = IamIds.require(actor.context().tenantId());
-        return transaction.execute(status -> {
-            ResourceDetail<DirectoryPolicyDraft> current = loadDirectory(tenantId);
-            IamIds.requireExpected(input.expectedVersion(), current.version());
-            requireDefault(input.policy().defaultRevisionId(), DefaultPolicyKind.DIRECTORY);
-            replaceDirectory(actor, tenantId, input.policy());
-            audits.write(actor.context(), access.nextId(), DIRECTORY_POLICY, IamIds.text(tenantId),
-                    AuditChangeType.UPDATE, Map.of(AuditField.POLICY_VERSION, current.version()),
-                    Map.of(AuditField.POLICY_VERSION, Long.toString(Long.parseLong(current.version()) + 1)),
-                    Map.of(DIRECTORY_POLICY, Long.toString(Long.parseLong(current.version()) + 1)));
-            return loadDirectory(tenantId);
-        });
     }
 
     /**
@@ -166,185 +112,6 @@ public class PolicyService {
         });
     }
 
-    /**
-     * 只读策略预览，结果与操作者可见范围求交。
-     *
-     * @param input 草稿与查看者
-     * @return 可见样例
-     */
-    public Preview<PolicyPreviewResult> preview(PolicyPreviewInput input) {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_POLICY_PREVIEW);
-        long tenantId = IamIds.require(actor.context().tenantId());
-        long viewerId = IamIds.require(input.viewerMemberId());
-        long operatorId = IamIds.require(actor.context().memberId());
-        ResourceDetail<DirectoryPolicyDraft> savedDirectory = loadDirectory(tenantId);
-        ResourceDetail<FieldPolicyDraft> savedField = loadField(tenantId);
-        DirectoryPolicyDraft directoryDraft = input.policyDraft().kind() == DefaultPolicyKind.DIRECTORY
-                ? input.policyDraft().directory() : savedDirectory.record();
-        FieldPolicySnapshot snapshot = input.policyDraft().kind() == DefaultPolicyKind.FIELD
-                ? fields.snapshot(tenantId, PolicyScenario.DIRECTORY, input.policyDraft().field())
-                : fields.snapshot(tenantId, PolicyScenario.DIRECTORY);
-        DirectoryVisibility preview = directory.evaluate(tenantId, viewerId, directoryDraft);
-        DirectoryVisibility operator = directory.evaluate(tenantId, operatorId, savedDirectory.record());
-        if (input.target() != null && !input.target().isBlank()) {
-            long targetId = IamIds.require(input.target());
-            if (!operator.contains(targetId)) {
-                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-            }
-            if (!preview.contains(targetId)) {
-                PolicyPreviewResult result = new PolicyPreviewResult(input.policyDraft().kind(), List.of(), List.of(),
-                        operator.concealsAny(preview));
-                return new Preview<>(previewVersion(input.policyDraft().kind(), savedDirectory, savedField), true,
-                        List.of(), List.of(), new ImpactSummary(null, null, null, result.restricted()), result);
-            }
-        }
-        List<DirectoryVisibility> visibilities = List.of(preview, operator);
-        var membersPage = policies.pageVisibleMembers(tenantId, visibilities, null, null, IamPages.DEFAULT_PAGE,
-                IamPages.DEFAULT_SIZE);
-        var batch = fields.prepare(snapshot, viewerId, membersPage.getRecords().stream().map(row -> row.getId().longValueExact()).toList());
-        List<ResourceDetail<MemberRecord>> members = new ArrayList<>();
-        for (IamTenantMemberEntity row : membersPage.getRecords()) {
-            if (input.target() != null && !input.target().isBlank()
-                    && !input.target().equals(row.getId().toString())) {
-                continue;
-            }
-            members.add(member(row, batch));
-        }
-        var departmentsPage = policies.pageVisibleDepartments(tenantId, visibilities, IamPages.DEFAULT_PAGE,
-                IamPages.DEFAULT_SIZE);
-        List<DepartmentRecord> departments = new ArrayList<>();
-        for (DirectoryDepartmentNode node : departmentsPage.getRecords()) {
-            departments.add(departmentRecord(node));
-        }
-        boolean restricted = operator.concealsAny(preview);
-        PolicyPreviewResult result = new PolicyPreviewResult(input.policyDraft().kind(), members, departments,
-                restricted);
-        return new Preview<>(previewVersion(input.policyDraft().kind(), savedDirectory, savedField), true, List.of(),
-                List.of(), new ImpactSummary(null, null, null, restricted), result);
-    }
-
-    private static String previewVersion(DefaultPolicyKind kind, ResourceDetail<DirectoryPolicyDraft> directory,
-                                         ResourceDetail<FieldPolicyDraft> field) {
-        return kind == DefaultPolicyKind.DIRECTORY ? directory.version() : field.version();
-    }
-
-    /** 返回与整份通讯录查询范围对应的全局能力。 */
-    public com.ingot.framework.commons.model.iam.ResourceFieldContext directoryContext() {
-        var actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DIRECTORY_READ);
-        long tenantId = IamIds.require(actor.context().tenantId()), viewerId = IamIds.require(actor.context().memberId());
-        var snapshot = fields.snapshot(tenantId, PolicyScenario.DIRECTORY);
-        var visibility = directory.evaluate(tenantId, viewerId, loadDirectory(tenantId).record());
-        var operations = fields.operations(snapshot, viewerId, com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY,
-                IamAction.VALUE_TENANT_DIRECTORY_READ, visibility.toLookupScope());
-        return new com.ingot.framework.commons.model.iam.ResourceFieldContext(fields.contextVisibility(snapshot, viewerId),
-                Map.of(IamAction.VALUE_TENANT_DIRECTORY_READ, operations), snapshot.masks());
-    }
-
-    /**
-     * 分页列出当前查看者可见的普通通讯录成员。
-     *
-     * @param page 页码
-     * @param pageSize 页大小
-     * @param phone 手机号精确筛选，可空
-     * @param email 邮箱精确筛选，可空
-     * @return 成员页
-     */
-    public PageResponse<ResourceDetail<MemberRecord>> listDirectoryMembers(int page, int pageSize, String phone,
-                                                                           String email) {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DIRECTORY_READ);
-        IamPages.require(page, pageSize);
-        long tenantId = IamIds.require(actor.context().tenantId());
-        long viewerId = IamIds.require(actor.context().memberId());
-        DirectoryVisibility visibility = directory.evaluate(tenantId, viewerId, loadDirectory(tenantId).record());
-        FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.DIRECTORY);
-        Map<String, String> submitted = new java.util.LinkedHashMap<>();
-        if (phone != null && !phone.isBlank()) submitted.put(MemberFieldKey.VALUE_PHONE, phone);
-        if (email != null && !email.isBlank()) submitted.put(MemberFieldKey.VALUE_EMAIL, email);
-        fields.requireFilters(snapshot, viewerId, com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY,
-                IamAction.VALUE_TENANT_DIRECTORY_READ, visibility.toLookupScope(), submitted);
-        var result = policies.pageVisibleMembers(tenantId, List.of(visibility), phone, email, page, pageSize);
-        var batch = fields.prepare(snapshot, viewerId, result.getRecords().stream().map(row -> row.getId().longValueExact()).toList());
-        List<ResourceDetail<MemberRecord>> items = new ArrayList<>();
-        for (IamTenantMemberEntity row : result.getRecords()) {
-            items.add(member(row, batch));
-        }
-        return IamPages.details(items, result.getTotal(), page, pageSize);
-    }
-
-    /**
-     * 读取普通通讯录成员详情。
-     *
-     * @param id 成员 ID
-     * @return 投影后的详情
-     */
-    public ResourceDetail<MemberRecord> getDirectoryMember(String id) {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DIRECTORY_READ);
-        long tenantId = IamIds.require(actor.context().tenantId());
-        long memberId = IamIds.require(id);
-        long viewerId = IamIds.require(actor.context().memberId());
-        DirectoryVisibility visibility = directory.evaluate(tenantId, viewerId, loadDirectory(tenantId).record());
-        if (!policies.visibleMember(tenantId, visibility, memberId)) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        }
-        IamTenantMemberEntity row = policies.findActiveMember(tenantId, memberId);
-        if (row == null) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        }
-        return member(row, fields.prepare(fields.snapshot(tenantId, PolicyScenario.DIRECTORY), viewerId, List.of(memberId)));
-    }
-
-    /**
-     * 列出普通通讯录可见部门树。
-     *
-     * @param page 页码
-     * @param pageSize 页大小
-     * @return 部门页
-     */
-    public PageResponse<ResourceDetail<DepartmentRecord>> listDirectoryDepartments(int page, int pageSize) {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DIRECTORY_READ);
-        IamPages.require(page, pageSize);
-        long tenantId = IamIds.require(actor.context().tenantId());
-        long viewerId = IamIds.require(actor.context().memberId());
-        DirectoryVisibility visibility = directory.evaluate(tenantId, viewerId, loadDirectory(tenantId).record());
-        var result = policies.pageVisibleDepartments(tenantId, List.of(visibility), page, pageSize);
-        List<ResourceDetail<DepartmentRecord>> items = result.getRecords().stream()
-                .map(PolicyService::departmentDetail)
-                .toList();
-        return IamPages.details(items, result.getTotal(), page, pageSize);
-    }
-
-    private ResourceDetail<DirectoryPolicyDraft> loadDirectory(long tenantId) {
-        IamDirectoryPolicyEntity row = policies.findDirectory(tenantId);
-        if (row == null) {
-            return IamDetails.of(new DirectoryPolicyDraft(latestDefault(DefaultPolicyKind.DIRECTORY), null, List.of()),
-                    "0");
-        }
-        DirectoryDefault override = null;
-        LinkedHashSet<Long> selectorIds = new LinkedHashSet<>();
-        if (row.getDefaultScope() != null && row.getDefaultScope() == DirectoryDefaultScope.SELECTED) {
-            selectorIds.add(selectorId(row.getDefaultSelectorId()));
-        }
-        List<IamDirectoryRuleEntity> items = policies.listDirectoryRules(tenantId);
-        for (IamDirectoryRuleEntity item : items) {
-            selectorIds.add(selectorId(item.getViewerSelectorId()));
-            selectorIds.add(selectorId(item.getTargetSelectorId()));
-        }
-        Map<Long, Selection> selectors = policies.selectors(tenantId, selectorIds);
-        if (row.getDefaultScope() != null) {
-            Selection selection = row.getDefaultScope() == DirectoryDefaultScope.SELECTED
-                    ? selection(selectors, selectorId(row.getDefaultSelectorId())) : null;
-            override = new DirectoryDefault(row.getDefaultScope(), selection);
-        }
-        List<DirectoryRule> rules = new ArrayList<>();
-        for (IamDirectoryRuleEntity item : items) {
-            rules.add(new DirectoryRule(item.getEffect(),
-                    selection(selectors, selectorId(item.getViewerSelectorId())),
-                    selection(selectors, selectorId(item.getTargetSelectorId()))));
-        }
-        return IamDetails.of(new DirectoryPolicyDraft(row.getDefaultRevisionId().toString(), override, rules),
-                row.getVersion().toString());
-    }
-
     private ResourceDetail<FieldPolicyDraft> loadField(long tenantId) {
         IamFieldPolicyEntity row = policies.findField(tenantId);
         if (row == null) {
@@ -369,24 +136,6 @@ public class PolicyService {
                 row.getVersion().toString());
     }
 
-    private void replaceDirectory(ActiveIdentity actor, long tenantId, DirectoryPolicyDraft policy) {
-        policies.deleteDirectoryRules(tenantId);
-        Long selectorId = null;
-        DirectoryDefaultScope scope = null;
-        if (policy.defaultOverride() != null) {
-            scope = policy.defaultOverride().scope();
-            if (scope == DirectoryDefaultScope.SELECTED) {
-                selectorId = writeSelector(actor, tenantId, policy.defaultOverride().selection());
-            }
-        }
-        policies.upsertDirectory(tenantId, IamIds.require(policy.defaultRevisionId()), scope, selectorId);
-        for (DirectoryRule rule : policy.rules()) {
-            long viewer = writeSelector(actor, tenantId, rule.viewerSelection());
-            long target = writeSelector(actor, tenantId, rule.targetSelection());
-            policies.insertDirectoryRule(access.nextId(), tenantId, rule.effect(), viewer, target);
-        }
-    }
-
     private void replaceField(ActiveIdentity actor, long tenantId, FieldPolicyDraft policy) {
         policies.deleteFieldRules(tenantId);
         for (var operation : policy.operationRules()) {
@@ -403,22 +152,19 @@ public class PolicyService {
     }
 
     private void requireVisibilityRule(FieldRule rule) {
-        var resource = rule.scenario() == PolicyScenario.DIRECTORY
-                ? com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY
-                : com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER;
-        var field = fieldMetadata.requireFresh(resource, false).descriptor().fields().stream()
+        var field = fieldMetadata.requireFresh(MemberResources.TENANT_MEMBER, false).descriptor().fields().stream()
                 .filter(value -> value.key().equals(rule.fieldKey())).findFirst()
                 .orElseThrow(() -> new BizException(IamReasonCode.INVALID_ARGUMENT));
-        if (!field.visibilities().contains(rule.visibility())) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        if (!field.visibilities().contains(rule.visibility())) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
     }
 
     private void requireOperationRule(FieldOperationRule rule) {
-        if (rule.resource().domain() != AuthorizationDomain.TENANT)
+        if (rule.resource().domain() != AuthorizationDomain.TENANT
+                || !MemberResources.TENANT_MEMBER.equals(rule.resource())) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        var expected = rule.scenario() == PolicyScenario.DIRECTORY
-                ? com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY
-                : com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER;
-        if (!expected.equals(rule.resource())) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
         var descriptor = fieldMetadata.requireFresh(rule.resource(), false).descriptor();
         var manifest = fieldMetadata.bindings(rule.resource());
         var write = manifest.bindings().stream().anyMatch(binding -> rule.actionCode().equals(binding.actionCode())
@@ -432,8 +178,9 @@ public class PolicyService {
         if (rule.operations().editable() && (!write || !field.editable()
                     || action.mode() != com.ingot.framework.commons.model.iam.extension.ExecutionMode.MUTATING)
                 || rule.operations().filterable() && (!filter || !field.filterable()
-                    || action.mode() != com.ingot.framework.commons.model.iam.extension.ExecutionMode.READ_ONLY))
+                    || action.mode() != com.ingot.framework.commons.model.iam.extension.ExecutionMode.READ_ONLY)) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
     }
 
     private long writeSelector(ActiveIdentity actor, long tenantId, Selection selection) {
@@ -450,38 +197,18 @@ public class PolicyService {
         return id;
     }
 
-    private ResourceDetail<MemberRecord> member(IamTenantMemberEntity row, FieldAccessEvaluator.FieldBatch batch) {
-        MemberRecord raw = new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
-                row.getPhone(), row.getEmail(), null, row.getStatus(), List.of());
-        Map<String, FieldAccess> access = fields.memberAccess(batch, row.getId().longValueExact());
-        String version = row.getVersion() == null ? "0" : row.getVersion().toString();
-        return IamDetails.of(fields.project(raw, access, com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY, batch.snapshot().masks()), access, Map.of(), version);
-    }
-
     private void requireDefault(String revisionId, DefaultPolicyKind kind) {
-        if (!policies.hasDefaultRevision(IamIds.require(revisionId), kind)) {
+        if (policies.findRevision(IamIds.require(revisionId), kind) == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
     }
 
     private String latestDefault(DefaultPolicyKind kind) {
-        String id = policies.latestDefaultId(kind);
-        if (id == null) {
+        var revision = policies.latestRevision(kind);
+        if (revision == null || revision.getId() == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return id;
-    }
-
-    private static ResourceDetail<DepartmentRecord> departmentDetail(DirectoryDepartmentNode node) {
-        return IamDetails.of(departmentRecord(node),
-                node.row().getVersion() == null ? "0" : node.row().getVersion().toString());
-    }
-
-    private static DepartmentRecord departmentRecord(DirectoryDepartmentNode node) {
-        IamDepartmentEntity row = node.row();
-        return new DepartmentRecord(row.getId().toString(),
-                row.getParentId() == null ? null : row.getParentId().toString(),
-                row.getName(), row.getSortOrder() == null ? 0 : row.getSortOrder(), node.navigationOnly(), null);
+        return revision.getId().toString();
     }
 
     private static Selection selection(Map<Long, Selection> selectors, long selectorId) {

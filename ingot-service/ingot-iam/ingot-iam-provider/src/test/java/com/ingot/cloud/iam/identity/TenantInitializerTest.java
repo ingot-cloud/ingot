@@ -40,15 +40,15 @@ class TenantInitializerTest {
                 com.ingot.cloud.iam.persistence.IamMybatisTestAccess.audits(dataSource));
     }
 
-    private TenantInitializationPlan plan(long governance, long directory, long application) {
+    private TenantInitializationPlan plan(long governance, long field, long application) {
         return new TenantInitializationPlan(10, "研发组织", "ingot/tenant/avatar/a.png", 2, 101, "组织所有者", 111, "根部门",
-                directory, 22, List.of(new TenantInitializationPlan.Application(application, 301)),
+                field, List.of(new TenantInitializationPlan.Application(application, 301)),
                 null, 401);
     }
 
     @Test
     void initializesOnlyOwnedRowsAndFixedReferences() {
-        var result = initializer.initialize(actor, plan(11, 21, 1));
+        var result = initializer.initialize(actor, plan(11, 22, 1));
         assertEquals("10", result.id());
         assertEquals("0", result.version());
         assertEquals(101L, jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10", Long.class));
@@ -58,7 +58,7 @@ class TenantInitializerTest {
         assertEquals(0,count("iam_role_assignment"));
         assertEquals(3, count("iam_role_definition"));
         assertEquals(3, count("iam_role_revision"));
-        assertEquals(2, count("iam_default_policy_revision"));
+        assertEquals(1, count("iam_default_policy_revision"));
         assertEquals(2, count("iam_account"));
         assertEquals(1, count("iam_member_department"));
         assertEquals("ALL", jdbc.queryForObject("SELECT audience_kind FROM iam_app_audience", String.class));
@@ -72,15 +72,15 @@ class TenantInitializerTest {
     @Test
     void auditFailureRollsBackAllPreviouslyInsertedRows() {
         jdbc.update("INSERT INTO iam_authorization_audit(id) VALUES (401)");
-        assertThrows(DataAccessException.class, () -> initializer.initialize(actor, plan(11, 21, 1)));
+        assertThrows(DataAccessException.class, () -> initializer.initialize(actor, plan(11, 22, 1)));
         assertNoTenantRows();
         assertEquals(1, count("iam_authorization_audit"));
     }
 
     @Test
     void duplicateCreationDoesNotModifyExistingOrganization() {
-        initializer.initialize(actor, plan(11, 21, 1));
-        assertThrows(DataAccessException.class, () -> initializer.initialize(actor, plan(11, 21, 1)));
+        initializer.initialize(actor, plan(11, 22, 1));
+        assertThrows(DataAccessException.class, () -> initializer.initialize(actor, plan(11, 22, 1)));
         assertEquals(1, count("iam_tenant"));
         assertEquals(0, count("iam_role_assignment"));
         assertEquals(1, count("iam_authorization_audit"));
@@ -90,25 +90,25 @@ class TenantInitializerTest {
     void initializationDoesNotDependOnAnyGovernanceRole() {
         jdbc.update("DELETE FROM iam_role_revision");
         jdbc.update("DELETE FROM iam_role_definition");
-        initializer.initialize(actor, plan(0,21,1));
+        initializer.initialize(actor, plan(0,22,1));
         assertEquals(0,count("iam_role_assignment"));
         assertEquals(101L,jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10",Long.class));
     }
 
     @Test
     void wrongDefaultKindAndPlatformApplicationAreRejected() {
-        assertCode(IamReasonCode.POLICY_CONFLICT, plan(11, 22, 1));
-        assertCode(IamReasonCode.APPLICATION_UNAVAILABLE, plan(11, 21, 2));
+        assertCode(IamReasonCode.POLICY_CONFLICT, plan(11, 21, 1));
+        assertCode(IamReasonCode.APPLICATION_UNAVAILABLE, plan(11, 22, 2));
         assertNoTenantRows();
     }
 
     @Test
     void disabledOwnerAccountOrActorCannotInitializeOrganization() {
         jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=2");
-        assertCode(IamReasonCode.IDENTITY_INVALID, plan(11, 21, 1));
+        assertCode(IamReasonCode.IDENTITY_INVALID, plan(11, 22, 1));
         jdbc.update("UPDATE iam_account SET enabled=TRUE WHERE id=2");
         jdbc.update("UPDATE iam_platform_member SET status='SUSPENDED' WHERE id=1001");
-        assertCode(IamReasonCode.IDENTITY_INVALID, plan(11, 21, 1));
+        assertCode(IamReasonCode.IDENTITY_INVALID, plan(11, 22, 1));
         assertNoTenantRows();
     }
 
@@ -122,7 +122,7 @@ class TenantInitializerTest {
 
     private void assertNoTenantRows() {
         for (String table : List.of("iam_tenant", "iam_tenant_member", "iam_department", "iam_member_department",
-                "iam_role_assignment", "iam_tenant_app_entitlement", "iam_app_audience", "iam_directory_policy", "iam_field_policy")) {
+                "iam_role_assignment", "iam_tenant_app_entitlement", "iam_app_audience", "iam_field_policy")) {
             assertEquals(0, count(table), table);
         }
     }

@@ -27,7 +27,7 @@ public final class FieldTestSupport {
         var mapper = new ObjectMapper().findAndRegisterModules();
         mapper.setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
         var registry = new FieldBindingRegistry(mapper);
-        for (var resource : List.of(MemberResources.PLATFORM_MEMBER, MemberResources.TENANT_MEMBER, MemberResources.TENANT_DIRECTORY)) {
+        for (var resource : List.of(MemberResources.PLATFORM_MEMBER, MemberResources.TENANT_MEMBER)) {
             String prefix = resource.applicationCode() + ":" + resource.resourceCode() + ":";
             registry.register(MemberRecord.class, resource, prefix + "read", FieldUse.READ);
             registry.register(MemberProfileInput.class, resource, prefix + "update", FieldUse.WRITE);

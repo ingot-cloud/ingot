@@ -22,8 +22,8 @@ class IamEnumPersistenceContractTest {
         for (Class type : new Class[]{
                 MemberStatus.class, AuthorizationDomain.class, RoleKind.class, SubjectType.class, GrantStatus.class,
                 AssignmentSource.class, DefaultPolicyKind.class, AudienceKind.class, EntitlementSource.class,
-                AuditChangeType.class, DirectoryDefaultScope.class, MenuKind.class, ActionMatchMode.class,
-                MenuAccessMode.class, ScopeKind.class, PolicyEffect.class, IamAction.class, IamReasonCode.class,
+                AuditChangeType.class, MenuKind.class, ActionMatchMode.class,
+                MenuAccessMode.class, ScopeKind.class, IamAction.class, IamReasonCode.class,
                 MemberFieldKey.class, ExportTaskStatus.class, IamActionOperation.class,
                 AccountLookupPurpose.class, SelectionPurpose.class, SensitiveConfirmationKind.class
         }) {
@@ -36,8 +36,8 @@ class IamEnumPersistenceContractTest {
         assertEquals("\"ACTIVE\"", mapper.writeValueAsString(MemberStatus.ACTIVE));
         assertEquals("\"PLATFORM\"", mapper.writeValueAsString(AuthorizationDomain.PLATFORM));
         assertEquals("\"ActionDenied\"", mapper.writeValueAsString(IamReasonCode.ACTION_DENIED));
-        assertEquals("\"iam-tenant:directory:read\"", mapper.writeValueAsString(IamAction.TENANT_DIRECTORY_READ));
-        assertEquals(IamAction.TENANT_DIRECTORY_READ, mapper.readValue("\"iam-tenant:directory:read\"", IamAction.class));
+        assertEquals("\"iam-tenant:field-policy:read\"", mapper.writeValueAsString(IamAction.TENANT_FIELD_POLICY_READ));
+        assertEquals(IamAction.TENANT_FIELD_POLICY_READ, mapper.readValue("\"iam-tenant:field-policy:read\"", IamAction.class));
         assertEquals(MemberStatus.ACTIVE, MemberStatus.getEnum("ACTIVE"));
         assertEquals("displayName", mapper.readValue("\"displayName\"", MemberFieldKey.class).getValue());
     }

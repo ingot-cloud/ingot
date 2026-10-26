@@ -77,8 +77,6 @@ class FieldAccessEvaluatorTest {
                 + " revision BIGINT, definition VARCHAR(1024))");
         jdbc.execute("CREATE TABLE iam_field_policy(tenant_id BIGINT PRIMARY KEY, default_revision_id BIGINT,"
                 + " default_kind VARCHAR(16), version BIGINT, operation_rules VARCHAR(4096) DEFAULT '[]')");
-        jdbc.execute("CREATE TABLE iam_directory_policy(tenant_id BIGINT PRIMARY KEY, default_revision_id BIGINT)");
-        jdbc.execute("CREATE TABLE iam_directory_rule(id BIGINT)");
         jdbc.execute("CREATE TABLE iam_policy_selector(id BIGINT PRIMARY KEY, tenant_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, tenant_id BIGINT, status VARCHAR(16))");
         jdbc.update("""
@@ -152,9 +150,17 @@ class FieldAccessEvaluatorTest {
     }
 
     @Test
-    void directoryNameSearchRemainsUnsupported() {
-        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.DIRECTORY), 101,
-                MemberFieldKey.VALUE_DISPLAY_NAME, "张", com.ingot.cloud.iam.evaluation.ObjectScope.all()));
+    void draftSnapshotParticipatesWithoutWritingRules() {
+        FieldPolicyDraft draft = new FieldPolicyDraft("22", List.of(
+                new FieldRule(PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE,
+                        new Selection(List.of("101"), List.of()),
+                        List.of(new ScopeExpression(ScopeKind.ALL, null, null)), Map.of(),
+                        FieldVisibility.HIDDEN)));
+        FieldPolicySnapshot snapshot = evaluator.snapshot(10, PolicyScenario.MANAGEMENT, draft);
+        assertEquals(FieldVisibility.HIDDEN,
+                evaluator.access(snapshot, 101, 102, MemberFieldKey.VALUE_PHONE).visibility());
+        assertEquals(FieldVisibility.MASKED,
+                evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE).visibility());
     }
 
     @Test
@@ -246,20 +252,6 @@ class FieldAccessEvaluatorTest {
         BizException lookup = assertThrows(BizException.class,
                 () -> evaluator.requireOriginalLookup(10, 101, MemberFieldKey.VALUE_PHONE, "13800000000"));
         assertEquals(IamReasonCode.ACTION_DENIED.getCode(), lookup.getCode());
-    }
-
-    @Test
-    void draftSnapshotParticipatesInPreviewWithoutWritingRules() {
-        FieldPolicyDraft draft = new FieldPolicyDraft("22", List.of(
-                new FieldRule(PolicyScenario.DIRECTORY, MemberFieldKey.VALUE_PHONE,
-                        new Selection(List.of("101"), List.of()),
-                        List.of(new ScopeExpression(ScopeKind.ALL, null, null)), Map.of(),
-                        FieldVisibility.HIDDEN)));
-        FieldPolicySnapshot snapshot = evaluator.snapshot(10, PolicyScenario.DIRECTORY, draft);
-        assertEquals(FieldVisibility.HIDDEN,
-                evaluator.access(snapshot, 101, 102, MemberFieldKey.VALUE_PHONE).visibility());
-        assertEquals(FieldVisibility.MASKED,
-                evaluator.access(10, 101, 102, PolicyScenario.DIRECTORY, MemberFieldKey.VALUE_PHONE).visibility());
     }
 
     @Test

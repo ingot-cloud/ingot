@@ -71,11 +71,7 @@ public class LocalResourceAuthorizationClient implements AuthorizationClient {
         Map<String, com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision> fieldDecisions = new LinkedHashMap<>();
         if (actor.context().domain() == com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM)
             fieldDecisions.putAll(roleFields.evaluate(request.resource(), actor.context(), view, request.actionCodes(), fresh));
-        else if (request.resource().equals(BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE)) {
-            for (var code : request.actionCodes())
-                fieldDecisions.put(code, tenantFields.decision(actor.context(), request.resource(), code,
-                        objectScopes.members(actor.context(), view.scope(code)), !preview && modes.get(code) == ExecutionMode.MUTATING));
-        } else if (request.resource().equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)) {
+        else if (request.resource().equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)) {
             for (var code : request.actionCodes()) {
                 var policy = tenantFields.decision(actor.context(), request.resource(), code,
                         objectScopes.members(actor.context(), view.scope(code)), !preview && modes.get(code) == ExecutionMode.MUTATING);

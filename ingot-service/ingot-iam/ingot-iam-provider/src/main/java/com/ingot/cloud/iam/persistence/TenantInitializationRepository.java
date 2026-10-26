@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.iam.identity.TenantInitializationPlan;
 import com.ingot.cloud.iam.persistence.entity.IamAppAudienceEntity;
 import com.ingot.cloud.iam.persistence.entity.IamDepartmentEntity;
-import com.ingot.cloud.iam.persistence.entity.IamDirectoryPolicyEntity;
 import com.ingot.cloud.iam.persistence.entity.IamFieldPolicyEntity;
 import com.ingot.cloud.iam.persistence.entity.IamMemberDepartmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleAssignmentEntity;
@@ -20,7 +19,6 @@ import com.ingot.cloud.iam.persistence.mapper.IamAppAudienceMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamApplicationMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDefaultPolicyRevisionMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
-import com.ingot.cloud.iam.persistence.mapper.IamDirectoryPolicyMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamFieldPolicyMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleAssignmentMapper;
@@ -59,7 +57,6 @@ public class TenantInitializationRepository {
     private final IamMemberDepartmentMapper memberDepartments;
     private final IamTenantAppEntitlementMapper entitlements;
     private final IamAppAudienceMapper audiences;
-    private final IamDirectoryPolicyMapper directoryPolicies;
     private final IamFieldPolicyMapper fieldPolicies;
 
     /**
@@ -141,10 +138,6 @@ public class TenantInitializationRepository {
             audience.setAudienceKind(AudienceKind.ALL);
             audiences.insert(audience);
         }
-        IamDirectoryPolicyEntity directory = new IamDirectoryPolicyEntity();
-        directory.setTenantId(id(plan.tenantId()));
-        directory.setDefaultRevisionId(id(plan.directoryRevisionId()));
-        directoryPolicies.insert(directory);
         IamFieldPolicyEntity field = new IamFieldPolicyEntity();
         field.setTenantId(id(plan.tenantId()));
         field.setDefaultRevisionId(id(plan.fieldRevisionId()));

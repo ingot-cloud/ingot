@@ -310,11 +310,10 @@ public class TenantCurrentRoleService {
             if (kinds.contains(scopeKind) && options.stream().noneMatch(p -> p.kind() == kind))
                 options.add(new CurrentRoleParameter(TenantAuthorizationConstants.resourceParameterKey(row.resourceId().toString(),kind), kind, row.resourceId().toString()));
         }
-        var directory = descriptor != null && com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_DIRECTORY_RESOURCE.equals(descriptor.key());
         return new CurrentRoleCatalogAction(row.actionId().toString(), row.actionCode(), row.actionName(), row.applicationId().toString(),
                 row.applicationName(), row.resourceId().toString(), row.resourceName(), Boolean.TRUE.equals(row.enabled()), kinds, options,
-                directory || descriptor == null ? List.of() : descriptor.fields(),
-                directory || descriptor == null ? Map.of() : descriptor.defaults());
+                descriptor == null ? List.of() : descriptor.fields(),
+                descriptor == null ? Map.of() : descriptor.defaults());
     }
 
     /** 按资源声明固化当前字段快照，创建、预览和保存共用。 */

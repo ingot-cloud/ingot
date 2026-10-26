@@ -63,7 +63,6 @@ GOVERNANCE_ROLES = {
 }
 
 DEFAULT_POLICIES = {
-    'DIRECTORY': POLICY_BASE + 1,
     'FIELD': POLICY_BASE + 2,
 }
 
@@ -89,7 +88,6 @@ PLATFORM_MEMBER_FIELDS = [dict(field, filterable=field['key'] == 'displayName') 
 ]
 # 目录能力上限不等同默认筛选授权；已有租户策略保持原值。
 TENANT_MEMBER_FIELDS = [dict(field, filterable=True) if field['key'] == 'displayName' else dict(field) for field in MEMBER_FIELDS]
-DIRECTORY_FIELDS = [dict(field, editable=False) for field in MEMBER_FIELDS]
 
 RESOURCES = {
     'action': ('操作', OBJECT_SCOPES, []),
@@ -100,15 +98,12 @@ RESOURCES = {
     'authorization': ('授权诊断', SINGLETON_SCOPES, []),
     'delegation': ('授权委派', OBJECT_SCOPES, []),
     'department': ('部门', DEPARTMENT_SCOPES, []),
-    'directory': ('通讯录', MEMBER_SCOPES, MEMBER_FIELDS),
-    'directory-policy': ('通讯录可见范围策略', SINGLETON_SCOPES, []),
     'entitlement': ('应用开通', OBJECT_SCOPES, []),
     'field-policy': ('成员字段策略', SINGLETON_SCOPES, []),
     'group': ('用户组', OBJECT_SCOPES, []),
     'member': ('成员', MEMBER_SCOPES, MEMBER_FIELDS),
     'menu': ('菜单', OBJECT_SCOPES, []),
     'plan': ('套餐', OBJECT_SCOPES, []),
-    'policy': ('策略预览', SINGLETON_SCOPES, []),
     'resource': ('资源', OBJECT_SCOPES, []),
     'role': ('角色', OBJECT_SCOPES, []),
     'settings': ('组织设置', SINGLETON_SCOPES, []),
@@ -213,12 +208,11 @@ TENANT_MENUS = [
     ]),
     ('安全与合规', 'org.iam.compliance', 'ep:lock', [
         ('成员访问策略', 'org.iam.member.policies',
-         ['iam-tenant:directory-policy:read', 'iam-tenant:field-policy:read']),
+         ['iam-tenant:field-policy:read']),
         ('组织授权审计', 'org.iam.authorization.audit', ['iam-tenant:audit:read']),
     ]),
     ('工作台', 'org.iam.workspace', 'ep:grid', [
         ('工作台', 'org.iam.workbench', ['iam-tenant:application:read']),
-        ('通讯录', 'org.iam.directory', ['iam-tenant:directory:read']),
     ]),
 ]
 
@@ -407,7 +401,6 @@ def build(check=False):
             resource_count += 1
             name, scopes, fields = RESOURCES[resource]
             if resource == 'member': fields = PLATFORM_MEMBER_FIELDS if application == 'iam-platform' else TENANT_MEMBER_FIELDS
-            if resource == 'directory': fields = DIRECTORY_FIELDS
             if APPLICATIONS[application]['domain'] == 'PLATFORM':
                 scopes = [scope for scope in scopes if scope not in ('MEMBER_DEPARTMENTS', 'MANAGED_DEPARTMENTS')]
             lines.append(insert(
@@ -566,13 +559,12 @@ def build(check=False):
                       f"AND app.domain = role.domain AND action.code = {quote(code)} "
                       f"AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain)"))
 
-    lines.append('-- 默认策略版本：固定版本被租户策略引用；通讯录默认全组织，字段默认脱敏手机邮箱，上限缺省不额外收紧。')
+    lines.append('-- 默认策略版本：固定版本被租户字段策略引用；字段默认脱敏手机邮箱，上限缺省不额外收紧。')
     field_default = {
         'fields': {item['key']: 'MASKED' if item['key'] in ('phone', 'email') else 'FULL' for item in MEMBER_FIELDS},
         'operations': {item['key']: {'editable': True, 'filterable': item['filterable']} for item in MEMBER_FIELDS},
     }
     definitions = {
-        'DIRECTORY': {'scope': 'ALL'},
         'FIELD': field_default,
     }
     for kind, policy_id in DEFAULT_POLICIES.items():

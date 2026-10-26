@@ -44,7 +44,7 @@ public final class TenantScopeCandidateSql {
                     + "EXISTS(SELECT 1 FROM iam_department child WHERE child.parent_id=d.id"
                     + " AND child.tenant_id=d.tenant_id) AS has_children "
                     + "FROM iam_department d WHERE d.tenant_id=#{q.tenantId}";
-            case MEMBER, DIRECTORY -> "SELECT id,display_name AS name FROM iam_tenant_member "
+            case MEMBER -> "SELECT id,display_name AS name FROM iam_tenant_member "
                     + "WHERE tenant_id=#{q.tenantId} AND status='ACTIVE'";
             case GROUP -> "SELECT id,name FROM iam_tenant_group WHERE tenant_id=#{q.tenantId}";
             case APPLICATION -> "SELECT app.id,app.name FROM iam_application app "

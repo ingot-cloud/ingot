@@ -20,10 +20,6 @@ import lombok.Getter;
 @Getter
 public enum IamAction {
     /**
-     * 契约字面量 {@code iam-tenant:directory:read}。
-     */
-    TENANT_DIRECTORY_READ("iam-tenant:directory:read"),
-    /**
      * 契约字面量 {@code iam-platform:member:read}。
      */
     PLATFORM_MEMBER_READ("iam-platform:member:read"),
@@ -564,14 +560,6 @@ public enum IamAction {
      */
     TENANT_ASSIGNMENT_DELETE("iam-tenant:assignment:delete"),
     /**
-     * 契约字面量 {@code iam-tenant:directory-policy:read}。
-     */
-    TENANT_DIRECTORY_POLICY_READ("iam-tenant:directory-policy:read"),
-    /**
-     * 契约字面量 {@code iam-tenant:directory-policy:update}。
-     */
-    TENANT_DIRECTORY_POLICY_UPDATE("iam-tenant:directory-policy:update"),
-    /**
      * 契约字面量 {@code iam-tenant:field-policy:read}。
      */
     TENANT_FIELD_POLICY_READ("iam-tenant:field-policy:read"),
@@ -579,10 +567,6 @@ public enum IamAction {
      * 契约字面量 {@code iam-tenant:field-policy:update}。
      */
     TENANT_FIELD_POLICY_UPDATE("iam-tenant:field-policy:update"),
-    /**
-     * 契约字面量 {@code iam-tenant:policy:preview}。
-     */
-    TENANT_POLICY_PREVIEW("iam-tenant:policy:preview"),
     /**
      * 契约字面量 {@code iam-tenant:authorization:diagnose}。
      */
@@ -612,10 +596,6 @@ public enum IamAction {
      */
     TENANT_DELEGATION_PREVIEW("iam-tenant:delegation:preview");
 
-    /**
-     * 契约字面量 {@code iam-tenant:directory:read}。
-     */
-    public static final String VALUE_TENANT_DIRECTORY_READ = "iam-tenant:directory:read";
     /**
      * 契约字面量 {@code iam-platform:member:read}。
      */
@@ -1157,14 +1137,6 @@ public enum IamAction {
      */
     public static final String VALUE_TENANT_ASSIGNMENT_DELETE = "iam-tenant:assignment:delete";
     /**
-     * 契约字面量 {@code iam-tenant:directory-policy:read}。
-     */
-    public static final String VALUE_TENANT_DIRECTORY_POLICY_READ = "iam-tenant:directory-policy:read";
-    /**
-     * 契约字面量 {@code iam-tenant:directory-policy:update}。
-     */
-    public static final String VALUE_TENANT_DIRECTORY_POLICY_UPDATE = "iam-tenant:directory-policy:update";
-    /**
      * 契约字面量 {@code iam-tenant:field-policy:read}。
      */
     public static final String VALUE_TENANT_FIELD_POLICY_READ = "iam-tenant:field-policy:read";
@@ -1172,10 +1144,6 @@ public enum IamAction {
      * 契约字面量 {@code iam-tenant:field-policy:update}。
      */
     public static final String VALUE_TENANT_FIELD_POLICY_UPDATE = "iam-tenant:field-policy:update";
-    /**
-     * 契约字面量 {@code iam-tenant:policy:preview}。
-     */
-    public static final String VALUE_TENANT_POLICY_PREVIEW = "iam-tenant:policy:preview";
     /**
      * 契约字面量 {@code iam-tenant:authorization:diagnose}。
      */

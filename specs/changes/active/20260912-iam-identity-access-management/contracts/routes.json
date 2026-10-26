@@ -60,118 +60,6 @@
     "implemented": true
   },
   {
-    "path": "/v1/directory/members",
-    "method": "get",
-    "operationId": "listDirectoryMembers",
-    "summary": "普通通讯录成员",
-    "domain": "TENANT",
-    "action": "iam-tenant:directory:read",
-    "request": null,
-    "response": "RPageResponseResourceDetailMemberRecord",
-    "execution": "普通通讯录规则；搜索计数详情一致；无管理 ACTION",
-    "implemented": true,
-    "query": [
-      {
-        "name": "purpose",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "enum": [
-            "DIRECTORY"
-          ]
-        }
-      },
-      {
-        "name": "page",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 1
-        }
-      },
-      {
-        "name": "pageSize",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 200,
-          "default": 20
-        }
-      },
-      {
-        "name": "phone",
-        "required": false,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "email",
-        "required": false,
-        "schema": {
-          "type": "string"
-        }
-      }
-    ]
-  },
-  {
-    "path": "/v1/directory/members/{id}",
-    "method": "get",
-    "operationId": "getDirectoryMember",
-    "summary": "普通通讯录成员详情",
-    "domain": "TENANT",
-    "action": "iam-tenant:directory:read",
-    "request": null,
-    "response": "RResourceDetailMemberRecord",
-    "execution": "普通通讯录规则；隐藏字段省略，脱敏字段仅返回脱敏值",
-    "implemented": true
-  },
-  {
-    "path": "/v1/directory/departments",
-    "method": "get",
-    "operationId": "listDirectoryDepartments",
-    "summary": "普通通讯录部门树",
-    "domain": "TENANT",
-    "action": "iam-tenant:directory:read",
-    "request": null,
-    "response": "RPageResponseResourceDetailDepartmentRecord",
-    "execution": "必要祖先仅为导航骨架，不提供隐藏分支人数",
-    "implemented": true,
-    "query": [
-      {
-        "name": "purpose",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "enum": [
-            "DIRECTORY"
-          ]
-        }
-      },
-      {
-        "name": "page",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 1
-        }
-      },
-      {
-        "name": "pageSize",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 200,
-          "default": 20
-        }
-      }
-    ]
-  },
-  {
     "path": "/v1/platform/members",
     "method": "get",
     "operationId": "platformListMembers",
@@ -2793,31 +2681,6 @@
     "implemented": true
   },
   {
-    "path": "/v1/tenant/policies/directory",
-    "method": "get",
-    "operationId": "getDirectoryPolicy",
-    "summary": "读取通讯录策略",
-    "domain": "TENANT",
-    "action": "iam-tenant:directory-policy:read",
-    "request": null,
-    "response": "RResourceDetailDirectoryPolicyDraft",
-    "execution": "可信租户；策略管理操作；引用同租户；PUT 重验版本、引用、字段上限并事务写审计",
-    "implemented": true
-  },
-  {
-    "path": "/v1/tenant/policies/directory",
-    "method": "put",
-    "operationId": "putDirectoryPolicy",
-    "summary": "整体替换通讯录策略",
-    "domain": "TENANT",
-    "action": "iam-tenant:directory-policy:update",
-    "request": "DirectoryPolicyInput",
-    "response": "RResourceDetailDirectoryPolicyDraft",
-    "execution": "可信租户；策略管理操作；引用同租户；PUT 重验版本、引用、字段上限并事务写审计",
-    "implemented": true,
-    "example": "directory-policy"
-  },
-  {
     "path": "/v1/tenant/policies/fields",
     "method": "get",
     "operationId": "getFieldPolicy",
@@ -2841,19 +2704,6 @@
     "execution": "可信租户；策略管理操作；引用同租户；PUT 重验版本、引用、字段上限并事务写审计",
     "implemented": true,
     "example": "field-policy"
-  },
-  {
-    "path": "/v1/tenant/policies/preview",
-    "method": "post",
-    "operationId": "previewPolicy",
-    "summary": "只读策略预览",
-    "domain": "TENANT",
-    "action": "iam-tenant:policy:preview",
-    "request": "PolicyPreviewInput",
-    "response": "RPreviewPolicyPreviewResult",
-    "execution": "真实引擎；无写入；查看者与目标同租户；结果与操作者可见范围求交",
-    "implemented": true,
-    "example": "policy-preview"
   },
   {
     "path": "/v1/tenant/authorization/diagnose",
@@ -4482,18 +4332,6 @@
     "request": null,
     "response": "RResourceFieldContext",
     "execution": "可信身份；全局操作与完整查询范围FULL证明",
-    "implemented": true
-  },
-  {
-    "path": "/v1/directory/context",
-    "method": "get",
-    "operationId": "directoryFieldContext",
-    "summary": "通讯录字段能力",
-    "domain": "TENANT",
-    "action": "iam-tenant:directory:read",
-    "request": null,
-    "response": "RResourceFieldContext",
-    "execution": "可信身份；与实际通讯录查询范围相同",
     "implemented": true
   },
   {

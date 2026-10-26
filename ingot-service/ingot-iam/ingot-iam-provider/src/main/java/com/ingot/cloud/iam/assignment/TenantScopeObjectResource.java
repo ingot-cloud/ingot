@@ -20,7 +20,6 @@ public enum TenantScopeObjectResource {
     ASSIGNMENT("assignment"),
     DELEGATION("delegation"),
     DEPARTMENT("department"),
-    DIRECTORY("directory"),
     GROUP("group"),
     MEMBER("member"),
     ROLE("role");

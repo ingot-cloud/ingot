@@ -94,8 +94,6 @@ class BootstrapSeedTest(unittest.TestCase):
         self.bootstrap()
         self.assertEqual('true', self.sql("""SELECT JSON_EXTRACT(res.field_capabilities,'$[0].filterable') FROM iam_resource res
             JOIN iam_application app ON app.id=res.application_id WHERE app.code='iam-tenant' AND res.code='member'"""))
-        self.assertEqual('false', self.sql("""SELECT JSON_EXTRACT(res.field_capabilities,'$[0].filterable') FROM iam_resource res
-            JOIN iam_application app ON app.id=res.application_id WHERE app.code='iam-tenant' AND res.code='directory'"""))
         self.assertEqual('false', self.sql("SELECT JSON_EXTRACT(definition,'$.operations.displayName.filterable') FROM iam_default_policy_revision WHERE kind='FIELD' ORDER BY revision DESC LIMIT 1"))
 
     def test_picker_name_patch_is_key_based_idempotent_and_preserves_policies(self):
@@ -221,9 +219,9 @@ class BootstrapSeedTest(unittest.TestCase):
         for table in tables:
             self.assertEqual(definitions[table], self.sql(f'SHOW CREATE TABLE `{table}`'), table)
             self.assertEqual(counts[table], self.count(table), table)
-        self.assertEqual(65, len(tables))
-        self.assertEqual(155, self.count('iam_action'))
-        self.assertEqual(38, self.count('iam_menu'))
+        self.assertEqual(64, len(tables))
+        self.assertEqual(152, self.count('iam_action'))
+        self.assertEqual(37, self.count('iam_menu'))
         for table in ['iam_account', 'iam_tenant', 'iam_role_assignment', 'iam_authorization_audit',
                       'account_lock_state', 'password_history', 'password_expiration', 'security_event']:
             self.assertEqual(0, self.count(table), table)
@@ -306,9 +304,9 @@ class BootstrapSeedTest(unittest.TestCase):
     def test_empty_database_gets_complete_catalog_without_credentials(self):
         self.bootstrap()
         self.assertEqual(4, self.count("iam_application"))
-        self.assertEqual(42, self.count("iam_resource"))
-        self.assertEqual(155, self.count("iam_action"))
-        self.assertEqual(38, self.count("iam_menu"))
+        self.assertEqual(39, self.count("iam_resource"))
+        self.assertEqual(152, self.count("iam_action"))
+        self.assertEqual(37, self.count("iam_menu"))
         self.assertEqual('FULL', self.sql("""
             SELECT JSON_UNQUOTE(JSON_EXTRACT(revision.resource_field_permissions,
                 CONCAT('$."',resource.id,'".visibility.phone')))
@@ -318,7 +316,7 @@ class BootstrapSeedTest(unittest.TestCase):
             WHERE role.kind='SYSTEM' AND role.domain='PLATFORM'
         """))
         self.assertEqual(0, self.count("iam_resource", "code='resource-field-policy'"))
-        self.assertEqual(2, self.count("iam_default_policy_revision"))
+        self.assertEqual(1, self.count("iam_default_policy_revision"))
         self.assertEqual(1, self.count("biz_leaf_alloc", "biz_tag = 'iam'"))
         # The seed carries no identity or credential rows; those come from the security use case.
         self.assertEqual(0, self.count("iam_account"))
@@ -367,11 +365,7 @@ class BootstrapSeedTest(unittest.TestCase):
         # Baseline entitlement resolution needs at least one enabled baseline tenant application.
         self.assertEqual("1", self.sql("SELECT COUNT(*) FROM iam_application "
                                        "WHERE domain = 'TENANT' AND baseline = TRUE AND enabled = TRUE"))
-        self.assertEqual(1, self.count("iam_default_policy_revision", "kind = 'DIRECTORY'"))
         self.assertEqual(1, self.count("iam_default_policy_revision", "kind = 'FIELD'"))
-        self.assertEqual("ALL", self.sql(
-            "SELECT JSON_UNQUOTE(JSON_EXTRACT(definition, '$.scope')) "
-            "FROM iam_default_policy_revision WHERE kind = 'DIRECTORY'"))
         self.assertEqual("MASKED", self.sql(
             "SELECT JSON_UNQUOTE(JSON_EXTRACT(definition, '$.fields.phone')) "
             "FROM iam_default_policy_revision WHERE kind = 'FIELD'"))
@@ -379,7 +373,7 @@ class BootstrapSeedTest(unittest.TestCase):
     def test_governance_grants_cover_own_domain_only(self):
         self.bootstrap()
         for role, domain, expected in ((ADMIN_ROLE_CODE, "PLATFORM", 108),
-                                       ("tenant-governance", "TENANT", 47)):
+                                       ("tenant-governance", "TENANT", 44)):
             covered = self.sql(f"""
                 SELECT COUNT(*) FROM iam_role_grant grant_row
                 JOIN iam_role_revision revision ON revision.id = grant_row.revision_id
@@ -509,10 +503,10 @@ class BootstrapSeedTest(unittest.TestCase):
         self.bootstrap()
         self.assertEqual(1, self.count("iam_application", "code = 'iam-tenant'"))
         self.assertEqual("500001", self.sql("SELECT id FROM iam_application WHERE code = 'iam-tenant'"))
-        self.assertEqual(15, self.count("iam_resource", "application_id = 500001"))
-        self.assertEqual(47, self.count("iam_action", "application_id = 500001"))
-        self.assertEqual(15, self.count("iam_menu", "application_id = 500001"))
-        self.assertEqual(155, self.count("iam_role_grant"))
+        self.assertEqual(12, self.count("iam_resource", "application_id = 500001"))
+        self.assertEqual(44, self.count("iam_action", "application_id = 500001"))
+        self.assertEqual(14, self.count("iam_menu", "application_id = 500001"))
+        self.assertEqual(152, self.count("iam_role_grant"))
 
     def test_manual_verification_seed_layers_on_the_cold_start_catalog(self):
         self.bootstrap()
@@ -521,7 +515,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(2, self.count("iam_account"))
         self.assertEqual(1, self.count("iam_platform_member"))
         self.assertEqual(2, self.count("iam_role_definition"))
-        self.assertEqual(155, self.count("iam_role_grant"))
+        self.assertEqual(152, self.count("iam_role_grant"))
         # The governance assignment resolves the platform revision from the seed, not a fixed id.
         self.assertEqual("1", self.sql("""
             SELECT COUNT(*) FROM iam_role_assignment assignment

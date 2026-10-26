@@ -59,7 +59,6 @@ class InitializationCatalogTest {
         var ids = new AtomicLong(500);
         var plan = catalog.plan(input(null), ids::incrementAndGet);
         assertNotNull(plan.ownerAccountId());
-        assertEquals(21L, plan.directoryRevisionId());
         assertEquals(22L, plan.fieldRevisionId());
         assertEquals(1, plan.applications().size());
         assertEquals(1L, plan.applications().getFirst().applicationId());

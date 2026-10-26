@@ -63,7 +63,7 @@ class ContractTest(unittest.TestCase):
     def test_all_references_resolve_and_dangling_refs_fail(self):
         validate_references(self.document)
         broken = copy.deepcopy(self.document)
-        del broken['components']['schemas']['PolicyPreviewInput']
+        del broken['components']['schemas']['FieldPolicyInput']
         with self.assertRaises(KeyError):
             validate_references(broken)
 
@@ -113,13 +113,10 @@ class ContractTest(unittest.TestCase):
             self.assertIn('400', operation['responses'])
             self.assertIn('403', operation['responses'])
 
-    def test_policy_updates_require_version_but_preview_has_no_write_command(self):
-        for prefix in ['Directory', 'Field']:
-            self.assertIn('expectedVersion', self.schemas[prefix + 'PolicyInput']['required'])
-            self.assertIn('policy', self.schemas[prefix + 'PolicyInput']['required'])
-            self.assertNotIn('expectedVersion', self.schemas[prefix + 'PolicyDraft']['properties'])
-        self.assertNotIn('allowed', self.schemas['PolicyPreviewInput']['properties'])
-        self.assertNotIn('tenantId', self.schemas['PolicyPreviewInput']['properties'])
+    def test_policy_updates_require_version(self):
+        self.assertIn('expectedVersion', self.schemas['FieldPolicyInput']['required'])
+        self.assertIn('policy', self.schemas['FieldPolicyInput']['required'])
+        self.assertNotIn('expectedVersion', self.schemas['FieldPolicyDraft']['properties'])
 
     def test_operations_use_concrete_response_envelope_and_explicit_errors(self):
         envelopes = self.document['components']['schemas']
@@ -141,8 +138,6 @@ class ContractTest(unittest.TestCase):
 
     def test_candidate_purpose_filters_and_export_status_are_explicit(self):
         for operation_id, expected in [
-            ('listDirectoryMembers', 'DIRECTORY'),
-            ('listDirectoryDepartments', 'DIRECTORY'),
             ('tenantListDepartments', 'MANAGED_DEPARTMENT'),
         ]:
             purpose = next(item for item in self.by_id[operation_id]['query'] if item['name'] == 'purpose')

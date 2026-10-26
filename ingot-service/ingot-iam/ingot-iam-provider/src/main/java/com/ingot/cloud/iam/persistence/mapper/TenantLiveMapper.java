@@ -32,8 +32,7 @@ public interface TenantLiveMapper {
 
     /** 批量读取策略、开通、人群及目录变更标记；不缓存可变事实。 */
     @Select("""
-        SELECT 'directory' AS category,CONCAT(COUNT(*),':',COALESCE(SUM(version),0),':',COALESCE(MAX(default_revision_id),0)) AS token FROM iam_directory_policy WHERE tenant_id=#{tenantId}
-        UNION ALL SELECT 'field',CONCAT(COUNT(*),':',COALESCE(SUM(version),0),':',COALESCE(MAX(default_revision_id),0)) FROM iam_field_policy WHERE tenant_id=#{tenantId}
+        SELECT 'field' AS category,CONCAT(COUNT(*),':',COALESCE(SUM(version),0),':',COALESCE(MAX(default_revision_id),0)) AS token FROM iam_field_policy WHERE tenant_id=#{tenantId}
         UNION ALL SELECT 'defaults',CONCAT(COUNT(*),':',COALESCE(SUM(revision),0),':',COALESCE(MAX(id),0)) FROM iam_default_policy_revision
         UNION ALL SELECT 'departments',CONCAT(COUNT(*),':',COALESCE(SUM(version),0),':',COALESCE(MAX(id),0)) FROM iam_department WHERE tenant_id=#{tenantId}
         UNION ALL SELECT 'groups',CONCAT(COUNT(*),':',COALESCE(SUM(version),0),':',COALESCE(MAX(id),0)) FROM iam_tenant_group WHERE tenant_id=#{tenantId}
