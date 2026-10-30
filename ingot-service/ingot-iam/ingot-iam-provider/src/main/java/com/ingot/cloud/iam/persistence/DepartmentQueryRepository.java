@@ -340,6 +340,17 @@ public class DepartmentQueryRepository {
         return row == null ? null : row.getParentId();
     }
 
+    /**
+     * 按部门列表相同的 SQL 范围统计普通部门，排除组织根节点。
+     *
+     * @param tenantId 当前可信组织 ID
+     * @param scope 部门读取范围
+     * @return 范围内的非根部门数
+     */
+    public long countDepartments(long tenantId, ObjectScope scope) {
+        return departments.selectCount(scoped(tenantId, scope).isNotNull(IamDepartmentEntity::getParentId));
+    }
+
     private LambdaQueryWrapper<IamDepartmentEntity> scoped(long tenantId, ObjectScope scope) {
         LambdaQueryWrapper<IamDepartmentEntity> wrapper = Wrappers.<IamDepartmentEntity>lambdaQuery()
                 .eq(IamDepartmentEntity::getTenantId, BigInteger.valueOf(tenantId));

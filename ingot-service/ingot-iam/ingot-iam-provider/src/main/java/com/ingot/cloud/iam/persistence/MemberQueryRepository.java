@@ -644,6 +644,17 @@ public class MemberQueryRepository {
                 .set(IamTenantMemberEntity::getUpdatedAt, LocalDateTime.now(ZoneOffset.UTC)));
     }
 
+    /**
+     * 按成员列表相同的 SQL 范围统计在册人数，不读取成员资料或任职明细。
+     *
+     * @param tenantId 当前可信组织 ID
+     * @param scope 成员读取范围
+     * @return 含暂停、不含已移出的成员数
+     */
+    public long countTenant(long tenantId, ObjectScope scope) {
+        return tenantMembers.selectCount(tenantFilter(tenantId, scope, null, null, null, null));
+    }
+
     private LambdaQueryWrapper<IamTenantMemberEntity> tenantFilter(long tenantId, ObjectScope scope, String phone,
                                                                    String email, Long departmentId,
                                                                    MemberStatus status) {

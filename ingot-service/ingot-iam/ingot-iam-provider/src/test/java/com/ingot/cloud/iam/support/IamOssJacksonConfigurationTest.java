@@ -26,6 +26,7 @@ import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.model.iam.DepartmentLeaderRecord;
 import com.ingot.framework.commons.model.iam.OrganizationMemberPickerOption;
+import com.ingot.framework.commons.model.iam.TenantWorkbenchStatistics;
 import com.ingot.framework.commons.oss.OssService;
 import com.ingot.framework.oss.jackson.OssUrlSerializer;
 import org.junit.jupiter.api.Test;
@@ -88,6 +89,19 @@ class IamOssJacksonConfigurationTest {
         assertTrue(mapper.writeValueAsString(named).contains("ep:menu"));
         assertTrue(mapper.writeValueAsString(entitlement).contains("https://signed.example/ingot/app/icon/a.png"));
         assertTrue(mapper.writeValueAsString(namedEntitlement).contains("ep:menu"));
+    }
+
+    @Test
+    void workbenchAvatarIsSignedAndUnauthorizedCountsAreOmitted() throws Exception {
+        OssService oss = mock(OssService.class);
+        when(oss.getObjectURL("logos/org.png")).thenReturn("https://signed.example/logos/org.png");
+        ObjectMapper mapper = mapper(oss);
+        var statistics = new TenantWorkbenchStatistics("10", "组织", "logos/org.png", null, 0L, null, 1L);
+        var json = mapper.readTree(mapper.writeValueAsString(statistics));
+        assertEquals("https://signed.example/logos/org.png", json.path("tenantAvatar").asText());
+        assertEquals(0L, json.path("departmentCount").asLong());
+        assertTrue(!json.has("memberCount"));
+        assertTrue(!json.has("groupCount"));
     }
 
     private static ObjectMapper mapper(OssService oss) {

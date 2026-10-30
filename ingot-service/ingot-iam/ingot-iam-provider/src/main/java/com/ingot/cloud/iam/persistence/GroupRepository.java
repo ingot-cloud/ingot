@@ -63,6 +63,17 @@ public class GroupRepository {
     private final IamRoleAssignmentMapper assignments;
 
     /**
+     * 统计当前组织的用户组，读取资格和 ALL 范围语义由调用方沿用组列表准入。
+     *
+     * @param tenantId 当前可信组织 ID
+     * @return 当前组织用户组数
+     */
+    public long countTenant(long tenantId) {
+        return tenantGroups.selectCount(Wrappers.<IamTenantGroupEntity>lambdaQuery()
+                .eq(IamTenantGroupEntity::getTenantId, BigInteger.valueOf(tenantId)));
+    }
+
+    /**
      * 组写入先锁平台授权治理应用，防止与分配校验并发扩大组。
      * @param domain 管理域
      */

@@ -252,6 +252,9 @@ PAGE_PATHS = {
 MENUS = {'iam-platform': PLATFORM_MENUS, 'iam-tenant': TENANT_MENUS,
          DEVELOPER_APPLICATION: DEVELOPER_MENUS, SECURITY_APPLICATION: SECURITY_MENUS}
 
+# 仅覆盖展示顺序，保留种子生成顺序及既有保留 ID。
+ROOT_MENU_SORT_ORDERS = {'org.iam.workspace': 0}
+
 
 def quote(value):
     """转义 SQL 字符串字面量。"""
@@ -486,7 +489,7 @@ def build(check=False):
                  'app.id', 'NULL', quote(directory_name),
                  quote(menu_path(directory_key)), quote(DIRECTORY_VIEW_PATH), quote(directory_key),
                  quote(directory_icon), quote('DIRECTORY'), quote('ANY'), quote('ACTION'),
-                 str(order), 'TRUE'],
+                 str(ROOT_MENU_SORT_ORDERS.get(directory_key, order)), 'TRUE'],
                 f"application_id = app.id AND route_name = {quote(directory_key)}",
                 source='iam_application app', where=f"app.code = {quote(application)}"))
             menu_links += [(application, directory_key, code) for code in directory_actions]

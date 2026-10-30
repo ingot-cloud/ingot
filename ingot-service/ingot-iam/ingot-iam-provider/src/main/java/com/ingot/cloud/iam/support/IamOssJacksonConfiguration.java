@@ -15,6 +15,7 @@ import com.ingot.framework.commons.model.iam.TenantCreateInput;
 import com.ingot.framework.commons.model.iam.TenantRecord;
 import com.ingot.framework.commons.model.iam.TenantSettingsInput;
 import com.ingot.framework.commons.model.iam.TenantUpdateInput;
+import com.ingot.framework.commons.model.iam.TenantWorkbenchStatistics;
 import com.ingot.framework.oss.common.OssSaveUrl;
 import com.ingot.framework.oss.common.OssUrl;
 import org.springframework.context.annotation.Bean;
@@ -44,6 +45,7 @@ public class IamOssJacksonConfiguration {
             builder.mixIn(DepartmentLeaderRecord.class, ReadAvatar.class);
             builder.mixIn(OrganizationMemberPickerOption.class, ReadAvatar.class);
             builder.mixIn(TenantRecord.class, ReadAvatar.class);
+            builder.mixIn(TenantWorkbenchStatistics.class, ReadTenantAvatar.class);
             builder.mixIn(CurrentProfile.class, ReadAvatar.class);
             builder.mixIn(ApplicationRecord.class, ReadIcon.class);
             builder.mixIn(ApplicationSummary.class, ReadIcon.class);
@@ -56,6 +58,17 @@ public class IamOssJacksonConfiguration {
             builder.mixIn(TenantUpdateInput.class, SaveAvatar.class);
             builder.mixIn(TenantSettingsInput.class, SaveAvatar.class);
         };
+    }
+
+    /**
+     * <p>为工作台当前组织头像签发时效链接。</p>
+     *
+     * @author jy
+     * @since 1.0.0
+     */
+    private abstract static class ReadTenantAvatar {
+        @OssUrl
+        abstract String tenantAvatar();
     }
 
     private abstract static class ReadAvatar {
