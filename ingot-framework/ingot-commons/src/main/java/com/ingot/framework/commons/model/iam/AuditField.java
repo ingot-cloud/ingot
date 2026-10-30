@@ -23,6 +23,8 @@ public enum AuditField {
     REMARK("REMARK"),
     /** 字段配置及脱敏参数，不包含业务原值。 */
     FIELD_CAPABILITIES("FIELD_CAPABILITIES"),
+    /** 资源是否接入租户字段策略。 */
+    FIELD_POLICY("FIELD_POLICY"),
     STATUS("STATUS"),
     ROLE_REVISION("ROLE_REVISION"),
     /** 租户稳定角色身份，不是业务版本。 */

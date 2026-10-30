@@ -431,16 +431,18 @@ public class CatalogRepository {
      * @param name 名称
      * @param scopes JSON 数组
      * @param fields JSON 数组
+     * @param fieldPolicy 是否接入租户字段策略
      * @param currentVersion 锁定后的当前版本
      */
     public void updateResource(long applicationId, long id, String name, String scopes, String fields,
-                               BigInteger currentVersion) {
+                               boolean fieldPolicy, BigInteger currentVersion) {
         resources.update(Wrappers.<IamResourceEntity>lambdaUpdate()
                 .eq(IamResourceEntity::getApplicationId, BigInteger.valueOf(applicationId))
                 .eq(IamResourceEntity::getId, BigInteger.valueOf(id))
                 .set(IamResourceEntity::getName, name)
                 .set(IamResourceEntity::getScopeCapabilities, scopes)
                 .set(IamResourceEntity::getFieldCapabilities, fields)
+                .set(IamResourceEntity::getFieldPolicy, fieldPolicy)
                 .set(IamResourceEntity::getVersion, currentVersion.add(BigInteger.ONE)));
     }
 

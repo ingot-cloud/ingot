@@ -1022,8 +1022,16 @@ def build(
     else:
         mark("assignment:a:ordinary-a", "reused")
 
+    resources = payload_data(
+        session.iam("GET", "/v1/tenant/policies/field-resources", owner_a_token, tenant=tenant_a)
+    )
     policy = payload_data(
-        session.iam("GET", "/v1/tenant/policies/fields", owner_a_token, tenant=tenant_a)
+        session.iam(
+            "GET",
+            f"/v1/tenant/policies/fields/{resources[0]['resourceId']}",
+            owner_a_token,
+            tenant=tenant_a,
+        )
     )
     objects["policy:a:field"] = {
         "id": str(policy.get("id") or "field"),

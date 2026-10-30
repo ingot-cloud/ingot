@@ -25,7 +25,6 @@ import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
 import com.ingot.framework.commons.model.iam.DefaultPolicyKind;
 import com.ingot.framework.commons.model.iam.DepartmentSelection;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
-import com.ingot.framework.commons.model.iam.PolicyScenario;
 import com.ingot.framework.commons.model.iam.Selection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -48,51 +47,60 @@ public class PolicyWriteRepository {
     private final IamDefaultPolicyRevisionMapper defaults;
 
     /**
-     * 读取当前租户字段策略引用。
+     * 读取当前租户某一资源的字段策略引用。
      *
      * @param tenantId 已授权租户 ID
+     * @param resourceId 已接入资源 ID
      * @return 策略行；尚未配置时为空
      */
-    public IamFieldPolicyEntity findField(long tenantId) {
+    public IamFieldPolicyEntity findField(long tenantId, long resourceId) {
         return fieldPolicies.selectOne(Wrappers.<IamFieldPolicyEntity>lambdaQuery()
-                .select(IamFieldPolicyEntity::getDefaultRevisionId, IamFieldPolicyEntity::getVersion, IamFieldPolicyEntity::getOperationRules)
-                .eq(IamFieldPolicyEntity::getTenantId, id(tenantId)));
+                .select(IamFieldPolicyEntity::getTenantId, IamFieldPolicyEntity::getResourceId,
+                        IamFieldPolicyEntity::getDefaultRevisionId, IamFieldPolicyEntity::getVersion,
+                        IamFieldPolicyEntity::getOperationRules)
+                .eq(IamFieldPolicyEntity::getTenantId, id(tenantId))
+                .eq(IamFieldPolicyEntity::getResourceId, id(resourceId)));
     }
 
     /**
-     * 按插入顺序读取当前租户字段规则。
+     * 按插入顺序读取当前租户某一资源的字段规则。
      *
      * @param tenantId 已授权租户 ID
+     * @param resourceId 已接入资源 ID
      * @return 规则列表
      */
-    public List<IamFieldRuleEntity> listFieldRules(long tenantId) {
+    public List<IamFieldRuleEntity> listFieldRules(long tenantId, long resourceId) {
         return fieldRules.selectList(Wrappers.<IamFieldRuleEntity>lambdaQuery()
-                .select(IamFieldRuleEntity::getScenario, IamFieldRuleEntity::getFieldKey,
+                .select(IamFieldRuleEntity::getResourceId, IamFieldRuleEntity::getFieldKey,
                         IamFieldRuleEntity::getViewerSelectorId, IamFieldRuleEntity::getTargetScope,
                         IamFieldRuleEntity::getScopeBindings, IamFieldRuleEntity::getVisibility)
                 .eq(IamFieldRuleEntity::getTenantId, id(tenantId))
+                .eq(IamFieldRuleEntity::getResourceId, id(resourceId))
                 .orderByAsc(IamFieldRuleEntity::getId));
     }
 
     /**
-     * 删除当前租户全部字段规则，供整体替换。
+     * 删除当前租户某一资源的全部字段规则，供整体替换。
      *
      * @param tenantId 已授权租户 ID
+     * @param resourceId 已接入资源 ID
      */
-    public void deleteFieldRules(long tenantId) {
+    public void deleteFieldRules(long tenantId, long resourceId) {
         fieldRules.delete(Wrappers.<IamFieldRuleEntity>lambdaQuery()
-                .eq(IamFieldRuleEntity::getTenantId, id(tenantId)));
+                .eq(IamFieldRuleEntity::getTenantId, id(tenantId))
+                .eq(IamFieldRuleEntity::getResourceId, id(resourceId)));
     }
 
     /**
-     * 插入或整体替换字段策略引用及全局操作规则并递增版本。
-     * @param operationRules 全局操作规则 JSON 数组
+     * 插入或整体替换某一资源的字段策略引用及操作规则并递增版本。
      *
      * @param tenantId 已授权租户 ID
+     * @param resourceId 已接入资源 ID
      * @param revisionId 默认策略版本 ID
+     * @param operationRules 本资源操作规则 JSON 数组
      */
-    public void upsertField(long tenantId, long revisionId, String operationRules) {
-        fieldPolicies.upsert(id(tenantId), id(revisionId), DefaultPolicyKind.FIELD, operationRules);
+    public void upsertField(long tenantId, long resourceId, long revisionId, String operationRules) {
+        fieldPolicies.upsert(id(tenantId), id(resourceId), id(revisionId), DefaultPolicyKind.FIELD, operationRules);
     }
 
     /**
@@ -100,19 +108,19 @@ public class PolicyWriteRepository {
      *
      * @param id 规则 ID
      * @param tenantId 已授权租户 ID
-     * @param scenario 后台管理场景
+     * @param resourceId 已接入资源 ID
      * @param fieldKey 字段键
      * @param viewerSelectorId 查看者选择器
      * @param targetScope 目标范围 JSON
      * @param scopeBindings 范围绑定 JSON
      * @param visibility 可见程度
      */
-    public void insertFieldRule(long id, long tenantId, PolicyScenario scenario, String fieldKey, long viewerSelectorId,
+    public void insertFieldRule(long id, long tenantId, long resourceId, String fieldKey, long viewerSelectorId,
                                 String targetScope, String scopeBindings, FieldVisibility visibility) {
         IamFieldRuleEntity row = new IamFieldRuleEntity();
         row.setId(id(id));
         row.setTenantId(id(tenantId));
-        row.setScenario(scenario);
+        row.setResourceId(id(resourceId));
         row.setFieldKey(fieldKey);
         row.setViewerSelectorId(id(viewerSelectorId));
         row.setTargetScope(targetScope);
@@ -175,24 +183,46 @@ public class PolicyWriteRepository {
      */
     public IamDefaultPolicyRevisionEntity findRevision(long revisionId, DefaultPolicyKind kind) {
         return defaults.selectOne(Wrappers.<IamDefaultPolicyRevisionEntity>lambdaQuery()
-                .select(IamDefaultPolicyRevisionEntity::getId, IamDefaultPolicyRevisionEntity::getKind,
-                        IamDefaultPolicyRevisionEntity::getRevision, IamDefaultPolicyRevisionEntity::getDefinition)
+                .select(IamDefaultPolicyRevisionEntity::getId, IamDefaultPolicyRevisionEntity::getResourceId,
+                        IamDefaultPolicyRevisionEntity::getKind, IamDefaultPolicyRevisionEntity::getRevision,
+                        IamDefaultPolicyRevisionEntity::getDefinition)
                 .eq(IamDefaultPolicyRevisionEntity::getId, id(revisionId))
                 .eq(IamDefaultPolicyRevisionEntity::getKind, kind));
     }
 
     /**
-     * 读取指定类别最新发布的默认策略版本。
+     * 写入由资源字段默认值生成的第 1 版。
+     *
+     * @param revision 尚未持久化的修订
+     */
+    public void insertRevision(IamDefaultPolicyRevisionEntity revision) {
+        defaults.insert(revision);
+    }
+
+    /**
+     * 为已接入资源补一条空策略行。
+     *
+     * @param row 策略行
+     */
+    public void insertField(IamFieldPolicyEntity row) {
+        fieldPolicies.insert(row);
+    }
+
+    /**
+     * 读取某一资源最新发布的默认策略版本。
      *
      * @param kind 策略类别
+     * @param resourceId 资源 ID
      * @return 版本行；不存在时为空
      */
-    public IamDefaultPolicyRevisionEntity latestRevision(DefaultPolicyKind kind) {
+    public IamDefaultPolicyRevisionEntity latestRevision(DefaultPolicyKind kind, long resourceId) {
         List<IamDefaultPolicyRevisionEntity> rows = defaults.selectList(
                 Wrappers.<IamDefaultPolicyRevisionEntity>lambdaQuery()
-                        .select(IamDefaultPolicyRevisionEntity::getId, IamDefaultPolicyRevisionEntity::getKind,
-                                IamDefaultPolicyRevisionEntity::getRevision, IamDefaultPolicyRevisionEntity::getDefinition)
+                        .select(IamDefaultPolicyRevisionEntity::getId, IamDefaultPolicyRevisionEntity::getResourceId,
+                                IamDefaultPolicyRevisionEntity::getKind, IamDefaultPolicyRevisionEntity::getRevision,
+                                IamDefaultPolicyRevisionEntity::getDefinition)
                         .eq(IamDefaultPolicyRevisionEntity::getKind, kind)
+                        .eq(IamDefaultPolicyRevisionEntity::getResourceId, id(resourceId))
                         .orderByDesc(IamDefaultPolicyRevisionEntity::getRevision, IamDefaultPolicyRevisionEntity::getId));
         return rows.isEmpty() ? null : rows.getFirst();
     }

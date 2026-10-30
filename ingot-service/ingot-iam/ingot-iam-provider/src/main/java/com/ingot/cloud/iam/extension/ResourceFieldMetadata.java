@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.extension;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,8 +22,11 @@ import com.ingot.framework.authorization.ResourceRegistry;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.ActionGrant;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.annotation.field.FieldUse;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.FieldCapability;
+import com.ingot.framework.commons.model.iam.FieldPolicyAction;
+import com.ingot.framework.commons.model.iam.FieldPolicyResource;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
@@ -54,6 +58,81 @@ public class ResourceFieldMetadata {
     private final ResourceRegistry registry;
     private final FieldManifestService manifests;
     private final org.springframework.beans.factory.ObjectProvider<com.ingot.framework.cache.spi.LayeredCache<String, Entry>> cache;
+
+    /**
+     * 目录已打开接入、服务器具备运行能力且声明了字段。
+     *
+     * @param key 完整资源键
+     * @return 是否读取租户字段策略
+     */
+    public boolean enrolled(ResourceKey key) {
+        var provider = registry.find(key);
+        if (provider == null || !provider.descriptor().fieldPolicyEligible() || key.domain() != AuthorizationDomain.TENANT) {
+            return false;
+        }
+        var app = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
+                .eq(IamApplicationEntity::getDomain, key.domain())
+                .eq(IamApplicationEntity::getCode, key.applicationCode())
+                .eq(IamApplicationEntity::getEnabled, true));
+        if (app == null) {
+            return false;
+        }
+        var row = resources.selectOne(Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getApplicationId, app.getId())
+                .eq(IamResourceEntity::getCode, key.resourceCode())
+                .eq(IamResourceEntity::getEnabled, true));
+        if (row == null || !Boolean.TRUE.equals(row.getFieldPolicy())) {
+            return false;
+        }
+        var fields = IamJson.read(row.getFieldCapabilities(), FIELDS);
+        return fields != null && !fields.isEmpty();
+    }
+
+    /**
+     * 服务器是否声明该资源具备字段策略运行能力。
+     *
+     * @param key 完整资源键
+     * @return 目录能否打开接入开关
+     */
+    public boolean eligible(ResourceKey key) {
+        var provider = registry.find(key);
+        return provider != null && provider.descriptor().fieldPolicyEligible();
+    }
+
+    /**
+     * 列出目录已接入且服务器允许的租户资源。
+     *
+     * @return 字段策略可选资源
+     */
+    public List<FieldPolicyResource> fieldPolicyCatalog() {
+        List<FieldPolicyResource> result = new ArrayList<>();
+        for (var row : resources.selectList(Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getFieldPolicy, true).eq(IamResourceEntity::getEnabled, true)
+                .orderByAsc(IamResourceEntity::getId))) {
+            var app = applications.selectById(row.getApplicationId());
+            if (app == null || app.getDomain() != AuthorizationDomain.TENANT || !Boolean.TRUE.equals(app.getEnabled())) {
+                continue;
+            }
+            var key = new ResourceKey(app.getDomain(), app.getCode(), row.getCode());
+            if (!eligible(key)) {
+                continue;
+            }
+            var fields = IamJson.read(row.getFieldCapabilities(), FIELDS);
+            if (fields == null || fields.isEmpty()) {
+                continue;
+            }
+            var bound = bindings(key).bindings().stream()
+                    .filter(binding -> binding.use() == FieldUse.WRITE || binding.use() == FieldUse.FILTER)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::actionCode)
+                    .collect(java.util.stream.Collectors.toSet());
+            var actions = this.actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
+                    .eq(IamActionEntity::getResourceId, row.getId()).eq(IamActionEntity::getEnabled, true)
+                    .orderByAsc(IamActionEntity::getId)).stream().filter(action -> bound.contains(action.getCode()))
+                    .map(action -> new FieldPolicyAction(action.getCode(), action.getName())).toList();
+            result.add(new FieldPolicyResource(row.getId().toString(), key, row.getName(), fields, actions));
+        }
+        return List.copyOf(result);
+    }
 
     /** 返回完整资源标识的实际绑定状态，不包含任何业务原值。 */
     public com.ingot.framework.commons.model.iam.extension.FieldBindingManifest bindings(ResourceKey key) {
@@ -155,7 +234,8 @@ public class ResourceFieldMetadata {
             }
             result.put(row.getId().toString(),
                     new ResourceDescriptor(descriptor.key(), descriptor.actions(), descriptor.scopeCapabilities(),
-                            fields, defaults, descriptor.readAction(), descriptor.hierarchical()));
+                            fields, defaults, descriptor.readAction(), descriptor.hierarchical(),
+                            descriptor.fieldPolicyEligible()));
         }
         return Map.copyOf(result);
     }
@@ -216,7 +296,7 @@ public class ResourceFieldMetadata {
                     ? original.defaults().getOrDefault(field, new FieldAccess(FieldVisibility.HIDDEN, false))
                     : new FieldAccess(FieldVisibility.HIDDEN, false)));
             value = new ResourceDescriptor(key, original.actions(), original.scopeCapabilities(), List.copyOf(fields.values()),
-                    defaults, original.readAction(), original.hierarchical());
+                    defaults, original.readAction(), original.hierarchical(), original.fieldPolicyEligible());
         }
         return new Entry(row.getId().toString(), value);
     }

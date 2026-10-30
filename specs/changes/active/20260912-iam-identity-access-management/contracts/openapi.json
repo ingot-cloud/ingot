@@ -15171,7 +15171,97 @@
         }
       }
     },
-    "/v1/tenant/policies/fields": {
+    "/v1/tenant/policies/field-resources": {
+      "get": {
+        "operationId": "listFieldPolicyResources",
+        "summary": "列出已接入字段策略的资源",
+        "tags": [
+          "TENANT"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "TENANT",
+        "x-iam-action": "iam-tenant:field-policy:read",
+        "x-iam-execution": "只返回当前租户已接入且服务器允许的资源及其字段能力",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RListFieldPolicyResource"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenant/policies/fields/{resourceId}": {
       "get": {
         "operationId": "getFieldPolicy",
         "summary": "读取字段策略",
@@ -15185,7 +15275,7 @@
         ],
         "x-iam-domain": "TENANT",
         "x-iam-action": "iam-tenant:field-policy:read",
-        "x-iam-execution": "可信租户；策略管理操作；引用同租户；PUT 重验版本、引用、字段上限并事务写审计",
+        "x-iam-execution": "可信租户；资源必须已接入；尚无策略行时补行并钉住该资源最新修订",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -15258,7 +15348,18 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ]
       },
       "put": {
         "operationId": "putFieldPolicy",
@@ -15273,7 +15374,7 @@
         ],
         "x-iam-domain": "TENANT",
         "x-iam-action": "iam-tenant:field-policy:update",
-        "x-iam-execution": "可信租户；策略管理操作；引用同租户；PUT 重验版本、引用、字段上限并事务写审计",
+        "x-iam-execution": "可信租户；字段、可见性、编辑、筛选和动作必须属于路径中的资源",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -15360,7 +15461,6 @@
                   "defaultRevisionId": "default-field-1",
                   "rules": [
                     {
-                      "scenario": "MANAGEMENT",
                       "fieldKey": "phone",
                       "viewerSelection": {
                         "members": [
@@ -15382,7 +15482,18 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ]
       }
     },
     "/v1/tenant/authorization/diagnose": {
@@ -29394,21 +29505,10 @@
           "actionCode",
           "fieldKey",
           "operations",
-          "resource",
-          "scenario",
           "viewerSelection"
         ],
         "type": "object",
         "properties": {
-          "resource": {
-            "$ref": "#/components/schemas/ResourceKey"
-          },
-          "scenario": {
-            "type": "string",
-            "enum": [
-              "MANAGEMENT"
-            ]
-          },
           "actionCode": {
             "type": "string"
           },
@@ -29433,6 +29533,24 @@
             "type": "boolean"
           }
         }
+      },
+      "FieldPolicyAction": {
+        "required": [
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "精确操作码"
+          },
+          "name": {
+            "type": "string",
+            "description": "动作名称"
+          }
+        },
+        "description": "字段策略可选的精确动作"
       },
       "FieldPolicyDecision": {
         "type": "object",
@@ -29525,10 +29643,47 @@
         },
         "description": "整体替换字段策略，提交必须重验版本及授权"
       },
+      "FieldPolicyResource": {
+        "required": [
+          "actions",
+          "fields",
+          "name",
+          "resource",
+          "resourceId"
+        ],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string",
+            "description": "资源 ID"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          },
+          "name": {
+            "type": "string",
+            "description": "资源名称"
+          },
+          "fields": {
+            "type": "array",
+            "description": "目录字段能力",
+            "items": {
+              "$ref": "#/components/schemas/FieldCapability"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "description": "已绑定字段读写或筛选的动作",
+            "items": {
+              "$ref": "#/components/schemas/FieldPolicyAction"
+            }
+          }
+        },
+        "description": "租户可配置字段策略的一份已接入资源"
+      },
       "FieldRule": {
         "required": [
           "fieldKey",
-          "scenario",
           "scopeBindings",
           "targetScope",
           "viewerSelection",
@@ -29536,13 +29691,6 @@
         ],
         "type": "object",
         "properties": {
-          "scenario": {
-            "type": "string",
-            "description": "后台或通讯录场景",
-            "enum": [
-              "MANAGEMENT"
-            ]
-          },
           "fieldKey": {
             "type": "string",
             "description": "资源目录已注册的字段键"
@@ -29574,7 +29722,7 @@
             ]
           }
         },
-        "description": "描述场景、字段、查看者和目标范围对应的字段限制"
+        "description": "描述字段、查看者和目标范围对应的字段限制"
       },
       "GrantCatalogAction": {
         "required": [
@@ -32695,6 +32843,26 @@
           }
         }
       },
+      "RListFieldPolicyResource": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldPolicyResource"
+            }
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RListGrantCatalogResource": {
         "type": "object",
         "properties": {
@@ -34059,6 +34227,9 @@
           },
           "hierarchical": {
             "type": "boolean"
+          },
+          "fieldPolicyEligible": {
+            "type": "boolean"
           }
         }
       },
@@ -34953,6 +35124,14 @@
               "$ref": "#/components/schemas/FieldCapability"
             }
           },
+          "fieldPolicy": {
+            "type": "boolean",
+            "description": "目录是否接入租户字段策略"
+          },
+          "fieldPolicyEligible": {
+            "type": "boolean",
+            "description": "服务器是否允许打开字段策略接入"
+          },
           "status": {
             "type": "string",
             "description": "资源状态",
@@ -35029,6 +35208,10 @@
             "items": {
               "$ref": "#/components/schemas/FieldCapability"
             }
+          },
+          "fieldPolicy": {
+            "type": "boolean",
+            "description": "是否接入租户字段策略"
           }
         },
         "description": "更新资源名称与能力声明，不能改写所属应用或编码"

@@ -94,7 +94,7 @@ class TenantLiveMySqlHttpTest {
         jdbc.update("INSERT INTO iam_department(id,tenant_id,parent_id,name) VALUES(11,10,NULL,'研发'),(12,10,11,'研发子部门'),(13,10,NULL,'营销')");
         jdbc.update("INSERT INTO iam_member_department(tenant_id,member_id,department_id) VALUES(10,104,12)");
         jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id,enabled,valid_from,source) SELECT 600+tenant.id,tenant.id,app.id,TRUE,'2000-01-01','INITIALIZATION' FROM iam_tenant tenant JOIN iam_application app ON app.code='iam-tenant'");
-        jdbc.update("INSERT INTO iam_field_policy(tenant_id,default_revision_id) SELECT t.id,d.id FROM iam_tenant t JOIN iam_default_policy_revision d ON d.kind='FIELD' WHERE d.revision=(SELECT MAX(revision) FROM iam_default_policy_revision WHERE kind='FIELD')");
+        jdbc.update("INSERT INTO iam_field_policy(tenant_id,resource_id,default_revision_id) SELECT t.id,d.resource_id,d.id FROM iam_tenant t JOIN iam_default_policy_revision d ON d.kind='FIELD' WHERE d.revision=(SELECT MAX(revision) FROM iam_default_policy_revision WHERE kind='FIELD' AND resource_id=d.resource_id)");
         jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,audience_kind) SELECT tenant.id,app.id,'ALL' FROM iam_tenant tenant JOIN iam_application app ON app.code='iam-tenant'");
         first=node(pool);second=node(pool);
     }
@@ -270,7 +270,7 @@ class TenantLiveMySqlHttpTest {
         var compiler=new com.ingot.cloud.iam.extension.ScopeTransportCompiler(new DepartmentClosure(IamMybatisTestAccess.mapper(source,IamDepartmentMapper.class)),IamMybatisTestAccess.mapper(source,IamMemberDepartmentMapper.class));
         var tenantFields=new com.ingot.cloud.iam.policy.FieldAccessEvaluator(IamMybatisTestAccess.policies(source),IamMybatisTestAccess.mapper(source,IamMemberDepartmentMapper.class),new DepartmentClosure(IamMybatisTestAccess.mapper(source,IamDepartmentMapper.class)),absent(),new com.ingot.framework.authorization.field.FieldProjectionEngine(json,fields,new com.ingot.framework.authorization.field.DefaultMaskStrategy()),metadata,absent());
         var roleFields=new com.ingot.cloud.iam.extension.RoleFieldPermissionService(metadata,IamMybatisTestAccess.roles(source),compiler,evaluator,manifests,absent());
-        var local=new com.ingot.cloud.iam.extension.LocalResourceAuthorizationClient(identities,evaluator,registry,compiler,roleFields,candidates,tenantFields,IamMybatisTestAccess.objectScopes(source));
+        var local=new com.ingot.cloud.iam.extension.LocalResourceAuthorizationClient(identities,evaluator,registry,compiler,roleFields,candidates,tenantFields,metadata,IamMybatisTestAccess.objectScopes(source));
         web.registerBean(com.ingot.cloud.iam.web.inner.InnerResourceAuthorizationAPI.class,()->new com.ingot.cloud.iam.web.inner.InnerResourceAuthorizationAPI(local));
         var remote=new com.ingot.cloud.iam.api.rpc.RemoteIamAuthorizationService() {
             public com.ingot.framework.commons.model.support.R<com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotDTO> snapshot(com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotRequest request){throw new UnsupportedOperationException();}

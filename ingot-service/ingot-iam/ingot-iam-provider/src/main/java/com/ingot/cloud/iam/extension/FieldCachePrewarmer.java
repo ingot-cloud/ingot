@@ -28,7 +28,10 @@ public class FieldCachePrewarmer {
             try { metadata.require(resource, false); }
             catch (RuntimeException failure) { log.warn("字段目录预热失败，受控请求保持拒绝: {}", resource, failure); }
         }
-        try { defaults.get(FieldPolicyCacheConfiguration.LATEST); }
+        try {
+            var member = metadata.require(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, false);
+            defaults.get(FieldPolicyCacheConfiguration.latest(Long.parseLong(member.id())));
+        }
         catch (RuntimeException failure) { log.warn("公共字段默认策略预热失败，后续读取可重试", failure); }
     }
 }

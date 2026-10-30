@@ -30,7 +30,6 @@ import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberStatus;
-import com.ingot.framework.commons.model.iam.PolicyScenario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -205,7 +204,7 @@ public class DiagnoseAuditService {
             return Map.of();
         }
         return fieldAccess.memberAccess(IamIds.require(actor.context().tenantId()),
-                IamIds.require(actor.context().memberId()), IamIds.require(targetId), PolicyScenario.MANAGEMENT);
+                IamIds.require(actor.context().memberId()), IamIds.require(targetId), com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
     }
 
     private static boolean discloseSources(AuthorizationDomain domain, ActiveIdentity actor, String memberId,

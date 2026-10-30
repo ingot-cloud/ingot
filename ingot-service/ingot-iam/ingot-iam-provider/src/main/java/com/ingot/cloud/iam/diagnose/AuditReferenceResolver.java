@@ -35,7 +35,6 @@ import com.ingot.framework.commons.model.iam.FieldProjection;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.MemberStatus;
-import com.ingot.framework.commons.model.iam.PolicyScenario;
 import com.ingot.framework.commons.model.iam.SubjectType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -212,7 +211,7 @@ public class AuditReferenceResolver {
                 }
             }
             FieldPolicySnapshot snapshot = domain == AuthorizationDomain.TENANT && !visible.isEmpty()
-                    ? fieldAccess.snapshot(tenantId.longValueExact(), PolicyScenario.MANAGEMENT) : null;
+                    ? fieldAccess.snapshot(tenantId.longValueExact(), com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE) : null;
             long viewer = Long.parseLong(actor.context().memberId());
             for (BigInteger id : ids) {
                 String key = AuditReferenceType.MEMBER.key(text(id));

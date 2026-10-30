@@ -34,7 +34,7 @@ class FieldCacheAndBatchTest {
         var evaluator = new FieldAccessEvaluator(mock(PolicyWriteRepository.class), memberships, mock(DepartmentClosure.class),
                 FieldTestSupport.noCache(), FieldTestSupport.projection(), FieldTestSupport.metadata(), FieldTestSupport.noCache());
         var full = new FieldAccess(FieldVisibility.FULL, true);
-        var snapshot = new FieldPolicySnapshot(10, PolicyScenario.MANAGEMENT, Map.of("phone", full), Map.of("phone", full),
+        var snapshot = new FieldPolicySnapshot(10, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, Map.of("phone", full), Map.of("phone", full),
                 List.of(new FieldAccessEvaluator.FieldRuleRow(new Selection(List.of("1"), List.of()),
                         List.of(new ScopeExpression(ScopeKind.ALL, null, null)), Map.of(), "phone", FieldVisibility.FULL)),
                 List.of(), Map.of("phone", new FieldOperations(true, false)), Map.of("phone", new FieldOperations(true, false)),
@@ -55,12 +55,14 @@ class FieldCacheAndBatchTest {
         var bindings = mock(FieldBindingRegistry.class);
         var metadata = mock(ResourceFieldMetadata.class);
         when(bindings.resources()).thenReturn(Set.of(MemberResources.PLATFORM_MEMBER, MemberResources.TENANT_MEMBER));
+        when(metadata.require(MemberResources.TENANT_MEMBER, false))
+                .thenReturn(new ResourceFieldMetadata.Entry("10", null));
         LayeredCache<String, FieldDefaultReference> defaults = mock(LayeredCache.class);
         LayeredCache<String, FieldPolicySnapshot> policy = mock(LayeredCache.class);
         new FieldCachePrewarmer(bindings, metadata, defaults).ready();
         verify(metadata).require(MemberResources.PLATFORM_MEMBER, false);
-        verify(metadata).require(MemberResources.TENANT_MEMBER, false);
-        verify(defaults).get(FieldPolicyCacheConfiguration.LATEST);
+        verify(metadata, times(2)).require(MemberResources.TENANT_MEMBER, false);
+        verify(defaults).get(FieldPolicyCacheConfiguration.latest(10));
         verifyNoMoreInteractions(metadata, defaults);
         clearInvocations(defaults);
         new FieldPolicyCacheConfiguration.OriginInvalidator(policy, defaults).changed(AuthorizationChangedSpringEvent.all(this));

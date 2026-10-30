@@ -21,12 +21,14 @@ import com.ingot.framework.commons.model.iam.ScopeKind;
  * @param defaults 每个字段的默认策略
  * @param readAction 披露诊断对象所需精确操作
  * @param hierarchical 候选是否为树
+ * @param fieldPolicyEligible 服务器是否具备租户字段策略运行能力；目录只能在此基础上关闭接入
  * @author jy
  * @since 1.0.0
  */
 public record ResourceDescriptor(@NotNull @Valid ResourceKey key, @NotNull List<@Valid ActionDescriptor> actions,
         @NotNull List<ScopeKind> scopeCapabilities, @NotNull List<@Valid FieldCapability> fields,
-        @NotNull Map<String, FieldAccess> defaults, @NotBlank String readAction, boolean hierarchical) {
+        @NotNull Map<String, FieldAccess> defaults, @NotBlank String readAction, boolean hierarchical,
+        boolean fieldPolicyEligible) {
     /**
      * 防御复制；默认值必须覆盖已登记字段。
      */

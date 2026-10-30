@@ -155,7 +155,7 @@ class RemoteAuthorizationTest {
         var calls=new AtomicInteger();var available=new AtomicReference<>(true);
         var remote=remote(request->{calls.incrementAndGet();if(!available.get())return R.error500();
             return R.ok(new AuthorizationDecision(key,actor,Map.of(READ,new ActionDecision(true,true,List.of(new ScopeCondition(true,List.of(),null,List.of())),new FieldPolicyDecision(Map.of(),Map.of(),List.of(),Map.of(),Map.of(),com.ingot.framework.commons.model.iam.FieldMergeMode.GRANTS))),"fresh",Instant.now().plusSeconds(30)));});
-        var descriptor=new ResourceDescriptor(key,List.of(new ActionDescriptor(READ,ExecutionMode.READ_ONLY)),List.of(ScopeKind.ALL),List.of(),Map.of(),READ,false);
+        var descriptor=new ResourceDescriptor(key,List.of(new ActionDescriptor(READ,ExecutionMode.READ_ONLY)),List.of(ScopeKind.ALL),List.of(),Map.of(),READ,false,false);
         var registry=new ResourceRegistry(List.of(new ResourceObjectProvider(){
             public ResourceDescriptor descriptor(){return descriptor;}
             public AuthorizationCandidatePage candidates(ResourceObjectQuery q){return new AuthorizationCandidatePage(List.of(),0,q.page(),q.pageSize(),true,null);}
@@ -309,7 +309,7 @@ class RemoteAuthorizationTest {
         var descriptor = new ResourceDescriptor(KEY,
                 List.of(new ActionDescriptor(READ, ExecutionMode.READ_ONLY),
                         new ActionDescriptor(WRITE, ExecutionMode.MUTATING)),
-                List.of(ScopeKind.ALL), List.of(), Map.of(), READ, false);
+                List.of(ScopeKind.ALL), List.of(), Map.of(), READ, false, false);
         return new ResourceRegistry(List.of(new ResourceObjectProvider() {
             public ResourceDescriptor descriptor() {
                 return descriptor;

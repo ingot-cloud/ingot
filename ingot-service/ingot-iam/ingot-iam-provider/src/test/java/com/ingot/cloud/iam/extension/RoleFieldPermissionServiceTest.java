@@ -77,7 +77,7 @@ class RoleFieldPermissionServiceTest {
                         new ActionDescriptor(WRITE, ExecutionMode.MUTATING)),
                 List.of(ScopeKind.ALL, ScopeKind.OBJECT_SET),
                 List.of(new FieldCapability(PHONE, "手机号", List.of(FieldVisibility.values()), true, false, com.ingot.framework.commons.model.iam.MaskSpec.PHONE)),
-                Map.of(PHONE, MASKED), READ, false);
+                Map.of(PHONE, MASKED), READ, false, false);
         when(metadata.require(eq(KEY), anyBoolean())).thenAnswer(invocation -> metadata.requireFresh(KEY, false));
         when(metadata.resourceIds(anyList())).thenReturn(Set.of(BigInteger.TEN));
         when(metadata.load(anyCollection())).thenReturn(Map.of(RESOURCE, descriptor));

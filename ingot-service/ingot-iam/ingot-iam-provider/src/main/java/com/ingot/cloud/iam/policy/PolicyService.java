@@ -22,13 +22,18 @@ import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.DefaultPolicyKind;
 import com.ingot.framework.commons.model.iam.DepartmentSelection;
+import com.ingot.cloud.iam.extension.ResourceFieldMetadata;
+import com.ingot.cloud.iam.persistence.entity.IamDefaultPolicyRevisionEntity;
+import com.ingot.framework.commons.model.iam.FieldCapability;
 import com.ingot.framework.commons.model.iam.FieldOperationRule;
 import com.ingot.framework.commons.model.iam.FieldPolicyDraft;
 import com.ingot.framework.commons.model.iam.FieldPolicyInput;
+import com.ingot.framework.commons.model.iam.FieldPolicyResource;
 import com.ingot.framework.commons.model.iam.FieldRule;
+import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
-import com.ingot.framework.commons.model.iam.MemberResources;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.ScopeBinding;
 import com.ingot.framework.commons.model.iam.ScopeExpression;
@@ -38,7 +43,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * <p>维护租户成员字段策略，不产生业务授权。</p>
+ * <p>维护已接入资源的租户字段策略，不产生业务授权。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -53,7 +58,7 @@ public class PolicyService {
     private final IamAccess access;
     private final IamAuditWriter audits;
     private final FieldAccessEvaluator fields;
-    private final com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata;
+    private final ResourceFieldMetadata fieldMetadata;
     private final PolicyWriteRepository policies;
     private final TransactionTemplate transaction;
 
@@ -80,44 +85,62 @@ public class PolicyService {
     }
 
     /**
-     * 读取字段策略。
+     * 列出当前租户已接入的资源。
      *
-     * @return 策略详情
+     * @return 资源目录
      */
-    public ResourceDetail<FieldPolicyDraft> getFieldPolicy() {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_FIELD_POLICY_READ);
-        return loadField(IamIds.require(actor.context().tenantId()));
+    public List<FieldPolicyResource> listFieldPolicyResources() {
+        access.require(AuthorizationDomain.TENANT, IamAction.TENANT_FIELD_POLICY_READ);
+        return fieldMetadata.fieldPolicyCatalog();
     }
 
     /**
-     * 整体替换字段策略。
+     * 读取一份资源的字段策略。
      *
+     * @param resourceId 资源 ID
+     * @return 策略详情
+     */
+    public ResourceDetail<FieldPolicyDraft> getFieldPolicy(String resourceId) {
+        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_FIELD_POLICY_READ);
+        long tenantId = IamIds.require(actor.context().tenantId());
+        return transaction.execute(status -> loadField(tenantId, requireEnrolled(resourceId)));
+    }
+
+    /**
+     * 整体替换一份资源的字段策略。
+     *
+     * @param resourceId 资源 ID
      * @param input 完整配置
      * @return 提交后详情
      */
-    public ResourceDetail<FieldPolicyDraft> putFieldPolicy(FieldPolicyInput input) {
+    public ResourceDetail<FieldPolicyDraft> putFieldPolicy(String resourceId, FieldPolicyInput input) {
         ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_FIELD_POLICY_UPDATE);
         long tenantId = IamIds.require(actor.context().tenantId());
+        var enrolled = requireEnrolled(resourceId);
         return transaction.execute(status -> {
-            ResourceDetail<FieldPolicyDraft> current = loadField(tenantId);
+            ResourceDetail<FieldPolicyDraft> current = loadField(tenantId, enrolled);
             IamIds.requireExpected(input.expectedVersion(), current.version());
-            requireDefault(input.policy().defaultRevisionId(), DefaultPolicyKind.FIELD);
-            replaceField(actor, tenantId, input.policy());
+            requireDefault(input.policy().defaultRevisionId(), enrolled.resourceId());
+            replaceField(actor, tenantId, enrolled, input.policy());
             access.authorizationChanged();
-            audits.write(actor.context(), access.nextId(), FIELD_POLICY, IamIds.text(tenantId),
+            audits.write(actor.context(), access.nextId(), FIELD_POLICY, resourceId,
                     AuditChangeType.UPDATE, Map.of(AuditField.POLICY_VERSION, current.version()),
                     Map.of(AuditField.POLICY_VERSION, Long.toString(Long.parseLong(current.version()) + 1)),
                     Map.of(FIELD_POLICY, Long.toString(Long.parseLong(current.version()) + 1)));
-            return loadField(tenantId);
+            return loadField(tenantId, enrolled);
         });
     }
 
-    private ResourceDetail<FieldPolicyDraft> loadField(long tenantId) {
-        IamFieldPolicyEntity row = policies.findField(tenantId);
-        if (row == null) {
-            return IamDetails.of(new FieldPolicyDraft(latestDefault(DefaultPolicyKind.FIELD), List.of()), "0");
-        }
-        List<IamFieldRuleEntity> items = policies.listFieldRules(tenantId);
+    private EnrolledResource requireEnrolled(String resourceId) {
+        long id = IamIds.require(resourceId);
+        return fieldMetadata.fieldPolicyCatalog().stream().filter(item -> item.resourceId().equals(resourceId)).findFirst()
+                .map(item -> new EnrolledResource(id, item.resource(), fieldMetadata.requireFresh(item.resource(), false).descriptor()))
+                .orElseThrow(() -> new BizException(IamReasonCode.OBJECT_NOT_FOUND));
+    }
+
+    private ResourceDetail<FieldPolicyDraft> loadField(long tenantId, EnrolledResource enrolled) {
+        IamFieldPolicyEntity row = ensurePolicy(tenantId, enrolled);
+        List<IamFieldRuleEntity> items = policies.listFieldRules(tenantId, enrolled.resourceId());
         LinkedHashSet<Long> selectorIds = new LinkedHashSet<>();
         for (IamFieldRuleEntity item : items) {
             selectorIds.add(selectorId(item.getViewerSelectorId()));
@@ -125,7 +148,7 @@ public class PolicyService {
         Map<Long, Selection> selectors = policies.selectors(tenantId, selectorIds);
         List<FieldRule> rules = new ArrayList<>();
         for (IamFieldRuleEntity item : items) {
-            rules.add(new FieldRule(item.getScenario(), item.getFieldKey(),
+            rules.add(new FieldRule(item.getFieldKey(),
                     selection(selectors, selectorId(item.getViewerSelectorId())),
                     IamJson.read(item.getTargetScope(), SCOPES),
                     IamJson.read(item.getScopeBindings(), BINDINGS),
@@ -136,37 +159,64 @@ public class PolicyService {
                 row.getVersion().toString());
     }
 
-    private void replaceField(ActiveIdentity actor, long tenantId, FieldPolicyDraft policy) {
-        policies.deleteFieldRules(tenantId);
+    private IamFieldPolicyEntity ensurePolicy(long tenantId, EnrolledResource enrolled) {
+        IamFieldPolicyEntity row = policies.findField(tenantId, enrolled.resourceId());
+        if (row != null) {
+            return row;
+        }
+        IamDefaultPolicyRevisionEntity latest = policies.latestRevision(DefaultPolicyKind.FIELD, enrolled.resourceId());
+        long revisionId;
+        if (latest == null) {
+            revisionId = access.nextId();
+            IamDefaultPolicyRevisionEntity created = new IamDefaultPolicyRevisionEntity();
+            created.setId(BigInteger.valueOf(revisionId));
+            created.setResourceId(BigInteger.valueOf(enrolled.resourceId()));
+            created.setKind(DefaultPolicyKind.FIELD);
+            created.setRevision(BigInteger.ONE);
+            created.setDefinition(DefaultPolicyDefinitions.definition(enrolled.descriptor()));
+            policies.insertRevision(created);
+        }
+        else {
+            revisionId = latest.getId().longValueExact();
+        }
+        IamFieldPolicyEntity created = new IamFieldPolicyEntity();
+        created.setTenantId(BigInteger.valueOf(tenantId));
+        created.setResourceId(BigInteger.valueOf(enrolled.resourceId()));
+        created.setDefaultRevisionId(BigInteger.valueOf(revisionId));
+        created.setDefaultKind(DefaultPolicyKind.FIELD);
+        created.setOperationRules("[]");
+        created.setVersion(BigInteger.ZERO);
+        policies.insertField(created);
+        return policies.findField(tenantId, enrolled.resourceId());
+    }
+
+    private void replaceField(ActiveIdentity actor, long tenantId, EnrolledResource enrolled, FieldPolicyDraft policy) {
+        policies.deleteFieldRules(tenantId, enrolled.resourceId());
         for (var operation : policy.operationRules()) {
-            requireOperationRule(operation);
+            requireOperationRule(enrolled, operation);
             writeSelector(actor, tenantId, operation.viewerSelection());
         }
-        policies.upsertField(tenantId, IamIds.require(policy.defaultRevisionId()), IamJson.array(policy.operationRules()));
+        policies.upsertField(tenantId, enrolled.resourceId(), IamIds.require(policy.defaultRevisionId()),
+                IamJson.array(policy.operationRules()));
         for (FieldRule rule : policy.rules()) {
-            requireVisibilityRule(rule);
+            requireVisibilityRule(enrolled.descriptor(), rule);
             long viewer = writeSelector(actor, tenantId, rule.viewerSelection());
-            policies.insertFieldRule(access.nextId(), tenantId, rule.scenario(), rule.fieldKey(), viewer,
+            policies.insertFieldRule(access.nextId(), tenantId, enrolled.resourceId(), rule.fieldKey(), viewer,
                     IamJson.array(rule.targetScope()), IamJson.object(rule.scopeBindings()), rule.visibility());
         }
     }
 
-    private void requireVisibilityRule(FieldRule rule) {
-        var field = fieldMetadata.requireFresh(MemberResources.TENANT_MEMBER, false).descriptor().fields().stream()
-                .filter(value -> value.key().equals(rule.fieldKey())).findFirst()
+    private void requireVisibilityRule(ResourceDescriptor descriptor, FieldRule rule) {
+        FieldCapability field = descriptor.fields().stream().filter(value -> value.key().equals(rule.fieldKey())).findFirst()
                 .orElseThrow(() -> new BizException(IamReasonCode.INVALID_ARGUMENT));
         if (!field.visibilities().contains(rule.visibility())) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
     }
 
-    private void requireOperationRule(FieldOperationRule rule) {
-        if (rule.resource().domain() != AuthorizationDomain.TENANT
-                || !MemberResources.TENANT_MEMBER.equals(rule.resource())) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        }
-        var descriptor = fieldMetadata.requireFresh(rule.resource(), false).descriptor();
-        var manifest = fieldMetadata.bindings(rule.resource());
+    private void requireOperationRule(EnrolledResource enrolled, FieldOperationRule rule) {
+        var descriptor = enrolled.descriptor();
+        var manifest = fieldMetadata.bindings(enrolled.resource());
         var write = manifest.bindings().stream().anyMatch(binding -> rule.actionCode().equals(binding.actionCode())
                 && rule.fieldKey().equals(binding.fieldKey()) && binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.WRITE);
         var filter = manifest.bindings().stream().anyMatch(binding -> rule.actionCode().equals(binding.actionCode())
@@ -197,18 +247,14 @@ public class PolicyService {
         return id;
     }
 
-    private void requireDefault(String revisionId, DefaultPolicyKind kind) {
-        if (policies.findRevision(IamIds.require(revisionId), kind) == null) {
+    private void requireDefault(String revisionId, long resourceId) {
+        var revision = policies.findRevision(IamIds.require(revisionId), DefaultPolicyKind.FIELD);
+        if (revision == null || revision.getResourceId() == null || revision.getResourceId().longValueExact() != resourceId) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
     }
 
-    private String latestDefault(DefaultPolicyKind kind) {
-        var revision = policies.latestRevision(kind);
-        if (revision == null || revision.getId() == null) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        }
-        return revision.getId().toString();
+    private record EnrolledResource(long resourceId, ResourceKey resource, ResourceDescriptor descriptor) {
     }
 
     private static Selection selection(Map<Long, Selection> selectors, long selectorId) {

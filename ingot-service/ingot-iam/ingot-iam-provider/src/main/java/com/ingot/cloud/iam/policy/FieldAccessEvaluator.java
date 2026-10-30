@@ -33,14 +33,13 @@ import com.ingot.framework.commons.model.iam.FieldProjection;
 import com.ingot.framework.commons.model.iam.FieldRule;
 import com.ingot.framework.commons.model.iam.FieldOperations;
 import com.ingot.framework.commons.model.iam.FieldOperationRule;
-import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.model.iam.IamActionOperation;
+import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
 import com.ingot.framework.commons.model.iam.extension.ResourceKey;
-import com.ingot.cloud.iam.extension.BuiltinResourceProviders;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.MemberRecord;
-import com.ingot.framework.commons.model.iam.PolicyScenario;
 import com.ingot.framework.commons.model.iam.ScopeBinding;
 import com.ingot.framework.commons.model.iam.ScopeExpression;
 import com.ingot.framework.commons.model.iam.ScopeKind;
@@ -49,7 +48,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * <p>按场景、查看者与目标合并字段策略，投影响应并按独立操作规则拒绝不可编辑写入。</p>
+ * <p>按资源、查看者与目标合并字段策略，投影响应并按独立操作规则拒绝不可编辑写入。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -70,50 +69,50 @@ public class FieldAccessEvaluator {
     private final org.springframework.beans.factory.ObjectProvider<com.ingot.framework.cache.spi.LayeredCache<String, FieldDefaultReference>> defaults;
 
     /**
-     * 加载当前租户在指定场景下的默认版本、平台上限与规则，供一次请求复用。
+     * 加载当前租户在指定资源下的默认版本、平台上限与规则，供一次请求复用。
      *
      * @param tenantId 当前租户
-     * @param scenario 后台或通讯录
+     * @param resource 已接入资源
      * @return 字段策略快照
      */
-    public FieldPolicySnapshot snapshot(long tenantId, PolicyScenario scenario) {
+    public FieldPolicySnapshot snapshot(long tenantId, ResourceKey resource) {
         // 租户策略每次请求读取当前事实，不接受变更提交前的热缓存。
-        return snapshotFresh(tenantId, scenario);
-
+        return snapshotFresh(tenantId, resource);
     }
 
     /** 加载当前配置事实；写事务和缓存 loader 使用，绝不回读热缓存。 */
-    public FieldPolicySnapshot snapshotFresh(long tenantId, PolicyScenario scenario) {
-        try { return loadSnapshot(tenantId, scenario, true); }
+    public FieldPolicySnapshot snapshotFresh(long tenantId, ResourceKey resource) {
+        try { return loadSnapshot(tenantId, resource, true); }
         catch(org.springframework.dao.DataAccessException failure) { throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE); }
     }
 
     /** 缓存 loader 使用当前默认引用缓存；业务写入调用 snapshotFresh。 */
-    public FieldPolicySnapshot snapshotCachedConfiguration(long tenantId, PolicyScenario scenario) {
-        return loadSnapshot(tenantId, scenario, false);
+    public FieldPolicySnapshot snapshotCachedConfiguration(long tenantId, ResourceKey resource) {
+        return loadSnapshot(tenantId, resource, false);
     }
 
-    private FieldPolicySnapshot loadSnapshot(long tenantId, PolicyScenario scenario, boolean fresh) {
+    private FieldPolicySnapshot loadSnapshot(long tenantId, ResourceKey resource, boolean fresh) {
+        var entry = metadata.requireFresh(resource, false);
+        long resourceId = Long.parseLong(entry.id());
+        var descriptor = entry.descriptor();
         var configured = fresh ? null : defaults.getIfAvailable();
-        IamFieldPolicyEntity policy = policies.findField(tenantId);
-        FieldDefaultReference latest = configured == null ? FieldDefaultReference.from(policies.latestRevision(DefaultPolicyKind.FIELD)) : reference(configured, FieldPolicyCacheConfiguration.LATEST);
-        FieldDefaultReference baseline = policy == null
-                ? latest : configured == null ? FieldDefaultReference.from(policies.findRevision(policy.getDefaultRevisionId().longValueExact(), DefaultPolicyKind.FIELD)) : reference(configured, policy.getDefaultRevisionId().toString());
+        IamFieldPolicyEntity policy = policies.findField(tenantId, resourceId);
+        FieldDefaultReference latest = configured == null
+                ? referenceOf(policies.latestRevision(DefaultPolicyKind.FIELD, resourceId), descriptor)
+                : reference(configured, FieldPolicyCacheConfiguration.latest(resourceId), descriptor);
+        FieldDefaultReference baseline = policy == null ? latest
+                : configured == null ? referenceOf(policies.findRevision(policy.getDefaultRevisionId().longValueExact(), DefaultPolicyKind.FIELD), descriptor)
+                : reference(configured, policy.getDefaultRevisionId().toString(), descriptor);
         if (baseline == null || latest == null)
             throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
         List<FieldRuleRow> rows = new ArrayList<>();
-        List<IamFieldRuleEntity> items = policies.listFieldRules(tenantId);
+        List<IamFieldRuleEntity> items = policy == null ? List.of() : policies.listFieldRules(tenantId, resourceId);
         LinkedHashSet<Long> selectorIds = new LinkedHashSet<>();
         for (IamFieldRuleEntity item : items) {
-            if (item.getScenario() == scenario) {
-                selectorIds.add(item.getViewerSelectorId().longValueExact());
-            }
+            selectorIds.add(item.getViewerSelectorId().longValueExact());
         }
         Map<Long, Selection> selectors = policies.selectors(tenantId, selectorIds);
         for (IamFieldRuleEntity item : items) {
-            if (item.getScenario() != scenario) {
-                continue;
-            }
             rows.add(new FieldRuleRow(
                     selectors.getOrDefault(item.getViewerSelectorId().longValueExact(),
                             new Selection(List.of(), List.of())),
@@ -121,34 +120,37 @@ public class FieldAccessEvaluator {
                     IamJson.read(item.getScopeBindings(), BINDINGS),
                     item.getFieldKey(), item.getVisibility()));
         }
-        return governedSnapshot(tenantId, scenario,
-                DefaultPolicyDefinitions.fieldAccess(baseline == null ? null : baseline.definition()),
-                DefaultPolicyDefinitions.fieldCeiling(latest == null ? null : latest.definition()),
+        return governedSnapshot(tenantId, resource, descriptor, entry.expiresAt(),
+                DefaultPolicyDefinitions.fieldAccess(baseline.definition(), descriptor),
+                DefaultPolicyDefinitions.fieldCeiling(latest.definition(), descriptor),
                 List.copyOf(rows), policy == null || policy.getOperationRules() == null ? List.of()
                         : IamJson.read(policy.getOperationRules(), new TypeReference<List<FieldOperationRule>>() { }),
-                DefaultPolicyDefinitions.fieldOperations(baseline == null ? null : baseline.definition(), false),
-                DefaultPolicyDefinitions.fieldOperations(latest.definition(), true),
+                DefaultPolicyDefinitions.fieldOperations(baseline.definition(), false, descriptor),
+                DefaultPolicyDefinitions.fieldOperations(latest.definition(), true, descriptor),
                 com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime.earliest(latest.expiresAt(), baseline.expiresAt()));
     }
 
-    private static FieldDefaultReference reference(com.ingot.framework.cache.spi.LayeredCache<String, FieldDefaultReference> cache, String key) {
+    private static FieldDefaultReference referenceOf(IamDefaultPolicyRevisionEntity revision, ResourceDescriptor descriptor) {
+        return revision == null ? new FieldDefaultReference(DefaultPolicyDefinitions.definition(descriptor),
+                com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime.deadline()) : FieldDefaultReference.from(revision);
+    }
+
+    private static FieldDefaultReference reference(com.ingot.framework.cache.spi.LayeredCache<String, FieldDefaultReference> cache, String key,
+            ResourceDescriptor descriptor) {
         var value = cache.get(key);
         if (value == null || !java.time.Instant.now().isBefore(value.expiresAt())) {
             cache.evict(key);
             value = cache.get(key);
         }
-        if (value == null || !java.time.Instant.now().isBefore(value.expiresAt()))
-            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
-        return value;
+        return value == null || !java.time.Instant.now().isBefore(value.expiresAt())
+                ? new FieldDefaultReference(DefaultPolicyDefinitions.definition(descriptor),
+                        com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime.deadline()) : value;
     }
 
-    private FieldPolicySnapshot governedSnapshot(long tenantId, PolicyScenario scenario,
-            Map<String, FieldAccess> baseline, Map<String, FieldAccess> ceiling, List<FieldRuleRow> rules,
-            List<FieldOperationRule> operationRules, Map<String, FieldOperations> defaults,
+    private FieldPolicySnapshot governedSnapshot(long tenantId, ResourceKey resource, ResourceDescriptor descriptor,
+            java.time.Instant entryExpiresAt, Map<String, FieldAccess> baseline, Map<String, FieldAccess> ceiling,
+            List<FieldRuleRow> rules, List<FieldOperationRule> operationRules, Map<String, FieldOperations> defaults,
             Map<String, FieldOperations> operationCeiling, java.time.Instant expiresAt) {
-        var resource = BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
-        var entry = metadata.requireFresh(resource, false);
-        var descriptor = entry.descriptor();
         Map<String, com.ingot.framework.commons.model.iam.MaskSpec> masks = new LinkedHashMap<>();
         Map<String, FieldAccess> values = new LinkedHashMap<>(), upper = new LinkedHashMap<>();
         Map<String, FieldOperations> abilities = new LinkedHashMap<>(), limits = new LinkedHashMap<>();
@@ -163,8 +165,8 @@ public class FieldAccessEvaluator {
             var operation = operationCeiling.getOrDefault(field.key(), new FieldOperations(field.editable(), field.filterable()));
             limits.put(field.key(), new FieldOperations(field.editable() && operation.editable(), field.filterable() && operation.filterable()));
         }
-        return new FieldPolicySnapshot(tenantId, scenario, values, upper, rules, operationRules, abilities, limits, masks,
-                com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime.earliest(expiresAt, entry.expiresAt()));
+        return new FieldPolicySnapshot(tenantId, resource, values, upper, rules, operationRules, abilities, limits, masks,
+                com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime.earliest(expiresAt, entryExpiresAt));
     }
 
     /** 编译给其他服务执行的无原值策略，序列化之后不再读取数据库。 */
@@ -173,11 +175,8 @@ public class FieldAccessEvaluator {
             ObjectScope scope, boolean fresh) {
         if (policies.currentOwner(IamIds.require(actor.tenantId()), IamIds.require(actor.memberId())))
             return ownerDecision(resource, action);
-        if (!resource.equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE))
-            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
-        var scenario = PolicyScenario.MANAGEMENT;
         long tenantId = IamIds.require(actor.tenantId()), viewer = IamIds.require(actor.memberId());
-        var snapshot = fresh ? snapshotFresh(tenantId, scenario) : snapshot(tenantId, scenario);
+        var snapshot = fresh ? snapshotFresh(tenantId, resource) : snapshot(tenantId, resource);
         var batch = prepare(snapshot, viewer, List.of());
         var abilities = operations(snapshot, viewer, resource, action, scope);
         Map<String, FieldAccess> defaults = new LinkedHashMap<>(), ceilings = new LinkedHashMap<>();
@@ -204,32 +203,33 @@ public class FieldAccessEvaluator {
      * 按未保存草稿组装字段策略快照，与提交后求值使用同一合并规则。
      *
      * @param tenantId 当前租户
-     * @param scenario 后台或通讯录
+     * @param resource 已接入资源
      * @param draft 字段草稿
      * @return 字段策略快照
      */
-    public FieldPolicySnapshot snapshot(long tenantId, PolicyScenario scenario, FieldPolicyDraft draft) {
-        IamDefaultPolicyRevisionEntity latest = policies.latestRevision(DefaultPolicyKind.FIELD);
+    public FieldPolicySnapshot snapshot(long tenantId, ResourceKey resource, FieldPolicyDraft draft) {
+        var entry = metadata.requireFresh(resource, false);
+        long resourceId = Long.parseLong(entry.id());
+        IamDefaultPolicyRevisionEntity latest = policies.latestRevision(DefaultPolicyKind.FIELD, resourceId);
         IamDefaultPolicyRevisionEntity baseline = policies.findRevision(
                 IamIds.require(draft.defaultRevisionId()), DefaultPolicyKind.FIELD);
-        if (baseline == null || latest == null) {
+        if (baseline == null || latest == null || baseline.getResourceId() == null
+                || baseline.getResourceId().longValueExact() != resourceId) {
             throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
         }
+        var descriptor = entry.descriptor();
         List<FieldRuleRow> rows = new ArrayList<>();
         List<FieldRule> rules = draft.rules() == null ? List.of() : draft.rules();
         for (FieldRule rule : rules) {
-            if (rule.scenario() != scenario) {
-                continue;
-            }
             rows.add(new FieldRuleRow(rule.viewerSelection(), rule.targetScope(), rule.scopeBindings(),
                     rule.fieldKey(), rule.visibility()));
         }
-        return governedSnapshot(tenantId, scenario,
-                DefaultPolicyDefinitions.fieldAccess(baseline.getDefinition()),
-                DefaultPolicyDefinitions.fieldCeiling(latest == null ? null : latest.getDefinition()),
+        return governedSnapshot(tenantId, resource, descriptor, entry.expiresAt(),
+                DefaultPolicyDefinitions.fieldAccess(baseline.getDefinition(), descriptor),
+                DefaultPolicyDefinitions.fieldCeiling(latest.getDefinition(), descriptor),
                 List.copyOf(rows), draft.operationRules(),
-                DefaultPolicyDefinitions.fieldOperations(baseline.getDefinition(), false),
-                DefaultPolicyDefinitions.fieldOperations(latest.getDefinition(), true),
+                DefaultPolicyDefinitions.fieldOperations(baseline.getDefinition(), false, descriptor),
+                DefaultPolicyDefinitions.fieldOperations(latest.getDefinition(), true, descriptor),
                 com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime.deadline());
     }
 
@@ -239,13 +239,13 @@ public class FieldAccessEvaluator {
      * @param tenantId 当前租户
      * @param viewerId 查看者成员
      * @param targetMemberId 目标成员
-     * @param scenario 后台或通讯录
+     * @param resource 已接入资源
      * @param fieldKey 字段键
      * @return 合并后的访问结果
      */
-    public FieldAccess access(long tenantId, long viewerId, long targetMemberId, PolicyScenario scenario,
+    public FieldAccess access(long tenantId, long viewerId, long targetMemberId, ResourceKey resource,
                               String fieldKey) {
-        return access(snapshot(tenantId, scenario), viewerId, targetMemberId, fieldKey);
+        return access(snapshot(tenantId, resource), viewerId, targetMemberId, fieldKey);
     }
 
     /**
@@ -271,9 +271,7 @@ public class FieldAccessEvaluator {
         FieldAccess resolved = matched == null ? snapshot.baselineOf(fieldKey) : matched;
         var visibility = resolved.visibility().ordinal() <= snapshot.ceilingOf(fieldKey).visibility().ordinal()
                 ? resolved.visibility() : snapshot.ceilingOf(fieldKey).visibility();
-        boolean editable = snapshot.scenario() == PolicyScenario.MANAGEMENT
-                && operation(snapshot, viewerId, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE,
-                        IamAction.VALUE_TENANT_MEMBER_UPDATE, fieldKey).editable();
+        boolean editable = operation(snapshot, viewerId, snapshot.resource(), updateAction(snapshot.resource()), fieldKey).editable();
         return new FieldAccess(visibility, visibility != FieldVisibility.HIDDEN && editable);
     }
 
@@ -283,12 +281,12 @@ public class FieldAccessEvaluator {
      * @param tenantId 当前租户
      * @param viewerId 查看者成员
      * @param targetMemberId 目标成员
-     * @param scenario 后台或通讯录
+     * @param resource 已接入资源
      * @return 按字段键索引的访问说明
      */
     public Map<String, FieldAccess> memberAccess(long tenantId, long viewerId, long targetMemberId,
-                                                 PolicyScenario scenario) {
-        return memberAccess(snapshot(tenantId, scenario), viewerId, targetMemberId);
+                                                 ResourceKey resource) {
+        return memberAccess(snapshot(tenantId, resource), viewerId, targetMemberId);
     }
 
     /**
@@ -349,9 +347,9 @@ public class FieldAccessEvaluator {
         // 选择器按请求内值缓存，字段数量不产生重复关系查询。
         for (var field : snapshot.baseline().keySet()) {
             FieldOperations matched = null;
+            String update = updateAction(snapshot.resource());
             for (var rule : snapshot.operationRules()) {
-                if (rule.scenario() != snapshot.scenario() || !BuiltinResourceProviders.TENANT_MEMBER_RESOURCE.equals(rule.resource())
-                        || !IamAction.VALUE_TENANT_MEMBER_UPDATE.equals(rule.actionCode()) || !field.equals(rule.fieldKey())
+                if (!update.equals(rule.actionCode()) || !field.equals(rule.fieldKey())
                         || !viewers.computeIfAbsent(rule.viewerSelection(), selection -> matchesViewer(snapshot.tenantId(), viewerId, selection)))
                     continue;
                 matched = matched == null ? rule.operations() : new FieldOperations(matched.editable() && rule.operations().editable(),
@@ -359,8 +357,7 @@ public class FieldAccessEvaluator {
             }
             var baseline = matched == null ? snapshot.operationDefaults().getOrDefault(field, FieldOperations.NONE) : matched;
             var upper = snapshot.operationCeiling().getOrDefault(field, FieldOperations.NONE);
-            operations.put(field, new FieldOperations(snapshot.scenario() == PolicyScenario.MANAGEMENT
-                    && baseline.editable() && upper.editable(), false));
+            operations.put(field, new FieldOperations(baseline.editable() && upper.editable(), false));
         }
         Map<Long, List<String>> immutable = new LinkedHashMap<>();
         departments.forEach((id, values) -> immutable.put(id, List.copyOf(values)));
@@ -439,7 +436,8 @@ public class FieldAccessEvaluator {
      * @param submitted 实际提交值；显式空引用由业务 nullable 规则处理
      */
     public void requireWritable(long tenantId, long viewerId, long targetMemberId, String fieldKey, String submitted) {
-        FieldAccess access = access(tenantId, viewerId, targetMemberId, PolicyScenario.MANAGEMENT, fieldKey);
+        FieldAccess access = access(tenantId, viewerId, targetMemberId,
+                com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, fieldKey);
         if (!access.editable() || access.visibility() == FieldVisibility.HIDDEN) {
             throw new BizException(IamReasonCode.ACTION_DENIED);
         }
@@ -454,7 +452,7 @@ public class FieldAccessEvaluator {
      * @param submitted 筛选原值
      */
     public void requireOriginalLookup(long tenantId, long viewerId, String fieldKey, String submitted) {
-        requireOriginalLookup(snapshot(tenantId, PolicyScenario.MANAGEMENT), viewerId, fieldKey, submitted,
+        requireOriginalLookup(snapshot(tenantId, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE), viewerId, fieldKey, submitted,
                 ObjectScope.all());
     }
 
@@ -472,8 +470,8 @@ public class FieldAccessEvaluator {
         if (submitted == null || submitted.isBlank() || scope == null || scope.coversNone()) {
             return;
         }
-        var resource = BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
-        var action = IamAction.VALUE_TENANT_MEMBER_READ;
+        var resource = snapshot.resource();
+        var action = metadata.requireFresh(resource, false).descriptor().readAction();
         if (!operation(snapshot, viewerId, resource, action, fieldKey).filterable()
                 || !universallyFull(snapshot, viewerId, fieldKey, scope)) {
             throw new BizException(IamReasonCode.ACTION_DENIED);
@@ -505,8 +503,7 @@ public class FieldAccessEvaluator {
         final var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
         FieldOperations matched = null;
         for (var rule : snapshot.operationRules()) {
-            if (!resource.equals(rule.resource()) || snapshot.scenario() != rule.scenario()
-                    || !action.equals(rule.actionCode()) || !fieldKey.equals(rule.fieldKey())
+            if (!action.equals(rule.actionCode()) || !fieldKey.equals(rule.fieldKey())
                     || !matchesViewer(snapshot.tenantId(), viewerId, rule.viewerSelection()))
                 continue;
             matched = matched == null ? rule.operations() : new FieldOperations(
@@ -514,7 +511,7 @@ public class FieldAccessEvaluator {
         }
         var baseline = matched == null ? snapshot.operationDefaults().getOrDefault(fieldKey, FieldOperations.NONE) : matched;
         var upper = snapshot.operationCeiling().getOrDefault(fieldKey, FieldOperations.NONE);
-        boolean write = action.equals(IamAction.VALUE_TENANT_MEMBER_UPDATE) || action.equals(IamAction.VALUE_TENANT_MEMBER_CREATE);
+        boolean write = writes(action);
         return new FieldOperations(write && baseline.editable() && upper.editable(), !write && baseline.filterable() && upper.filterable());
     }
 
@@ -530,14 +527,13 @@ public class FieldAccessEvaluator {
         for (var field : snapshot.baseline().keySet()) {
             FieldOperations matched = null;
             for (var rule : snapshot.operationRules()) {
-                if (!resource.equals(rule.resource()) || snapshot.scenario() != rule.scenario()
-                        || !action.equals(rule.actionCode()) || !field.equals(rule.fieldKey())
+                if (!action.equals(rule.actionCode()) || !field.equals(rule.fieldKey())
                         || !viewers.computeIfAbsent(rule.viewerSelection(), selection -> matchesViewer(snapshot.tenantId(), viewerId, selection))) continue;
                 matched = matched == null ? rule.operations() : new FieldOperations(matched.editable() && rule.operations().editable(), matched.filterable() && rule.operations().filterable());
             }
             var value = matched == null ? snapshot.operationDefaults().getOrDefault(field, FieldOperations.NONE) : matched;
             var upper = snapshot.operationCeiling().getOrDefault(field, FieldOperations.NONE);
-            boolean write = action.equals(IamAction.VALUE_TENANT_MEMBER_UPDATE) || action.equals(IamAction.VALUE_TENANT_MEMBER_CREATE);
+            boolean write = writes(action);
             result.put(field, new FieldOperations(write && value.editable() && upper.editable(),
                     !write && value.filterable() && upper.filterable() && universallyFull(batch, field, scope)));
         }
@@ -740,7 +736,7 @@ public class FieldAccessEvaluator {
     }
     private FieldPolicySnapshot ownerSnapshot(FieldPolicySnapshot snapshot, long viewerId) {
         if (!policies.currentOwner(snapshot.tenantId(), viewerId)) return snapshot;
-        return new FieldPolicySnapshot(snapshot.tenantId(), snapshot.scenario(), snapshot.ceiling(), snapshot.ceiling(),
+        return new FieldPolicySnapshot(snapshot.tenantId(), snapshot.resource(), snapshot.ceiling(), snapshot.ceiling(),
                 List.of(), List.of(), snapshot.operationCeiling(), snapshot.operationCeiling(), snapshot.masks(), snapshot.expiresAt());
     }
 
@@ -755,14 +751,13 @@ public class FieldAccessEvaluator {
         Map<String, com.ingot.framework.commons.model.iam.MaskSpec> masks = new LinkedHashMap<>();
         Map<String,FieldAccess> platformCeiling=Map.of();
         Map<String,FieldOperations> platformOperations=Map.of();
-        if (resource.equals(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)) {
-            try {
-                var latest=policies.latestRevision(DefaultPolicyKind.FIELD);
-                if(latest==null)throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
-                platformCeiling=DefaultPolicyDefinitions.fieldCeiling(latest.getDefinition());
-                platformOperations=DefaultPolicyDefinitions.fieldOperations(latest.getDefinition(),true);
-            } catch(org.springframework.dao.DataAccessException failure){throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);}
-        }
+        try {
+            var latest=policies.latestRevision(DefaultPolicyKind.FIELD, Long.parseLong(entry.id()));
+            if (latest != null) {
+                platformCeiling=DefaultPolicyDefinitions.fieldCeiling(latest.getDefinition(), descriptor);
+                platformOperations=DefaultPolicyDefinitions.fieldOperations(latest.getDefinition(), true, descriptor);
+            }
+        } catch(org.springframework.dao.DataAccessException failure){throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);}
         var ceilings=platformCeiling;var operationCeilings=platformOperations;
         descriptor.fields().forEach(field -> {
             var visibility = field.visibilities().stream().max(java.util.Comparator.comparingInt(Enum::ordinal)).orElse(FieldVisibility.HIDDEN);
@@ -776,6 +771,19 @@ public class FieldAccessEvaluator {
         });
         return new com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision(fields, fields, List.of(), operations,
             masks, com.ingot.framework.commons.model.iam.FieldMergeMode.RESTRICTIONS, entry.expiresAt());
+    }
+
+    private String updateAction(ResourceKey resource) {
+        return metadata.requireFresh(resource, false).descriptor().actions().stream().map(action -> action.code())
+                .filter(code -> IamActionOperation.ofActionCode(code) == IamActionOperation.UPDATE).findFirst().orElse("");
+    }
+
+    private static boolean writes(String action) {
+        if (action == null || action.isBlank()) {
+            return false;
+        }
+        var operation = IamActionOperation.ofActionCode(action);
+        return operation == IamActionOperation.CREATE || operation == IamActionOperation.UPDATE;
     }
 
 }

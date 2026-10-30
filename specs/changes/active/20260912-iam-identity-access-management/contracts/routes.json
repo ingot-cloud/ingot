@@ -2681,7 +2681,19 @@
     "implemented": true
   },
   {
-    "path": "/v1/tenant/policies/fields",
+    "path": "/v1/tenant/policies/field-resources",
+    "method": "get",
+    "operationId": "listFieldPolicyResources",
+    "summary": "列出已接入字段策略的资源",
+    "domain": "TENANT",
+    "action": "iam-tenant:field-policy:read",
+    "request": null,
+    "response": "RListFieldPolicyResource",
+    "execution": "只返回当前租户已接入且服务器允许的资源及其字段能力",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/policies/fields/{resourceId}",
     "method": "get",
     "operationId": "getFieldPolicy",
     "summary": "读取字段策略",
@@ -2689,11 +2701,11 @@
     "action": "iam-tenant:field-policy:read",
     "request": null,
     "response": "RResourceDetailFieldPolicyDraft",
-    "execution": "可信租户；策略管理操作；引用同租户；PUT 重验版本、引用、字段上限并事务写审计",
+    "execution": "可信租户；资源必须已接入；尚无策略行时补行并钉住该资源最新修订",
     "implemented": true
   },
   {
-    "path": "/v1/tenant/policies/fields",
+    "path": "/v1/tenant/policies/fields/{resourceId}",
     "method": "put",
     "operationId": "putFieldPolicy",
     "summary": "整体替换字段策略",
@@ -2701,7 +2713,7 @@
     "action": "iam-tenant:field-policy:update",
     "request": "FieldPolicyInput",
     "response": "RResourceDetailFieldPolicyDraft",
-    "execution": "可信租户；策略管理操作；引用同租户；PUT 重验版本、引用、字段上限并事务写审计",
+    "execution": "可信租户；字段、可见性、编辑、筛选和动作必须属于路径中的资源",
     "implemented": true,
     "example": "field-policy"
   },

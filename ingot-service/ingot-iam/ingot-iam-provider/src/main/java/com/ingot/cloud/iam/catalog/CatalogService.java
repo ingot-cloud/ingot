@@ -397,11 +397,12 @@ public class CatalogService {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_RESOURCE_READ);
         long id = IamIds.require(applicationId);
         requireApplication(id);
+        IamApplicationEntity application = catalog.findApplication(id);
         IamPages.require(page, pageSize);
         Page<IamResourceEntity> rows = catalog.pageResources(id, page, pageSize, name, code);
         List<ResourceDetail<ResourceRecord>> items = rows.getRecords()
             .stream()
-            .map(row -> IamDetails.of(resource(row), version(row.getVersion())))
+            .map(row -> IamDetails.of(resource(application, row), version(row.getVersion())))
             .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
@@ -438,6 +439,7 @@ public class CatalogService {
             entity.setName(input.name());
             entity.setScopeCapabilities(IamJson.array(input.scopeCapabilities()));
             entity.setFieldCapabilities(IamJson.array(input.fieldCapabilities()));
+            entity.setFieldPolicy(false);
             entity.setEnabled(true);
             try {
                 catalog.insertResource(entity);
@@ -469,13 +471,16 @@ public class CatalogService {
             IamApplicationEntity application = requireLocked(catalog.findApplication(appId));
             requireResourceScopes(application.getDomain(), input.scopeCapabilities());
             requireFieldCapabilities(application, current.getCode(), input.fieldCapabilities());
+            requireFieldPolicy(application, current.getCode(), input.fieldCapabilities(), input.fieldPolicy());
             IamIds.requireVersion(input.expectedVersion(), version(current.getVersion()));
             catalog.updateResource(appId, id, input.name(), IamJson.array(input.scopeCapabilities()),
-                    IamJson.array(input.fieldCapabilities()), current.getVersion());
+                    IamJson.array(input.fieldCapabilities()), input.fieldPolicy(), current.getVersion());
             String next = nextVersion(current.getVersion());
             audits.write(actor.context(), access.nextId(), RESOURCE, resourceId, AuditChangeType.UPDATE,
-                    Map.of(AuditField.NAME, current.getName(), AuditField.FIELD_CAPABILITIES, current.getFieldCapabilities() == null ? "[]" : current.getFieldCapabilities()),
-                    Map.of(AuditField.NAME, input.name(), AuditField.FIELD_CAPABILITIES, input.fieldCapabilities()),
+                    Map.of(AuditField.NAME, current.getName(), AuditField.FIELD_CAPABILITIES, current.getFieldCapabilities() == null ? "[]" : current.getFieldCapabilities(),
+                            AuditField.FIELD_POLICY, String.valueOf(Boolean.TRUE.equals(current.getFieldPolicy()))),
+                    Map.of(AuditField.NAME, input.name(), AuditField.FIELD_CAPABILITIES, input.fieldCapabilities(),
+                            AuditField.FIELD_POLICY, String.valueOf(input.fieldPolicy())),
                     Map.of(RESOURCE, next));
             changes.markAll();
             return loadResource(appId, id);
@@ -1036,7 +1041,7 @@ public class CatalogService {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return IamDetails.of(resource(row), version(row.getVersion()));
+        return IamDetails.of(resource(catalog.findApplication(applicationId), row), version(row.getVersion()));
     }
 
     private ResourceDetail<ActionRecord> loadAction(long applicationId, long id) {
@@ -1123,6 +1128,7 @@ public class CatalogService {
             entity.setName(resource.name());
             entity.setScopeCapabilities(IamJson.array(resource.scopeCapabilities()));
             entity.setFieldCapabilities(IamJson.array(resource.fieldCapabilities()));
+            entity.setFieldPolicy(false);
             entity.setEnabled(true);
             try {
                 catalog.insertResource(entity);
@@ -1221,6 +1227,19 @@ public class CatalogService {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         return ordered;
+    }
+
+    private void requireFieldPolicy(IamApplicationEntity application, String resourceCode, List<FieldCapability> fields,
+            boolean fieldPolicy) {
+        if (!fieldPolicy) {
+            return;
+        }
+        var key = new com.ingot.framework.commons.model.iam.extension.ResourceKey(application.getDomain(),
+                application.getCode(), resourceCode);
+        if (application.getDomain() != AuthorizationDomain.TENANT || fields == null || fields.isEmpty()
+                || !fieldMetadata.eligible(key)) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
     }
 
     private void requireFieldCapabilities(IamApplicationEntity application, String resourceCode, List<FieldCapability> fields) {
@@ -1341,11 +1360,15 @@ public class CatalogService {
                 row.getSortOrder() == null ? 0 : row.getSortOrder());
     }
 
-    private static ResourceRecord resource(IamResourceEntity row) {
+    private ResourceRecord resource(IamApplicationEntity application, IamResourceEntity row) {
         List<ScopeKind> scopes = IamJson.read(row.getScopeCapabilities(), SCOPES);
         List<FieldCapability> fields = IamJson.read(row.getFieldCapabilities(), FIELDS);
+        boolean eligible = application != null && fieldMetadata.eligible(
+                new com.ingot.framework.commons.model.iam.extension.ResourceKey(application.getDomain(),
+                        application.getCode(), row.getCode()));
         return new ResourceRecord(text(row.getId()), text(row.getApplicationId()), row.getCode(), row.getName(),
-                scopes == null ? List.of() : scopes, fields == null ? List.of() : fields, statusOf(row.getEnabled()));
+                scopes == null ? List.of() : scopes, fields == null ? List.of() : fields,
+                Boolean.TRUE.equals(row.getFieldPolicy()), eligible, statusOf(row.getEnabled()));
     }
 
     private ActionCatalogItem catalogItem(IamActionEntity row) {

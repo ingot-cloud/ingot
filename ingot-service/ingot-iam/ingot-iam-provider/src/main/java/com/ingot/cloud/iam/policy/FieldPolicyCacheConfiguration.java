@@ -29,10 +29,20 @@ import lombok.RequiredArgsConstructor;
 @Configuration(proxyBeanMethods = false)
 public class FieldPolicyCacheConfiguration {
     private static final String CACHE_NAME = "iam-field-policy";
-    private static final String PREFIX = "fields-v3:policy:";
+    private static final String PREFIX = "fields-v4:policy:";
     private static final String ALL = "all";
-    /** 公共默认策略当前引用键。 */
-    public static final String LATEST = "latest";
+    /** 某一资源默认策略当前引用键的前缀。 */
+    public static final String LATEST_PREFIX = "latest:";
+
+    /**
+     * 某一资源最新默认修订的缓存键。
+     *
+     * @param resourceId 资源 ID
+     * @return 缓存键
+     */
+    public static String latest(long resourceId) {
+        return LATEST_PREFIX + resourceId;
+    }
 
     /** 本缓存独立的来源持有者。 */
     @Bean
@@ -52,7 +62,7 @@ public class FieldPolicyCacheConfiguration {
                 .loader(key -> {
                     try {
                         var query = mapper.readValue(key, Query.class);
-                        return fields.snapshotCachedConfiguration(query.tenantId(), query.scenario());
+                        return fields.snapshotCachedConfiguration(query.tenantId(), query.resource());
                     }
                     catch (java.io.IOException exception) { throw new IllegalArgumentException("非法字段缓存键", exception); }
                 }).cacheable(value -> value != null).sourceHolder(source)
@@ -69,7 +79,9 @@ public class FieldPolicyCacheConfiguration {
                 .settings(LayeredCacheSettings.builder().l1Enabled(properties.isL1Enabled()).l1Ttl(properties.boundedL1Ttl())
                         .l1MaximumSize(properties.getL1MaximumSize()).l2Enabled(properties.isL2Enabled()).l2Ttl(properties.boundedL2Ttl())
                         .resilienceEnabled(false).localFloorEnabled(false).build())
-                .loader(key -> FieldDefaultReference.from(key.equals(LATEST) ? policies.latestRevision(com.ingot.framework.commons.model.iam.DefaultPolicyKind.FIELD)
+                .loader(key -> FieldDefaultReference.from(key.startsWith(LATEST_PREFIX)
+                        ? policies.latestRevision(com.ingot.framework.commons.model.iam.DefaultPolicyKind.FIELD,
+                                Long.parseLong(key.substring(LATEST_PREFIX.length())))
                         : policies.findRevision(Long.parseLong(key), com.ingot.framework.commons.model.iam.DefaultPolicyKind.FIELD)))
                 .cacheable(value -> value != null).sourceHolder(new CacheSourceHolder())
                 .l2MultiKey(redis.getIfAvailable(), mapper, new TypeReference<FieldDefaultReference>() { },
@@ -118,9 +130,9 @@ public class FieldPolicyCacheConfiguration {
     /**
      * <p>仅配置所需的稳定缓存身份，不包含查看者或目标原值。</p>
      * @param tenantId 策略归属租户
-     * @param scenario 后台或通讯录
+     * @param resource 已接入资源
      * @author jy
      * @since 1.0.0
      */
-    public record Query(long tenantId, com.ingot.framework.commons.model.iam.PolicyScenario scenario) { }
+    public record Query(long tenantId, com.ingot.framework.commons.model.iam.extension.ResourceKey resource) { }
 }

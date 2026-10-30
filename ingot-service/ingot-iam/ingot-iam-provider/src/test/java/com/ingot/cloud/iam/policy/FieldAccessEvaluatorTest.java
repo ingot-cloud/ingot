@@ -15,7 +15,6 @@ import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberStatus;
-import com.ingot.framework.commons.model.iam.PolicyScenario;
 import com.ingot.framework.commons.model.iam.ScopeExpression;
 import com.ingot.framework.commons.model.iam.ScopeKind;
 import com.ingot.framework.commons.model.iam.Selection;
@@ -69,19 +68,20 @@ class FieldAccessEvaluatorTest {
                   department_id BIGINT, include_descendants BOOLEAN)
                 """);
         jdbc.execute("""
-                CREATE TABLE iam_field_rule(id BIGINT, tenant_id BIGINT, scenario VARCHAR(32), field_key VARCHAR(64),
+                CREATE TABLE iam_field_rule(id BIGINT, tenant_id BIGINT, resource_id BIGINT, field_key VARCHAR(64),
                   viewer_selector_id BIGINT, target_scope VARCHAR(512), scope_bindings VARCHAR(512),
                   visibility VARCHAR(16))
                 """);
-        jdbc.execute("CREATE TABLE iam_default_policy_revision(id BIGINT PRIMARY KEY, kind VARCHAR(16),"
+        jdbc.execute("CREATE TABLE iam_default_policy_revision(id BIGINT PRIMARY KEY, resource_id BIGINT, kind VARCHAR(16),"
                 + " revision BIGINT, definition VARCHAR(1024))");
-        jdbc.execute("CREATE TABLE iam_field_policy(tenant_id BIGINT PRIMARY KEY, default_revision_id BIGINT,"
-                + " default_kind VARCHAR(16), version BIGINT, operation_rules VARCHAR(4096) DEFAULT '[]')");
+        jdbc.execute("CREATE TABLE iam_field_policy(tenant_id BIGINT, resource_id BIGINT, default_revision_id BIGINT,"
+                + " default_kind VARCHAR(16), version BIGINT, operation_rules VARCHAR(4096) DEFAULT '[]',"
+                + " PRIMARY KEY(tenant_id, resource_id))");
         jdbc.execute("CREATE TABLE iam_policy_selector(id BIGINT PRIMARY KEY, tenant_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, tenant_id BIGINT, status VARCHAR(16))");
         jdbc.update("""
-                INSERT INTO iam_default_policy_revision VALUES (22,'FIELD',1,
-                  '{"fields":{"displayName":"FULL","avatar":"FULL","phone":"MASKED","email":"MASKED"}}')
+                INSERT INTO iam_default_policy_revision(id, resource_id, kind, revision, definition) VALUES (22,10,'FIELD',1,
+                  '{"fields":{"displayName":"FULL","avatar":"FULL","phone":"MASKED","email":"MASKED"},"operations":{"displayName":{"editable":true,"filterable":false},"avatar":{"editable":true,"filterable":false},"phone":{"editable":false,"filterable":true},"email":{"editable":false,"filterable":true}}}')
                 """);
         jdbc.update("INSERT INTO iam_department VALUES (11,10,NULL),(12,10,11)");
         jdbc.update("INSERT INTO iam_member_department VALUES (10,101,11),(10,102,12)");
@@ -98,7 +98,7 @@ class FieldAccessEvaluatorTest {
         jdbc.update("INSERT INTO iam_tenant(id,owner_member_id) VALUES(10,101)");
         jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,status,account_id) VALUES(101,10,'ACTIVE',1)");
         try {
-            var snapshot=evaluator.snapshotFresh(10,PolicyScenario.MANAGEMENT);
+            var snapshot=evaluator.snapshotFresh(10,com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
             assertEquals(com.ingot.framework.commons.model.iam.FieldVisibility.FULL,evaluator.memberAccess(snapshot,101,102).get("phone").visibility());
             assertEquals(com.ingot.framework.commons.model.iam.FieldVisibility.MASKED,evaluator.memberAccess(snapshot,102,101).get("phone").visibility());
             jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=1");
@@ -118,31 +118,30 @@ class FieldAccessEvaluatorTest {
     @Test
     void nameSearchRequiresFilterGrantAndFullVisibilityWhileOwnerRespectsExplicitCeiling() {
         var scope = com.ingot.cloud.iam.evaluation.ObjectScope.all();
-        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE), 101,
                 MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope));
-        jdbc.update("INSERT INTO iam_field_policy(tenant_id,default_revision_id,default_kind,version,operation_rules) VALUES(10,22,'FIELD',0,?)",
+        jdbc.update("INSERT INTO iam_field_policy(tenant_id,resource_id,default_revision_id,default_kind,version,operation_rules) VALUES(10,10,22,'FIELD',0,?)",
                 com.ingot.cloud.iam.support.IamJson.array(List.of(new com.ingot.framework.commons.model.iam.FieldOperationRule(
-                        com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER, PolicyScenario.MANAGEMENT,
                         com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ, MemberFieldKey.VALUE_DISPLAY_NAME,
                         new Selection(List.of("101"),List.of()), new com.ingot.framework.commons.model.iam.FieldOperations(false,true)))));
-        evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+        evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE), 101,
                 MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope);
         jdbc.update("INSERT INTO iam_policy_selector_member VALUES(10,601,101)");
-        jdbc.update("INSERT INTO iam_field_rule VALUES(601,10,'MANAGEMENT','displayName',601,'[{\"kind\":\"ALL\"}]','{}','MASKED')");
-        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+        jdbc.update("INSERT INTO iam_field_rule VALUES(601,10,10,'displayName',601,'[{\"kind\":\"ALL\"}]','{}','MASKED')");
+        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE), 101,
                 MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope));
         jdbc.update("UPDATE iam_field_rule SET visibility='HIDDEN' WHERE id=601");
-        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+        assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE), 101,
                 MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope));
         jdbc.update("INSERT INTO iam_account(id,enabled) VALUES(1,TRUE)");
         jdbc.update("INSERT INTO iam_tenant(id,owner_member_id) VALUES(10,101)");
         jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,status,account_id) VALUES(101,10,'ACTIVE',1)");
         try {
-            evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+            evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE), 101,
                     MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope);
-            jdbc.update("INSERT INTO iam_default_policy_revision VALUES(23,'FIELD',2,?)",
+            jdbc.update("INSERT INTO iam_default_policy_revision(id, resource_id, kind, revision, definition) VALUES(23,10,'FIELD',2,?)",
                     "{\"operationCeiling\":{\"displayName\":{\"editable\":true,\"filterable\":false}}}");
-            assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, PolicyScenario.MANAGEMENT), 101,
+            assertThrows(BizException.class, () -> evaluator.requireOriginalLookup(evaluator.snapshotFresh(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE), 101,
                     MemberFieldKey.VALUE_DISPLAY_NAME, "张", scope));
         } finally {
             jdbc.update("DELETE FROM iam_tenant_member WHERE id=101");jdbc.update("DELETE FROM iam_tenant WHERE id=10");jdbc.update("DELETE FROM iam_account WHERE id=1");
@@ -152,15 +151,15 @@ class FieldAccessEvaluatorTest {
     @Test
     void draftSnapshotParticipatesWithoutWritingRules() {
         FieldPolicyDraft draft = new FieldPolicyDraft("22", List.of(
-                new FieldRule(PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE,
+                new FieldRule(MemberFieldKey.VALUE_PHONE,
                         new Selection(List.of("101"), List.of()),
                         List.of(new ScopeExpression(ScopeKind.ALL, null, null)), Map.of(),
                         FieldVisibility.HIDDEN)));
-        FieldPolicySnapshot snapshot = evaluator.snapshot(10, PolicyScenario.MANAGEMENT, draft);
+        FieldPolicySnapshot snapshot = evaluator.snapshot(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, draft);
         assertEquals(FieldVisibility.HIDDEN,
                 evaluator.access(snapshot, 101, 102, MemberFieldKey.VALUE_PHONE).visibility());
         assertEquals(FieldVisibility.MASKED,
-                evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE).visibility());
+                evaluator.access(10, 101, 102, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, MemberFieldKey.VALUE_PHONE).visibility());
     }
 
     @Test
@@ -185,11 +184,11 @@ class FieldAccessEvaluatorTest {
 
     @Test
     void phoneAndEmailDefaultToMaskedAndNotEditable() {
-        FieldAccess phone = evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE);
+        FieldAccess phone = evaluator.access(10, 101, 102, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, MemberFieldKey.VALUE_PHONE);
         assertEquals(FieldVisibility.MASKED, phone.visibility());
         assertFalse(phone.editable());
         MemberRecord projected = evaluator.project(new MemberRecord("102", "成员", "a", "13800000000", "a@b.c",
-                null, MemberStatus.ACTIVE, List.of()), evaluator.memberAccess(10, 101, 102, PolicyScenario.MANAGEMENT), com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER, Map.of(MemberFieldKey.VALUE_PHONE, com.ingot.framework.commons.model.iam.MaskSpec.PHONE, MemberFieldKey.VALUE_EMAIL, com.ingot.framework.commons.model.iam.MaskSpec.EMAIL));
+                null, MemberStatus.ACTIVE, List.of()), evaluator.memberAccess(10, 101, 102, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE), com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER, Map.of(MemberFieldKey.VALUE_PHONE, com.ingot.framework.commons.model.iam.MaskSpec.PHONE, MemberFieldKey.VALUE_EMAIL, com.ingot.framework.commons.model.iam.MaskSpec.EMAIL));
         assertEquals("138****0000", projected.phone());
         assertEquals("***@b.c", projected.email());
         assertEquals("成员", projected.displayName());
@@ -199,7 +198,7 @@ class FieldAccessEvaluatorTest {
     void hiddenRuleWinsAndRejectsWriteAndOriginalLookup() {
         insertRule(1, 101, "[{\"kind\":\"ALL\"}]", FieldVisibility.HIDDEN, false);
         insertRule(2, 101, "[{\"kind\":\"ALL\"}]", FieldVisibility.MASKED, false);
-        FieldAccess phone = evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE);
+        FieldAccess phone = evaluator.access(10, 101, 102, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, MemberFieldKey.VALUE_PHONE);
         assertEquals(FieldVisibility.HIDDEN, phone.visibility());
         MemberRecord projected = evaluator.project(new MemberRecord("102", "成员", null, "13800000000", null,
                 null, MemberStatus.ACTIVE, List.of()), Map.of(MemberFieldKey.VALUE_PHONE, phone,
@@ -218,7 +217,7 @@ class FieldAccessEvaluatorTest {
     @Test
     void fullEditableRuleAllowsWriteAndOriginalLookupWhenCeilingOpen() {
         insertRule(3, 101, "[{\"kind\":\"ALL\"}]", FieldVisibility.FULL, true);
-        FieldAccess phone = evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE);
+        FieldAccess phone = evaluator.access(10, 101, 102, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, MemberFieldKey.VALUE_PHONE);
         assertEquals(FieldVisibility.FULL, phone.visibility());
         assertTrue(phone.editable());
         evaluator.requireWritable(10, 101, 102, MemberFieldKey.VALUE_PHONE, "13900000000");
@@ -230,9 +229,9 @@ class FieldAccessEvaluatorTest {
     @Test
     void originalLookupRejectsWhenOnlySelfIsFullyVisible() {
         insertRule(5, 101, "[{\"kind\":\"SELF\"}]", FieldVisibility.FULL, true);
-        FieldAccess self = evaluator.access(10, 101, 101, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE);
+        FieldAccess self = evaluator.access(10, 101, 101, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, MemberFieldKey.VALUE_PHONE);
         assertEquals(FieldVisibility.FULL, self.visibility());
-        FieldAccess other = evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE);
+        FieldAccess other = evaluator.access(10, 101, 102, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, MemberFieldKey.VALUE_PHONE);
         assertEquals(FieldVisibility.MASKED, other.visibility());
         BizException lookup = assertThrows(BizException.class,
                 () -> evaluator.requireOriginalLookup(10, 101, MemberFieldKey.VALUE_PHONE, "13800000000"));
@@ -242,11 +241,11 @@ class FieldAccessEvaluatorTest {
     @Test
     void platformCeilingCapsTenantFullRule() {
         jdbc.update("""
-                INSERT INTO iam_default_policy_revision VALUES (23,'FIELD',2,
+                INSERT INTO iam_default_policy_revision(id, resource_id, kind, revision, definition) VALUES (23,10,'FIELD',2,
                   '{"fields":{"phone":"MASKED"},"ceiling":{"phone":"MASKED"}}')
                 """);
         insertRule(6, 101, "[{\"kind\":\"ALL\"}]", FieldVisibility.FULL, true);
-        FieldAccess phone = evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE);
+        FieldAccess phone = evaluator.access(10, 101, 102, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, MemberFieldKey.VALUE_PHONE);
         assertEquals(FieldVisibility.MASKED, phone.visibility());
         assertTrue(phone.editable());
         BizException lookup = assertThrows(BizException.class,
@@ -255,31 +254,48 @@ class FieldAccessEvaluatorTest {
     }
 
     @Test
+    void ruleOnAnotherResourceDoesNotChangeMemberFields() {
+        jdbc.update("INSERT INTO iam_policy_selector_member VALUES (10,?,?)", 77, 101);
+        jdbc.update("""
+                INSERT INTO iam_field_rule VALUES (?,?,?,?,?,?,'{}',?)
+                """, 77, 10, 99, MemberFieldKey.VALUE_PHONE, 77, "[{\"kind\":\"ALL\"}]",
+                FieldVisibility.HIDDEN.name());
+        FieldAccess phone = evaluator.access(10, 101, 102,
+                com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE,
+                MemberFieldKey.VALUE_PHONE);
+        assertEquals(FieldVisibility.MASKED, phone.visibility());
+    }
+
+    @Test
     void unmatchedViewerDoesNotApplyRule() {
         insertRule(4, 999, "[{\"kind\":\"ALL\"}]", FieldVisibility.FULL, true);
-        FieldAccess phone = evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE);
+        FieldAccess phone = evaluator.access(10, 101, 102, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, MemberFieldKey.VALUE_PHONE);
         assertEquals(FieldVisibility.MASKED, phone.visibility());
         assertFalse(phone.editable());
     }
 
     private void insertRule(long id, long viewerMemberId, String targetScope, FieldVisibility visibility,
                             boolean editable) {
+        jdbc.update("""
+                INSERT INTO iam_field_policy(tenant_id, resource_id, default_revision_id, default_kind, version, operation_rules)
+                SELECT 10,10,22,'FIELD',0,'[]' WHERE NOT EXISTS (
+                  SELECT 1 FROM iam_field_policy WHERE tenant_id=10 AND resource_id=10)
+                """);
         jdbc.update("INSERT INTO iam_policy_selector_member VALUES (10,?,?)", id, viewerMemberId);
         jdbc.update("""
                 INSERT INTO iam_field_rule VALUES (?,?,?,?,?,?,'{}',?)
-                """, id, 10, PolicyScenario.MANAGEMENT.name(), MemberFieldKey.VALUE_PHONE, id, targetScope,
+                """, id, 10, 10, MemberFieldKey.VALUE_PHONE, id, targetScope,
                 visibility.name());
         if (editable) {
             var selection = new Selection(List.of(Long.toString(viewerMemberId)), List.of());
-            var resource = com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER;
             var operations = List.of(
-                    new com.ingot.framework.commons.model.iam.FieldOperationRule(resource, PolicyScenario.MANAGEMENT,
+                    new com.ingot.framework.commons.model.iam.FieldOperationRule(
                             com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_UPDATE,
                             MemberFieldKey.VALUE_PHONE, selection, new com.ingot.framework.commons.model.iam.FieldOperations(true, false)),
-                    new com.ingot.framework.commons.model.iam.FieldOperationRule(resource, PolicyScenario.MANAGEMENT,
+                    new com.ingot.framework.commons.model.iam.FieldOperationRule(
                             com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ,
                             MemberFieldKey.VALUE_PHONE, selection, new com.ingot.framework.commons.model.iam.FieldOperations(false, true)));
-            jdbc.update("MERGE INTO iam_field_policy(tenant_id, default_revision_id, default_kind, version, operation_rules) KEY(tenant_id) VALUES (10,22,'FIELD',1,?)",
+            jdbc.update("MERGE INTO iam_field_policy(tenant_id, resource_id, default_revision_id, default_kind, version, operation_rules) KEY(tenant_id, resource_id) VALUES (10,10,22,'FIELD',1,?)",
                     com.ingot.cloud.iam.support.IamJson.object(operations));
         }
     }

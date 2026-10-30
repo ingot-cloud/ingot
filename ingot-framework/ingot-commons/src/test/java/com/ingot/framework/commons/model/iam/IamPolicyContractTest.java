@@ -36,7 +36,7 @@ class IamPolicyContractTest {
             assertFalse(validator.validate(new FieldPolicyInput("v1",
                     new FieldPolicyDraft("default-2", null))).isEmpty());
             assertFalse(validator.validate(new FieldPolicyInput("v1", new FieldPolicyDraft("default-2",
-                    List.of(new FieldRule(PolicyScenario.MANAGEMENT, " ", empty, List.of(),
+                    List.of(new FieldRule(" ", empty, List.of(),
                             java.util.Map.of(), FieldVisibility.MASKED))))).isEmpty());
         }
     }
@@ -82,7 +82,7 @@ class IamPolicyContractTest {
     void fieldDraftCopiesRules() {
         var rules = new java.util.ArrayList<FieldRule>();
         var draft = new FieldPolicyDraft("default-2", rules);
-        rules.add(new FieldRule(PolicyScenario.MANAGEMENT, "phone", empty, List.of(), java.util.Map.of(),
+        rules.add(new FieldRule("phone", empty, List.of(), java.util.Map.of(),
                 FieldVisibility.MASKED));
         assertTrue(draft.rules().isEmpty());
         var json = new ObjectMapper().valueToTree(draft);

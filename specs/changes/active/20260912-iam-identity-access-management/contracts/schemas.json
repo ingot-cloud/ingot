@@ -3531,21 +3531,10 @@
           "actionCode",
           "fieldKey",
           "operations",
-          "resource",
-          "scenario",
           "viewerSelection"
         ],
         "type": "object",
         "properties": {
-          "resource": {
-            "$ref": "#/components/schemas/ResourceKey"
-          },
-          "scenario": {
-            "type": "string",
-            "enum": [
-              "MANAGEMENT"
-            ]
-          },
           "actionCode": {
             "type": "string"
           },
@@ -3570,6 +3559,24 @@
             "type": "boolean"
           }
         }
+      },
+      "FieldPolicyAction": {
+        "required": [
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "精确操作码"
+          },
+          "name": {
+            "type": "string",
+            "description": "动作名称"
+          }
+        },
+        "description": "字段策略可选的精确动作"
       },
       "FieldPolicyDecision": {
         "type": "object",
@@ -3662,10 +3669,47 @@
         },
         "description": "整体替换字段策略，提交必须重验版本及授权"
       },
+      "FieldPolicyResource": {
+        "required": [
+          "actions",
+          "fields",
+          "name",
+          "resource",
+          "resourceId"
+        ],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string",
+            "description": "资源 ID"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          },
+          "name": {
+            "type": "string",
+            "description": "资源名称"
+          },
+          "fields": {
+            "type": "array",
+            "description": "目录字段能力",
+            "items": {
+              "$ref": "#/components/schemas/FieldCapability"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "description": "已绑定字段读写或筛选的动作",
+            "items": {
+              "$ref": "#/components/schemas/FieldPolicyAction"
+            }
+          }
+        },
+        "description": "租户可配置字段策略的一份已接入资源"
+      },
       "FieldRule": {
         "required": [
           "fieldKey",
-          "scenario",
           "scopeBindings",
           "targetScope",
           "viewerSelection",
@@ -3673,13 +3717,6 @@
         ],
         "type": "object",
         "properties": {
-          "scenario": {
-            "type": "string",
-            "description": "后台或通讯录场景",
-            "enum": [
-              "MANAGEMENT"
-            ]
-          },
           "fieldKey": {
             "type": "string",
             "description": "资源目录已注册的字段键"
@@ -3711,7 +3748,7 @@
             ]
           }
         },
-        "description": "描述场景、字段、查看者和目标范围对应的字段限制"
+        "description": "描述字段、查看者和目标范围对应的字段限制"
       },
       "GrantCatalogAction": {
         "required": [
@@ -6832,6 +6869,26 @@
           }
         }
       },
+      "RListFieldPolicyResource": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldPolicyResource"
+            }
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RListGrantCatalogResource": {
         "type": "object",
         "properties": {
@@ -8196,6 +8253,9 @@
           },
           "hierarchical": {
             "type": "boolean"
+          },
+          "fieldPolicyEligible": {
+            "type": "boolean"
           }
         }
       },
@@ -9090,6 +9150,14 @@
               "$ref": "#/components/schemas/FieldCapability"
             }
           },
+          "fieldPolicy": {
+            "type": "boolean",
+            "description": "目录是否接入租户字段策略"
+          },
+          "fieldPolicyEligible": {
+            "type": "boolean",
+            "description": "服务器是否允许打开字段策略接入"
+          },
           "status": {
             "type": "string",
             "description": "资源状态",
@@ -9166,6 +9234,10 @@
             "items": {
               "$ref": "#/components/schemas/FieldCapability"
             }
+          },
+          "fieldPolicy": {
+            "type": "boolean",
+            "description": "是否接入租户字段策略"
           }
         },
         "description": "更新资源名称与能力声明，不能改写所属应用或编码"

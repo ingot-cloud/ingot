@@ -121,7 +121,7 @@ class ResourceAuthorizationTest {
         var key = new ResourceKey(AuthorizationDomain.PLATFORM, app, "incident");
         var descriptor = new ResourceDescriptor(key,
                 List.of(new ActionDescriptor(app + ":incident:read", ExecutionMode.READ_ONLY)),
-                List.of(ScopeKind.ALL, ScopeKind.OBJECT_SET), List.of(), Map.of(), app + ":incident:read", false);
+                List.of(ScopeKind.ALL, ScopeKind.OBJECT_SET), List.of(), Map.of(), app + ":incident:read", false, false);
         return new ResourceObjectProvider() {
             public ResourceDescriptor descriptor() {
                 return descriptor;

@@ -69,6 +69,6 @@ public final class SecurityResources {
         return new ResourceDescriptor(new ResourceKey(AuthorizationDomain.PLATFORM, APPLICATION, resource),
                 actions.stream().map(a -> new ActionDescriptor(a.getCode(), a.getOperation().isMutating()
                         ? ExecutionMode.MUTATING : ExecutionMode.READ_ONLY)).toList(),
-                List.of(ScopeKind.ALL), List.of(), Map.of(), read, false);
+                List.of(ScopeKind.ALL), List.of(), Map.of(), read, false, false);
     }
 }

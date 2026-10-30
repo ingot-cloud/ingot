@@ -66,7 +66,6 @@ import com.ingot.framework.commons.model.iam.MemberRoleView;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.model.iam.MemberTimeFields;
 import com.ingot.framework.commons.model.iam.PageResponse;
-import com.ingot.framework.commons.model.iam.PolicyScenario;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.Selection;
 import org.springframework.dao.DuplicateKeyException;
@@ -199,7 +198,7 @@ public class MemberQueryService {
                 && !authorization.actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_CREATE))
             throw new BizException(IamReasonCode.ACTION_DENIED);
         long tenantId = IamIds.require(actor.context().tenantId()), viewerId = IamIds.require(actor.context().memberId());
-        var snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
+        var snapshot = fields.snapshot(tenantId, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
         var scope = authorization.actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_READ)
                 ? scopes.memberRead(actor.context(), IamAction.TENANT_MEMBER_READ) : ObjectScope.none();
         Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldOperations>> operations = new LinkedHashMap<>();
@@ -368,7 +367,7 @@ public class MemberQueryService {
         }
         long tenantId = IamIds.require(actor.context().tenantId());
         long viewerId = IamIds.require(actor.context().memberId());
-        FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
+        FieldPolicySnapshot snapshot = fields.snapshot(tenantId, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
         Map<String, String> submitted = new LinkedHashMap<>();
         if (phone != null && !phone.isBlank()) submitted.put(MemberFieldKey.VALUE_PHONE, phone);
         if (email != null && !email.isBlank()) submitted.put(MemberFieldKey.VALUE_EMAIL, email);
@@ -433,7 +432,7 @@ public class MemberQueryService {
                 .map(IamTenantMemberEntity::getAccountId).filter(java.util.Objects::nonNull).toList());
         Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
                 rows.stream().map(IamTenantMemberEntity::getId).toList());
-        FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
+        FieldPolicySnapshot snapshot = fields.snapshot(tenantId, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
         var batch = fields.prepare(snapshot, viewerId, rows.stream().map(row -> row.getId().longValueExact()).toList());
         List<MemberRecord> raws = new ArrayList<>();
@@ -808,7 +807,7 @@ public class MemberQueryService {
         List<MemberDepartmentView> departments = members.departmentViews(tenantId, List.of(row.getId()))
             .getOrDefault(row.getId(), List.of());
         MemberRecord raw = tenantMemberDetail(row, departments);
-        var snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
+        var snapshot = fields.snapshot(tenantId, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
         var caps = capabilities.snapshot(actor.context());
         var batch = fields.prepare(snapshot, viewerId, List.of(row.getId().longValueExact()));
         var rowCapabilities = capabilities.tenantMembers(caps, List.of(raw)).get(raw.id());

@@ -305,6 +305,7 @@ CREATE TABLE iam_resource (
     name VARCHAR(128) NOT NULL COMMENT '业务显示名称',
     scope_capabilities JSON NOT NULL COMMENT '资源支持的范围能力JSON数组，作为授权范围校验上限',
     field_capabilities JSON NOT NULL COMMENT '资源字段能力JSON数组，限制可见性、编辑及筛选等可声明能力',
+    field_policy BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否接入租户字段策略：1接入、0仅使用角色字段权限',
     enabled BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否启用：1启用、0停用；不代表已授予操作权限',
     version BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '记录乐观锁版本；变更时按所属业务事务递增',
     PRIMARY KEY (id),
@@ -313,6 +314,7 @@ CREATE TABLE iam_resource (
     CONSTRAINT fk_iam_resource_application FOREIGN KEY (application_id) REFERENCES iam_application (id),
     CONSTRAINT ck_iam_resource_scopes CHECK (JSON_TYPE(scope_capabilities) = 'ARRAY'),
     CONSTRAINT ck_iam_resource_fields CHECK (JSON_TYPE(field_capabilities) = 'ARRAY'),
+    CONSTRAINT ck_iam_resource_field_policy CHECK (field_policy IN (0, 1)),
     CONSTRAINT ck_iam_resource_enabled CHECK (enabled IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='应用资源及范围字段能力';
 
@@ -728,12 +730,15 @@ SET time_zone = '+00:00';
 -- IAM 独立目标库：策略引用、审计事实与迁移记录，不初始化或授予任何默认权限。
 CREATE TABLE iam_default_policy_revision (
     id BIGINT UNSIGNED NOT NULL COMMENT '默认字段策略固定版本记录标识',
+    resource_id BIGINT UNSIGNED NOT NULL COMMENT '所属资源ID，该修订只作为这一资源的默认基线',
     kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '默认策略类别：FIELD字段',
     revision BIGINT UNSIGNED NOT NULL COMMENT '不可变快照的发布序号，从1开始；与记录乐观锁版本不同',
     definition JSON NOT NULL COMMENT '默认字段策略不可变定义JSON对象，由字段求值器解释',
     PRIMARY KEY (id),
     UNIQUE KEY uk_iam_default_policy_kind (id, kind),
-    UNIQUE KEY uk_iam_default_policy_revision (kind, revision),
+    UNIQUE KEY uk_iam_default_policy_resource (id, resource_id),
+    UNIQUE KEY uk_iam_default_policy_revision (resource_id, kind, revision),
+    CONSTRAINT fk_iam_default_policy_resource FOREIGN KEY (resource_id) REFERENCES iam_resource (id),
     CONSTRAINT ck_iam_default_policy_kind CHECK (kind IN ('FIELD')),
     CONSTRAINT ck_iam_default_policy_definition CHECK (JSON_TYPE(definition) = 'OBJECT'),
     CONSTRAINT ck_iam_default_policy_revision CHECK (revision > 0)
@@ -769,35 +774,37 @@ CREATE TABLE iam_policy_selector_department (
 
 CREATE TABLE iam_field_policy (
     tenant_id BIGINT UNSIGNED NOT NULL COMMENT '所属租户组织ID',
-    default_revision_id BIGINT UNSIGNED NOT NULL COMMENT '绑定的默认策略固定版本ID，与default_kind共同校验引用',
+    resource_id BIGINT UNSIGNED NOT NULL COMMENT '接入字段策略的资源ID',
+    default_revision_id BIGINT UNSIGNED NOT NULL COMMENT '绑定的默认策略固定版本ID，须属于同一资源',
     default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'FIELD' COMMENT '默认策略种类，固定为FIELD',
-    operation_rules JSON NOT NULL DEFAULT (JSON_ARRAY()) COMMENT '租户字段操作规则JSON数组，限定已接入的编辑及筛选等能力',
+    operation_rules JSON NOT NULL DEFAULT (JSON_ARRAY()) COMMENT '本资源字段操作规则JSON数组，限定已接入的编辑及筛选等能力',
     version BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '记录乐观锁版本；变更时按所属业务事务递增',
-    PRIMARY KEY (tenant_id),
+    PRIMARY KEY (tenant_id, resource_id),
     CONSTRAINT fk_iam_field_policy_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant (id),
+    CONSTRAINT fk_iam_field_policy_resource FOREIGN KEY (resource_id) REFERENCES iam_resource (id),
     CONSTRAINT fk_iam_field_default FOREIGN KEY (default_revision_id, default_kind) REFERENCES iam_default_policy_revision (id, kind),
+    CONSTRAINT fk_iam_field_policy_revision FOREIGN KEY (default_revision_id, resource_id) REFERENCES iam_default_policy_revision (id, resource_id),
     CONSTRAINT ck_iam_field_default_kind CHECK (default_kind = 'FIELD'),
     CONSTRAINT ck_iam_field_operations CHECK (JSON_TYPE(operation_rules) = 'ARRAY')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='租户字段策略及操作规则';
 
 CREATE TABLE iam_field_rule (
-    id BIGINT UNSIGNED NOT NULL COMMENT '租户场景字段可见性规则记录标识',
+    id BIGINT UNSIGNED NOT NULL COMMENT '租户资源字段可见性规则记录标识',
     tenant_id BIGINT UNSIGNED NOT NULL COMMENT '所属租户组织ID',
-    scenario VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '字段策略使用场景：MANAGEMENT管理；取值MANAGEMENT',
+    resource_id BIGINT UNSIGNED NOT NULL COMMENT '规则所属资源ID，与策略行一致',
     field_key VARCHAR(128) COLLATE utf8mb4_bin NOT NULL COMMENT '资源字段稳定标识，用于匹配目录能力及字段规则',
     viewer_selector_id BIGINT UNSIGNED NOT NULL COMMENT '规则适用的查看者选择器ID，须属于本租户',
     target_scope JSON NOT NULL COMMENT '字段规则目标范围表达式JSON数组',
     scope_bindings JSON NOT NULL COMMENT '参数名到范围对象的绑定JSON对象；空对象表示无显式绑定',
     visibility VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '字段可见性：HIDDEN隐藏、MASKED脱敏、FULL完整；取值HIDDEN,MASKED,FULL',
     PRIMARY KEY (id),
-    KEY idx_iam_field_rule_match (tenant_id, scenario, field_key, id),
-    CONSTRAINT fk_iam_field_rule_policy FOREIGN KEY (tenant_id) REFERENCES iam_field_policy (tenant_id),
+    KEY idx_iam_field_rule_match (tenant_id, resource_id, field_key, id),
+    CONSTRAINT fk_iam_field_rule_policy FOREIGN KEY (tenant_id, resource_id) REFERENCES iam_field_policy (tenant_id, resource_id),
     CONSTRAINT fk_iam_field_rule_viewer FOREIGN KEY (tenant_id, viewer_selector_id) REFERENCES iam_policy_selector (tenant_id, id),
-    CONSTRAINT ck_iam_field_rule_scenario CHECK (scenario IN ('MANAGEMENT')),
     CONSTRAINT ck_iam_field_rule_visibility CHECK (visibility IN ('HIDDEN', 'MASKED', 'FULL')),
     CONSTRAINT ck_iam_field_rule_scope CHECK (JSON_TYPE(target_scope) = 'ARRAY'),
     CONSTRAINT ck_iam_field_rule_bindings CHECK (JSON_TYPE(scope_bindings) = 'OBJECT')
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='租户场景字段可见性规则';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='租户资源字段可见性规则';
 
 -- 成员导出任务：共享库存储，供多实例读取状态、成员 ID 快照与过期清理。
 CREATE TABLE iam_member_export (
@@ -1268,160 +1275,160 @@ SELECT COALESCE((SELECT 100004 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_app
 WHERE NOT EXISTS (SELECT 1 FROM iam_application WHERE code = 'platform:security');
 
 -- 资源：声明合法范围与字段能力，供角色发布与字段策略校验取值。
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110001 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110001)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'account', '全局账号', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110001 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110001)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'account', '全局账号', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'account');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110002 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110002)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'action', '操作', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110002 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110002)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'action', '操作', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'action');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110003 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110003)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'application', '应用', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110003 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110003)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'application', '应用', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'application');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110004 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110004)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'assignment', '角色授权', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110004 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110004)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'assignment', '角色授权', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'assignment');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110005 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110005)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'audit', '审计记录', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110005 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110005)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'audit', '审计记录', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'audit');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110006 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110006)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'authorization', '授权诊断', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110006 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110006)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'authorization', '授权诊断', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'authorization');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110007 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110007)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'delegation', '授权委派', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110007 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110007)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'delegation', '授权委派', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'delegation');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110008 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110008)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'dictionary', '字典', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110008 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110008)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'dictionary', '字典', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'dictionary');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110009 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110009)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'entitlement', '应用开通', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110009 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110009)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'entitlement', '应用开通', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'entitlement');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110010 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110010)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'group', '用户组', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110010 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110010)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'group', '用户组', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'group');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110011 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110011)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'member', '成员', CAST('["ALL", "SELF", "OBJECT_SET"]' AS JSON), CAST('[{"key": "displayName", "label": "显示名", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": true, "mask": {"kind": "ALL"}}, {"key": "avatar", "label": "头像", "visibilities": ["HIDDEN", "FULL"], "editable": true, "filterable": false}, {"key": "phone", "label": "手机号", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": false, "mask": {"kind": "PHONE"}}, {"key": "email", "label": "邮箱", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": false, "mask": {"kind": "EMAIL"}}, {"key": "joinedAt", "label": "加入时间", "visibilities": ["HIDDEN", "FULL"], "editable": false, "filterable": false}, {"key": "lastLoginAt", "label": "最后登录", "visibilities": ["HIDDEN", "FULL"], "editable": false, "filterable": false}, {"key": "updatedAt", "label": "更新时间", "visibilities": ["HIDDEN", "FULL"], "editable": false, "filterable": false}]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110011 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110011)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'member', '成员', CAST('["ALL", "SELF", "OBJECT_SET"]' AS JSON), CAST('[{"key": "displayName", "label": "显示名", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": true, "mask": {"kind": "ALL"}}, {"key": "avatar", "label": "头像", "visibilities": ["HIDDEN", "FULL"], "editable": true, "filterable": false}, {"key": "phone", "label": "手机号", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": false, "mask": {"kind": "PHONE"}}, {"key": "email", "label": "邮箱", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": false, "mask": {"kind": "EMAIL"}}, {"key": "joinedAt", "label": "加入时间", "visibilities": ["HIDDEN", "FULL"], "editable": false, "filterable": false}, {"key": "lastLoginAt", "label": "最后登录", "visibilities": ["HIDDEN", "FULL"], "editable": false, "filterable": false}, {"key": "updatedAt", "label": "更新时间", "visibilities": ["HIDDEN", "FULL"], "editable": false, "filterable": false}]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'member');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110012 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110012)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'menu', '菜单', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110012 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110012)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'menu', '菜单', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'menu');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110013 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110013)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'plan', '套餐', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110013 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110013)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'plan', '套餐', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'plan');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110014 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110014)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'resource', '资源', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110014 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110014)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'resource', '资源', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'resource');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110015 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110015)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'role', '角色', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110015 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110015)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'role', '角色', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'role');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110016 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110016)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'shared-role', '共享角色', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110016 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110016)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'shared-role', '共享角色', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'shared-role');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110017 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110017)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'tenant', '组织', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110017 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110017)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'tenant', '组织', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-platform' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'tenant');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110018 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110018)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'application', '应用', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110018 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110018)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'application', '应用', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'application');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110019 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110019)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'assignment', '角色授权', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110019 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110019)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'assignment', '角色授权', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'assignment');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110020 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110020)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'audience', '应用可用人群', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110020 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110020)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'audience', '应用可用人群', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'audience');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110021 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110021)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'audit', '审计记录', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110021 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110021)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'audit', '审计记录', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'audit');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110022 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110022)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'authorization', '授权诊断', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110022 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110022)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'authorization', '授权诊断', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'authorization');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110023 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110023)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'delegation', '授权委派', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110023 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110023)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'delegation', '授权委派', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'delegation');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110024 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110024)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'department', '部门', CAST('["ALL", "MANAGED_DEPARTMENTS", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110024 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110024)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'department', '部门', CAST('["ALL", "MANAGED_DEPARTMENTS", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'department');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110025 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110025)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'field-policy', '成员字段策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110025 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110025)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'field-policy', '字段策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'field-policy');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110026 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110026)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'group', '用户组', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110026 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110026)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'group', '用户组', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'group');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110027 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110027)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'member', '成员', CAST('["ALL", "SELF", "MEMBER_DEPARTMENTS", "MANAGED_DEPARTMENTS", "OBJECT_SET"]' AS JSON), CAST('[{"key": "displayName", "label": "显示名", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": true, "mask": {"kind": "ALL"}}, {"key": "avatar", "label": "头像", "visibilities": ["HIDDEN", "FULL"], "editable": true, "filterable": false}, {"key": "phone", "label": "手机号", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": true, "mask": {"kind": "PHONE"}}, {"key": "email", "label": "邮箱", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": true, "mask": {"kind": "EMAIL"}}]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110027 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110027)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'member', '成员', CAST('["ALL", "SELF", "MEMBER_DEPARTMENTS", "MANAGED_DEPARTMENTS", "OBJECT_SET"]' AS JSON), CAST('[{"key": "displayName", "label": "显示名", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": true, "mask": {"kind": "ALL"}}, {"key": "avatar", "label": "头像", "visibilities": ["HIDDEN", "FULL"], "editable": true, "filterable": false}, {"key": "phone", "label": "手机号", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": true, "mask": {"kind": "PHONE"}}, {"key": "email", "label": "邮箱", "visibilities": ["HIDDEN", "MASKED", "FULL"], "editable": true, "filterable": true, "mask": {"kind": "EMAIL"}}]' AS JSON), TRUE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'member');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110028 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110028)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'role', '角色', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110028 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110028)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'role', '角色', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'role');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110029 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110029)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'settings', '组织设置', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110029 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110029)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'settings', '组织设置', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'settings');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110030 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110030)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'client', '客户端', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110030 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110030)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'client', '客户端', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:develop' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'client');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110031 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110031)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'id-allocation', '发号', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110031 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110031)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'id-allocation', '发号', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:develop' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'id-allocation');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110032 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110032)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'qrcode', '二维码', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110032 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110032)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'qrcode', '二维码', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:develop' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'qrcode');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110033 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110033)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'social-config', '社会化登录配置', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110033 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110033)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'social-config', '社会化登录配置', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:develop' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'social-config');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110034 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110034)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'credential-policy', '凭证策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110034 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110034)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'credential-policy', '凭证策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:security' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'credential-policy');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110035 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110035)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'lockout-policy', '账号锁定策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110035 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110035)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'lockout-policy', '账号锁定策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:security' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'lockout-policy');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110036 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110036)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'login-failure-policy', '登录失败防护', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110036 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110036)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'login-failure-policy', '登录失败防护', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:security' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'login-failure-policy');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110037 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110037)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'security-policy', '安全策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110037 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110037)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'security-policy', '安全策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:security' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'security-policy');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110038 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110038)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'session', '在线会话', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110038 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110038)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'session', '在线会话', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:security' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'session');
 
-INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, enabled)
-SELECT COALESCE((SELECT 110039 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110039)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'session-policy', '会话并发策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), TRUE FROM iam_application app
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110039 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110039)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'session-policy', '会话并发策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:security' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'session-policy');
 
 -- 操作：精确操作码全局唯一，禁止通配。
@@ -1814,11 +1821,11 @@ SELECT COALESCE((SELECT 120095 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_act
 WHERE app.code = 'iam-tenant' AND res.code = 'department' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'iam-tenant:department:update');
 
 INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
-SELECT COALESCE((SELECT 120099 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120099)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'iam-tenant:field-policy:read', '查看成员字段策略', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+SELECT COALESCE((SELECT 120099 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120099)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'iam-tenant:field-policy:read', '查看字段策略', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
 WHERE app.code = 'iam-tenant' AND res.code = 'field-policy' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'iam-tenant:field-policy:read');
 
 INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
-SELECT COALESCE((SELECT 120100 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120100)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'iam-tenant:field-policy:update', '编辑成员字段策略', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+SELECT COALESCE((SELECT 120100 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120100)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'iam-tenant:field-policy:update', '编辑字段策略', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
 WHERE app.code = 'iam-tenant' AND res.code = 'field-policy' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'iam-tenant:field-policy:update');
 
 INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
@@ -2127,8 +2134,8 @@ SELECT COALESCE((SELECT 130023 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_men
 WHERE app.code = 'iam-tenant' AND NOT EXISTS (SELECT 1 FROM iam_menu WHERE application_id = app.id AND route_name = 'org.iam.compliance');
 
 INSERT INTO iam_menu (id, application_id, parent_id, name, path, view_path, route_name, kind, match_mode, access_mode, sort_order, enabled)
-SELECT COALESCE((SELECT 130024 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130024)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), parent.application_id, parent.id, '成员访问策略', '/org/member-policies', 'org.iam.member.policies', 'org.iam.member.policies', 'PAGE', 'ANY', 'ACTION', 1, TRUE FROM iam_menu parent JOIN iam_application app ON app.id = parent.application_id
-WHERE app.code = 'iam-tenant' AND parent.route_name = 'org.iam.compliance' AND NOT EXISTS (SELECT 1 FROM iam_menu WHERE application_id = parent.application_id AND route_name = 'org.iam.member.policies');
+SELECT COALESCE((SELECT 130024 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130024)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), parent.application_id, parent.id, '字段策略', '/org/field-policies', 'org.iam.field.policies', 'org.iam.field.policies', 'PAGE', 'ANY', 'ACTION', 1, TRUE FROM iam_menu parent JOIN iam_application app ON app.id = parent.application_id
+WHERE app.code = 'iam-tenant' AND parent.route_name = 'org.iam.compliance' AND NOT EXISTS (SELECT 1 FROM iam_menu WHERE application_id = parent.application_id AND route_name = 'org.iam.field.policies');
 
 INSERT INTO iam_menu (id, application_id, parent_id, name, path, view_path, route_name, kind, match_mode, access_mode, sort_order, enabled)
 SELECT COALESCE((SELECT 130025 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130025)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), parent.application_id, parent.id, '组织授权审计', '/org/authorization-audit', 'org.iam.authorization.audit', 'org.iam.authorization.audit', 'PAGE', 'ANY', 'ACTION', 2, TRUE FROM iam_menu parent JOIN iam_application app ON app.id = parent.application_id
@@ -2353,7 +2360,7 @@ WHERE app.code = 'iam-tenant' AND menu.route_name = 'org.iam.compliance' AND act
 
 INSERT INTO iam_menu_action (application_id, menu_id, action_id)
 SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
-WHERE app.code = 'iam-tenant' AND menu.route_name = 'org.iam.member.policies' AND action.code = 'iam-tenant:field-policy:read' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
+WHERE app.code = 'iam-tenant' AND menu.route_name = 'org.iam.field.policies' AND action.code = 'iam-tenant:field-policy:read' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
 
 INSERT INTO iam_menu_action (application_id, menu_id, action_id)
 SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
@@ -3078,9 +3085,9 @@ SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_r
 WHERE role.domain = 'TENANT' AND role.tenant_key = 0 AND role.code = 'tenant-governance' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'iam-tenant:settings:update' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
 
 -- 默认策略版本：固定版本被租户字段策略引用；字段默认脱敏手机邮箱，上限缺省不额外收紧。
-INSERT INTO iam_default_policy_revision (id, kind, revision, definition)
-SELECT 150002, 'FIELD', 1, CAST('{"fields": {"displayName": "FULL", "avatar": "FULL", "phone": "MASKED", "email": "MASKED"}, "operations": {"displayName": {"editable": true, "filterable": false}, "avatar": {"editable": true, "filterable": false}, "phone": {"editable": true, "filterable": true}, "email": {"editable": true, "filterable": true}}}' AS JSON) FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM iam_default_policy_revision WHERE kind = 'FIELD' AND revision = 1);
+INSERT INTO iam_default_policy_revision (id, resource_id, kind, revision, definition)
+SELECT 150002, resource.id, 'FIELD', 1, CAST('{"fields": {"displayName": "FULL", "avatar": "FULL", "phone": "MASKED", "email": "MASKED"}, "operations": {"displayName": {"editable": true, "filterable": false}, "avatar": {"editable": true, "filterable": false}, "phone": {"editable": true, "filterable": true}, "email": {"editable": true, "filterable": true}}}' AS JSON) FROM iam_resource resource JOIN iam_application app ON app.id = resource.application_id
+WHERE app.domain = 'TENANT' AND app.code = 'iam-tenant' AND resource.code = 'member' AND NOT EXISTS (SELECT 1 FROM iam_default_policy_revision WHERE resource_id = resource.id AND kind = 'FIELD' AND revision = 1);
 
 -- 恢复调用者原有的会话外键设置。
 SET SESSION FOREIGN_KEY_CHECKS = @iam_init_previous_foreign_key_checks;

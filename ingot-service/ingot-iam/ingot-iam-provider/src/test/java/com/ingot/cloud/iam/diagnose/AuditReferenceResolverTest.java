@@ -74,7 +74,7 @@ class AuditReferenceResolverTest {
                         member(103, "李四", MemberStatus.REMOVED)))
                 .thenReturn(List.of(member(101, null, null), member(102, null, null)));
         FieldPolicySnapshot snapshot = mock(FieldPolicySnapshot.class);
-        when(fieldAccess.snapshot(10L, PolicyScenario.MANAGEMENT)).thenReturn(snapshot);
+        when(fieldAccess.snapshot(10L, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)).thenReturn(snapshot);
         when(fieldAccess.access(eq(snapshot), eq(101L), eq(101L), eq(MemberFieldKey.VALUE_DISPLAY_NAME)))
                 .thenReturn(new FieldAccess(FieldVisibility.FULL, true));
         when(fieldAccess.access(eq(snapshot), eq(101L), eq(102L), eq(MemberFieldKey.VALUE_DISPLAY_NAME)))

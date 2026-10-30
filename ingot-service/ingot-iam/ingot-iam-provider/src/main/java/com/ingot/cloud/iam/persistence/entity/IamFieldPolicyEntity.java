@@ -2,9 +2,7 @@ package com.ingot.cloud.iam.persistence.entity;
 
 import java.math.BigInteger;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.commons.model.iam.DefaultPolicyKind;
 import lombok.Getter;
@@ -20,8 +18,12 @@ import lombok.Setter;
 @TableName(value = "iam_field_policy", autoResultMap = true)
 public class IamFieldPolicyEntity {
     /** 所属租户 ID。 */
-    @TableId(value = "tenant_id", type = IdType.INPUT)
+    @TableField("tenant_id")
     private BigInteger tenantId;
+
+    /** 接入字段策略的资源 ID。 */
+    @TableField("resource_id")
+    private BigInteger resourceId;
 
     /** 默认字段策略版本 ID。 */
     @TableField("default_revision_id")
@@ -35,7 +37,7 @@ public class IamFieldPolicyEntity {
     @TableField("version")
     private BigInteger version;
 
-    /** 按资源、场景、查看者及精确操作配置的全局字段操作规则 JSON 数组。 */
+    /** 本资源按查看者及精确操作配置的字段操作规则 JSON 数组。 */
     @TableField("operation_rules")
     private String operationRules;
 }

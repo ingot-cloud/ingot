@@ -6,21 +6,18 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 /**
- * <p>描述场景、字段、查看者和目标范围对应的字段限制。</p>
+ * <p>描述字段、查看者和目标范围对应的字段限制。资源由策略路径决定。</p>
  *
  * @author jy
  * @since 1.0.0
- * @param scenario 后台或通讯录场景
  * @param fieldKey 资源目录已注册的字段键
  * @param viewerSelection 规则匹配的查看者
  * @param targetScope 目标范围项的并集，不独立开放对象
  * @param scopeBindings 目标范围的命名参数值
  * @param visibility 字段可见程度
  */
-@Schema(description = "描述场景、字段、查看者和目标范围对应的字段限制")
+@Schema(description = "描述字段、查看者和目标范围对应的字段限制")
 public record FieldRule(
-        @NotNull @Schema(description = "后台或通讯录场景", requiredMode = Schema.RequiredMode.REQUIRED)
-        PolicyScenario scenario,
         @NotBlank @Schema(description = "资源目录已注册的字段键", requiredMode = Schema.RequiredMode.REQUIRED)
         String fieldKey,
         @NotNull @Valid @Schema(description = "规则匹配的查看者", requiredMode = Schema.RequiredMode.REQUIRED)

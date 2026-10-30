@@ -80,7 +80,7 @@ public class IncidentProvider implements ResourceObjectProvider {
                         new FieldCapability(CONTACT, "联系方式", List.of(FieldVisibility.values()), true, false, com.ingot.framework.commons.model.iam.MaskSpec.EMAIL)),
                 Map.of(TITLE, new FieldAccess(FieldVisibility.FULL, true), CONTACT,
                         new FieldAccess(FieldVisibility.MASKED, false)),
-                READ, false);
+                READ, false, false);
     }
 
     @Override

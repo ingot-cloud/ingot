@@ -202,7 +202,7 @@ public class DepartmentLeaderService {
         scopes.requireDepartmentWrite(actor.context(), IamAction.TENANT_DEPARTMENT_LEADERS, IamIds.require(departmentId));
     }
 
-    private FieldPolicySnapshot snapshot(ActiveIdentity actor) { return fields.snapshotFresh(tenant(actor), PolicyScenario.MANAGEMENT); }
+    private FieldPolicySnapshot snapshot(ActiveIdentity actor) { return fields.snapshotFresh(tenant(actor), com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE); }
 
     private List<DepartmentLeaderRecord> project(ActiveIdentity actor, List<DepartmentLeaderRow> rows,
                                                 FieldPolicySnapshot snapshot, boolean primary) {

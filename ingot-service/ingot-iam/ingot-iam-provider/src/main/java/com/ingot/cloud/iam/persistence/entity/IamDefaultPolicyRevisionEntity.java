@@ -20,7 +20,11 @@ public class IamDefaultPolicyRevisionEntity {
     @TableId(value = "id", type = IdType.INPUT)
     private BigInteger id;
 
-    /** 角色种类。 */
+    /** 所属资源 ID。 */
+    @TableField("resource_id")
+    private BigInteger resourceId;
+
+    /** 策略种类。 */
     @TableField("kind")
     private DefaultPolicyKind kind;
 

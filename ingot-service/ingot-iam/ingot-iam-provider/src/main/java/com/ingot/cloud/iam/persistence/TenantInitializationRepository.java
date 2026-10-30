@@ -19,7 +19,10 @@ import com.ingot.cloud.iam.persistence.mapper.IamAppAudienceMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamApplicationMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDefaultPolicyRevisionMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
+import com.ingot.cloud.iam.persistence.entity.IamApplicationEntity;
+import com.ingot.cloud.iam.persistence.entity.IamResourceEntity;
 import com.ingot.cloud.iam.persistence.mapper.IamFieldPolicyMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamResourceMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleAssignmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleRevisionMapper;
@@ -34,6 +37,7 @@ import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.ConfigurationStatus;
 import com.ingot.framework.commons.model.iam.DefaultPolicyKind;
 import com.ingot.framework.commons.model.iam.EntitlementSource;
+import com.ingot.framework.commons.model.iam.MemberResources;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.model.iam.RoleKind;
 import com.ingot.framework.commons.model.iam.SubjectType;
@@ -58,6 +62,7 @@ public class TenantInitializationRepository {
     private final IamTenantAppEntitlementMapper entitlements;
     private final IamAppAudienceMapper audiences;
     private final IamFieldPolicyMapper fieldPolicies;
+    private final IamResourceMapper resources;
 
     /**
      * 锁定启用且未删除的所有者账号。
@@ -140,10 +145,28 @@ public class TenantInitializationRepository {
         }
         IamFieldPolicyEntity field = new IamFieldPolicyEntity();
         field.setTenantId(id(plan.tenantId()));
+        field.setResourceId(id(tenantMemberResourceId()));
         field.setDefaultRevisionId(id(plan.fieldRevisionId()));
+        field.setDefaultKind(DefaultPolicyKind.FIELD);
+        field.setOperationRules("[]");
+        field.setVersion(BigInteger.ZERO);
         fieldPolicies.insert(field);
         BigInteger version = tenants.currentVersion(id(plan.tenantId()));
         return version == null ? "0" : version.toString();
+    }
+
+    private long tenantMemberResourceId() {
+        IamApplicationEntity app = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
+                .eq(IamApplicationEntity::getDomain, AuthorizationDomain.TENANT)
+                .eq(IamApplicationEntity::getCode, MemberResources.TENANT_APPLICATION));
+        IamResourceEntity row = app == null ? null : resources.selectOne(Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getApplicationId, app.getId())
+                .eq(IamResourceEntity::getCode, MemberResources.MEMBER));
+        if (row == null) {
+            throw new com.ingot.framework.commons.error.BizException(
+                    com.ingot.framework.commons.model.iam.IamReasonCode.POLICY_CONFLICT);
+        }
+        return row.getId().longValueExact();
     }
 
     private static BigInteger id(long value) {

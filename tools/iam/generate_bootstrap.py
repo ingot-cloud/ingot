@@ -99,7 +99,7 @@ RESOURCES = {
     'delegation': ('授权委派', OBJECT_SCOPES, []),
     'department': ('部门', DEPARTMENT_SCOPES, []),
     'entitlement': ('应用开通', OBJECT_SCOPES, []),
-    'field-policy': ('成员字段策略', SINGLETON_SCOPES, []),
+    'field-policy': ('字段策略', SINGLETON_SCOPES, []),
     'group': ('用户组', OBJECT_SCOPES, []),
     'member': ('成员', MEMBER_SCOPES, MEMBER_FIELDS),
     'menu': ('菜单', OBJECT_SCOPES, []),
@@ -207,7 +207,7 @@ TENANT_MENUS = [
         ('应用管理', 'org.iam.applications', ['iam-tenant:application:read']),
     ]),
     ('安全与合规', 'org.iam.compliance', 'ep:lock', [
-        ('成员访问策略', 'org.iam.member.policies',
+        ('字段策略', 'org.iam.field.policies',
          ['iam-tenant:field-policy:read']),
         ('组织授权审计', 'org.iam.authorization.audit', ['iam-tenant:audit:read']),
     ]),
@@ -246,7 +246,7 @@ PAGE_PATHS = {
     'security.sessions': '/security/sessions',
     'platform.iam.authorization.audit': '/platform/authorization-audit',
     'org.iam.authorization.audit': '/org/authorization-audit',
-    'org.iam.member.policies': '/org/member-policies',
+    'org.iam.field.policies': '/org/field-policies',
 }
 
 MENUS = {'iam-platform': PLATFORM_MENUS, 'iam-tenant': TENANT_MENUS,
@@ -406,10 +406,11 @@ def build(check=False):
             lines.append(insert(
                 'iam_resource',
                 ['id', 'application_id', 'code', 'name', 'scope_capabilities', 'field_capabilities',
-                 'enabled'],
+                 'field_policy', 'enabled'],
                 [reserved_id('iam_resource', RESOURCE_BASE + resource_count, RESOURCE_BASE, ACTION_BASE),
                  'app.id', quote(resource), quote(name),
-                 json_literal(scopes), json_literal(fields), 'TRUE'],
+                 json_literal(scopes), json_literal(fields),
+                 'TRUE' if application == 'iam-tenant' and resource == 'member' else 'FALSE', 'TRUE'],
                 f"application_id = app.id AND code = {quote(resource)}",
                 source='iam_application app', where=f"app.code = {quote(application)}"))
 
@@ -570,9 +571,11 @@ def build(check=False):
     for kind, policy_id in DEFAULT_POLICIES.items():
         lines.append(insert(
             'iam_default_policy_revision',
-            ['id', 'kind', 'revision', 'definition'],
-            [str(policy_id), quote(kind), '1', json_literal(definitions[kind])],
-            f"kind = {quote(kind)} AND revision = 1"))
+            ['id', 'resource_id', 'kind', 'revision', 'definition'],
+            [str(policy_id), 'resource.id', quote(kind), '1', json_literal(definitions[kind])],
+            f"resource_id = resource.id AND kind = {quote(kind)} AND revision = 1",
+            source='iam_resource resource JOIN iam_application app ON app.id = resource.application_id',
+            where="app.domain = 'TENANT' AND app.code = 'iam-tenant' AND resource.code = 'member'"))
 
     content = '\n'.join(lines)
     if check:

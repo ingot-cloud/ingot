@@ -97,7 +97,7 @@ class ResourceFieldMetadataTest {
         when(provider.descriptor()).thenReturn(new ResourceDescriptor(KEY,
                 List.of(new ActionDescriptor(READ, ExecutionMode.READ_ONLY)), List.of(ScopeKind.ALL),
                 List.of(new FieldCapability(PHONE, "手机号", List.of(FieldVisibility.values()), true, true, com.ingot.framework.commons.model.iam.MaskSpec.PHONE)),
-                Map.of(PHONE, new FieldAccess(FieldVisibility.MASKED, false)), READ, false));
+                Map.of(PHONE, new FieldAccess(FieldVisibility.MASKED, false)), READ, false, false));
         var apps = mock(IamApplicationMapper.class);
         when(apps.selectBatchIds(anyCollection())).thenReturn(List.of(app));
         var service = new ResourceFieldMetadata(apps, mock(IamResourceMapper.class), mock(IamActionMapper.class),
@@ -122,6 +122,18 @@ class ResourceFieldMetadataTest {
         assertFalse(supported.fields().getFirst().filterable());
         app.setEnabled(false);
         assertTrue(service.describe(List.of(row)).isEmpty());
+    }
+
+    @Test
+    void onlyTheTenantMemberServerDeclaresFieldPolicyEligibility() {
+        var registry = new BuiltinResourceProviders(mock(
+                com.ingot.cloud.iam.persistence.mapper.AuthorizationCandidateMapper.class)).registry(List.of());
+        var service = new ResourceFieldMetadata(mock(IamApplicationMapper.class), mock(IamResourceMapper.class),
+                mock(IamActionMapper.class), registry, com.ingot.cloud.iam.persistence.FieldTestSupport.manifests(),
+                com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
+        assertTrue(service.eligible(com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER));
+        assertFalse(service.eligible(com.ingot.framework.commons.model.iam.MemberResources.PLATFORM_MEMBER));
+        assertFalse(service.enrolled(com.ingot.framework.commons.model.iam.MemberResources.PLATFORM_MEMBER));
     }
 
 }

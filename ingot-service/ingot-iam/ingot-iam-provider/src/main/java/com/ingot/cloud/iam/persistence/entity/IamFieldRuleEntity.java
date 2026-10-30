@@ -7,12 +7,11 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
-import com.ingot.framework.commons.model.iam.PolicyScenario;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * <p>保存租户字段规则，匹配键为场景、字段、查看者与目标范围。</p>
+ * <p>保存租户字段规则，匹配键为资源、字段、查看者与目标范围。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -29,9 +28,9 @@ public class IamFieldRuleEntity {
     @TableField("tenant_id")
     private BigInteger tenantId;
 
-    /** 后台或通讯录场景。 */
-    @TableField("scenario")
-    private PolicyScenario scenario;
+    /** 规则所属资源 ID。 */
+    @TableField("resource_id")
+    private BigInteger resourceId;
 
     /** 成员字段键。 */
     @TableField("field_key")

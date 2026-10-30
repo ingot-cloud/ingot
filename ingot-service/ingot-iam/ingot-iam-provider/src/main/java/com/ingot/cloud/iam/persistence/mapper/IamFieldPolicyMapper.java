@@ -24,16 +24,18 @@ public interface IamFieldPolicyMapper extends BaseMapper<IamFieldPolicyEntity> {
      * 按租户插入或整体替换字段策略引用，并递增配置版本。
      *
      * @param tenantId 已授权租户 ID
+     * @param resourceId 已接入资源 ID
      * @param revisionId 默认策略版本 ID
      * @param kind 固定为字段类别
-     * @param operationRules 全局操作规则 JSON 数组
+     * @param operationRules 本资源操作规则 JSON 数组
      * @return 受影响行数
      */
     @Insert("""
-            INSERT INTO iam_field_policy(tenant_id,default_revision_id,default_kind,operation_rules)
-            VALUES (#{tenantId},#{revisionId},#{kind},#{operationRules})
+            INSERT INTO iam_field_policy(tenant_id,resource_id,default_revision_id,default_kind,operation_rules)
+            VALUES (#{tenantId},#{resourceId},#{revisionId},#{kind},#{operationRules})
             ON DUPLICATE KEY UPDATE default_revision_id=#{revisionId},operation_rules=#{operationRules},version=version+1
             """)
-    int upsert(@Param("tenantId") BigInteger tenantId, @Param("revisionId") BigInteger revisionId,
-               @Param("kind") DefaultPolicyKind kind, @Param("operationRules") String operationRules);
+    int upsert(@Param("tenantId") BigInteger tenantId, @Param("resourceId") BigInteger resourceId,
+               @Param("revisionId") BigInteger revisionId, @Param("kind") DefaultPolicyKind kind,
+               @Param("operationRules") String operationRules);
 }

@@ -2,7 +2,7 @@
 
 <!-- 自动生成：python3 tools/iam/generate_database.py；说明在权威 DDL 维护。 -->
 
-manifest 管理 64 张表、529 个字段。
+manifest 管理 64 张表、532 个字段。
 
 ## 阅读约定
 
@@ -376,6 +376,7 @@ CONSTRAINT ck_iam_application_enabled CHECK (enabled IN (0, 1))
 | `name` | ``name VARCHAR(128) NOT NULL`` | 业务显示名称 |
 | `scope_capabilities` | ``scope_capabilities JSON NOT NULL`` | 资源支持的范围能力JSON数组，作为授权范围校验上限 |
 | `field_capabilities` | ``field_capabilities JSON NOT NULL`` | 资源字段能力JSON数组，限制可见性、编辑及筛选等可声明能力 |
+| `field_policy` | ``field_policy BOOLEAN NOT NULL DEFAULT FALSE`` | 是否接入租户字段策略：1接入、0仅使用角色字段权限 |
 | `enabled` | ``enabled BOOLEAN NOT NULL DEFAULT TRUE`` | 是否启用：1启用、0停用；不代表已授予操作权限 |
 | `version` | ``version BIGINT UNSIGNED NOT NULL DEFAULT 0`` | 记录乐观锁版本；变更时按所属业务事务递增 |
 
@@ -388,6 +389,7 @@ UNIQUE KEY uk_iam_resource_application (application_id, id)
 CONSTRAINT fk_iam_resource_application FOREIGN KEY (application_id) REFERENCES iam_application (id)
 CONSTRAINT ck_iam_resource_scopes CHECK (JSON_TYPE(scope_capabilities) = 'ARRAY')
 CONSTRAINT ck_iam_resource_fields CHECK (JSON_TYPE(field_capabilities) = 'ARRAY')
+CONSTRAINT ck_iam_resource_field_policy CHECK (field_policy IN (0, 1))
 CONSTRAINT ck_iam_resource_enabled CHECK (enabled IN (0, 1))
 ```
 
@@ -1046,6 +1048,7 @@ CONSTRAINT ck_iam_live_resource_bindings CHECK (JSON_TYPE(scope_bindings)='OBJEC
 | 字段 | 定义 | 说明 |
 |---|---|---|
 | `id` | ``id BIGINT UNSIGNED NOT NULL`` | 默认字段策略固定版本记录标识 |
+| `resource_id` | ``resource_id BIGINT UNSIGNED NOT NULL`` | 所属资源ID，该修订只作为这一资源的默认基线 |
 | `kind` | ``kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 默认策略类别：FIELD字段 |
 | `revision` | ``revision BIGINT UNSIGNED NOT NULL`` | 不可变快照的发布序号，从1开始；与记录乐观锁版本不同 |
 | `definition` | ``definition JSON NOT NULL`` | 默认字段策略不可变定义JSON对象，由字段求值器解释 |
@@ -1055,7 +1058,9 @@ CONSTRAINT ck_iam_live_resource_bindings CHECK (JSON_TYPE(scope_bindings)='OBJEC
 ```sql
 PRIMARY KEY (id)
 UNIQUE KEY uk_iam_default_policy_kind (id, kind)
-UNIQUE KEY uk_iam_default_policy_revision (kind, revision)
+UNIQUE KEY uk_iam_default_policy_resource (id, resource_id)
+UNIQUE KEY uk_iam_default_policy_revision (resource_id, kind, revision)
+CONSTRAINT fk_iam_default_policy_resource FOREIGN KEY (resource_id) REFERENCES iam_resource (id)
 CONSTRAINT ck_iam_default_policy_kind CHECK (kind IN ('FIELD'))
 CONSTRAINT ck_iam_default_policy_definition CHECK (JSON_TYPE(definition) = 'OBJECT')
 CONSTRAINT ck_iam_default_policy_revision CHECK (revision > 0)
@@ -1131,32 +1136,35 @@ CONSTRAINT ck_iam_selector_descendants CHECK (include_descendants IN (0, 1))
 | 字段 | 定义 | 说明 |
 |---|---|---|
 | `tenant_id` | ``tenant_id BIGINT UNSIGNED NOT NULL`` | 所属租户组织ID |
-| `default_revision_id` | ``default_revision_id BIGINT UNSIGNED NOT NULL`` | 绑定的默认策略固定版本ID，与default_kind共同校验引用 |
+| `resource_id` | ``resource_id BIGINT UNSIGNED NOT NULL`` | 接入字段策略的资源ID |
+| `default_revision_id` | ``default_revision_id BIGINT UNSIGNED NOT NULL`` | 绑定的默认策略固定版本ID，须属于同一资源 |
 | `default_kind` | ``default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'FIELD'`` | 默认策略种类，固定为FIELD |
-| `operation_rules` | ``operation_rules JSON NOT NULL DEFAULT (JSON_ARRAY())`` | 租户字段操作规则JSON数组，限定已接入的编辑及筛选等能力 |
+| `operation_rules` | ``operation_rules JSON NOT NULL DEFAULT (JSON_ARRAY())`` | 本资源字段操作规则JSON数组，限定已接入的编辑及筛选等能力 |
 | `version` | ``version BIGINT UNSIGNED NOT NULL DEFAULT 0`` | 记录乐观锁版本；变更时按所属业务事务递增 |
 
 约束与索引：
 
 ```sql
-PRIMARY KEY (tenant_id)
+PRIMARY KEY (tenant_id, resource_id)
 CONSTRAINT fk_iam_field_policy_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant (id)
+CONSTRAINT fk_iam_field_policy_resource FOREIGN KEY (resource_id) REFERENCES iam_resource (id)
 CONSTRAINT fk_iam_field_default FOREIGN KEY (default_revision_id, default_kind) REFERENCES iam_default_policy_revision (id, kind)
+CONSTRAINT fk_iam_field_policy_revision FOREIGN KEY (default_revision_id, resource_id) REFERENCES iam_default_policy_revision (id, resource_id)
 CONSTRAINT ck_iam_field_default_kind CHECK (default_kind = 'FIELD')
 CONSTRAINT ck_iam_field_operations CHECK (JSON_TYPE(operation_rules) = 'ARRAY')
 ```
 
 ## iam_field_rule
 
-租户场景字段可见性规则
+租户资源字段可见性规则
 
 权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
 
 | 字段 | 定义 | 说明 |
 |---|---|---|
-| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 租户场景字段可见性规则记录标识 |
+| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 租户资源字段可见性规则记录标识 |
 | `tenant_id` | ``tenant_id BIGINT UNSIGNED NOT NULL`` | 所属租户组织ID |
-| `scenario` | ``scenario VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 字段策略使用场景：MANAGEMENT管理；取值MANAGEMENT |
+| `resource_id` | ``resource_id BIGINT UNSIGNED NOT NULL`` | 规则所属资源ID，与策略行一致 |
 | `field_key` | ``field_key VARCHAR(128) COLLATE utf8mb4_bin NOT NULL`` | 资源字段稳定标识，用于匹配目录能力及字段规则 |
 | `viewer_selector_id` | ``viewer_selector_id BIGINT UNSIGNED NOT NULL`` | 规则适用的查看者选择器ID，须属于本租户 |
 | `target_scope` | ``target_scope JSON NOT NULL`` | 字段规则目标范围表达式JSON数组 |
@@ -1167,10 +1175,9 @@ CONSTRAINT ck_iam_field_operations CHECK (JSON_TYPE(operation_rules) = 'ARRAY')
 
 ```sql
 PRIMARY KEY (id)
-KEY idx_iam_field_rule_match (tenant_id, scenario, field_key, id)
-CONSTRAINT fk_iam_field_rule_policy FOREIGN KEY (tenant_id) REFERENCES iam_field_policy (tenant_id)
+KEY idx_iam_field_rule_match (tenant_id, resource_id, field_key, id)
+CONSTRAINT fk_iam_field_rule_policy FOREIGN KEY (tenant_id, resource_id) REFERENCES iam_field_policy (tenant_id, resource_id)
 CONSTRAINT fk_iam_field_rule_viewer FOREIGN KEY (tenant_id, viewer_selector_id) REFERENCES iam_policy_selector (tenant_id, id)
-CONSTRAINT ck_iam_field_rule_scenario CHECK (scenario IN ('MANAGEMENT'))
 CONSTRAINT ck_iam_field_rule_visibility CHECK (visibility IN ('HIDDEN', 'MASKED', 'FULL'))
 CONSTRAINT ck_iam_field_rule_scope CHECK (JSON_TYPE(target_scope) = 'ARRAY')
 CONSTRAINT ck_iam_field_rule_bindings CHECK (JSON_TYPE(scope_bindings) = 'OBJECT')

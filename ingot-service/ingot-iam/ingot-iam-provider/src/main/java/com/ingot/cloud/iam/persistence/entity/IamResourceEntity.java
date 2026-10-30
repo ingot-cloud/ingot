@@ -42,6 +42,10 @@ public class IamResourceEntity {
     @TableField("field_capabilities")
     private String fieldCapabilities;
 
+    /** 是否接入租户字段策略。 */
+    @TableField("field_policy")
+    private Boolean fieldPolicy;
+
     /** 是否启用。 */
     @TableField("enabled")
     private Boolean enabled;

@@ -24,6 +24,7 @@ public class InitializationCatalogRepository {
     private final IamRoleRevisionMapper revisions;
     private final IamDefaultPolicyRevisionMapper defaults;
     private final IamApplicationMapper applications;
+    private final IamResourceMapper resources;
     private final IamPlanMapper plans;
     private final IamPlanApplicationMapper planApplications;
 
@@ -71,10 +72,28 @@ public class InitializationCatalogRepository {
      * @return 策略版本 ID 列表
      */
     public List<Long> defaultRevisions(DefaultPolicyKind kind) {
+        Long resourceId = tenantMemberResourceId();
+        if (resourceId == null) {
+            return List.of();
+        }
         return defaults.selectList(Wrappers.<IamDefaultPolicyRevisionEntity>lambdaQuery()
                 .select(IamDefaultPolicyRevisionEntity::getId).eq(IamDefaultPolicyRevisionEntity::getKind, kind)
+                .eq(IamDefaultPolicyRevisionEntity::getResourceId, BigInteger.valueOf(resourceId))
                 .orderByDesc(IamDefaultPolicyRevisionEntity::getRevision, IamDefaultPolicyRevisionEntity::getId))
                 .stream().map(row -> row.getId().longValueExact()).toList();
+    }
+
+    private Long tenantMemberResourceId() {
+        IamApplicationEntity app = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
+                .eq(IamApplicationEntity::getDomain, AuthorizationDomain.TENANT)
+                .eq(IamApplicationEntity::getCode, MemberResources.TENANT_APPLICATION));
+        if (app == null) {
+            return null;
+        }
+        IamResourceEntity row = resources.selectOne(Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getApplicationId, app.getId())
+                .eq(IamResourceEntity::getCode, MemberResources.MEMBER));
+        return row == null ? null : row.getId().longValueExact();
     }
 
     /** @return 租户域启用的基础应用，按排序值及 ID 排序 */

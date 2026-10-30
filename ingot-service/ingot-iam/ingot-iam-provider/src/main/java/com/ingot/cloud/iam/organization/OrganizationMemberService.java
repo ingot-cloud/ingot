@@ -65,7 +65,7 @@ public class OrganizationMemberService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         var scope = scopes.memberRead(actor.context(), IamAction.TENANT_MEMBER_READ);
-        var snapshot = fields.snapshotFresh(tenant, PolicyScenario.MANAGEMENT);
+        var snapshot = fields.snapshotFresh(tenant, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
         fields.requireOriginalLookup(snapshot, viewer, MemberFieldKey.VALUE_DISPLAY_NAME, name, scope);
         var result = candidates.pageEffective(tenant, scope, name, id, page, size);
         var memberIds = result.getRecords().stream().map(row -> row.getId()).toList();
@@ -139,7 +139,7 @@ public class OrganizationMemberService {
             scopes.requireVisibleDepartment(actor.context(), IamAction.TENANT_DEPARTMENT_READ, department);
         }
         var scope = scopes.memberRead(actor.context(), IamAction.TENANT_MEMBER_READ);
-        var snapshot = fields.snapshotFresh(tenant, PolicyScenario.MANAGEMENT);
+        var snapshot = fields.snapshotFresh(tenant, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
         fields.requireOriginalLookup(snapshot, viewer, MemberFieldKey.VALUE_DISPLAY_NAME, keyword, scope);
         var result = branch == null ? candidates.page(tenant, scope, department, keyword, selected, page, size, groupId)
                 : candidates.page(tenant, scope, department, keyword, selected, page, size, groupId, branch);

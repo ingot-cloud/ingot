@@ -17,6 +17,8 @@ import jakarta.validation.constraints.*;
  * @param name 资源名称
  * @param scopeCapabilities 允许的范围种类
  * @param fieldCapabilities 已注册字段能力
+ * @param fieldPolicy 目录是否接入租户字段策略
+ * @param fieldPolicyEligible 服务器是否允许打开接入
  * @param status 资源状态
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -34,6 +36,10 @@ public record ResourceRecord(
         List<@NotNull ScopeKind> scopeCapabilities,
         @NotNull @Schema(description = "已注册字段能力", requiredMode = Schema.RequiredMode.REQUIRED)
         List<@NotNull @Valid FieldCapability> fieldCapabilities,
+        @Schema(description = "目录是否接入租户字段策略")
+        boolean fieldPolicy,
+        @Schema(description = "服务器是否允许打开字段策略接入")
+        boolean fieldPolicyEligible,
         @NotNull @Schema(description = "资源状态", requiredMode = Schema.RequiredMode.REQUIRED)
         ConfigurationStatus status) {
 

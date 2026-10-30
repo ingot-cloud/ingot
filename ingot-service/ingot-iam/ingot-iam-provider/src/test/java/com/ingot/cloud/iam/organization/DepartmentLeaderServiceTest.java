@@ -133,9 +133,9 @@ class DepartmentLeaderServiceTest {
         var raw = row(102, true, true); raw.setDisplayName("隐藏姓名");
         raw.setAvatar("ingot/member/hidden.png");
         when(leaders.page(any())).thenReturn(List.of(raw));
-        var snapshot = new FieldPolicySnapshot(10, PolicyScenario.MANAGEMENT, Map.of(), Map.of(), List.of(),
+        var snapshot = new FieldPolicySnapshot(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, Map.of(), Map.of(), List.of(),
                 List.of(), Map.of(), Map.of(), Map.of());
-        when(fields.snapshotFresh(10, PolicyScenario.MANAGEMENT)).thenReturn(snapshot);
+        when(fields.snapshotFresh(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)).thenReturn(snapshot);
         when(fields.project(any(MemberRecord.class), any(), any(), anyMap())).thenAnswer(invocation -> {
             MemberRecord value = invocation.getArgument(0);
             assertEquals("ingot/member/hidden.png", value.avatar());
@@ -172,9 +172,9 @@ class DepartmentLeaderServiceTest {
         var another = row(102, true, true); another.setDepartmentId(id(12)); another.setVisibleCount(1L); another.setDisplayName("原始姓名");
         first.setAvatar("ingot/member/visible.png"); another.setAvatar("ingot/member/visible.png");
         when(leaders.summaries(any())).thenReturn(List.of(first, another));
-        var snapshot = new FieldPolicySnapshot(10, PolicyScenario.MANAGEMENT, Map.of(), Map.of(), List.of(),
+        var snapshot = new FieldPolicySnapshot(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, Map.of(), Map.of(), List.of(),
                 List.of(), Map.of(), Map.of(), Map.of());
-        when(fields.snapshotFresh(10, PolicyScenario.MANAGEMENT)).thenReturn(snapshot);
+        when(fields.snapshotFresh(10, com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE)).thenReturn(snapshot);
         when(fields.project(any(MemberRecord.class), any(), any(), anyMap())).thenAnswer(invocation -> {
             MemberRecord raw = invocation.getArgument(0);
             assertNull(raw.phone()); assertNull(raw.email()); assertNull(raw.loginPhone());

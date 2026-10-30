@@ -124,7 +124,7 @@ public final class BuiltinResourceProviders {
                         : key.resourceCode().equals(PlatformScopeObjectResource.MEMBER.getValue())
                                 ? List.of(ScopeKind.ALL, ScopeKind.SELF, ScopeKind.OBJECT_SET)
                                 : List.of(ScopeKind.ALL, ScopeKind.OBJECT_SET),
-                fields, defaults, read, object == PlatformScopeObjectResource.MENU);
+                fields, defaults, read, object == PlatformScopeObjectResource.MENU, key.equals(TENANT_MEMBER_RESOURCE));
     }
 
     private static String fieldLabel(MemberFieldKey field) {

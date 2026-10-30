@@ -121,6 +121,7 @@ public final class IamMybatisTestAccess {
         return new InitializationCatalogRepository(mapper(source, IamAccountMapper.class),
                 mapper(source, IamRoleDefinitionMapper.class), mapper(source, IamRoleRevisionMapper.class),
                 mapper(source, IamDefaultPolicyRevisionMapper.class), mapper(source, IamApplicationMapper.class),
+                mapper(source, IamResourceMapper.class),
                 mapper(source, IamPlanMapper.class), mapper(source, IamPlanApplicationMapper.class));
     }
 
@@ -130,7 +131,8 @@ public final class IamMybatisTestAccess {
                 mapper(source, IamDefaultPolicyRevisionMapper.class), mapper(source, IamTenantMapper.class),
                 mapper(source, IamTenantMemberMapper.class), mapper(source, IamDepartmentMapper.class),
                 mapper(source, IamMemberDepartmentMapper.class),
-                mapper(source, IamTenantAppEntitlementMapper.class),                 mapper(source, IamAppAudienceMapper.class), mapper(source, IamFieldPolicyMapper.class));
+                mapper(source, IamTenantAppEntitlementMapper.class), mapper(source, IamAppAudienceMapper.class),
+                mapper(source, IamFieldPolicyMapper.class), mapper(source, IamResourceMapper.class));
     }
 
     /** 在当前夹具数据源上建立成员查询与写入 Repository。 */

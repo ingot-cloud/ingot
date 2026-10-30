@@ -28,6 +28,7 @@ CREATE TABLE iam_resource (
     name VARCHAR(128) NOT NULL COMMENT '业务显示名称',
     scope_capabilities JSON NOT NULL COMMENT '资源支持的范围能力JSON数组，作为授权范围校验上限',
     field_capabilities JSON NOT NULL COMMENT '资源字段能力JSON数组，限制可见性、编辑及筛选等可声明能力',
+    field_policy BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否接入租户字段策略：1接入、0仅使用角色字段权限',
     enabled BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否启用：1启用、0停用；不代表已授予操作权限',
     version BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '记录乐观锁版本；变更时按所属业务事务递增',
     PRIMARY KEY (id),
@@ -36,6 +37,7 @@ CREATE TABLE iam_resource (
     CONSTRAINT fk_iam_resource_application FOREIGN KEY (application_id) REFERENCES iam_application (id),
     CONSTRAINT ck_iam_resource_scopes CHECK (JSON_TYPE(scope_capabilities) = 'ARRAY'),
     CONSTRAINT ck_iam_resource_fields CHECK (JSON_TYPE(field_capabilities) = 'ARRAY'),
+    CONSTRAINT ck_iam_resource_field_policy CHECK (field_policy IN (0, 1)),
     CONSTRAINT ck_iam_resource_enabled CHECK (enabled IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='应用资源及范围字段能力';
 

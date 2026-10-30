@@ -6,12 +6,13 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ingot.cloud.iam.support.IamJson;
 import com.ingot.framework.commons.model.iam.FieldAccess;
+import com.ingot.framework.commons.model.iam.FieldCapability;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
-import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.FieldOperations;
+import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
 
 /**
- * <p>解释固定默认字段策略版本的 JSON 定义体，空对象回落到手机邮箱脱敏。</p>
+ * <p>解释某一资源的固定默认字段策略版本。缺键回落到该资源自己的字段默认值和能力上限。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -24,49 +25,42 @@ public final class DefaultPolicyDefinitions {
     }
 
     /**
-     * 解析字段默认访问；缺省键回落到手机邮箱脱敏、其余完整可编辑。
+     * 用资源字段默认值生成第 1 版定义，不手写成员字段。
+     *
+     * @param resource 已注册资源
+     * @return 字段与操作默认 JSON
+     */
+    public static String definition(ResourceDescriptor resource) {
+        Map<String, FieldVisibility> fields = new LinkedHashMap<>();
+        Map<String, FieldOperations> operations = new LinkedHashMap<>();
+        for (FieldCapability field : resource.fields()) {
+            FieldAccess access = resource.defaults().getOrDefault(field.key(), new FieldAccess(FieldVisibility.HIDDEN, false));
+            fields.put(field.key(), access.visibility());
+            operations.put(field.key(), new FieldOperations(access.editable(), field.filterable()));
+        }
+        return IamJson.object(Map.of("fields", fields, "operations", operations));
+    }
+
+    /**
+     * 解析字段默认访问；缺键使用资源默认值。
      *
      * @param definition 版本定义 JSON；可空
+     * @param resource 字段所属资源
      * @return 按字段键索引的访问
      */
-    public static Map<String, FieldAccess> fieldAccess(String definition) {
-        return fieldMap(definition, false);
+    public static Map<String, FieldAccess> fieldAccess(String definition, ResourceDescriptor resource) {
+        return fieldMap(definition, false, resource);
     }
 
     /**
-     * 解析平台字段上限；缺省表示不额外收紧，租户规则最高可到完整可见。
+     * 解析平台字段上限；缺省时取该字段能力中的最高可见性。
      *
      * @param definition 最新平台版本 JSON；可空
+     * @param resource 字段所属资源
      * @return 按字段键索引的上限
      */
-    public static Map<String, FieldAccess> fieldCeiling(String definition) {
-        return fieldMap(definition, true);
-    }
-
-    /**
-     * 读取单个字段的文档化基线，供定义体缺键时使用。
-     *
-     * @param fieldKey 字段键
-     * @return 手机邮箱脱敏且不可编辑，其余完整可编辑
-     */
-    public static FieldAccess documented(String fieldKey) {
-        if (MemberFieldKey.VALUE_PHONE.equals(fieldKey) || MemberFieldKey.VALUE_EMAIL.equals(fieldKey)) {
-            return new FieldAccess(FieldVisibility.MASKED, false);
-        }
-        if (MemberFieldKey.VALUE_DISPLAY_NAME.equals(fieldKey) || MemberFieldKey.VALUE_AVATAR.equals(fieldKey))
-            return new FieldAccess(FieldVisibility.FULL, true);
-        return new FieldAccess(FieldVisibility.HIDDEN, false);
-    }
-
-    /**
-     * 平台未声明上限时的最宽可见性，允许租户规则授予完整字段。
-     *
-     * @param fieldKey 字段键
-     * @return 完整可见且可编辑
-     */
-    public static FieldAccess openCeiling(String fieldKey) {
-        return java.util.Arrays.stream(MemberFieldKey.values()).anyMatch(field -> field.getValue().equals(fieldKey))
-                ? new FieldAccess(FieldVisibility.FULL, true) : new FieldAccess(FieldVisibility.HIDDEN, false);
+    public static Map<String, FieldAccess> fieldCeiling(String definition, ResourceDescriptor resource) {
+        return fieldMap(definition, true, resource);
     }
 
     /**
@@ -98,36 +92,48 @@ public final class DefaultPolicyDefinitions {
         return access;
     }
 
-    private static Map<String, FieldAccess> fieldMap(String definition, boolean ceiling) {
+    private static Map<String, FieldAccess> fieldMap(String definition, boolean ceiling, ResourceDescriptor resource) {
         FieldBody body = IamJson.read(definition, FIELD);
         Map<String, FieldVisibility> configured = ceiling
                 ? body == null || body.ceiling() == null ? Map.of() : body.ceiling()
                 : body == null || body.fields() == null ? Map.of() : body.fields();
         Map<String, FieldAccess> access = new LinkedHashMap<>();
-        for (MemberFieldKey field : MemberFieldKey.values()) {
-            FieldVisibility item = configured.get(field.getValue());
-            FieldAccess fallback = ceiling ? openCeiling(field.getValue()) : documented(field.getValue());
-            access.put(field.getValue(), item == null ? fallback : new FieldAccess(item, item != FieldVisibility.HIDDEN));
+        for (FieldCapability field : resource.fields()) {
+            FieldVisibility item = configured.get(field.key());
+            FieldAccess fallback = ceiling ? openCeiling(field) : resource.defaults().getOrDefault(field.key(),
+                    new FieldAccess(FieldVisibility.HIDDEN, false));
+            access.put(field.key(), item == null ? fallback : new FieldAccess(item, item != FieldVisibility.HIDDEN));
         }
-        configured.forEach((key, value) -> access.putIfAbsent(key, value == null ? new FieldAccess(FieldVisibility.HIDDEN, false) : new FieldAccess(value, value != FieldVisibility.HIDDEN)));
         return Map.copyOf(access);
     }
 
-    /** 读取固定操作默认或上限，未注册字段始终关闭。 */
-    public static Map<String, FieldOperations> fieldOperations(String definition, boolean ceiling) {
+    /**
+     * 读取固定操作默认或上限。缺省操作能力来自资源字段默认值和字段能力。
+     *
+     * @param definition 版本定义 JSON
+     * @param ceiling 是否读取操作上限
+     * @param resource 字段所属资源
+     * @return 按字段键索引的操作能力
+     */
+    public static Map<String, FieldOperations> fieldOperations(String definition, boolean ceiling, ResourceDescriptor resource) {
         FieldBody body = IamJson.read(definition, FIELD);
         Map<String, FieldOperations> configured = body == null ? Map.of()
                 : ceiling ? body.operationCeiling() : body.operations();
         configured = configured == null ? Map.of() : configured;
         Map<String, FieldOperations> result = new LinkedHashMap<>();
-        for (var field : MemberFieldKey.values()) {
-            var fallback = new FieldOperations(ceiling || documented(field.getValue()).editable(),
-                    field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL
-                            || ceiling && field == MemberFieldKey.DISPLAY_NAME);
-            result.put(field.getValue(), configured.getOrDefault(field.getValue(), fallback));
+        for (FieldCapability field : resource.fields()) {
+            FieldAccess fallbackAccess = resource.defaults().getOrDefault(field.key(), new FieldAccess(FieldVisibility.HIDDEN, false));
+            var fallback = new FieldOperations(ceiling ? field.editable() : fallbackAccess.editable(),
+                    ceiling ? field.filterable() : field.filterable() && fallbackAccess.visibility() == FieldVisibility.FULL);
+            result.put(field.key(), configured.getOrDefault(field.key(), fallback));
         }
-        configured.forEach(result::putIfAbsent);
         return Map.copyOf(result);
+    }
+
+    private static FieldAccess openCeiling(FieldCapability field) {
+        FieldVisibility visibility = field.visibilities().stream().max(java.util.Comparator.comparingInt(Enum::ordinal))
+                .orElse(FieldVisibility.HIDDEN);
+        return new FieldAccess(visibility, visibility != FieldVisibility.HIDDEN && field.editable());
     }
 
     private record FieldBody(Map<String, FieldVisibility> fields, Map<String, FieldVisibility> ceiling,

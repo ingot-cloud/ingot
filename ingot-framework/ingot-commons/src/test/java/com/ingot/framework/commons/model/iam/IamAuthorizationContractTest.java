@@ -340,6 +340,7 @@ class IamAuthorizationContractTest {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<AssignmentPreviewResult>>>() {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<FieldPolicyDraft>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<FieldPolicyResource>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CreatedResource>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<OrganizationMemberPickerPage>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<DepartmentNavigationPage>>() {

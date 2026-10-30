@@ -40,7 +40,7 @@ class FieldPolicyBoundaryTest {
         bindings.register(Row.class, RESOURCE, READ, FieldUse.READ);
         var provider = new ResourceObjectProvider() {
             public ResourceDescriptor descriptor() { return new ResourceDescriptor(RESOURCE,
-                    List.of(new ActionDescriptor(READ, ExecutionMode.READ_ONLY)), List.of(), List.of(), Map.of(), READ, false); }
+                    List.of(new ActionDescriptor(READ, ExecutionMode.READ_ONLY)), List.of(), List.of(), Map.of(), READ, false, false); }
             public AuthorizationCandidatePage candidates(ResourceObjectQuery query) { throw new AssertionError("清单不得查询业务原值"); }
             public boolean objectsExist(AuthorizationContext context, List<String> ids) { throw new AssertionError("清单不得查询对象事实"); }
         };
