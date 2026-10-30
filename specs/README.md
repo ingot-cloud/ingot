@@ -188,7 +188,7 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-
+- [租户工作台统计接口](./changes/active/20261030-iam-tenant-workbench/README.md)（validating；功能与自动化验证完成，待用户自行联调验收）
 
 - [授权审计游标分页与可读展示](./changes/active/20261024-iam-authorization-audit-readable/README.md)（implementing；2026-10-24 用户确认开工）
 - [租户拥有者动态全权限与角色即时生效](./changes/active/20261014-iam-tenant-live-authorization/README.md)（validating；2026-10-14 开发与隔离验证完成，待用户产品验收，2026-10-19已本地提交）
