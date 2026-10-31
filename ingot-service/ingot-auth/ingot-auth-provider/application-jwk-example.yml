@@ -67,7 +67,6 @@ ingot:
     oauth2:
       auth:
         issuer: http://localhost:8080
-        loginFormUrl: http://localhost:1798/oauth2/challenge
 
 # ========================================
 # 环境变量示例

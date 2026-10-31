@@ -29,14 +29,23 @@ import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.util.MultiValueMap;
 
 /**
- * <p>Description  : 自定义授权码请求 {@link AuthenticationConverter}.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2023/9/9.</p>
- * <p>Time         : 10:58 AM.</p>
+ * <p>
+ * Description : 自定义授权码请求 {@link AuthenticationConverter}.
+ * </p>
+ * <p>
+ * Author : wangchao.
+ * </p>
+ * <p>
+ * Date : 2023/9/9.
+ * </p>
+ * <p>
+ * Time : 10:58 AM.
+ * </p>
  */
 public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter implements AuthenticationConverter {
-    private final OAuth2AuthorizationCodeRequestAuthenticationConverter converter =
-            new OAuth2AuthorizationCodeRequestAuthenticationConverter();
+
+    private final OAuth2AuthorizationCodeRequestAuthenticationConverter converter = new OAuth2AuthorizationCodeRequestAuthenticationConverter();
+
     private final AuthenticatedMemberBinder memberBinder;
 
     /**
@@ -48,7 +57,6 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
 
     /**
      * 使用成员绑定器在选定租户后替换预授权用户。
-     *
      * @param memberBinder 选定租户后绑定成员；为空时推迟到签发阶段绑定
      */
     public CustomOAuth2AuthorizationCodeRequestAuthenticationConverter(AuthenticatedMemberBinder memberBinder) {
@@ -64,8 +72,8 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
 
         Authentication finalOPrincipal = principal;
 
-        OAuth2AuthorizationCodeRequestAuthenticationToken token =
-                (OAuth2AuthorizationCodeRequestAuthenticationToken) converter.convert(request);
+        OAuth2AuthorizationCodeRequestAuthenticationToken token = (OAuth2AuthorizationCodeRequestAuthenticationToken) converter
+            .convert(request);
 
         Map<String, Object> additionalParameters = new HashMap<>(token.getAdditionalParameters());
         // 如果没有传递method，默认使用S256
@@ -74,14 +82,19 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
         }
         additionalParameters.put(InOAuth2ParameterNames.SESSION_ID, SecurityUtils.getSessionId(request));
 
-        return ErrorUtil.tryOrThrow(() ->
-                        new OAuth2AuthorizationCodeRequestAuthenticationToken(
-                                token.getAuthorizationUri(), token.getClientId(), finalOPrincipal,
-                                token.getRedirectUri(), token.getState(), token.getScopes(), additionalParameters),
+        return ErrorUtil.tryOrThrow(
+                () -> new OAuth2AuthorizationCodeRequestAuthenticationToken(token.getAuthorizationUri(),
+                        token.getClientId(), finalOPrincipal, token.getRedirectUri(), token.getState(),
+                        token.getScopes(), additionalParameters),
                 e -> createError(OAuth2ErrorCodes.INVALID_REQUEST, e));
     }
 
-    private Authentication requiredCheck(HttpServletRequest request, OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
+    private Authentication requiredCheck(HttpServletRequest request,
+            OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
+        if (token.getAuthenticationExpiresAt() <= java.time.Instant.now().getEpochSecond()) {
+            OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.INVALID_GRANT, "预授权已过期", null);
+            throw new OAuth2AuthorizationCodeRequestAuthenticationException(error, null);
+        }
         if (isPlatformContext(token)) {
             String tenant = request.getParameter(InOAuth2ParameterNames.TENANT);
             if (StrUtil.isNotEmpty(tenant)) {
@@ -89,8 +102,8 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
             }
             MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
             Map<String, Object> additional = copyValidatedAdditionalParameters(token, parameters);
-            return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
-                    token.getPrincipal(), token.getAllowList(), additional, token.getTimeToLive());
+            return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(token.getPrincipal(), additional,
+                    token.getAllowList(), token.getTimeToLive(), token.getAuthenticationExpiresAt());
         }
 
         String tenant = request.getParameter(InOAuth2ParameterNames.TENANT);
@@ -105,19 +118,19 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
         Map<String, Object> newAdditionalParameters = copyValidatedAdditionalParameters(token, parameters);
         newAdditionalParameters.put(InOAuth2ParameterNames.TENANT, tenant);
         Object principal = bindTenantMember(token.getPrincipal(), tenant);
-        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
-                principal, token.getAllowList(), newAdditionalParameters, token.getTimeToLive());
+        return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(principal, newAdditionalParameters,
+                token.getAllowList(), token.getTimeToLive(), token.getAuthenticationExpiresAt());
     }
 
     private Object bindTenantMember(Object principal, String tenant) {
-        if (memberBinder == null || !(principal instanceof InUser user)
-                || user.getAuthorizationContext() != null
+        if (memberBinder == null || !(principal instanceof InUser user) || user.getAuthorizationContext() != null
                 || UserTypeEnum.getEnum(user.getUserType()) != UserTypeEnum.ADMIN) {
             return principal;
         }
         try {
             return memberBinder.bindSelectedTenant(user, tenant);
-        } catch (OAuth2AuthenticationException exception) {
+        }
+        catch (OAuth2AuthenticationException exception) {
             throwError(InOAuth2ParameterNames.TENANT);
             throw exception;
         }
@@ -131,15 +144,15 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
     }
 
     private static Map<String, Object> copyValidatedAdditionalParameters(
-            OAuth2PreAuthorizationCodeRequestAuthenticationToken token,
-            MultiValueMap<String, String> parameters) {
+            OAuth2PreAuthorizationCodeRequestAuthenticationToken token, MultiValueMap<String, String> parameters) {
         Map<String, Object> additionalParameters = token.getAdditionalParameters();
         additionalParameters.forEach((key, value) -> {
             List<String> requestValues = parameters.get(key);
             if (CollUtil.isEmpty(requestValues)) {
                 throwError(key);
             }
-            if (value.getClass().isArray() && !ArrayUtil.equals(ArrayUtil.toArray(requestValues, String.class), value)) {
+            if (value.getClass().isArray()
+                    && !ArrayUtil.equals(ArrayUtil.toArray(requestValues, String.class), value)) {
                 throwError(key);
             }
             if (!StrUtil.equals(requestValues.get(0), String.valueOf(value))) {
@@ -152,7 +165,8 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
     }
 
     private static void throwError(String parameterName) {
-        OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.INVALID_REQUEST, "OAuth 2.0 Parameter: " + parameterName, null);
+        OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.INVALID_REQUEST, "OAuth 2.0 Parameter: " + parameterName,
+                null);
         throw new OAuth2AuthorizationCodeRequestAuthenticationException(error, null);
     }
 
@@ -160,4 +174,5 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
         OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.INVALID_REQUEST, message, null);
         return new OAuth2AuthorizationCodeRequestAuthenticationException(error, cause, null);
     }
+
 }

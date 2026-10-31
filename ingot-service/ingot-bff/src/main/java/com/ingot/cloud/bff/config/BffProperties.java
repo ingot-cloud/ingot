@@ -2,103 +2,82 @@ package com.ingot.cloud.bff.config;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.ingot.cloud.bff.model.enums.FingerprintMode;
-import com.ingot.framework.commons.constants.HeaderConstants;
 import com.ingot.framework.commons.model.bff.BffAppRegistration;
-import com.ingot.framework.commons.utils.BffCookiePolicy;
+import com.ingot.framework.commons.model.bff.BffFingerprintMode;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * <p>BFF 服务配置，绑定 {@code ingot.bff.*}。</p>
- *
- * <p>{@code require-https} 与 {@code apps} 来自 Nacos {@code in-bff-apps.yml}（仅 BFF/Gateway 加载）。
- * TTL 与指纹来自 {@code in-service-bff.yml}。Cookie 名称与 Secure 由 {@link BffCookiePolicy} 按
- * {@code require-https} 决定，没有可配的 Domain。</p>
- *
- * <h3>使用示例：</h3>
- * <pre>{@code
- * ingot:
- *   bff:
- *     require-https: true
- *     user-type: "0"
- *     session-ttl: 7200
- *     transaction-ttl: 600
- *     ticket-ttl: 60
- *     security:
- *       fingerprint-enabled: true
- *       fingerprint-mode: device
- *     apps:
- *       - app-id: tenant-admin
- *         domain: TENANT
- *         admin-origin: https://admin.example
- *         login-origin: https://login.example
- *         oauth-client-id: in-bff-tenant
- *         oauth-redirect-uri: https://bff.example/bff/auth/tenant/callback
- * }</pre>
+ * <p>
+ * 同源内部登录配置；注册表仅 BFF/Gateway 消费，TTL 单位为秒。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
- *
- * @see BffAppRegistration
- * @see BffCookiePolicy
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "ingot.bff")
+@ConfigurationProperties(prefix = "ingot.bff", ignoreUnknownFields = false)
 public class BffProperties {
-    /**
-     * 管理端用户类型字面量，预授权时传给 Auth。默认 {@code 0}（管理用户）。
-     */
-    private String userType = "0";
-    /**
-     * 正式会话 Redis / Cookie 有效期（秒）。默认 7 天；Nacos 常用 7200。
-     */
-    private long sessionTtl = 60 * 60 * 24 * 7;
-    /**
-     * 登录事务 Redis 有效期（秒）。默认 600。
-     */
+
+    /** 预授权的管理用户类型，默认管理用户。 */
+    private String userType = UserTypeEnum.ADMIN.getValue();
+
+    /** 正式会话及 Cookie 寿命秒数，默认 7200。 */
+    private long sessionTtl = 7200;
+
+    /** 用户点击后新建事务的硬寿命秒数，默认 600，不滑动续期。 */
     private long transactionTtl = 600;
-    /**
-     * 一次性 ticket 有效期（秒）。默认 60，且不得超过事务剩余时间。
-     */
-    private long ticketTtl = 60;
-    /**
-     * 是否按生产 Cookie 与 origin 规则运行。默认 {@code true}。
-     * <p>{@code true}：{@code apps} 不可空，origin 必须 HTTPS 且同一主域；Cookie 为
-     * {@link BffCookiePolicy#SESSION_COOKIE_HOST} 并带 Secure。
-     * {@code false}：仅本机 DEV HTTP；Cookie 为 {@link BffCookiePolicy#SESSION_COOKIE_PLAIN} 且不加 Secure。
-     * 不要按请求 scheme 判断。</p>
-     */
+
+    /** 完成结果仅用于原绑定恢复的窗口秒数，默认 60，不超过正式会话寿命。 */
+    private long completionRecoveryTtl = 60;
+
+    /** 每绑定未终结事务上限，默认 5。 */
+    private int maxActiveTransactions = 5;
+
+    /** 单次认证的执行租约秒数，默认 30；超时不接管重做 Auth。 */
+    private long executionLeaseSeconds = 30;
+
+    /** 后台清理间隔毫秒，默认 5000。 */
+    private long cleanupInterval = 5000;
+
+    /** 生产必须 HTTPS；false 仅限 loopback 开发。 */
     private boolean requireHttps = true;
-    /**
-     * 前端应用注册表，按 Gateway 注入的 appId 查找回跳 origin 与 OAuth 客户端。
-     */
+
+    /** 两个固定应用的同源注册表。 */
     private List<BffAppRegistration> apps = new ArrayList<>();
-    /**
-     * 指纹校验。
-     */
+
+    /** 附加设备指纹校验配置，不替代绑定及 CSRF。 */
     private SecurityConfig security = new SecurityConfig();
 
+    /** 拒绝使安全期限失效的配置。 */
+    @PostConstruct
+    public void validate() {
+        if (transactionTtl <= 0 || sessionTtl <= 0 || completionRecoveryTtl <= 0 || completionRecoveryTtl > sessionTtl
+                || maxActiveTransactions <= 0 || executionLeaseSeconds <= 0 || cleanupInterval <= 0)
+            throw new IllegalStateException("BFF 期限、容量和清理间隔必须为正，恢复窗口不能超过会话寿命");
+    }
+
     /**
-     * <p>会话指纹开关与模式。</p>
+     * <p>
+     * 设备指纹来源及开关。
+     * </p>
      *
      * @author jy
      * @since 1.0.0
      */
     @Data
     public static class SecurityConfig {
-        /**
-         * 是否在创建/读取会话时校验指纹。默认开启。
-         */
+
+        /** 默认启用；关闭后不保存指纹。 */
         private boolean fingerprintEnabled = true;
-        /**
-         * 指纹模式：{@link FingerprintMode#DEVICE} 的 {@code device}（读
-         * {@link HeaderConstants#BFF_DEVICE_FINGERPRINT_HEADER}）或
-         * {@link FingerprintMode#IPUA} 的 {@code ip_ua}。默认 {@code device}。
-         */
-        private String fingerprintMode = FingerprintMode.DEVICE.getValue();
+
+        /** 默认 device；ip_ua 只使用可信代理 IP 与 User-Agent。 */
+        private BffFingerprintMode fingerprintMode = BffFingerprintMode.DEVICE;
+
     }
+
 }

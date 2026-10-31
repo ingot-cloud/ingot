@@ -6,16 +6,14 @@ ingot:
     apps:
       - app-id: platform-admin
         domain: PLATFORM
-        admin-origin: https://platform.ingotcloud.top
-        login-origin: https://platform-login.ingotcloud.top
+        origin: https://platform.ingotcloud.top
         oauth-client-id: in-bff-platform
         oauth-scope: system
         oauth-redirect-uri: https://bff.ingotcloud.top/bff/auth/platform/callback
         default-return-to: /
       - app-id: tenant-admin
         domain: TENANT
-        admin-origin: https://admin.ingotcloud.top
-        login-origin: https://login.ingotcloud.top
+        origin: https://admin.ingotcloud.top
         oauth-client-id: in-bff-tenant
         oauth-scope: system
         oauth-redirect-uri: https://bff.ingotcloud.top/bff/auth/tenant/callback

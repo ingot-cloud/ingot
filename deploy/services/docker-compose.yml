@@ -46,6 +46,48 @@ services:
       retries: 3
       start_period: 90s
 
+  # ========== BFF 服务 ==========
+  ingot-bff:
+    image: ${REGISTRY_URL}/ingot/bff:${BFF_VERSION}
+    networks:
+      - extnet
+    env_file:
+      - services-env/bff.env      # 服务专用环境变量
+      - services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=5400
+      - MANAGEMENT_PORT=6400
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    deploy:
+      mode: replicated
+      replicas: ${BFF_REPLICAS:-1}
+      resources:
+        limits:
+          cpus: '${BFF_CPUS:-2}'
+          memory: ${BFF_MEMORY:-1g}
+        reservations:
+          cpus: '1'
+          memory: 1g
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == worker
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 60s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6400/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
   # ========== Gateway 服务 ==========
   ingot-gateway:
     image: ${REGISTRY_URL}/ingot/gateway:${GATEWAY_VERSION}

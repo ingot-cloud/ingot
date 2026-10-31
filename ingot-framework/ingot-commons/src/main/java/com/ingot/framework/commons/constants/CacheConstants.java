@@ -120,39 +120,6 @@ public interface CacheConstants {
      */
     String AUTHORIZATION_DETAILS = "auth_details";
 
-    /**
-     * BFF session key 前缀
-     */
-    String BFF_SESSION = IGNORE_TENANT_PREFIX + ":bff_session";
-
-    /**
-     * 登录事务 Redis 前缀，与正式会话隔离。
-     */
-    String BFF_LOGIN_TRANSACTION = IGNORE_TENANT_PREFIX + ":bff_login_tx";
-
-    /**
-     * 浏览器绑定 Redis 前缀。
-     */
-    String BFF_AUTH_BINDING = IGNORE_TENANT_PREFIX + ":bff_auth_binding";
-
-    /**
-     * 构建 BFF session 的完整 Redis key
-     *
-     * @param sessionId 会话 ID
-     * @return {@code in:bff_session:{sessionId}}
-     */
-    static String bffSessionKey(String sessionId) {
-        return BFF_SESSION + ":" + sessionId;
-    }
-
-    static String bffLoginTransactionKey(String transactionId) {
-        return BFF_LOGIN_TRANSACTION + ":" + transactionId;
-    }
-
-    static String bffAuthBindingKey(String bindingId) {
-        return BFF_AUTH_BINDING + ":" + bindingId;
-    }
-
     interface Security {
         String PREFIX = IGNORE_TENANT_PREFIX + ":security";
         

@@ -15,7 +15,6 @@ ingot:
   security:
     oauth2:
       auth:
-        loginFormUrl: https://login.ingotcloud.top/oauth2/challenge
         issuer: http://${SERVICE_AUTH_HOST:localhost:5100}
       resource:
         publicUrls:

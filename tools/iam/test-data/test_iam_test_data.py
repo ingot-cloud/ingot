@@ -33,9 +33,7 @@ def sample_config(state_dir: Path, **overrides) -> dict:
         "redisNamespace": "iam-test",
         "sites": {
             "tenantAdmin": "http://tenant.localhost:5798",
-            "tenantLogin": "http://tenant-login.localhost:1798",
             "platformAdmin": "http://platform.localhost:5799",
-            "platformLogin": "http://platform-login.localhost:1799",
         },
         "bootstrapUsername": "platform",
         "oauth": {"clientId": "ingot", "clientSecret": "ingot"},

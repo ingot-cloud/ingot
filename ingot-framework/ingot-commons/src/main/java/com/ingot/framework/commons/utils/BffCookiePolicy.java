@@ -1,83 +1,57 @@
 package com.ingot.framework.commons.utils;
 
-import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.constants.BffConstants;
 
 /**
- * <p>按 {@code ingot.bff.require-https} 选择 BFF host-only Cookie 名称与 {@code Set-Cookie} 属性。</p>
- *
- * <p>已部署环境（内网测试/生产、公网生产）必须 {@code requireHttps=true}：名称带 {@code __Host-} 前缀并加
- * {@code Secure}。本机 DEV 可 {@code false}：无前缀、不加 {@code Secure}，以便 {@code http://localhost} 收下 Cookie。
- * 一律不写 {@code Domain}。不要按请求 scheme 或 {@code request.isSecure()} 分支，避免边缘 TLS 终止后误判。</p>
+ * <p>
+ * 按固定应用命名的 host-only Cookie；端口不是 Cookie 隔离边界。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
  */
 public final class BffCookiePolicy {
 
-    /**
-     * HTTPS 正式会话 Cookie 名；浏览器要求 Secure、Path=/、无 Domain。
-     */
-    public static final String SESSION_COOKIE_HOST = "__Host-IN_SESSION";
+    /** 仅用于当前Host清理的v1 Cookie名称，不参与认证回退。 */
+    public static final java.util.Set<String> LEGACY_COOKIES = java.util.Set.of("__Host-IN_SESSION",
+            "__Host-IN_AUTH_BINDING", "IN_SESSION", "IN_AUTH_BINDING");
 
-    /**
-     * DEV HTTP 正式会话 Cookie 名。
-     */
-    public static final String SESSION_COOKIE_PLAIN = "IN_SESSION";
+    private static final String HOST_PREFIX = "__Host-";
 
-    /**
-     * HTTPS 临时绑定 Cookie 名。
-     */
-    public static final String BINDING_COOKIE_HOST = "__Host-IN_AUTH_BINDING";
+    private static final String PLATFORM_PREFIX = "IN_PLATFORM_";
 
-    /**
-     * DEV HTTP 临时绑定 Cookie 名。
-     */
-    public static final String BINDING_COOKIE_PLAIN = "IN_AUTH_BINDING";
+    private static final String TENANT_PREFIX = "IN_TENANT_";
 
-    private static final String SAME_SITE_LAX = "Lax";
+    private static final String SESSION = "SESSION";
+
+    private static final String BINDING = "BINDING";
 
     private BffCookiePolicy() {
     }
 
-    /**
-     * 当前环境正式会话 Cookie 名。
-     *
-     * @param requireHttps 与 {@code ingot.bff.require-https} 相同；true 为 {@link #SESSION_COOKIE_HOST}
-     * @return 不可空的 Cookie 名
-     */
-    public static String sessionCookieName(boolean requireHttps) {
-        return requireHttps ? SESSION_COOKIE_HOST : SESSION_COOKIE_PLAIN;
+    /** 只选择当前可信应用的正式会话名称。 */
+    public static String sessionCookieName(boolean requireHttps, String appId) {
+        return prefix(requireHttps, appId) + SESSION;
     }
 
-    /**
-     * 当前环境绑定 Cookie 名。
-     *
-     * @param requireHttps 与 {@code ingot.bff.require-https} 相同；true 为 {@link #BINDING_COOKIE_HOST}
-     * @return 不可空的 Cookie 名
-     */
-    public static String bindingCookieName(boolean requireHttps) {
-        return requireHttps ? BINDING_COOKIE_HOST : BINDING_COOKIE_PLAIN;
+    /** 只选择当前可信应用的匿名绑定名称。 */
+    public static String bindingCookieName(boolean requireHttps, String appId) {
+        return prefix(requireHttps, appId) + BINDING;
     }
 
-    /**
-     * 拼 host-only {@code Set-Cookie}：Path=/、HttpOnly、SameSite=Lax；{@code requireHttps} 时追加 Secure。
-     *
-     * @param name           {@link #sessionCookieName(boolean)} 或 {@link #bindingCookieName(boolean)}
-     * @param value          Cookie 值；null 当空串，配合 Max-Age=0 用于清除
-     * @param maxAgeSeconds  存活秒数
-     * @param requireHttps   true 时写 Secure（与 {@code __Host-} 前缀配套）
-     * @return 完整 Set-Cookie 头值
-     */
+    private static String prefix(boolean secure, String appId) {
+        String app = switch (appId) {
+            case BffConstants.APP_PLATFORM -> PLATFORM_PREFIX;
+            case BffConstants.APP_TENANT -> TENANT_PREFIX;
+            default -> throw new IllegalArgumentException("未知 BFF appId");
+        };
+        return (secure ? HOST_PREFIX : "") + app;
+    }
+
+    /** 签发/清除 HttpOnly Cookie；不允许 Domain，Secure 由受信配置决定。 */
     public static String setCookieHeader(String name, String value, long maxAgeSeconds, boolean requireHttps) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(name).append('=').append(StrUtil.nullToEmpty(value));
-        builder.append("; Path=/");
-        builder.append("; Max-Age=").append(maxAgeSeconds);
-        builder.append("; HttpOnly");
-        if (requireHttps) {
-            builder.append("; Secure");
-        }
-        builder.append("; SameSite=").append(SAME_SITE_LAX);
-        return builder.toString();
+        return name + "=" + (value == null ? "" : value) + "; Path=/; HttpOnly; SameSite=Lax; Max-Age="
+                + Math.max(0, maxAgeSeconds) + (requireHttps ? "; Secure" : "");
     }
+
 }

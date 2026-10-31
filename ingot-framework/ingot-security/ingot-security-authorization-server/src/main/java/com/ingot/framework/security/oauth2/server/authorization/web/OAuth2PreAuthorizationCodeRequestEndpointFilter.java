@@ -31,45 +31,55 @@ import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * <p>Description  : .</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2023/7/26.</p>
- * <p>Time         : 11:09 AM.</p>
+ * <p>
+ * Description : .
+ * </p>
+ * <p>
+ * Author : wangchao.
+ * </p>
+ * <p>
+ * Date : 2023/7/26.
+ * </p>
+ * <p>
+ * Time : 11:09 AM.
+ * </p>
  */
 @Slf4j
 public final class OAuth2PreAuthorizationCodeRequestEndpointFilter extends OncePerRequestFilter {
+
     private final AuthenticationManager authenticationManager;
+
     private final RequestMatcher requestMatcher;
+
     private final AuthenticationConverter authenticationConverter;
+
     private final AuthenticationSuccessHandler authenticationSuccessHandler = this::sendResponseWithNewSession;
+
     private final AuthenticationSuccessHandler authenticatedSuccessHandler = this::sendResponse;
-    private final AuthenticationFailureHandler authenticationFailureHandler
-            = new DefaultAuthenticationFailureHandler();
+
+    private final AuthenticationFailureHandler authenticationFailureHandler = new DefaultAuthenticationFailureHandler();
 
     private final SecurityContextRepository securityContextRepository;
-    private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder
-            .getContextHolderStrategy();
 
-    private final HttpMessageConverter<OAuth2PreAuthorizationCodeRequestAuthenticationToken> responseConverter =
-            new OAuth2PreAuthHttpMessageConverter();
+    private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder
+        .getContextHolderStrategy();
+
+    private final HttpMessageConverter<OAuth2PreAuthorizationCodeRequestAuthenticationToken> responseConverter = new OAuth2PreAuthHttpMessageConverter();
 
     public OAuth2PreAuthorizationCodeRequestEndpointFilter(AuthenticationManager authenticationManager,
-                                                           RequestMatcher requestMatcher,
-                                                           SecurityContextRepository securityContextRepository) {
+            RequestMatcher requestMatcher, SecurityContextRepository securityContextRepository) {
         Assert.notNull(authenticationManager, "authenticationManager cannot be null");
         Assert.notNull(requestMatcher, "requestMatcher cannot be null");
         this.authenticationManager = authenticationManager;
         this.requestMatcher = requestMatcher;
         this.authenticationConverter = new DelegatingAuthenticationConverter(
-                Collections.singletonList(
-                        new OAuth2PreAuthorizationCodeRequestAuthenticationConverter()));
+                Collections.singletonList(new OAuth2PreAuthorizationCodeRequestAuthenticationConverter()));
         this.securityContextRepository = securityContextRepository;
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
         if (!this.requestMatcher.matches(request)) {
             filterChain.doFilter(request, response);
             return;
@@ -88,19 +98,16 @@ public final class OAuth2PreAuthorizationCodeRequestEndpointFilter extends OnceP
             }
             Authentication authenticationResult = this.authenticationManager.authenticate(authenticationRequest);
             this.authenticationSuccessHandler.onAuthenticationSuccess(request, response, authenticationResult);
-        } catch (AuthenticationException ex) {
+        }
+        catch (AuthenticationException ex) {
             SecurityContextHolder.clearContext();
             this.authenticationFailureHandler.onAuthenticationFailure(request, response, ex);
         }
     }
 
-    private void sendResponse(HttpServletRequest request,
-                              HttpServletResponse response,
-                              Authentication authentication) throws IOException {
-        OAuth2PreAuthorizationCodeRequestAuthenticationToken token =
-                (OAuth2PreAuthorizationCodeRequestAuthenticationToken) authentication;
-        log.debug("[OAuth2PreAuthorizationCodeRequestEndpointFilter] - sendResponse - session = {}",
-                request.getSession(false));
+    private void sendResponse(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            throws IOException {
+        OAuth2PreAuthorizationCodeRequestAuthenticationToken token = (OAuth2PreAuthorizationCodeRequestAuthenticationToken) authentication;
 
         SecurityContext context = this.securityContextHolderStrategy.createEmptyContext();
         context.setAuthentication(authentication);
@@ -111,13 +118,12 @@ public final class OAuth2PreAuthorizationCodeRequestEndpointFilter extends OnceP
         this.responseConverter.write(token, null, httpResponse);
     }
 
-    private void sendResponseWithNewSession(HttpServletRequest request,
-                                            HttpServletResponse response,
-                                            Authentication authentication) throws IOException {
+    private void sendResponseWithNewSession(HttpServletRequest request, HttpServletResponse response,
+            Authentication authentication) throws IOException {
         // create session
-        String sessionId = request.getSession(true).getId();
-        log.debug("[OAuth2PreAuthorizationCodeRequestEndpointFilter] - sendResponseWithNewSession - create new session = {}", sessionId);
+        request.getSession(true);
 
         sendResponse(request, response, authentication);
     }
+
 }

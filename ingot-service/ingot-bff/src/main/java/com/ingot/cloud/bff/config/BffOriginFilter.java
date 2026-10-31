@@ -1,97 +1,69 @@
 package com.ingot.cloud.bff.config;
 
 import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.commons.model.bff.BffAppRegistration;
+import com.ingot.cloud.bff.error.BffAuthException;
+import com.ingot.framework.commons.constants.BffConstants;
+import com.ingot.framework.commons.model.bff.BffErrorCode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * 按注册表 origin 精确校验请求来源。
+ * <p>
+ * 认证自举同样验证精确来源，拒绝表单和查询参数传入 OAuth/重定向身份。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
  */
-@Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
 public class BffOriginFilter extends OncePerRequestFilter {
-    private final BffProperties properties;
+
+    private final BffAppRegistry registry;
+
+    private boolean json(String contentType) {
+        try {
+            return MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.parseMediaType(contentType));
+        }
+        catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
-        List<String> allowedOrigins = registeredOrigins();
-        if (CollUtil.isEmpty(allowedOrigins)) {
-            filterChain.doFilter(request, response);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+        if (!request.getRequestURI().startsWith(BffConstants.ROOT)) {
+            chain.doFilter(request, response);
             return;
         }
-
-        String origin = request.getHeader("Origin");
-        String referer = request.getHeader("Referer");
-        if (isAllowed(origin, allowedOrigins) || isRefererAllowed(referer, allowedOrigins)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        log.warn("[BffOriginFilter] blocked request from origin={}, referer={}, uri={}",
-                origin, referer, request.getRequestURI());
-        response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.getWriter().write("{\"code\":\"BFF_ENTRY_MISMATCH\",\"message\":\"Forbidden: origin not allowed\"}");
-    }
-
-    private List<String> registeredOrigins() {
-        List<String> origins = new ArrayList<>();
-        if (CollUtil.isNotEmpty(properties.getApps())) {
-            for (BffAppRegistration app : properties.getApps()) {
-                addOrigin(origins, app.getAdminOrigin());
-                addOrigin(origins, app.getLoginOrigin());
-            }
-        }
-        return origins;
-    }
-
-    private static void addOrigin(List<String> origins, String origin) {
-        if (StrUtil.isNotBlank(origin)) {
-            origins.add(StrUtil.removeSuffix(origin, "/"));
-        }
-    }
-
-    private boolean isAllowed(String origin, List<String> allowedOrigins) {
-        if (StrUtil.isEmpty(origin)) {
-            return false;
-        }
-        return allowedOrigins.stream().anyMatch(allowed -> StrUtil.equalsIgnoreCase(origin, allowed));
-    }
-
-    private boolean isRefererAllowed(String referer, List<String> allowedOrigins) {
-        if (StrUtil.isEmpty(referer)) {
-            return false;
-        }
+        response.setHeader(org.springframework.http.HttpHeaders.CACHE_CONTROL, "no-store");
         try {
-            String refererOrigin = URI.create(referer).resolve("/").toString();
-            String normalized = StrUtil.removeSuffix(refererOrigin, "/");
-            return allowedOrigins.stream().anyMatch(
-                    allowed -> StrUtil.equalsIgnoreCase(normalized, StrUtil.removeSuffix(allowed, "/")));
-        } catch (Exception exception) {
-            return false;
+            registry.requireSource(request, registry.requireFromRequest(request));
+            if (!request.getParameterMap().isEmpty())
+                throw new BffAuthException(BffErrorCode.INVALID_REQUEST);
+            if ("POST".equals(request.getMethod())
+                    && (request.getContentType() == null || !json(request.getContentType())))
+                throw new BffAuthException(BffErrorCode.INVALID_REQUEST);
+            chain.doFilter(request, response);
+        }
+        catch (BffAuthException exception) {
+            BffErrorCode error = exception.getErrorCode();
+            response.setStatus(error.getHttpStatus());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding(java.nio.charset.StandardCharsets.UTF_8.name());
+            response.getWriter()
+                .write("{\"code\":\"" + error.getCode() + "\",\"message\":\"" + error.getText() + "\"}");
         }
     }
+
 }

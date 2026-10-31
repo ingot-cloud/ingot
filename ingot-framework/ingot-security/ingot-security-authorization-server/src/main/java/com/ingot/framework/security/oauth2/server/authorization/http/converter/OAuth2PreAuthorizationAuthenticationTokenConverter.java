@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.constants.BffConstants;
+import java.time.Instant;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
@@ -11,21 +13,35 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 
 /**
- * <p>Description  : OAuth2PreAuthorizationAuthenticationTokenConverter.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2023/7/28.</p>
- * <p>Time         : 5:28 PM.</p>
+ * <p>
+ * Description : OAuth2PreAuthorizationAuthenticationTokenConverter.
+ * </p>
+ * <p>
+ * Author : wangchao.
+ * </p>
+ * <p>
+ * Date : 2023/7/28.
+ * </p>
+ * <p>
+ * Time : 5:28 PM.
+ * </p>
  */
-public class OAuth2PreAuthorizationAuthenticationTokenConverter implements Converter<OAuth2PreAuthorizationCodeRequestAuthenticationToken, Map<String, Object>> {
+public class OAuth2PreAuthorizationAuthenticationTokenConverter
+        implements Converter<OAuth2PreAuthorizationCodeRequestAuthenticationToken, Map<String, Object>> {
 
     @Override
     public Map<String, Object> convert(@NonNull OAuth2PreAuthorizationCodeRequestAuthenticationToken source) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put(InOAuth2ParameterNames.PRE_ALLOW_LIST, source.getAllowList());
+        if (source.getAuthenticationExpiresAt() > 0) {
+            parameters.put(BffConstants.AUTHENTICATION_EXPIRES_AT,
+                    Instant.ofEpochSecond(source.getAuthenticationExpiresAt()).toString());
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put(R.CODE, BaseErrorCode.OK.getCode());
         result.put(R.DATA, parameters);
         return result;
     }
+
 }

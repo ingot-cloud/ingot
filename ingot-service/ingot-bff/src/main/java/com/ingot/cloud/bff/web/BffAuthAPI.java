@@ -1,13 +1,13 @@
 package com.ingot.cloud.bff.web;
 
 import java.util.Map;
-
-import com.ingot.cloud.bff.model.dto.BffCompleteDTO;
+import com.ingot.cloud.bff.error.BffAuthException;
 import com.ingot.cloud.bff.model.dto.BffLoginDTO;
 import com.ingot.cloud.bff.model.dto.BffTenantSelectDTO;
 import com.ingot.cloud.bff.model.dto.BffTransactionView;
 import com.ingot.cloud.bff.service.BffAuthService;
 import com.ingot.framework.commons.constants.BffConstants;
+import com.ingot.framework.commons.model.bff.BffErrorCode;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
@@ -16,112 +16,129 @@ import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
- * 双入口 BFF 认证 API。浏览器不传 domain 或重定向 URL。
+ * <p>
+ * 同源双入口认证 API；login/select 直接建立当前应用正式会话。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/bff/auth")
+
 @RequiredArgsConstructor
 public class BffAuthAPI implements RShortcuts {
-    private final BffAuthService authService;
 
+    private final BffAuthService auth;
+
+    /** 同源匿名自举；只接受空 JSON。 */
     @Permit
-    @PostMapping("/csrf")
-    public R<Map<String, Object>> csrf(HttpServletRequest request, HttpServletResponse response) {
-        return ok(authService.issueCsrf(request, response));
+    @PostMapping(BffConstants.CSRF)
+    public R<Map<String, Object>> csrf(@RequestBody Map<String, Object> body, HttpServletRequest request,
+            HttpServletResponse response) {
+        empty(body);
+        return ok(auth.issueCsrf(request, response));
     }
 
+    /** 平台用户点击时准备事务。 */
     @Permit
-    @PostMapping("/platform/transactions")
-    public R<Map<String, Object>> createPlatformTransaction(HttpServletRequest request, HttpServletResponse response) {
-        return ok(authService.createTransaction(BffConstants.ENTRY_PLATFORM, request, response));
+    @PostMapping(BffConstants.PLATFORM_TRANSACTIONS)
+    public R<BffTransactionView> createPlatform(@RequestBody Map<String, Object> body, HttpServletRequest request,
+            HttpServletResponse response) {
+        empty(body);
+        return ok(auth.createTransaction(BffConstants.ENTRY_PLATFORM, request, response));
     }
 
+    /** 租户用户点击时准备事务。 */
     @Permit
-    @PostMapping("/tenant/transactions")
-    public R<Map<String, Object>> createTenantTransaction(HttpServletRequest request, HttpServletResponse response) {
-        return ok(authService.createTransaction(BffConstants.ENTRY_TENANT, request, response));
+    @PostMapping(BffConstants.TENANT_TRANSACTIONS)
+    public R<BffTransactionView> createTenant(@RequestBody Map<String, Object> body, HttpServletRequest request,
+            HttpServletResponse response) {
+        empty(body);
+        return ok(auth.createTransaction(BffConstants.ENTRY_TENANT, request, response));
     }
 
-    /** 返回平台登录事务及 ISO-8601 UTC 截止时间。 */
+    /** 只读本绑定的平台事务。 */
     @Permit
-    @GetMapping("/platform/transactions/{id}")
-    public R<BffTransactionView> readPlatformTransaction(@PathVariable("id") String id,
+    @GetMapping(BffConstants.PLATFORM_TRANSACTION)
+    public R<BffTransactionView> readPlatform(@PathVariable(BffConstants.TRANSACTION_VARIABLE) String id,
             HttpServletRequest request) {
-        return ok(authService.readTransaction(BffConstants.ENTRY_PLATFORM, id, request));
+        return ok(auth.readTransaction(BffConstants.ENTRY_PLATFORM, id, request));
     }
 
-    /** 返回组织登录事务及 ISO-8601 UTC 截止时间。 */
+    /** 只读本绑定的租户事务。 */
     @Permit
-    @GetMapping("/tenant/transactions/{id}")
-    public R<BffTransactionView> readTenantTransaction(@PathVariable("id") String id,
+    @GetMapping(BffConstants.TENANT_TRANSACTION)
+    public R<BffTransactionView> readTenant(@PathVariable(BffConstants.TRANSACTION_VARIABLE) String id,
             HttpServletRequest request) {
-        return ok(authService.readTransaction(BffConstants.ENTRY_TENANT, id, request));
+        return ok(auth.readTransaction(BffConstants.ENTRY_TENANT, id, request));
     }
 
+    /** 原绑定有界恢复平台结果，不再执行认证。 */
+    @Permit
+    @PostMapping(BffConstants.PLATFORM_RESUME)
+    public R<BffTransactionView> resumePlatform(@PathVariable(BffConstants.TRANSACTION_VARIABLE) String id,
+            @RequestBody Map<String, Object> body, HttpServletRequest request, HttpServletResponse response) {
+        empty(body);
+        return ok(auth.resume(BffConstants.ENTRY_PLATFORM, id, request, response));
+    }
+
+    /** 原绑定有界恢复租户结果，不再执行认证。 */
+    @Permit
+    @PostMapping(BffConstants.TENANT_RESUME)
+    public R<BffTransactionView> resumeTenant(@PathVariable(BffConstants.TRANSACTION_VARIABLE) String id,
+            @RequestBody Map<String, Object> body, HttpServletRequest request, HttpServletResponse response) {
+        empty(body);
+        return ok(auth.resume(BffConstants.ENTRY_TENANT, id, request, response));
+    }
+
+    /** 整包解密的平台认证，无租户选择。 */
     @Permit
     @InCryptoHybridContext
     @InDecrypt
-    @PostMapping("/platform/login")
-    public R<?> platformLogin(@RequestBody BffLoginDTO dto,
-            HttpServletRequest request,
-            HttpServletResponse response) {
-        return authService.login(BffConstants.ENTRY_PLATFORM, dto, request, response);
+    @PostMapping(BffConstants.PLATFORM_LOGIN)
+    public R<?> platformLogin(@RequestBody BffLoginDTO body, HttpServletRequest request, HttpServletResponse response) {
+        return auth.login(BffConstants.ENTRY_PLATFORM, body, request, response);
     }
 
+    /** 整包解密的租户认证，多候选留在本页选择。 */
     @Permit
     @InCryptoHybridContext
     @InDecrypt
-    @PostMapping("/tenant/login")
-    public R<?> tenantLogin(@RequestBody BffLoginDTO dto,
-            HttpServletRequest request,
-            HttpServletResponse response) {
-        return authService.login(BffConstants.ENTRY_TENANT, dto, request, response);
+    @PostMapping(BffConstants.TENANT_LOGIN)
+    public R<?> tenantLogin(@RequestBody BffLoginDTO body, HttpServletRequest request, HttpServletResponse response) {
+        return auth.login(BffConstants.ENTRY_TENANT, body, request, response);
     }
 
+    /** 选定租户后直接建立本域正式会话。 */
     @Permit
-    @PostMapping("/tenant/select")
-    public R<?> selectTenant(@RequestBody BffTenantSelectDTO dto,
-            HttpServletRequest request,
-            HttpServletResponse response) {
-        return authService.selectTenant(dto.getTenantId(), dto.getTransactionId(), request, response);
+    @PostMapping(BffConstants.TENANT_SELECT)
+    public R<?> select(@RequestBody BffTenantSelectDTO body, HttpServletRequest request, HttpServletResponse response) {
+        return auth.selectTenant(body.getTenantId(), body.getTransactionId(), request, response);
     }
 
+    /** 同源退出，当前应用 Cookie 清理兜底。 */
     @Permit
-    @PostMapping("/platform/complete")
-    public R<Map<String, Object>> completePlatform(@RequestBody BffCompleteDTO dto,
-            HttpServletRequest request,
-            HttpServletResponse response) {
-        return ok(authService.complete(BffConstants.ENTRY_PLATFORM, dto.getTicket(), request, response));
-    }
-
-    @Permit
-    @PostMapping("/tenant/complete")
-    public R<Map<String, Object>> completeTenant(@RequestBody BffCompleteDTO dto,
-            HttpServletRequest request,
-            HttpServletResponse response) {
-        return ok(authService.complete(BffConstants.ENTRY_TENANT, dto.getTicket(), request, response));
-    }
-
-    @Permit
-    @DeleteMapping("/logout")
+    @DeleteMapping(BffConstants.LOGOUT)
     public R<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        return authService.logout(request, response);
+        return auth.logout(request, response);
     }
 
-    @GetMapping("/me")
-    public R<Map<String, Object>> me(HttpServletRequest request) {
-        return authService.me(request);
+    /** 用实际正式 Cookie 确认本应用身份。 */
+    @Permit
+    @GetMapping(BffConstants.ME)
+    public org.springframework.http.ResponseEntity<R<Map<String, Object>>> me(HttpServletRequest request) {
+        R<Map<String, Object>> result = auth.me(request);
+        return org.springframework.http.ResponseEntity.status(result.isSuccess()
+                ? org.springframework.http.HttpStatus.OK : org.springframework.http.HttpStatus.UNAUTHORIZED)
+            .body(result);
     }
+
+    private void empty(Map<String, Object> body) {
+        if (body == null || !body.isEmpty())
+            throw new BffAuthException(BffErrorCode.INVALID_REQUEST);
+    }
+
 }

@@ -3,6 +3,7 @@ package com.ingot.framework.gateway.rule.client.challenge.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ingot.cloud.security.api.model.enums.ChallengeCaptchaType;
+import com.ingot.framework.commons.constants.BffConstants;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -31,7 +32,7 @@ class ChallengeTypesTest {
         assertThat(ChallengeTypes.isVcPath("/vc")).isTrue();
         assertThat(ChallengeTypes.isVcPath("/vc/image/check")).isTrue();
         assertThat(ChallengeTypes.isVcPath("/vc/**")).isTrue();
-        assertThat(ChallengeTypes.isVcPath("/bff/auth/login")).isFalse();
+        assertThat(ChallengeTypes.isVcPath(BffConstants.PLATFORM_LOGIN)).isFalse();
         assertThat(ChallengeTypes.isVcPath(null)).isFalse();
     }
 }

@@ -16,7 +16,10 @@ ingot:
     user-type: "0"
     session-ttl: 7200
     transaction-ttl: 600
-    ticket-ttl: 60
+    completion-recovery-ttl: 60
+    max-active-transactions: 5
+    execution-lease-seconds: 30
+    cleanup-interval: 5000
     security:
       # 客户端指纹校验，防止 Cookie 盗用
       fingerprint-enabled: ${BFF_FINGERPRINT_ENABLED:true}
@@ -55,3 +58,13 @@ logging:
       max-file-size: ${LOG_FILE_MAX_SIZE:100MB}
       max-history: ${LOG_FILE_MAX_HISTORY:30}
       total-size-cap: ${LOG_FILE_TOTAL_SIZE:20GB}
+# 认证RPC含内部Cookie、PKCE或sid；覆盖全局Feign日志策略，禁止记录URL/Headers/Body。
+spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          RemoteAuthTokenService:
+            loggerLevel: NONE
+          RemoteAuthSessionService:
+            loggerLevel: NONE

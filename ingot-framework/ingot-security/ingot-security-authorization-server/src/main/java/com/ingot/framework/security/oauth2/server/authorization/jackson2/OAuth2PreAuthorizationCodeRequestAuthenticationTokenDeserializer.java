@@ -18,35 +18,42 @@ import com.ingot.framework.security.oauth2.server.authorization.authentication.O
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * <p>Description  : OAuth2PreAuthorizationCodeRequestAuthenticationTokenDeserializer.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2023/9/6.</p>
- * <p>Time         : 9:48 AM.</p>
+ * <p>
+ * Description : OAuth2PreAuthorizationCodeRequestAuthenticationTokenDeserializer.
+ * </p>
+ * <p>
+ * Author : wangchao.
+ * </p>
+ * <p>
+ * Date : 2023/9/6.
+ * </p>
+ * <p>
+ * Time : 9:48 AM.
+ * </p>
  */
 @Slf4j
 final class OAuth2PreAuthorizationCodeRequestAuthenticationTokenDeserializer
         extends JsonDeserializer<OAuth2PreAuthorizationCodeRequestAuthenticationToken> {
 
     @Override
-    public OAuth2PreAuthorizationCodeRequestAuthenticationToken deserialize(
-            JsonParser parser, DeserializationContext ctxt) throws IOException, JacksonException {
+    public OAuth2PreAuthorizationCodeRequestAuthenticationToken deserialize(JsonParser parser,
+            DeserializationContext ctxt) throws IOException, JacksonException {
         ObjectMapper mapper = (ObjectMapper) parser.getCodec();
         JsonNode root = mapper.readTree(parser);
         return deserialize(parser, mapper, root);
     }
 
-    private OAuth2PreAuthorizationCodeRequestAuthenticationToken deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
-            throws JsonParseException {
-        InUser principal = JsonNodeUtils.findValue(root, "principal",
+    private OAuth2PreAuthorizationCodeRequestAuthenticationToken deserialize(JsonParser parser, ObjectMapper mapper,
+            JsonNode root) throws JsonParseException {
+        InUser principal = JsonNodeUtils.findValue(root, "principal", new TypeReference<>() {
+        }, mapper);
+        List<TenantMainDTO> allows = JsonNodeUtils.findValue(root, "allowList", new TypeReference<>() {
+        }, mapper);
+        Map<String, Object> additionalParameters = JsonNodeUtils.findValue(root, "additionalParameters",
                 new TypeReference<>() {
                 }, mapper);
-        List<TenantMainDTO> allows = JsonNodeUtils.findValue(
-                root, "allowList", new TypeReference<>() {
-                }, mapper);
-        Map<String, Object> additionalParameters = JsonNodeUtils.findValue(
-                root, "additionalParameters", new TypeReference<>() {
-                }, mapper);
-        return OAuth2PreAuthorizationCodeRequestAuthenticationToken
-                .authenticated(principal, allows, additionalParameters, 0L);
+        return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(principal, additionalParameters, allows,
+                root.path("timeToLive").asLong(), root.path("authenticationExpiresAt").asLong());
     }
+
 }

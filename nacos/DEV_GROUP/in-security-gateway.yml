@@ -16,6 +16,26 @@ ingot:
                 method: POST
               - path: /bff/auth/tenant/login
                 method: POST
+              - path: /bff/auth/tenant/select
+                method: POST
+              - path: /bff/auth/platform/transactions/*/resume
+                method: POST
+              - path: /bff/auth/tenant/transactions/*/resume
+                method: POST
+          - code: login-preparation-floor
+            name: 登录准备与状态读取
+            enabled: true
+            pattern-list:
+              - path: /bff/auth/csrf
+                method: POST
+              - path: /bff/auth/platform/transactions
+                method: POST
+              - path: /bff/auth/tenant/transactions
+                method: POST
+              - path: /bff/auth/platform/transactions/**
+                method: GET
+              - path: /bff/auth/tenant/transactions/**
+                method: GET
           - code: api-business-floor
             name: 公共业务层
             enabled: true
@@ -41,6 +61,15 @@ ingot:
             control-behavior: F
             enabled: true
             priority: 0
+          - code: login-preparation-ip-floor
+            group-code: login-preparation-floor
+            dimension: IP
+            qps: 30
+            burst: 45
+            interval-sec: 1
+            control-behavior: F
+            enabled: true
+            priority: 5
           - code: biz-ip-floor
             group-code: api-business-floor
             dimension: IP

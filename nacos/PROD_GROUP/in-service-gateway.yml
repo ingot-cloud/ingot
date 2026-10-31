@@ -36,6 +36,8 @@ spring:
               uri: lb://in-service-bff
               predicates:
                 - Path=/bff/**
+              filters:
+                - PreserveHostHeader
             - id: in-service-auth
               uri: lb://in-service-auth
               predicates:

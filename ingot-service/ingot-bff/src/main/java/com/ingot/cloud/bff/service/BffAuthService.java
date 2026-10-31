@@ -5,17 +5,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.cloud.auth.api.model.dto.InnerSessionRevokeDTO;
-import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
 import com.ingot.cloud.auth.api.rpc.RemoteAuthTokenService;
 import com.ingot.cloud.bff.config.AccountLockBffProperties;
 import com.ingot.cloud.bff.config.BffAppRegistry;
@@ -31,10 +28,10 @@ import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.constants.SecurityConstants;
 import com.ingot.framework.commons.model.bff.BffAppRegistration;
 import com.ingot.framework.commons.model.bff.BffErrorCode;
+import com.ingot.framework.commons.model.bff.BffLoginStage;
 import com.ingot.framework.commons.model.bff.BffSession;
 import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
-import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
@@ -48,13 +45,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponseType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.stereotype.Service;
 
 /**
- * 双入口 BFF 登录编排：事务、凭证、交接与正式会话。
+ * <p>
+ * 同源双入口认证编排；一次性提交结果并直接签发本域正式 Cookie。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
@@ -63,458 +63,440 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class BffAuthService {
-    private static final String STAGE_LOGIN = "LOGIN";
-    private static final String STAGE_SELECT_TENANT = "SELECT_TENANT";
-    private static final String STAGE_READY = "READY";
-    private static final String CODE_ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
-    private static final String MSG_ACCOUNT_LOCKED = "账号已被锁定，请联系管理员";
-    private static final String AUTH_COOKIE_NAME = "JSESSIONID";
-    private static final String CODE_CHALLENGE_ALGORITHM = "SHA-256";
+
     private static final SecureRandom RANDOM = new SecureRandom();
 
+    private static final String AUTH_COOKIE_PREFIX = "JSESSIONID=";
+
+    private static final String PKCE_ALGORITHM = "SHA-256";
+
+    private static final String ACCOUNT_LOCKED_CODE = "ACCOUNT_LOCKED";
+
+    private static final String ACCOUNT_LOCKED_MESSAGE = "账号已被锁定，请联系管理员";
+
+    private static final String ID = "id";
+
+    private static final String SERVICE_FAILURE_PREFIX = "S05";
+
+    private static final String HTTP_FAILURE_PREFIX = "5";
+
+    private static final String NAME = "name";
+
     private final BffProperties properties;
-    private final BffAppRegistry appRegistry;
-    private final BffSessionService sessionService;
-    private final LoginTransactionService transactionService;
-    private final RemoteAuthTokenService remoteAuthTokenService;
-    private final RemoteAuthSessionService remoteAuthSessionService;
-    private final AccountLockSignalPort accountLockSignalPort;
-    private final AccountLockBffProperties accountLockBffProperties;
 
-    /**
-     * 签发本 host 的 CSRF，并轮换浏览器绑定。
-     *
-     * <p>请求若已携带绑定 Cookie，先删除 Redis 中该绑定，再写入新绑定与 Cookie。
-     * 旧 token 不得继续用于后续状态修改请求。</p>
-     *
-     * @param request  当前请求，用于校验入口及读取旧绑定 Cookie
-     * @param response 写入新的绑定 Cookie
-     * @return 仅含 {@code csrfToken} 的 data
-     */
+    private final BffAppRegistry registry;
+
+    private final BffSessionService sessions;
+
+    private final LoginTransactionService store;
+
+    private final RemoteAuthTokenService auth;
+
+    private final BffCleanupService cleanup;
+
+    private final AccountLockSignalPort accountLocks;
+
+    private final AccountLockBffProperties accountLockProperties;
+
+    private final BffMetrics metrics;
+
+    /** 同源自举或复用绑定，不能以新标签页轮换作废其他事务。 */
     public Map<String, Object> issueCsrf(HttpServletRequest request, HttpServletResponse response) {
-        BffAppRegistration app = appRegistry.requireFromRequest(request);
-        if (BffConstants.ENTRY_ADMIN.equals(appRegistry.requireEntryRole(request))) {
-            appRegistry.requireAdmin(request, app);
-        } else {
-            appRegistry.requireLogin(request, app);
+        BffAppRegistration app = app(request);
+        sessions.clearLegacy(request, response);
+        AuthBinding binding = store.findBinding(app.getAppId(), sessions.bindingId(request, app));
+        if (binding == null) {
+            binding = new AuthBinding();
+            binding.setAppId(app.getAppId());
+            binding.setBindingId(random(BffConstants.TOKEN_BYTES));
+            binding.setCsrfToken(random(BffConstants.CSRF_BYTES));
+            if (!store.createBinding(binding))
+                throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
         }
-        transactionService.deleteBinding(sessionService.getBindingIdFromCookie(request));
-        AuthBinding binding = new AuthBinding();
-        binding.setBindingId(randomToken(16));
-        binding.setAppId(app.getAppId());
-        binding.setCsrfToken(randomToken(24));
-        transactionService.saveBinding(binding, transactionService.ttlSeconds());
-        sessionService.writeBindingCookie(binding.getBindingId(), transactionService.ttlSeconds(), response);
-        return Map.of("csrfToken", binding.getCsrfToken());
+        long ttl = store.bindingTtl(app.getAppId(), binding.getBindingId());
+        sessions.writeBinding(app.getAppId(), binding.getBindingId(), ttl, response);
+        return Map.of("csrfToken", binding.getCsrfToken(), "expiresAt", Instant.ofEpochSecond(store.now() + ttl));
     }
 
-    public Map<String, Object> createTransaction(String entry, HttpServletRequest request, HttpServletResponse response) {
-        BffAppRegistration app = requireEntryApp(entry, request);
-        appRegistry.requireAdmin(request, app);
-        AuthBinding binding = requireCsrf(request, app);
-        LoginTransaction transaction = new LoginTransaction();
-        transaction.setTransactionId(randomToken(16));
-        transaction.setAppId(app.getAppId());
-        transaction.setDomain(app.getDomain());
-        transaction.setEntry(entry);
-        transaction.setStage(STAGE_LOGIN);
-        transaction.setAdminBindingId(binding.getBindingId());
-        transaction.setCsrfToken(binding.getCsrfToken());
-        transaction.setCodeVerifier(randomToken(32));
-        transaction.setState(randomToken(8));
-        transaction.setExpiresAt(Instant.now().getEpochSecond() + transactionService.ttlSeconds());
-        transactionService.save(transaction);
-        return Map.of(
-                "transactionId", transaction.getTransactionId(),
-                "loginUrl", appRegistry.loginUrl(app, transaction.getTransactionId()));
+    /** 仅用户提交时创建本次事务，原子预留容量并延长绑定。 */
+    public BffTransactionView createTransaction(String entry, HttpServletRequest request,
+            HttpServletResponse response) {
+        BffAppRegistration app = entry(entry, request);
+        AuthBinding binding = binding(request, app, true);
+        LoginTransaction tx = new LoginTransaction();
+        tx.setAppId(app.getAppId());
+        tx.setDomain(app.getDomain());
+        tx.setBindingId(binding.getBindingId());
+        tx.setTransactionId(random(BffConstants.TOKEN_BYTES));
+        tx.setStage(BffLoginStage.LOGIN);
+        tx.setCodeVerifier(random(BffConstants.PKCE_BYTES));
+        tx.setState(random(BffConstants.TOKEN_BYTES));
+        tx.setExpiresAt(store.now() + properties.getTransactionTtl());
+        store.create(tx);
+        metrics.event("prepared", app.getAppId(), tx.getStage().getValue());
+        sessions.writeBinding(app.getAppId(), binding.getBindingId(),
+                store.bindingTtl(app.getAppId(), binding.getBindingId()), response);
+        return view(tx, null);
     }
 
-    /**
-     * 返回登录事务的公开视图；截止时间使用 API 时间点，内部事务仍保存 epoch seconds。
-     * @param entry 登录入口
-     * @param transactionId 事务 ID
-     * @param request 当前浏览器请求
-     * @return 通过既有浏览器绑定校验后的事务视图
-     */
-    public BffTransactionView readTransaction(String entry, String transactionId, HttpServletRequest request) {
-        BffAppRegistration app = requireEntryApp(entry, request);
-        appRegistry.requireLogin(request, app);
-        LoginTransaction transaction = requireTransaction(transactionId, app);
-        bindLoginBrowser(transaction, request, app);
-        List<Map<String, String>> allows = null;
-        String completionUrl = null;
-        if (STAGE_SELECT_TENANT.equals(transaction.getStage()) && transaction.getAllows() != null) {
-            allows = summarizeAllows(transaction.getAllows());
+    /** 只读查询本事务；旧账号的有效 Cookie 不会被当成本次结果。 */
+    public BffTransactionView readTransaction(String entry, String id, HttpServletRequest request) {
+        BffAppRegistration app = entry(entry, request);
+        LoginTransaction tx = transaction(id, request, app, false);
+        Boolean established = null;
+        if (tx.getStage() == BffLoginStage.COMPLETED) {
+            BffSession current = sessions.getSession(request, false);
+            established = current != null && tx.getResultSessionId().equals(current.getSessionId());
         }
-        if (STAGE_READY.equals(transaction.getStage()) && StrUtil.isNotBlank(transaction.getTicket())) {
-            completionUrl = appRegistry.completionUrl(app, transaction.getTicket());
-        }
-        return new BffTransactionView(transaction.getTransactionId(), transaction.getStage(),
-                Instant.ofEpochSecond(transaction.getExpiresAt()), allows, completionUrl);
+        return view(tx, established);
     }
 
+    /** 校验密码，平台/单组织直接完成，多组织进入当前页选择。 */
     public R<?> login(String entry, BffLoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
-        BffAppRegistration app = requireEntryApp(entry, request);
-        appRegistry.requireLogin(request, app);
-        LoginTransaction transaction = requireTransaction(dto.getTransactionId(), app);
-        requireCsrf(request, app);
-        requireLoginBinding(transaction, request, app);
-        if (!STAGE_LOGIN.equals(transaction.getStage())) {
-            throw new BffAuthException(BffErrorCode.TRANSACTION_CONFLICT);
-        }
-        if (accountLockBffProperties.isEnabled()
-                && !accountLockBffProperties.isEmitLoginFailureOnBffBlock()
-                && isAccountLocked(dto.getUsername())) {
-            return R.error(CODE_ACCOUNT_LOCKED, MSG_ACCOUNT_LOCKED);
-        }
-
-        AuthorizationDomain domain = app.getDomain();
-        String codeChallenge = generateCodeChallenge(transaction.getCodeVerifier());
-        Map<String, String> formData = new HashMap<>();
-        formData.put(OAuth2ParameterNames.USERNAME, dto.getUsername());
-        formData.put(OAuth2ParameterNames.PASSWORD, dto.getPassword());
-        formData.put(InOAuth2ParameterNames.DOMAIN, domain.getValue());
-
-        ResponseEntity<R<Map<String, Object>>> responseEntity;
-        try {
-            responseEntity = remoteAuthTokenService.preAuthorize(null,
-                    properties.getUserType(), PreAuthorizationGrantType.PASSWORD.value(),
-                    app.getOauthClientId(), codeChallenge,
-                    OAuth2AuthorizationResponseType.CODE.getValue(),
-                    app.getOauthRedirectUri(), app.getOauthScope(), transaction.getState(),
-                    domain.getValue(), formData);
-        } catch (Exception exception) {
-            return authRpcFailure(exception, "pre_authorize");
-        }
-        R<Map<String, Object>> result = responseEntity.getBody();
-        if (result == null || !result.isSuccess()) {
-            return result == null ? R.error500() : result;
-        }
-        transaction.setAuthCookie(extractAuthCookie(responseEntity.getHeaders()));
-        List<TenantMainDTO> allows = parseAllows(result.getData());
-        if (domain == AuthorizationDomain.PLATFORM) {
-            return completeAuthorize(transaction, app, null, request, response);
-        }
-        if (CollUtil.isEmpty(allows)) {
-            throw new BffAuthException(BffErrorCode.IDENTITY_UNAVAILABLE);
-        }
-        if (allows.size() == 1) {
-            return completeAuthorize(transaction, app, allows.get(0).getId(), request, response);
-        }
-        transaction.setStage(STAGE_SELECT_TENANT);
-        transaction.setAllows(allows);
-        transactionService.save(transaction);
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("stage", STAGE_SELECT_TENANT);
-        data.put("transactionId", transaction.getTransactionId());
-        data.put("allows", summarizeAllows(allows));
-        return R.ok(data);
-    }
-
-    public R<?> selectTenant(String tenantId, String transactionId, HttpServletRequest request,
-            HttpServletResponse response) {
-        BffAppRegistration app = requireEntryApp(BffConstants.ENTRY_TENANT, request);
-        appRegistry.requireLogin(request, app);
-        LoginTransaction transaction = requireTransaction(transactionId, app);
-        requireCsrf(request, app);
-        requireLoginBinding(transaction, request, app);
-        if (!STAGE_SELECT_TENANT.equals(transaction.getStage())) {
-            throw new BffAuthException(BffErrorCode.TRANSACTION_CONFLICT);
-        }
-        if (StrUtil.isBlank(tenantId) || transaction.getAllows() == null
-                || transaction.getAllows().stream().noneMatch(item -> StrUtil.equals(item.getId(), tenantId))) {
+        BffAppRegistration app = entry(entry, request);
+        LoginTransaction tx = transaction(dto.getTransactionId(), request, app, true);
+        if (StrUtil.hasBlank(dto.getUsername(), dto.getPassword()))
             throw new BffAuthException(BffErrorCode.INVALID_REQUEST);
+        sessions.fingerprint(request);
+        store.claim(tx, BffLoginStage.LOGIN);
+        long started = System.nanoTime();
+        if (accountLockProperties.isEnabled() && !accountLockProperties.isEmitLoginFailureOnBffBlock()
+                && accountLocks.isLockedByUsername(UserTypeEnum.getEnum(properties.getUserType()), dto.getUsername())) {
+            store.transition(tx, BffLoginStage.FAILED, null);
+            return R.error(ACCOUNT_LOCKED_CODE, ACCOUNT_LOCKED_MESSAGE);
         }
-        return completeAuthorize(transaction, app, tenantId, request, response);
-    }
-
-    public Map<String, Object> complete(String entry, String ticket, HttpServletRequest request,
-            HttpServletResponse response) {
-        BffAppRegistration app = requireEntryApp(entry, request);
-        appRegistry.requireAdmin(request, app);
-        requireCsrf(request, app);
-        if (StrUtil.isBlank(ticket)) {
-            throw new BffAuthException(BffErrorCode.TICKET_INVALID);
-        }
-        LoginTransaction transaction = transactionService.require(
-                transactionService.requireTransactionIdByTicket(ticket));
-        if (transaction == null || !STAGE_READY.equals(transaction.getStage())
-                || !StrUtil.equals(transaction.getAppId(), app.getAppId())
-                || transaction.getTicketExpiresAt() <= Instant.now().getEpochSecond()) {
-            throw new BffAuthException(BffErrorCode.TICKET_INVALID);
-        }
-        AuthBinding binding = transactionService.requireBinding(sessionService.getBindingIdFromCookie(request));
-        if (!StrUtil.equals(binding.getBindingId(), transaction.getAdminBindingId())) {
-            throw new BffAuthException(BffErrorCode.BINDING_MISMATCH);
-        }
-        BffSession session = new BffSession();
-        session.setAccessToken(transaction.getAccessToken());
-        session.setRefreshToken(transaction.getRefreshToken());
-        session.setSid(transaction.getSid());
-        session.setUserId(transaction.getUserId());
-        session.setTenantId(transaction.getTenantId());
-        session.setClientId(app.getOauthClientId());
-        session.setAppId(app.getAppId());
-        session.setDomain(app.getDomain().getValue());
-        session.setAuthCookie(transaction.getAuthCookie());
-        long ttl = Math.max(60, properties.getSessionTtl());
-        sessionService.createSession(session, request, response);
-        transactionService.saveBinding(binding, ttl);
-        sessionService.writeBindingCookie(binding.getBindingId(), ttl, response);
-        transactionService.deleteTicket(ticket);
-        transactionService.delete(transaction.getTransactionId());
-        return Map.of("returnTo", app.getDefaultReturnTo());
-    }
-
-    /**
-     * 撤销当前应用会话并清除本 host 的正式 Cookie 与绑定 Cookie。
-     *
-     * <p>CSRF 不匹配时仍清除本机会话，避免前端无法离开；只要还能读到会话就尽量撤销 Auth sid。</p>
-     *
-     * @param request  当前管理台请求
-     * @param response 用于清除 Cookie
-     * @return 空成功 data
-     */
-    public R<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        BffAppRegistration app = appRegistry.requireFromRequest(request);
-        appRegistry.requireAdmin(request, app);
+        Map<String, String> form = new HashMap<>();
+        form.put(OAuth2ParameterNames.USERNAME, dto.getUsername());
+        form.put(OAuth2ParameterNames.PASSWORD, dto.getPassword());
+        form.put(InOAuth2ParameterNames.DOMAIN, app.getDomain().getValue());
         try {
-            requireCsrf(request, app);
-        } catch (BffAuthException exception) {
-            if (exception.getErrorCode() != BffErrorCode.BINDING_MISMATCH) {
-                throw exception;
+            ResponseEntity<R<Map<String, Object>>> responseEntity = auth.preAuthorize(null, properties.getUserType(),
+                    PreAuthorizationGrantType.PASSWORD.value(), app.getOauthClientId(), challenge(tx.getCodeVerifier()),
+                    OAuth2AuthorizationResponseType.CODE.getValue(), app.getOauthRedirectUri(), app.getOauthScope(),
+                    tx.getState(), app.getDomain().getValue(), form);
+            R<Map<String, Object>> result = responseEntity == null ? null : responseEntity.getBody();
+            if (result == null || !result.isSuccess()) {
+                if (result == null || serverFailure(result.getCode()))
+                    throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
+                store.transition(tx, BffLoginStage.FAILED, null);
+                return result;
             }
-            log.warn("[BffAuth] logout csrf mismatch, still clearing local session");
+            Map<String, Object> data = result.getData();
+            tx.setAuthenticationExpiresAt(authenticationDeadline(data));
+            tx.setLeaseUntil(Math.min(tx.getLeaseUntil(), store.deadline(tx)));
+            if (store.deadline(tx) <= store.now())
+                throw new BffAuthException(BffErrorCode.TRANSACTION_EXPIRED);
+            tx.setAuthCookie(authCookie(responseEntity.getHeaders()));
+            if (StrUtil.isBlank(tx.getAuthCookie()))
+                throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
+            List<TenantMainDTO> allows = allows(data);
+            if (app.getDomain() == AuthorizationDomain.PLATFORM)
+                return authorize(tx, app, null, request, response);
+            if (allows.isEmpty())
+                throw new BffAuthException(BffErrorCode.IDENTITY_UNAVAILABLE);
+            if (allows.size() == 1)
+                return authorize(tx, app, allows.get(0).getId(), request, response);
+            tx.setAllows(allows);
+            store.transition(tx, BffLoginStage.SELECT_TENANT, null);
+            return R.ok(view(tx, null));
         }
-        BffSession session = sessionService.getSession(request);
-        if (session != null && StrUtil.isNotEmpty(session.getSid())) {
-            InnerSessionRevokeDTO params = InnerSessionRevokeDTO.builder()
-                    .reason(SessionRevokeReason.USER_LOGOUT)
-                    .build();
-            try {
-                remoteAuthSessionService.revokeBySid(session.getAuthCookie(), session.getSid(), params);
-            } catch (Exception exception) {
-                log.warn("[BffAuth] session revoke failed on auth service, sid={}", session.getSid(), exception);
+        catch (InFeignException exception) {
+            if (!serverFailure(exception.getCode())) {
+                fail(tx, BffLoginStage.FAILED);
+                return R.error(exception.getCode(), exception.getMessage());
             }
+            fail(tx, BffLoginStage.UNKNOWN);
+            throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
         }
-        sessionService.removeSession(request, response);
-        transactionService.deleteBinding(sessionService.getBindingIdFromCookie(request));
-        sessionService.clearBindingCookie(response);
-        return R.ok();
+        catch (BffAuthException exception) {
+            fail(tx, exception.getErrorCode() == BffErrorCode.AUTH_UNAVAILABLE ? BffLoginStage.UNKNOWN
+                    : BffLoginStage.FAILED);
+            throw exception;
+        }
+        catch (RuntimeException exception) {
+            fail(tx, BffLoginStage.UNKNOWN);
+            throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
+        }
+        finally {
+            form.clear();
+            metrics.authentication(app.getAppId(), started);
+        }
     }
 
-    public R<Map<String, Object>> me(HttpServletRequest request) {
-        BffSession session = sessionService.getSession(request);
-        if (session == null || StrUtil.isBlank(session.getAccessToken())) {
-            return R.error(com.ingot.framework.commons.model.status.BaseErrorCode.UNAUTHORIZED);
+    /** 选择当前事务允许的组织，仍由 Auth 重验实时资格。 */
+    public R<?> selectTenant(String tenantId, String id, HttpServletRequest request, HttpServletResponse response) {
+        BffAppRegistration app = entry(BffConstants.ENTRY_TENANT, request);
+        LoginTransaction tx = transaction(id, request, app, true);
+        if (StrUtil.isBlank(tenantId) || tx.getAllows() == null
+                || tx.getAllows().stream().noneMatch(t -> tenantId.equals(t.getId())))
+            throw new BffAuthException(BffErrorCode.INVALID_REQUEST);
+        store.claim(tx, BffLoginStage.SELECT_TENANT);
+        try {
+            return authorize(tx, app, tenantId, request, response);
         }
+        catch (BffAuthException exception) {
+            fail(tx, exception.getErrorCode() == BffErrorCode.AUTH_UNAVAILABLE ? BffLoginStage.UNKNOWN
+                    : BffLoginStage.FAILED);
+            throw exception;
+        }
+        catch (RuntimeException exception) {
+            fail(tx, BffLoginStage.UNKNOWN);
+            throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
+        }
+    }
+
+    /** 只为原浏览器重新下发未被撤销/替换的本次会话，不再换码。 */
+    public BffTransactionView resume(String entry, String id, HttpServletRequest request,
+            HttpServletResponse response) {
+        BffAppRegistration app = entry(entry, request);
+        LoginTransaction tx = transaction(id, request, app, true);
+        if (tx.getStage() != BffLoginStage.COMPLETED)
+            throw new BffAuthException(BffErrorCode.RESULT_UNAVAILABLE);
+        BffSession session = store.readSession(app.getAppId(), tx.getResultSessionId());
+        if (session == null || !tx.getBindingId().equals(session.getBindingId())
+                || !sessions.verifyFingerprint(session, request) || !sessions.validSid(session, app))
+            throw new BffAuthException(BffErrorCode.RESULT_UNAVAILABLE);
+        sessions.writeSession(session, response);
+        metrics.event("resume", app.getAppId(), BffLoginStage.COMPLETED.getValue());
+        return view(tx, null);
+    }
+
+    /** 返回当前真实 Cookie 的有效身份并确认交付。 */
+    public R<Map<String, Object>> me(HttpServletRequest request) {
+        app(request);
+        BffSession session = sessions.getSession(request, true);
+        if (session == null)
+            return R.error(BaseErrorCode.UNAUTHORIZED);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("appId", session.getAppId());
         data.put("domain", session.getDomain());
         data.put("tenantId", session.getTenantId());
-        data.put("userId", session.getUserId() != null ? session.getUserId() : 0);
+        data.put("userId", session.getUserId());
         data.put("clientId", session.getClientId());
         return R.ok(data);
     }
 
-    private R<?> completeAuthorize(LoginTransaction transaction, BffAppRegistration app, String tenantId,
-            HttpServletRequest request, HttpServletResponse response) {
-        String codeChallenge = generateCodeChallenge(transaction.getCodeVerifier());
-        R<Map<String, Object>> authorizeResult;
-        try {
-            authorizeResult = remoteAuthTokenService.authorize(
-                    transaction.getAuthCookie(), PreAuthorizationGrantType.PASSWORD.value(),
-                    tenantId, app.getDomain().getValue(), app.getOauthClientId(), codeChallenge,
-                    OAuth2AuthorizationResponseType.CODE.getValue(),
-                    app.getOauthRedirectUri(), app.getOauthScope(), transaction.getState());
-        } catch (Exception exception) {
-            throw new BffAuthException(authorizeWindowError(exception, "authorize"));
-        }
-        if (authorizeResult == null || !authorizeResult.isSuccess() || authorizeResult.getData() == null) {
-            throw new BffAuthException(authorizeWindowError(null, "authorize"));
-        }
-        Map<String, String> tokenForm = new HashMap<>();
-        tokenForm.put(OAuth2ParameterNames.CODE, String.valueOf(authorizeResult.getData().get(OAuth2ParameterNames.CODE)));
-        tokenForm.put(OAuth2ParameterNames.GRANT_TYPE, SecurityConstants.GrantType.AUTHORIZATION_CODE);
-        tokenForm.put(PkceParameterNames.CODE_VERIFIER, transaction.getCodeVerifier());
-        tokenForm.put(OAuth2ParameterNames.CLIENT_ID, app.getOauthClientId());
-        tokenForm.put(OAuth2ParameterNames.REDIRECT_URI, app.getOauthRedirectUri());
-        R<Map<String, Object>> tokenResult;
-        try {
-            tokenResult = remoteAuthTokenService.token(tokenForm);
-        } catch (Exception exception) {
-            throw new BffAuthException(authorizeWindowError(exception, "token"));
-        }
-        if (tokenResult == null || !tokenResult.isSuccess() || tokenResult.getData() == null) {
-            throw new BffAuthException(authorizeWindowError(null, "token"));
-        }
-        Map<String, Object> tokenData = tokenResult.getData();
-        transaction.setAccessToken((String) tokenData.get(InOAuth2ParameterNames.ACCESS_TOKEN));
-        transaction.setRefreshToken(StrUtil.emptyIfNull((String) tokenData.get(InOAuth2ParameterNames.REFRESH_TOKEN)));
-        transaction.setSid(JwtPayloadUtil.readClaim(transaction.getAccessToken(), InJwtClaimNames.SID));
-        Object userId = tokenData.get("user_id");
-        if (userId instanceof Number number) {
-            transaction.setUserId(number.longValue());
-        }
-        transaction.setTenantId(tenantId);
-        transaction.setStage(STAGE_READY);
-        transaction.setTicket(randomToken(24));
-        long now = Instant.now().getEpochSecond();
-        transaction.setTicketExpiresAt(Math.min(now + properties.getTicketTtl(), transaction.getExpiresAt()));
-        transactionService.save(transaction);
-        transactionService.saveTicket(transaction.getTicket(), transaction.getTransactionId(),
-                Math.max(1, transaction.getTicketExpiresAt() - now));
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("stage", STAGE_READY);
-        data.put("transactionId", transaction.getTransactionId());
-        data.put("completionUrl", appRegistry.completionUrl(app, transaction.getTicket()));
-        return R.ok(data);
+    /** 同源退出保留 CSRF 失效仍清当前应用的兜底，不清另一应用。 */
+    public R<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        BffAppRegistration app = app(request);
+        String bindingId = sessions.bindingId(request, app);
+        BffSession session = store.readSession(app.getAppId(), sessions.sessionId(request, app));
+        if (session != null)
+            store.invalidate(session);
+        store.deleteBinding(app.getAppId(), bindingId);
+        sessions.clear(app, response);
+        cleanup.cleanupApp(app.getAppId());
+        return R.ok();
     }
 
-    private BffAppRegistration requireEntryApp(String entry, HttpServletRequest request) {
-        BffAppRegistration app = appRegistry.requireFromRequest(request);
-        AuthorizationDomain expected = BffConstants.ENTRY_PLATFORM.equals(entry)
-                ? AuthorizationDomain.PLATFORM : AuthorizationDomain.TENANT;
-        appRegistry.requireDomain(app, expected);
+    private R<?> authorize(LoginTransaction tx, BffAppRegistration app, String tenantId, HttpServletRequest request,
+            HttpServletResponse response) {
+        Map<String, Object> authorization;
+        try {
+            authorization = authData(auth.authorize(tx.getAuthCookie(), PreAuthorizationGrantType.PASSWORD.value(),
+                    tenantId, app.getDomain().getValue(), app.getOauthClientId(), challenge(tx.getCodeVerifier()),
+                    OAuth2AuthorizationResponseType.CODE.getValue(), app.getOauthRedirectUri(), app.getOauthScope(),
+                    tx.getState()));
+        }
+        catch (InFeignException exception) {
+            throw new BffAuthException(classify(exception.getCode()));
+        }
+        Map<String, String> form = new HashMap<>();
+        form.put(OAuth2ParameterNames.CODE, String.valueOf(authorization.get(OAuth2ParameterNames.CODE)));
+        form.put(OAuth2ParameterNames.GRANT_TYPE, SecurityConstants.GrantType.AUTHORIZATION_CODE);
+        form.put(PkceParameterNames.CODE_VERIFIER, tx.getCodeVerifier());
+        form.put(OAuth2ParameterNames.CLIENT_ID, app.getOauthClientId());
+        form.put(OAuth2ParameterNames.REDIRECT_URI, app.getOauthRedirectUri());
+        Map<String, Object> token;
+        try {
+            token = authData(auth.token(form));
+        }
+        catch (InFeignException exception) {
+            throw new BffAuthException(classify(exception.getCode()));
+        }
+        finally {
+            form.clear();
+        }
+        BffSession session = new BffSession();
+        session.setSessionId(random(BffConstants.TOKEN_BYTES));
+        session.setAppId(app.getAppId());
+        session.setDomain(app.getDomain().getValue());
+        session.setBindingId(tx.getBindingId());
+        session.setTransactionId(tx.getTransactionId());
+        session.setClientId(app.getOauthClientId());
+        session.setTenantId(tenantId);
+        session.setAuthCookie(tx.getAuthCookie());
+        session.setCreatedAt(store.now());
+        session.setExpiresAt(store.now() + properties.getSessionTtl());
+        session.setRecoveryExpiresAt(
+                Math.min(session.getExpiresAt(), store.now() + properties.getCompletionRecoveryTtl()));
+        session.setAccessToken((String) token.get(InOAuth2ParameterNames.ACCESS_TOKEN));
+        session.setRefreshToken((String) token.get(InOAuth2ParameterNames.REFRESH_TOKEN));
+        session.setSid(JwtPayloadUtil.readClaim(session.getAccessToken(), InJwtClaimNames.SID));
+        boolean committing = false;
+        try {
+            session.setFingerprint(sessions.fingerprint(request));
+            session.setFingerprintMode(
+                    session.getFingerprint() == null ? null : properties.getSecurity().getFingerprintMode());
+            if (StrUtil.hasBlank(session.getAccessToken(), session.getSid()))
+                throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
+            sessions.bindIdentity(session, app);
+            store.transition(tx, BffLoginStage.COMMITTING, session);
+            committing = true;
+            store.commit(tx, session, sessions.sessionId(request, app));
+            metrics.event("commit", app.getAppId(), BffLoginStage.COMPLETED.getValue());
+        }
+        catch (RuntimeException exception) {
+            try {
+                store.enqueueRevoke(session);
+            }
+            catch (RuntimeException unavailable) {
+                if (!committing)
+                    cleanup.revokeUncommitted(session);
+                // commit前已有原子清理记录；commit回包不明时绝不误撤可能已交付的身份。
+                else
+                    log.warn("[BffAuth] commit reply uncertain; durable cleanup record retained, app={}",
+                            app.getAppId());
+            }
+            throw exception;
+        }
+        sessions.writeSession(session, response);
+        sessions.writeBinding(app.getAppId(), tx.getBindingId(), store.bindingTtl(app.getAppId(), tx.getBindingId()),
+                response);
+        return R.ok(view(tx, null));
+    }
+
+    private Map<String, Object> authData(R<Map<String, Object>> result) {
+        if (result == null || result.getData() == null || !result.isSuccess())
+            throw new BffAuthException(result == null ? BffErrorCode.AUTH_UNAVAILABLE : classify(result.getCode()));
+        return result.getData();
+    }
+
+    private BffErrorCode classify(String code) {
+        if (OAuth2ErrorCodes.INVALID_GRANT.equals(code) || OAuth2ErrorCodes.INVALID_TOKEN.equals(code)
+                || BaseErrorCode.UNAUTHORIZED.getCode().equals(code))
+            return BffErrorCode.TRANSACTION_EXPIRED;
+        if (BaseErrorCode.FORBIDDEN.getCode().equals(code) || OAuth2ErrorCodes.INVALID_REQUEST.equals(code)
+                || OAuth2ErrorCodes.ACCESS_DENIED.equals(code))
+            return BffErrorCode.IDENTITY_UNAVAILABLE;
+        return BffErrorCode.AUTH_UNAVAILABLE;
+    }
+
+    private boolean serverFailure(String code) {
+        return code == null || BaseErrorCode.REQUEST_FALLBACK.getCode().equals(code)
+                || code.startsWith(SERVICE_FAILURE_PREFIX) || code.startsWith(HTTP_FAILURE_PREFIX);
+    }
+
+    private void fail(LoginTransaction tx, BffLoginStage stage) {
+        if (tx.getStage() == BffLoginStage.COMPLETED || tx.getStage() == BffLoginStage.FAILED)
+            return;
+        metrics.event("authentication.result", tx.getAppId(), stage.getValue());
+        if (stage == BffLoginStage.UNKNOWN)
+            log.warn("[BffAuth] result UNKNOWN; no Auth replay, app={}, correlation={}", tx.getAppId(),
+                    metrics.correlation(tx.getTransactionId()));
+        try {
+            store.transition(tx, stage, null);
+        }
+        catch (RuntimeException exception) {
+            log.warn("[BffAuth] state uncertain; no automatic Auth retry, app={}, correlation={}", tx.getAppId(),
+                    metrics.correlation(tx.getTransactionId()));
+        }
+    }
+
+    private BffAppRegistration app(HttpServletRequest request) {
+        BffAppRegistration app = registry.requireFromRequest(request);
+        registry.requireSource(request, app);
         return app;
     }
 
-    private LoginTransaction requireTransaction(String transactionId, BffAppRegistration app) {
-        LoginTransaction transaction = transactionService.require(transactionId);
-        if (!StrUtil.equals(transaction.getAppId(), app.getAppId())) {
-            throw new BffAuthException(BffErrorCode.ENTRY_MISMATCH);
-        }
-        return transaction;
+    private BffAppRegistration entry(String entry, HttpServletRequest request) {
+        BffAppRegistration app = app(request);
+        registry.requireEntry(entry, app);
+        return app;
     }
 
-    private AuthBinding requireCsrf(HttpServletRequest request, BffAppRegistration app) {
-        AuthBinding binding = transactionService.requireBinding(sessionService.getBindingIdFromCookie(request));
-        if (!StrUtil.equals(binding.getAppId(), app.getAppId())) {
+    private AuthBinding binding(HttpServletRequest request, BffAppRegistration app, boolean csrf) {
+        AuthBinding binding = store.findBinding(app.getAppId(), sessions.bindingId(request, app));
+        if (binding == null)
             throw new BffAuthException(BffErrorCode.BINDING_MISMATCH);
-        }
-        String header = request.getHeader(BffConstants.CSRF_HEADER);
-        if (StrUtil.isBlank(header) || !StrUtil.equals(header, binding.getCsrfToken())) {
-            throw new BffAuthException(BffErrorCode.BINDING_MISMATCH);
-        }
+        if (csrf && !binding.getCsrfToken().equals(request.getHeader(BffConstants.CSRF_HEADER)))
+            throw new BffAuthException(BffErrorCode.CSRF_INVALID);
         return binding;
     }
 
-    private void requireLoginBinding(LoginTransaction transaction, HttpServletRequest request, BffAppRegistration app) {
-        AuthBinding binding = requireCsrf(request, app);
-        bindLoginBrowser(transaction, binding);
+    private LoginTransaction transaction(String id, HttpServletRequest request, BffAppRegistration app, boolean csrf) {
+        return store.require(app.getAppId(), id, binding(request, app, csrf).getBindingId());
     }
 
-    private void bindLoginBrowser(LoginTransaction transaction, HttpServletRequest request, BffAppRegistration app) {
-        AuthBinding binding = transactionService.requireBinding(sessionService.getBindingIdFromCookie(request));
-        if (!StrUtil.equals(binding.getAppId(), app.getAppId())) {
-            throw new BffAuthException(BffErrorCode.BINDING_MISMATCH);
+    private long authenticationDeadline(Map<String, Object> data) {
+        try {
+            Object value = data == null ? null : data.get(BffConstants.AUTHENTICATION_EXPIRES_AT);
+            if (!(value instanceof String text))
+                throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
+            return Instant.parse(text).getEpochSecond();
         }
-        bindLoginBrowser(transaction, binding);
-    }
-
-    private void bindLoginBrowser(LoginTransaction transaction, AuthBinding binding) {
-        if (StrUtil.isNotBlank(transaction.getLoginBindingId())
-                && !StrUtil.equals(transaction.getLoginBindingId(), binding.getBindingId())) {
-            throw new BffAuthException(BffErrorCode.BINDING_MISMATCH);
-        }
-        if (StrUtil.isBlank(transaction.getLoginBindingId())) {
-            transaction.setLoginBindingId(binding.getBindingId());
-            transactionService.save(transaction);
+        catch (DateTimeParseException exception) {
+            throw new BffAuthException(BffErrorCode.AUTH_UNAVAILABLE);
         }
     }
 
-    private List<TenantMainDTO> parseAllows(Map<String, Object> data) {
-        if (data == null) {
-            return List.of();
-        }
-        Object raw = data.get(InOAuth2ParameterNames.PRE_ALLOW_LIST);
-        if (!(raw instanceof List<?> list) || list.isEmpty()) {
-            return List.of();
-        }
+    private BffTransactionView view(LoginTransaction tx, Boolean established) {
+        boolean completed = tx.getStage() == BffLoginStage.COMPLETED;
+        boolean busy = tx.getStage() == BffLoginStage.AUTHENTICATING || tx.getStage() == BffLoginStage.COMMITTING
+                || tx.getStage() == BffLoginStage.UNKNOWN;
+        List<Map<String, String>> candidates = tx.getStage() == BffLoginStage.SELECT_TENANT ? tx.getAllows()
+            .stream()
+            .map(t -> Map.of(ID, t.getId(), NAME, StrUtil.blankToDefault(t.getName(), t.getId())))
+            .toList() : null;
+        return new BffTransactionView(tx.getTransactionId(), tx.getStage(),
+                completed ? null : Instant.ofEpochSecond(store.deadline(tx)), candidates,
+                completed ? BffConstants.DEFAULT_RETURN_TO : null, established,
+                completed ? Instant.ofEpochSecond(tx.getRecoveryExpiresAt()) : null,
+                busy ? BffConstants.RETRY_AFTER_MILLIS : null);
+    }
+
+    private List<TenantMainDTO> allows(Map<String, Object> data) {
         List<TenantMainDTO> result = new ArrayList<>();
-        for (Object item : list) {
-            if (item instanceof Map<?, ?> map) {
-                TenantMainDTO dto = new TenantMainDTO();
-                Object id = map.get("id");
-                Object name = map.get("name");
-                dto.setId(id == null ? null : String.valueOf(id));
-                dto.setName(name == null ? null : String.valueOf(name));
-                if (StrUtil.isNotBlank(dto.getId())) {
+        Object raw = data == null ? null : data.get(InOAuth2ParameterNames.PRE_ALLOW_LIST);
+        if (raw instanceof List<?> list)
+            for (Object item : list) {
+                if (item instanceof TenantMainDTO dto && StrUtil.isNotBlank(dto.getId()))
+                    result.add(dto);
+                else if (item instanceof Map<?, ?> map && map.get(ID) != null) {
+                    TenantMainDTO dto = new TenantMainDTO();
+                    dto.setId(String.valueOf(map.get(ID)));
+                    dto.setName(map.get(NAME) == null ? dto.getId() : String.valueOf(map.get(NAME)));
                     result.add(dto);
                 }
-            } else if (item instanceof TenantMainDTO dto && StrUtil.isNotBlank(dto.getId())) {
-                result.add(dto);
             }
-        }
         return result;
     }
 
-    private List<Map<String, String>> summarizeAllows(List<TenantMainDTO> allows) {
-        return allows.stream()
-                .map(item -> Map.of("id", item.getId(), "name", StrUtil.blankToDefault(item.getName(), item.getId())))
-                .toList();
-    }
-
-    private boolean isAccountLocked(String username) {
-        if (StrUtil.isBlank(username)) {
-            return false;
-        }
-        UserTypeEnum userType = UserTypeEnum.getEnum(properties.getUserType());
-        if (userType == null) {
-            userType = UserTypeEnum.ADMIN;
-        }
-        return accountLockSignalPort.isLockedByUsername(userType, username);
-    }
-
-    private BffErrorCode authorizeWindowError(Exception exception, String stage) {
-        if (exception != null) {
-            log.warn("[BffAuth] {} failed, mapping to transaction expired", stage, exception);
-        } else {
-            log.warn("[BffAuth] {} returned unsuccessful result, mapping to transaction expired", stage);
-        }
-        return BffErrorCode.TRANSACTION_EXPIRED;
-    }
-
-    private R<?> authRpcFailure(Exception exception, String stage) {
-        if (exception instanceof InFeignException feignException) {
-            log.warn("[BffAuth] {} failed, code={}", stage, feignException.getCode());
-            String code = StrUtil.blankToDefault(feignException.getCode(),
-                    BaseErrorCode.BAD_REQUEST.getCode());
-            String message = StrUtil.blankToDefault(feignException.getMessage(),
-                    BaseErrorCode.BAD_REQUEST.getText());
-            return R.error(code, message);
-        }
-        log.error("[BffAuth] {} failed", stage, exception);
-        return R.error500();
-    }
-
-    private String extractAuthCookie(HttpHeaders headers) {
-        List<String> setCookies = headers.get(HttpHeaders.SET_COOKIE);
-        if (setCookies == null) {
-            return null;
-        }
-        String cookiePrefix = AUTH_COOKIE_NAME + "=";
-        for (String setCookie : setCookies) {
-            if (setCookie.startsWith(cookiePrefix)) {
-                return StrUtil.subBefore(setCookie, ";", false);
-            }
-        }
+    private String authCookie(HttpHeaders headers) {
+        List<String> cookies = headers.get(HttpHeaders.SET_COOKIE);
+        if (cookies != null)
+            for (String cookie : cookies)
+                if (cookie.startsWith(AUTH_COOKIE_PREFIX))
+                    return StrUtil.subBefore(cookie, ";", false);
         return null;
     }
 
-    private String generateCodeChallenge(String codeVerifier) {
+    private String challenge(String verifier) {
         try {
-            MessageDigest digest = MessageDigest.getInstance(CODE_CHALLENGE_ALGORITHM);
-            byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("Failed to generate PKCE code challenge", exception);
+            return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(
+                        MessageDigest.getInstance(PKCE_ALGORITHM).digest(verifier.getBytes(StandardCharsets.US_ASCII)));
+        }
+        catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("PKCE algorithm unavailable", exception);
         }
     }
 
-    private String randomToken(int byteLength) {
-        byte[] bytes = new byte[byteLength];
-        RANDOM.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    private String random(int bytes) {
+        byte[] value = new byte[bytes];
+        RANDOM.nextBytes(value);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(value);
     }
+
 }

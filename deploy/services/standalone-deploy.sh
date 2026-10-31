@@ -56,6 +56,7 @@ Docker Compose 单机部署脚本
 可用服务名称：
     ingot-auth      # Auth 服务
     ingot-gateway   # Gateway 服务
+    ingot-bff       # 同源登录 BFF
     ingot-member    # Member 服务
     ingot-iam       # IAM 服务
 
@@ -339,6 +340,7 @@ show_logs() {
         echo "可用服务："
         echo "  - ingot-auth"
         echo "  - ingot-gateway"
+        echo "  - ingot-bff"
         echo "  - ingot-member"
         echo "  - ingot-iam"
         exit 1

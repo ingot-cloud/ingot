@@ -29,7 +29,6 @@ public class AccountLockGatewayProperties {
      */
     private List<String> excludePathPatterns = new ArrayList<>(List.of(
             "/actuator/**",
-            "/bff/auth/login",
             "/bff/auth/**"
     ));
 }

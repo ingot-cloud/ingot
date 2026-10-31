@@ -24,7 +24,7 @@ REQUIRED_CONFIG = (
     "redisNamespace",
     "sites",
 )
-REQUIRED_SITES = ("tenantAdmin", "tenantLogin", "platformAdmin", "platformLogin")
+REQUIRED_SITES = ("tenantAdmin", "platformAdmin")
 REQUIRED_DATABASE = ("host", "port", "name", "user")
 SCENARIO_CATALOG = Path(__file__).resolve().parent / "scenarios.json"
 SCENE_VERSION = json.loads(SCENARIO_CATALOG.read_text())["sceneVersion"]
