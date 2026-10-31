@@ -84,9 +84,10 @@ Sentinel `GatewayParamFlowItem.fieldName` 与限流/黑白名单 DB 短码对应
 
 ## 5. BFF 设备指纹
 
-- 推荐模式：从 `In-Ca-Sig` 读取前端计算的 SHA-256 指纹。
-- 降级模式：Header 缺失时使用 `In-Inner-Client-Real-IP`（或 `WebUtil` 回退）+ User-Agent 计算 IP+UA 指纹。
-- 网关 `SessionTokenRelayFilter` 与 BFF `BffSessionService` 均遵循相同优先级。
+- DEVICE模式从 `In-Ca-Sig` 读取设备指纹，缺失时拒绝，不自动切IPUA。
+- IPUA模式按配置使用 `In-Inner-Client-Real-IP` + User-Agent计算；事务/会话记录本次模式。
+- Gateway和BFF按同一记录模式核对；关闭指纹只由可信配置决定。
+- `BffAppContextFilter`剥离外部 `In-Inner-Bff-App-Id` 与旧 `In-Inner-Bff-Entry`；可信Host/scheme/端口仅注入当前应用ID，不再区分登录/管理主机角色。
 
 ## 6. 已废弃 Header（不再识别）
 

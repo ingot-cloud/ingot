@@ -188,6 +188,8 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
+
 - [租户工作台统计接口](./changes/active/20261030-iam-tenant-workbench/README.md)（validating；功能与自动化验证完成，待用户自行联调验收）
 
 - [授权审计游标分页与可读展示](./changes/active/20261024-iam-authorization-audit-readable/README.md)（implementing；2026-10-24 用户确认开工）
@@ -279,3 +281,5 @@ current/<domain>/<capability>/
 - [角色版本应用引擎职责分离](./changes/archive/2026/20261011-iam-role-application-domain-support/README.md)（completed，2026-10-11 验收完成并归档）；[当前扩展边界](./current/iam/role-version-application/SPEC.md)
 
 - [角色详情加载优化](./changes/archive/2026/20261012-iam-role-detail-loading/README.md)（completed，2026-10-12 人工验收通过）；[当前能力](./current/iam/role-version-application/README.md)
+
+- [内部后台同源登录与双入口部署](./changes/archive/2026/20261031-security-same-origin-login/README.md)（completed，2026-10-31用户确认两端核心流程本地验收）；[当前能力](./current/security/same-origin-login/README.md)。

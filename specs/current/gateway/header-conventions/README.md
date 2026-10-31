@@ -10,8 +10,8 @@
 
 - 旧 Header（`X-Ca-Sig`、`X-In-Ca-Sig`、`X-Client-Real-IP`、`X-User-Id`）不再识别，无向后兼容别名。
 - `In-Inner-*` 仅允许网关链路写入；外部传入在入口被移除。
-- 设备指纹 Header 缺失时，BFF 与网关降级为 IP+UA 计算（行为不变）。
-- 前端须同步改发 `In-Ca-Sig`，与后端同版本窗口发布。
+- BFF指纹按配置DEVICE或IPUA固定执行；DEVICE缺少In-Ca-Sig时拒绝，不在请求间自动降级。
+- 前端使用 `In-Ca-Sig`，与后端同版本窗口发布；双入口身份见[同源登录](../../security/same-origin-login/SPEC.md)。
 
 ## 所有者
 

@@ -125,6 +125,8 @@
    }
   ```
 
+以下为 Auth 协议接口，供受控客户端或 BFF 内部接入。内部管理台浏览器使用 [同源 BFF 登录流程](./BFF-AUTH-FLOW.md)，不直接执行本节的授权码交换；示例 BaseURL 为本地 Gateway。
+
 ## 2.预授权
 预授权流程如下：
  1. 用户进行预授权认证，密码模式或者社交模式
@@ -155,7 +157,7 @@
      - avatar：组织logo
  - 请求示例：
    ```
-   http://localhost:1798/api/auth/oauth2/pre_authorize?
+   http://localhost:7980/auth/oauth2/pre_authorize?
    user_type=0
    &_vc_code=xhaNas%2BNCIU%3D
    &pre_grant_type=password
@@ -206,7 +208,7 @@
    - redirect_uri：重定向URL
  - 请求示例：
     ```
-   http://localhost:1798/api/auth/oauth2/authorize?
+   http://localhost:7980/auth/oauth2/authorize?
    pre_grant_type=password
    &org=0
    &client_id=ingot

@@ -1,5 +1,7 @@
 # IAM 多租户身份与访问管理重构
 
+> 2026-10-31 登录/部署条款已由[同源双入口归档](../../archive/2026/20261031-security-same-origin-login/README.md)接管，用户确认两端登录、退出、切换组织与多标签页本地验收通过；当前契约见[同源登录基线](../../../current/security/same-origin-login/README.md)。本主change其他任务保持active，四站BFF设计仅为历史。
+
 > 状态：implementing
 > 2026-09-16 双入口 BFF 增量：implementing（规格已确认 Host→appId / Nacos 回跳 / 前端不传 URL）。B01–B05 已落地，B06 四站浏览器与全量 IAM 证据未做；主 change 既有进展与证据保留。
 

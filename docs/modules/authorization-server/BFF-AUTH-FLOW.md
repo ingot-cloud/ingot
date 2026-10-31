@@ -1,186 +1,108 @@
-# BFF 双入口登录链路
+# 管理台同源 BFF 登录流程
 
-本文描述**当前实现**的登录、交接与会话链路，便于对照浏览器、Gateway、BFF、Auth 与 Redis。契约细节以 `specs/changes/active/20260912-iam-identity-access-management/BFF-LOGIN.md` 为准。
+平台和租户各有一个管理入口，登录页面位于各自的 `/login/`，由同一份 SPA 提供。前端只部署 `admin-platform` 和 `admin`；后端 `ingot-auth` 继续负责 OAuth2、PKCE、凭证校验与会话撤销，BFF 保存 Token，浏览器只持有 HttpOnly Cookie。正式会话提交前经 Auth 的 sid 查询确认身份；公开 Token 响应中没有内部用户字段，用户 ID 来自 Auth 会话主数据。
 
-## 1. 一眼看懂
+本文描述当前实现。接口细节见 [同源登录 API](../../../specs/changes/archive/2026/20261031-security-same-origin-login/API.md)，部署和切换见 [发布指南](../../../deploy/services/SAME-ORIGIN-LOGIN.md)。本地自动化已完成，真实 Auth/IAM、客户 CA、休眠及生产切换/回滚仍待联合验收，见 [验证记录](../../../specs/changes/archive/2026/20261031-security-same-origin-login/VALIDATION.md)。历史设计保留在 Spec 中。
 
-```
-管理台 /auth/start
-    │  POST /bff/auth/csrf          → Cookie IN_AUTH_BINDING（本 host）
-    │  POST /bff/auth/{entry}/transactions
-    ▼
-登录站 /oauth2/challenge?tx=…
-    │  POST /bff/auth/csrf          → 登录站自己的 IN_AUTH_BINDING
-    │  GET  /bff/auth/{entry}/transactions/{id}
-    │  POST /bff/auth/{entry}/login （HYBRID + CSRF）
-    │  [租户多候选] POST /bff/auth/tenant/select
-    │  Auth：pre_authorize → authorize → token（PKCE）
-    ▼
-管理台 /auth/complete?ticket=…
-    │  POST /bff/auth/{entry}/complete
-    │  校验 start 时记下的 adminBindingId（不要再轮换 CSRF）
-    ▼
-正式会话 Cookie IN_SESSION（本 host）
-    │  Gateway 读 Session → 注入 Authorization: Bearer
-    ▼
-下游微服务
-```
+## 入口与职责
 
-浏览器**不传** domain、OAuth 参数、跳转 URL。Gateway 用请求 **Host** 匹配 Nacos `ingot.bff.apps` 的 `admin-origin` / `login-origin`，写入内部头 `In-Inner-Bff-App-Id`、`In-Inner-Bff-Entry`。BFF 只认这组头，不认前端自报的身份。
+| 应用 | 本机 DEV 登录地址 | 双域名生产示例 | 纯 IP HTTPS 示例 |
+|---|---|---|---|
+| 平台 `platform-admin` / `PLATFORM` | http://platform.localhost:5799/login/ | https://platform.example.com/login/ | https://192.168.1.100:8443/login/ |
+| 租户 `tenant-admin` / `TENANT` | http://tenant.localhost:5798/login/ | https://admin.example.com/login/ | https://192.168.1.100:9443/login/ |
 
-## 2. 本机 DEV 四个域名
+`*.localhost` 在浏览器回环到本机。每个入口的 `/api/` 代理到 Gateway，Host 必须保留实际端口。平台、租户分别使用独立的内部 OAuth 客户端 `in-bff-platform`、`in-bff-tenant`；实际配置以 Nacos 和 Auth RegisteredClient 为准。
 
-Gateway / BFF 共用 Nacos `DEV_GROUP` 的 `in-bff-apps.yml`（`require-https: false`）。**必须同步到运行中的 Nacos**，改仓库文件不会自动生效。
+Gateway 根据可信 Host/端口匹配 `ingot.bff.apps[].origin`，覆盖内部应用头；BFF 再核对应用、入口和来源。浏览器不提交 appId、domain、clientId、回调地址或跨域跳转地址。OAuth redirect URI 是与 RegisteredClient 精确匹配的内部协议值，浏览器不访问它。
 
-| 站点 | 本机 URL | Nacos origin | Vite 端口 |
-|------|----------|--------------|-----------|
-| 租户管理台 | http://tenant.localhost:5798 | `admin-origin` | 5798 |
-| 租户登录 | http://tenant-login.localhost:1798 | `login-origin` | 1798 |
-| 平台管理台 | http://platform.localhost:5799 | `admin-origin` | 5799 |
-| 平台登录 | http://platform-login.localhost:1799 | `login-origin` | 1799 |
+| 层 | 职责 |
+|---|---|
+| `apps/admin-platform`、`apps/admin` | 组合登录插件与管理页面，提供公开静态 `/login/` 路由 |
+| `plugins/auth` / `packages/auth-core` | 表单、事务状态、租户选择及有界恢复；复用管理宿主网络和唯一挑战组件 |
+| Gateway | 可信入口识别、限流/412 挑战、本应用 Cookie 中继与会话检查 |
+| BFF | CSRF/绑定、事务、Auth 协议交换、原子会话提交和撤销补偿 |
+| Auth / IAM | 真实凭证、预授权期限、身份及成员资格校验、Token 与 sid 生命周期 |
 
-`*.localhost` 按 RFC 6761 直接回环，**不必写 `/etc/hosts`**，也没有 `.local` 的 mDNS 等待。用上表 hostname 打开，不要用光杆 `http://localhost:5798`（四个站点会共享 Cookie）。Host 对不上注册表时 Gateway 直接 403。
-
-四个 hostname 各自一份 **host-only** Cookie（不写 `Domain`）。不要把前端 `VITE_APP_COOKIE_DOMAIN` 配成 `.localhost`，否则四站点会串 Cookie。
-
-OAuth `oauth-redirect-uri` 仍是网关协议回调（如 `http://localhost:5400/bff/auth/tenant/callback`）。BFF 请求带 `pre_grant_type`，Auth **不 302**，只在 JSON 里回授权码。浏览器不会打开这个地址。
-
-Vite `/api` 代理到 Gateway，且 `changeOrigin: false`，这样 Gateway 看到的 Host 仍是 `tenant.localhost:5798` 这类前端主机名。
-
-## 3. 角色与存储
-
-| 组件 | 职责 |
-|------|------|
-| 管理台 SPA | `/auth/start` 开事务；`/auth/complete` 用 ticket 换正式会话；之后走 IAM |
-| 登录站 SPA | 凭证、挑战、租户选择；**不能** `complete` / `me` / `logout` |
-| Gateway | Host→appId；剥伪造内部头；正式 `IN_SESSION` → Bearer JWT |
-| BFF | CSRF/绑定、LoginTransaction、编排 Auth RPC、发 Cookie |
-| Auth | 预授权、授权码+PKCE、签发 JWT；BFF 客户端为 `in-bff-tenant` / `in-bff-platform` |
-
-Redis（前缀 `in:`）：
-
-| Key | 内容 | 默认 TTL |
-|-----|------|----------|
-| `in:bff_auth_binding:{bindingId}` | CSRF + appId | 登录阶段与事务相同，约 600s；complete 后延长到 `session-ttl` |
-| `in:bff_login_tx:{transactionId}` | 登录事务（PKCE、Auth cookie、ticket、两站点 binding） | 600s |
-| ticket 索引 | ticket → transactionId | 60s，且不超过事务剩余 |
-| `in:bff_session:{sessionId}` | 正式会话（accessToken 等） | 小时～天（`session-ttl`） |
-| `in:security_context:{sid}` | Auth 侧 SecurityContext | Auth 既有 |
-
-Cookie（DEV HTTP，`require-https: false`）：
-
-| 名称 | 谁写 | 谁读 |
-|------|------|------|
-| `IN_AUTH_BINDING` | BFF `POST /csrf` | 状态修改请求；**Gateway 不做 JWT 中继** |
-| `IN_SESSION` | BFF `complete` | Gateway 中继 + `me` / `logout` |
-
-属性：Path=/、HttpOnly、SameSite=Lax、无 Domain、无 Secure。HTTPS 环境改为 `__Host-IN_*` + Secure。
-
-事务里两个绑定：
-
-- `adminBindingId`：管理台 **start 那一次** CSRF 绑定。complete 必须仍是这个 Cookie，不能在完成页再 `POST /csrf` 轮换。
-- `loginBindingId`：登录站第一次 `GET transactions/{id}` 时钉死。login / select 必须还是这个浏览器。
-
-## 4. 逐步调用链
-
-浏览器路径都带同源 `/api` 前缀。`{entry}` 为 `tenant` 或 `platform`。状态修改请求带 `X-CSRF-Token`，与当前 host 的绑定 Cookie 对应 Redis 记录核对。
-
-### 4.1 管理台开事务
-
-1. 打开 `{adminOrigin}/auth/start`。
-2. `GET /bff/auth/me`：已有有效 `IN_SESSION` 则落地 `defaultReturnTo`（`/`），不再开事务。
-3. 否则 **强制** `POST /bff/auth/csrf`（轮换绑定，丢掉前端缓存的旧 token），再 `POST /bff/auth/{entry}/transactions`。
-4. BFF 校验内部头是 **admin**、路径与 `domain` 一致；记下 `adminBindingId`、PKCE `code_verifier`、OAuth `state`。
-5. 返回 `{transactionId, loginUrl}`。`loginUrl` 仅为 `{loginOrigin}/oauth2/challenge?tx={transactionId}`。
-6. 浏览器顶层跳转到登录站。
-
-### 4.2 登录站认证
-
-1. 无 `tx`：跳回配对管理台 `{adminOrigin}/auth/start`（构建期 `VITE_APP_ADMIN_START_URL`）。
-2. 按当前 `tx` 决定是否 `POST /csrf`：新事务或 CSRF 缓存不属于该事务则重签，并绑定 `transactionId`。同一事务内挑战重试复用。
-3. `GET /bff/auth/{entry}/transactions/{id}`：校验入口为 **login**，写入 `loginBindingId`（已有则必须相同）。
-4. `POST /bff/auth/{entry}/login`（整包 HYBRID）：校验 CSRF + `loginBindingId`。
-5. BFF Feign `preAuthorize`：账号密码、`domain`、PKCE challenge、注册表里的 `oauth-client-id` / `oauth-redirect-uri`。Auth 错误（如「用户名或密码错误」）原样回传 `code`/`message`，不改成 `S0500`。
-6. 平台：无租户候选，直接授权换码。租户：零候选 → `BFF_IDENTITY_UNAVAILABLE`；单候选自动 `authorize`；多候选返回 `SELECT_TENANT`。
-7. 多候选时 `POST /bff/auth/tenant/select`，再 `authorize`。授权时重新校验成员资格。
-8. `authorize` + `token`（`code_verifier`）成功后，Token **先放在事务里**，签发一次性 `ticket`（默认 60s），返回 `READY` 与 `completionUrl`：`{adminOrigin}/auth/complete?ticket=…`。
-
-### 4.3 管理台完成交接
-
-1. 完成页立刻从 URL 去掉 `ticket`（`replaceState`）。
-2. `POST /bff/auth/{entry}/complete`：用 **start 时** 的绑定 Cookie + sessionStorage 里的 CSRF（`ensureCsrf` 有 token 就不再签发）。
-3. BFF 消费 ticket，核对 `adminBindingId`，创建 `BffSession`，写本 host `IN_SESSION`，删除事务与 ticket。
-4. 返回 `returnTo`（恒为注册表 `defaultReturnTo`）。前端可再恢复本 origin `sessionStorage` 里的相对深链。
-5. 管理台 `GET /me` + bootstrap，校验 `appId`/`domain` 与本产物一致。
-
-### 4.4 登录后与退出
-
-- 业务请求：Gateway 读 `IN_SESSION` → Redis → `Authorization: Bearer`。绑定 Cookie 不会触发中继。csrf / transactions / login / select / complete 即使带绑定 Cookie 也不注入 Bearer。
-- `DELETE /bff/auth/logout`：尽量带 CSRF。能读到会话则撤销当前应用 Auth sid；无论 CSRF 是否匹配都清本 host 正式 Cookie 与绑定 Cookie，返回成功。显式退出不保存 returnTo，`/auth/start` 不因残留会话弹回业务页。另一域会话不受影响。
-
-## 5. 时序（租户多候选）
+## 正常登录
 
 ```mermaid
 sequenceDiagram
-    participant Admin as 租户管理台<br/>tenant.localhost:5798
-    participant Login as 租户登录站<br/>tenant-login.localhost:1798
-    participant GW as Gateway
-    participant BFF as BFF
-    participant Auth as Auth
-    participant Redis as Redis
-
-    Admin->>GW: POST /bff/auth/csrf
-    GW->>BFF: Host 匹配 tenant-admin / admin
-    BFF->>Redis: 轮换 in:bff_auth_binding
-    Admin->>GW: POST /bff/auth/tenant/transactions
-    BFF->>Redis: 写 LoginTransaction（adminBindingId）
-    BFF-->>Admin: loginUrl + tx
-    Admin->>Login: 顶层跳转 ?tx=
-
-    Login->>GW: POST /bff/auth/csrf
-    BFF->>Redis: 登录站新 binding
-    Login->>GW: GET /bff/auth/tenant/transactions/{id}
-    BFF->>Redis: 钉死 loginBindingId
-    Login->>GW: POST /bff/auth/tenant/login
-    BFF->>Auth: pre_authorize（password + PKCE）
-    Auth-->>BFF: allows[]
-    BFF-->>Login: SELECT_TENANT
-    Login->>GW: POST /bff/auth/tenant/select
-    BFF->>Auth: authorize + token
-    BFF->>Redis: READY + ticket
-    BFF-->>Login: completionUrl
-    Login->>Admin: 顶层跳转 ?ticket=
-
-    Admin->>GW: POST /bff/auth/tenant/complete
-    BFF->>Redis: 校验 adminBindingId，写 BffSession
-    BFF-->>Admin: Set-Cookie IN_SESSION
+    participant U as 浏览器（当前管理入口）
+    participant G as Gateway
+    participant B as BFF
+    participant A as Auth / IAM
+    U->>U: 打开 /login/，可长期停留
+    Note over U: 此时不创建登录事务，不预拉业务 bootstrap 或验证码
+    U->>G: 用户提交：POST /api/bff/auth/csrf {}
+    G->>B: 可信应用上下文 + 原 Host
+    B-->>U: 本应用绑定 Cookie + CSRF
+    U->>B: POST /api/bff/auth/{entry}/transactions {}
+    B-->>U: LOGIN + transactionId + expiresAt
+    U->>G: POST /api/bff/auth/{entry}/login（整包 HYBRID）
+    Note over U,G: 如需 412 挑战，在当前页完成后重试当前登录请求
+    G->>B: 当前绑定、CSRF 和设备指纹
+    B->>A: pre_authorize，固定认证截止时间
+    alt 租户多候选
+        B-->>U: SELECT_TENANT + allows + expiresAt
+        U->>B: POST /api/bff/auth/tenant/select
+        B->>A: 重新校验所选成员资格
+    end
+    B->>A: authorize + token（PKCE）
+    B->>B: 原子提交正式会话、代次与本次结果
+    B-->>U: COMPLETED + 当前应用正式 Cookie
+    U->>B: GET /api/bff/auth/me（确认实际 Cookie）
+    U->>G: GET /api/iam/v1/me/bootstrap
+    U->>U: 安装业务路由，进入本应用受限返回路径或强制改密
 ```
 
-平台链路相同，但 login 成功后直接 READY，没有 select。
+平台入口不选择租户。租户零候选拒绝，单候选校验后直接登录，多候选始终留在本页。登录成功由当前 origin 直接建立会话，正常流程没有浏览器票据兑换和跨站往返。
 
-## 6. 关键校验（对照排错）
+返回路径只在本应用保存并限制为合法相对路径；绝对 URL、`//`、反斜杠及认证页循环目标会被拒绝。密码、Token、CSRF 不写 URL、日志或持久化浏览器存储。
 
-| 现象 | 常见原因 |
-|------|----------|
-| Gateway 403 | 浏览器 Host 不在 `in-bff-apps.yml`（仍用光杆 localhost、Nacos 未刷新） |
-| `BFF_ENTRY_MISMATCH` | 管理台打了 login 接口，或内部头与路径不一致 |
-| `BFF_BINDING_MISMATCH` | CSRF 与 Cookie 脱节；complete 时绑定被轮换；换了浏览器/隐私窗口 |
-| `BFF_TRANSACTION_EXPIRED` / 410 | 事务超过约 10 分钟，或 authorize/token 时 Auth 预授权会话 / state / 授权码已失效 |
-| `BFF_TICKET_INVALID` | ticket 用过、过期、或 appId 不符 |
-| `unauthorized_client` | Auth 客户端缺 `pre_authorization_code` / `authorization_code`，或 redirect_uri 与 Nacos 不一致 |
-| Vite “host is not allowed” | 未放行 `*.localhost`（`packages/vite-config` 的 `DEV_BFF_ALLOWED_HOSTS`） |
+## 接口与长期停留
 
-事务过期或绑定不匹配时，登录站清本 origin CSRF 缓存，跳回配对 `/auth/start`。不要跨租户/平台互跳。
+下表为服务端路径，浏览器添加当前 origin 的 `/api` 前缀。`{entry}` 只能是当前应用对应的 `platform` 或 `tenant`。
 
-## 7. 配置落点
+| 方法与路径 | 用途 |
+|---|---|
+| `POST /bff/auth/csrf` | 同源 JSON 自举，复用有效匿名绑定与 CSRF |
+| `POST /bff/auth/{entry}/transactions` | 点击提交时创建事务；空 JSON，无跳转 URL |
+| `POST /bff/auth/{entry}/login` | 整包 HYBRID 密码认证；返回选择或完成状态 |
+| `POST /bff/auth/tenant/select` | 当前绑定下选择允许的租户，成功直接写正式 Cookie |
+| `GET /bff/auth/{entry}/transactions/{id}` | 只读本次结果，识别处理中或完成状态 |
+| `POST /bff/auth/{entry}/transactions/{id}/resume` | 已完成且未交付时，有界重新下发同一个会话 Cookie |
+| `GET /bff/auth/me` | 校验本应用实际 Cookie、当前代次与 Auth sid |
+| `DELETE /bff/auth/logout` | 只退出当前应用，清理本应用 Cookie 并阻止旧结果恢复 |
 
-| 项 | 位置 |
-|----|------|
-| 四站点 origin、`require-https` | Nacos `in-bff-apps.yml`（仅 Gateway、BFF import） |
-| 事务/ticket/session TTL、指纹 | Nacos `in-service-bff.yml` |
-| OAuth 客户端 | `oauth2_registered_client`，种子 `databases/bff_client_init.sql` |
-| 管理台回跳登录前地址 | 登录应用 `VITE_APP_ADMIN_START_URL` |
-| 前端 JS Cookie Domain | `VITE_APP_COOKIE_DOMAIN` 本机留空；生产才写父域 |
-| 网关路由 | `/bff/**` → `ingot-service-bff` |
+登录页本身没有事务有效期。默认在点击时才创建 600 秒事务，打开页面或恢复焦点不续期。未认证的准备凭证失效时原地重建一次；认证/租户选择已过期则在当前页面重新认证。选择期限取事务硬截止和 Auth 返回的 `authenticationExpiresAt` 的最早值，读取与挑战不延长该期限。
 
-TEST / PROD 仍是 HTTPS 四主机 + `__Host-` Cookie，见各环境 `in-bff-apps.yml`。不要把 `http://IP:端口` 配进已部署环境。
+结果不确定时先查本次事务，禁止盲目重放密码或换码。`AUTHENTICATING` / `COMMITTING` 有界等待（前端最多 15 秒）；只有确认本次 `COMPLETED` 且 Cookie 未交付时才尝试一次 resume。默认恢复窗口 60 秒，退出、撤销或新身份替换后不能恢复旧结果。503 表示依赖不可用，保留当前页面状态；不能当成会话过期并循环跳转。
+
+常见状态码：事务过期 `410 BFF_TRANSACTION_EXPIRED`，来源/绑定/CSRF 不符 `403`，处理中或结果不可恢复 `409`，容量超过 `429 BFF_LOGIN_CAPACITY`，认证依赖故障 `503 BFF_AUTH_UNAVAILABLE`。账号锁定、凭证错误和强制改密沿用原业务契约。
+
+## Cookie、来源与状态约束
+
+| 场景 | 平台正式 / 绑定 | 租户正式 / 绑定 |
+|---|---|---|
+| HTTPS | `__Host-IN_PLATFORM_SESSION` / `__Host-IN_PLATFORM_BINDING` | `__Host-IN_TENANT_SESSION` / `__Host-IN_TENANT_BINDING` |
+| loopback HTTP DEV | `IN_PLATFORM_SESSION` / `IN_PLATFORM_BINDING` | `IN_TENANT_SESSION` / `IN_TENANT_BINDING` |
+
+认证 Cookie 由后端设置：HttpOnly、Path=/、SameSite=Lax、无 Domain，HTTPS 加 Secure。前端 `VITE_APP_COOKIE_DOMAIN` 不控制这些认证 Cookie。生产必须 HTTPS，只有 loopback DEV 可以关闭 `require-https`。
+
+纯 IP 双端口共享 Cookie 主机范围，两套 Cookie 可能都被发送。每个应用只消费、撤销和清理自己的名称，并校验 appId/domain、绑定、当前会话代次和有效 sid；另一应用的 Cookie 不提供当前入口身份。两个端口必须同属可信部署，端口不能提供 Cookie 发送隔离。浏览器存储与跨标签页通知按 origin 隔离。
+
+除 CSRF 自举外的写接口须带绑定 Cookie 和 `X-CSRF-Token`，自举本身也严格校验同源 JSON 与 Origin；Cookie 中继业务写请求同样校验精确 Origin。不开放跨域凭证请求，不用 Referer 覆盖错误 Origin。设备指纹、账号失败保护、网关限流及 412 挑战继续生效。
+
+Redis 使用 `in:bff:v2:{platform-admin}:` 与 `in:bff:v2:{tenant-admin}:`，每应用同槽原子推进事务和会话代次。清理任务无 TTL，撤销成功后移除；未知远端结果不能无条件重试换码。认证 Feign 日志必须关闭敏感 URL/头/Body 输出。
+
+## 启动、配置与兼容边界
+
+本机使用 Java 21 启动 dev profile 的 Auth（5100）、BFF（5400）、Gateway（7980）及 IAM/安全中心依赖。前端在 Node 22.17 / pnpm 10.12.4 下执行 `pnpm install --frozen-lockfile`、`pnpm build:packages`、`pnpm dev`，只启动两个管理入口。
+
+同步相应 Nacos Group 的 `in-bff-apps.yml`、`in-service-bff.yml`、`in-service-gateway.yml`、`in-security-gateway.yml`、`in-service-auth.yml`；Auth 配置不再设置指向独立登录站的 `loginFormUrl`。Gateway/BFF 的注册配置必须一致；变更 Host、端口或 HTTPS 后两侧与边缘代理一起同步。初始化 SQL 的这五份配置与 YAML 一致，已有环境通过 Nacos 正常发布配置，不能重新导入初始化 SQL 覆盖业务库。
+
+静态 SPA 深链和 `/login/` 刷新回本应用 index.html，`/api` 不回退 HTML；多层代理保留包含端口的 Host 以及受控边缘确认的外部 HTTPS scheme。证书 SAN 必须包含实际域名/IP，客户端信任 CA。
+
+旧 `/auth/start`、`/auth/complete`、`/oauth2/challenge` 仅作为页面链接兼容：清空参数后进入本域 `/login/`。旧 complete API、READY/ticket 交接协议和独立登录站不再运行。退役登录域如保留静态引导，目标必须固定，不能由 query 控制。历史发布回滚说明和旧状态只读盘点仍保留，详见发布指南。
+
+外部 OAuth2/OIDC 接入属于独立能力，不复用内部管理台的 `/login/` 作为通用授权页面。本轮不删除后端 Auth 服务或 OAuth2 协议接口。

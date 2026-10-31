@@ -9,7 +9,7 @@ L6 已验收闭环：图形 / 滑块验证码从 `ingot.vc.verifyUrls` 随业务
 1. **ALWAYS**：匹配路径且无有效通行证 → 412，请求不到下游。
 2. **ON_RATE_LIMIT**：Sentinel 拦住后若匹配策略则 412，否则 429。
 3. **PassToken**：验码成功签发；消费时 scope 取请求头，且路径必须被该 scope 策略覆盖。
-4. **登录种子**：`POST /bff/auth/login` 走 `ALWAYS` + `SLIDER`（`scope=login`）。
+4. **登录种子**：`POST /bff/auth/platform/login` 与 `POST /bff/auth/tenant/login` 走 `ALWAYS` + `SLIDER`（`scope=login`）。
 
 ## 边界
 

@@ -49,3 +49,5 @@ L5 已验收闭环：登录态从 jti 级 OnlineToken 索引收口为 **sid 会�
   - `specs/changes/archive/2026/20260910-pms-rbac-data-authorization/`（业务权限改为服务端快照）
 
 - [已验收的安全中心管理面与精确权限](../../iam/platform-capabilities/SPEC.md)
+
+- [同源双入口登录](../same-origin-login/README.md)：BFF v2 状态、独立Cookie与当前代次/交付/补偿，2026-10-31本地验收。

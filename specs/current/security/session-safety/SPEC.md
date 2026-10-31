@@ -34,7 +34,7 @@
 
 **IP 集合上限**：`ingot.security.session.ip-set-max-members` 默认 1000，超限不再 `SADD`。
 
-**不在本 schema**：BFF 私有 `in:bff_session:{sessionId}` 由 BFF 独占读写；Auth / 安全中心不读不写，也不建 sid 反向索引。`oauth2:auth:*` / `oauth2:token:*` 仍由 `RedisOAuth2AuthorizationService` 管理，本能力不改其 TTL 计算。
+**不在本 schema**：BFF v2 私有 `in:bff:v2:{appId}:session:{sessionId}`、绑定/事务/代次/交付及清理状态由 BFF/Gateway 安全链路管理；Auth / 安全中心不直读，也不建 sid 反向索引。详见[同源登录](../same-origin-login/SPEC.md)。`oauth2:auth:*` / `oauth2:token:*` 仍由 `RedisOAuth2AuthorizationService` 管理，本能力不改其 TTL 计算。
 
 ## 3. Resource Server 校验
 
@@ -69,7 +69,7 @@ revokeByUser(tenantId, clientId, userId, reason, actor):
 
 **原因**（`SessionRevokeReason`）：`USER_LOGOUT`、`ADMIN_REVOKE`、`CONCURRENT_KICKOUT`、`PASSWORD_CHANGED`、`ACCOUNT_LOCKED`、`ACCOUNT_DISABLED`、`TENANT_REVOKE`。
 
-不含 BFF 会话清理。管理员 / 账号联动 / 并发踢旧后，`in:bff_session:*` 残键靠下一次 401 引导重登，未重登则随 BFF 会话 TTL 消失。BFF 自助登出由 BFF 自己 `DEL` 该键。
+Auth 撤销不直接修改 BFF v2 私有状态。管理员/账号联动/并发踢旧后，Gateway/BFF按权威sid拒绝，旧BFF残态不能证明在线。BFF自助退出还原子失效当前会话并删除当前应用绑定、清两枚Cookie，已知sid经可靠补偿撤销；结果不可resume，另一应用不受影响。
 
 ## 5. 模块结构与依赖方向
 
@@ -79,7 +79,7 @@ ingot-service/ingot-auth/
 └── ingot-auth-provider/   # InnerSessionAPI、会话执行
 ```
 
-`@FeignClient(AUTH_SERVICE)` 只出现在 `ingot-auth-api`。BFF / 安全中心 / 账号域 → Auth；Auth **不**反向调用它们，也不读写 `in:bff_session:*`。
+`@FeignClient(AUTH_SERVICE)` 只出现在 `ingot-auth-api`。BFF / 安全中心 / 账号域 → Auth；Auth **不**反向调用它们，也不读写 BFF v2 私有状态。
 
 | 路径 | 调用方 | 网关 |
 |---|---|---|

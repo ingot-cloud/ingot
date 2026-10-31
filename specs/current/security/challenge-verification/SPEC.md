@@ -15,7 +15,7 @@ Filter 顺序见 [access-protection](../access-protection/SPEC.md)：`BlacklistF
 
 有效 PassToken 消费成功后打 `ingot.security.passToken.ok`，本次 **跳过 Sentinel**。
 
-登录保护对象是网关 **`POST /bff/auth/login`**。BFF 登录 JSON 不含验证码字段；BFF → Auth Feign 不再套码。
+登录保护对象是网关 **`POST /bff/auth/platform/login` 与 `POST /bff/auth/tenant/login`**。BFF 登录 JSON 不含验证码字段；BFF → Auth Feign 不再套码。
 
 ## 2. PassToken
 
