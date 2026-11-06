@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """从正式种子生成 App 用户管理的独立增量目录。"""
 
+import hashlib
 import re
 
 from generate_bootstrap import (
@@ -12,6 +13,12 @@ MIGRATION = ROOT / 'databases/iam/migrations/036_member_platform_application.sql
 
 def build(check=False):
     """同步可预演的增量脚本，限制写入本应用的目录表。"""
+    if MEMBER_APPLICATION == 'platform-member':
+        # 旧目录增量属于历史版本，新目录使用完整初始化。
+        expected = 'cf4fbb34dcbe051583901c47961dc8775d77f1b572b06bb569ab67384aeb55d1'
+        if hashlib.sha256(MIGRATION.read_bytes()).hexdigest() != expected:
+            raise SystemExit('历史036迁移摘要不一致')
+        return
     app = quote(MEMBER_APPLICATION)
     _, root, _, pages = MEMBER_MENUS[0]
     actions = [{'resource': resource, 'code': code}

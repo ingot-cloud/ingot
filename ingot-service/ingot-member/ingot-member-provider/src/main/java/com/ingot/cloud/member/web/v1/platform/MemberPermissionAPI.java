@@ -54,7 +54,16 @@ public class MemberPermissionAPI implements RShortcuts {
     @Operation(summary = "更新权限", description = "更新权限信息")
     @PutMapping
     public R<Void> update(@Validated(Group.Update.class) @RequestBody MemberPermission params) {
-        access.require(MemberAdminResources.PERMISSION, MemberAdminResources.PERMISSION_UPDATE);
+        if (params.getCreatedAt() != null || params.getUpdatedAt() != null || params.getDeletedAt() != null) {
+            throw new com.ingot.framework.commons.error.BizException(
+                    com.ingot.framework.commons.model.iam.IamReasonCode.INVALID_ARGUMENT);
+        }
+        if (params.getStatus() != null) {
+            access.require(MemberAdminResources.PERMISSION, MemberAdminResources.PERMISSION_CHANGE_STATUS);
+        }
+        if (params.getStatus() == null || params.getPid() != null || params.getName() != null || params.getCode() != null || params.getRemark() != null) {
+            access.require(MemberAdminResources.PERMISSION, MemberAdminResources.PERMISSION_UPDATE);
+        }
         params.setType(null);
         bizPermissionService.updateNonMenuPermission(params);
         return ok();

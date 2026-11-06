@@ -15,7 +15,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.persistence.entity.IamDepartmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamMemberDepartmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamPlatformGroupEntity;
@@ -63,14 +65,14 @@ public class GroupRepository {
     private final IamRoleAssignmentMapper assignments;
 
     /**
-     * 统计当前组织的用户组，读取资格和 ALL 范围语义由调用方沿用组列表准入。
+     * 按与组列表相同的对象范围统计当前组织的用户组。
      *
      * @param tenantId 当前可信组织 ID
+     * @param scope 组读取范围
      * @return 当前组织用户组数
      */
-    public long countTenant(long tenantId) {
-        return tenantGroups.selectCount(Wrappers.<IamTenantGroupEntity>lambdaQuery()
-                .eq(IamTenantGroupEntity::getTenantId, BigInteger.valueOf(tenantId)));
+    public long countTenant(long tenantId, ObjectScope scope) {
+        return tenantGroups.selectCount(tenantQuery(tenantId, scope));
     }
 
     /**
@@ -89,12 +91,15 @@ public class GroupRepository {
      * @param page 从 1 开始
      * @param pageSize 页大小
      * @param name 组名包含匹配，空白表示不限制
+     * @param scope 组读取范围
      * @return 组页
      */
-    public Page<IamPlatformGroupEntity> pagePlatform(int page, int pageSize, String name) {
-        return platformGroups.selectPage(new Page<>(page, pageSize), Wrappers.<IamPlatformGroupEntity>lambdaQuery()
+    public Page<IamPlatformGroupEntity> pagePlatform(int page, int pageSize, String name, ObjectScope scope) {
+        var query = Wrappers.<IamPlatformGroupEntity>lambdaQuery()
                 .like(name != null && !name.isBlank(), IamPlatformGroupEntity::getName, name)
-                .orderByAsc(IamPlatformGroupEntity::getId));
+                .orderByAsc(IamPlatformGroupEntity::getId);
+        ObjectScopeSql.restrictIds(query, IamPlatformGroupEntity::getId, scope);
+        return platformGroups.selectPage(new Page<>(page, pageSize), query);
     }
 
     /**
@@ -103,20 +108,21 @@ public class GroupRepository {
      * @param memberId 平台成员 ID
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param scope 用户组可见范围
      * @return 组页
      */
-    public Page<IamPlatformGroupEntity> pagePlatformByMember(long memberId, int page, int pageSize) {
-        Long total = platformMembers.selectCount(Wrappers.<IamPlatformGroupMemberEntity>lambdaQuery()
-                .eq(IamPlatformGroupMemberEntity::getMemberId, BigInteger.valueOf(memberId)));
+    public Page<IamPlatformGroupEntity> pagePlatformByMember(long memberId, int page, int pageSize, ObjectScope scope) {
+        var query = Wrappers.<IamPlatformGroupMemberEntity>lambdaQuery()
+                .eq(IamPlatformGroupMemberEntity::getMemberId, BigInteger.valueOf(memberId));
+        ObjectScopeSql.restrictIds(query, IamPlatformGroupMemberEntity::getGroupId, scope);
+        Long total = platformMembers.selectCount(query);
         Page<IamPlatformGroupEntity> result = new Page<>(page, pageSize, total == null ? 0 : total);
         if (total == null || total == 0) {
             return result;
         }
         int offset = Math.max(page - 1, 0) * pageSize;
         List<IamPlatformGroupMemberEntity> links = platformMembers.selectList(
-                Wrappers.<IamPlatformGroupMemberEntity>lambdaQuery()
-                        .eq(IamPlatformGroupMemberEntity::getMemberId, BigInteger.valueOf(memberId))
-                        .orderByAsc(IamPlatformGroupMemberEntity::getGroupId)
+                query.orderByAsc(IamPlatformGroupMemberEntity::getGroupId)
                         .last("LIMIT " + pageSize + " OFFSET " + offset));
         if (links.isEmpty()) {
             return result;
@@ -138,19 +144,25 @@ public class GroupRepository {
      * @param memberId 租户成员 ID
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param scope 用户组可见范围
      * @return 组页
      */
-    public Page<IamTenantGroupEntity> pageTenantByMember(long tenantId, long memberId, int page, int pageSize) {
+    public Page<IamTenantGroupEntity> pageTenantByMember(long tenantId, long memberId, int page, int pageSize,
+                                                        ObjectScope scope) {
         BigInteger tenant = BigInteger.valueOf(tenantId);
         BigInteger member = BigInteger.valueOf(memberId);
-        long total = tenantMembers.countGroupsOfMember(tenant, member);
+        Set<BigInteger> ids = scope.coversAll() ? null : ObjectScopeSql.objectIds(scope);
+        if (ids != null && ids.isEmpty()) {
+            return new Page<>(page, pageSize, 0);
+        }
+        long total = tenantMembers.countGroupsOfMember(tenant, member, ids);
         Page<IamTenantGroupEntity> result = new Page<>(page, pageSize, total);
         if (total == 0) {
             result.setRecords(List.of());
             return result;
         }
         int offset = Math.max(page - 1, 0) * pageSize;
-        result.setRecords(tenantMembers.pageGroupsOfMember(tenant, member, pageSize, offset));
+        result.setRecords(tenantMembers.pageGroupsOfMember(tenant, member, ids, pageSize, offset));
         return result;
     }
 
@@ -161,13 +173,20 @@ public class GroupRepository {
      * @param page 从 1 开始
      * @param pageSize 页大小
      * @param name 组名包含匹配，空白表示不限制
+     * @param scope 组读取范围
      * @return 组页
      */
-    public Page<IamTenantGroupEntity> pageTenant(long tenantId, int page, int pageSize, String name) {
-        return tenantGroups.selectPage(new Page<>(page, pageSize), Wrappers.<IamTenantGroupEntity>lambdaQuery()
-                .eq(IamTenantGroupEntity::getTenantId, BigInteger.valueOf(tenantId))
+    public Page<IamTenantGroupEntity> pageTenant(long tenantId, int page, int pageSize, String name, ObjectScope scope) {
+        return tenantGroups.selectPage(new Page<>(page, pageSize), tenantQuery(tenantId, scope)
                 .like(name != null && !name.isBlank(), IamTenantGroupEntity::getName, name)
                 .orderByAsc(IamTenantGroupEntity::getId));
+    }
+
+    private LambdaQueryWrapper<IamTenantGroupEntity> tenantQuery(long tenantId, ObjectScope scope) {
+        var query = Wrappers.<IamTenantGroupEntity>lambdaQuery()
+                .eq(IamTenantGroupEntity::getTenantId, BigInteger.valueOf(tenantId));
+        ObjectScopeSql.restrictIds(query, IamTenantGroupEntity::getId, scope);
+        return query;
     }
 
     /**

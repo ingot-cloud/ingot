@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.swagger.v3.core.converter.ModelConverters;
+import com.ingot.framework.commons.model.download.DownloadTask;
+import com.ingot.framework.commons.model.download.DownloadLink;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.media.Schema;
 import jakarta.validation.Validation;
@@ -288,7 +290,8 @@ class IamAuthorizationContractTest {
                 CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class, DepartmentTreeNode.class,
                 GroupRecord.class, GroupEffectiveMemberRecord.class, GroupMembership.class, GroupMembershipDepartment.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
                 EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
-                DepartmentWorkbookExportInput.class,
+                DepartmentWorkbookExportInput.class, MemberWorkbookExportInput.class,
+                TenantWorkbenchStatistics.class, DownloadTask.class, DownloadLink.class,
                 DelegationRecord.class, PlanRecord.class, PlanApplication.class, EntitlementRecord.class,
                 FieldPolicyInput.class,
                 DiagnoseInput.class, ConfigurationStatusInput.class, MemberStatusInput.class, VersionInput.class,
@@ -314,7 +317,11 @@ class IamAuthorizationContractTest {
             schemas.putAll(ModelConverters.getInstance().readAll(type));
         }
         for (java.lang.reflect.Type type : List
-            .of(new com.fasterxml.jackson.core.type.TypeReference<R<CurrentRoleGrantList>>() { }.getType(),
+            .of(new com.fasterxml.jackson.core.type.TypeReference<R<TenantWorkbenchStatistics>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<DownloadTask>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<DownloadTask>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<DownloadLink>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<CurrentRoleGrantList>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<CurrentRolePermissionResult>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<Preview<CurrentRolePreviewResult>>>() { }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<CurrentRoleSummary>>>() { }.getType(),

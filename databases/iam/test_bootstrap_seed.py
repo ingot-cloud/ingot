@@ -128,9 +128,9 @@ class BootstrapSeedTest(unittest.TestCase):
             'iam-tenant\torg.iam.compliance\tep:lock\n'
             'iam-tenant\torg.iam.organization\tep:office-building\n'
             'iam-tenant\torg.iam.workspace\tep:grid\n'
-            'platform:develop\tplatform.develop\tep:cpu\n'
-            'platform:member\tmember.root\tep:iphone\n'
-            'platform:security\tsecurity.root\tep:lock',
+            'platform-developer\tplatform.develop\tep:cpu\n'
+            'platform-member\tmember.root\tep:iphone\n'
+            'platform-security\tsecurity.root\tep:lock',
             self.sql("""
                 SELECT app.code, menu.route_name, menu.icon FROM iam_menu menu
                 JOIN iam_application app ON app.id = menu.application_id
@@ -139,7 +139,7 @@ class BootstrapSeedTest(unittest.TestCase):
             """))
         self.assertEqual('0', self.sql("SELECT COUNT(*) FROM iam_menu "
                                        "WHERE parent_id IS NOT NULL AND icon IS NOT NULL AND TRIM(icon) <> '' "
-                                       "AND application_id <> (SELECT id FROM iam_application WHERE code='platform:member')"))
+                                       "AND application_id <> (SELECT id FROM iam_application WHERE code='platform-member')"))
 
     def test_member_catalog_upgrade_dry_run_repeat_conflict_and_rollback(self):
         directory = SCHEMA_DIRECTORY / 'migrations'
@@ -173,8 +173,9 @@ class BootstrapSeedTest(unittest.TestCase):
         self.sql("INSERT INTO iam_application (id, code, domain, name) "
                  "VALUES (500001, 'iam-platform', 'PLATFORM', '既有平台治理')")
         self.bootstrap()
+        self.sql("UPDATE iam_application SET code='platform:develop' WHERE code='platform-developer'")
         root_condition = "parent_id IS NULL AND kind = 'DIRECTORY'"
-        old_roots = " AND route_name NOT IN ('platform.settings','security.root')"
+        old_roots = " AND route_name NOT IN ('platform.settings','security.root','member.root')"
         expected_icons = self.sql("SELECT id, icon FROM iam_menu WHERE " + root_condition + old_roots
                                   + " AND route_name <> 'org.iam.workspace' ORDER BY id")
         self.sql("""
@@ -238,6 +239,7 @@ class BootstrapSeedTest(unittest.TestCase):
         for schema in sources('frameworkSchemas'):
             self.sql(read_source(schema))
         self.bootstrap()
+        self.sql(sources('initialAccounts')[0].read_text())
         tables = self.sql('SHOW TABLES').splitlines()
         definitions = {table: self.sql(f'SHOW CREATE TABLE `{table}`') for table in tables}
         counts = {table: self.count(table) for table in tables}
@@ -248,10 +250,10 @@ class BootstrapSeedTest(unittest.TestCase):
         for table in tables:
             self.assertEqual(definitions[table], self.sql(f'SHOW CREATE TABLE `{table}`'), table)
             self.assertEqual(counts[table], self.count(table), table)
-        self.assertEqual(64, len(tables))
-        self.assertEqual(172, self.count('iam_action'))
+        self.assertEqual(65, len(tables))
+        self.assertEqual(181, self.count('iam_action'))
         self.assertEqual(41, self.count('iam_menu'))
-        for table in ['iam_account', 'iam_tenant', 'iam_role_assignment', 'iam_authorization_audit',
+        for table in ['iam_tenant', 'iam_tenant_member', 'iam_authorization_audit',
                       'account_lock_state', 'password_history', 'password_expiration', 'security_event']:
             self.assertEqual(0, self.count(table), table)
         self.assertEqual('1', self.sql('SELECT @@FOREIGN_KEY_CHECKS'))
@@ -270,9 +272,10 @@ class BootstrapSeedTest(unittest.TestCase):
 
         for initial_fk_checks in (1, 0):
             with self.subTest(initial_fk_checks=initial_fk_checks):
-                self.sql(MANUAL_SEED.read_text())
                 # Organization and owner form a real FK cycle; runtime assignments reference seed roles.
                 self.sql("""
+                    INSERT INTO iam_account (id, username, password_hash)
+                        VALUES (900002, 'temporary-owner', 'fixture');
                     INSERT INTO iam_tenant (id, name) VALUES (800101, '临时组织');
                     INSERT INTO iam_tenant_member (id, tenant_id, account_id, display_name)
                         VALUES (800102, 800101, 900002, '临时所有者');
@@ -298,7 +301,7 @@ class BootstrapSeedTest(unittest.TestCase):
                 self.assertEqual('0', self.sql("SELECT COUNT(*) FROM iam_menu WHERE kind = 'DIRECTORY' "
                                                "AND parent_id IS NOT NULL "
                                                "AND (view_path IS NULL OR view_path <> 'layout.simple')"))
-                self.assertEqual('iam-tenant:role:upgrade', self.sql('SELECT code FROM iam_action WHERE enabled = FALSE ORDER BY code'))
+                self.assertEqual(0, self.count('iam_action', 'NOT enabled'))
                 self.assertEqual(str(RESERVED_CEILING),
                                  self.sql("SELECT max_id FROM biz_leaf_alloc WHERE biz_tag = 'iam'"))
                 self.sql("INSERT INTO iam_platform_member (id, account_id, display_name) "
@@ -330,11 +333,11 @@ class BootstrapSeedTest(unittest.TestCase):
                 self.assertEqual(normalized(before[table]), normalized(self.sql(f'SHOW CREATE TABLE `{table}`')), table)
         self.assertEqual(before_indexes, self.sql(indexes))
 
-    def test_empty_database_gets_complete_catalog_without_credentials(self):
+    def test_catalog_seed_keeps_identity_creation_separate(self):
         self.bootstrap()
         self.assertEqual(5, self.count("iam_application"))
-        self.assertEqual(42, self.count("iam_resource"))
-        self.assertEqual(172, self.count("iam_action"))
+        self.assertEqual(44, self.count("iam_resource"))
+        self.assertEqual(181, self.count("iam_action"))
         self.assertEqual(41, self.count("iam_menu"))
         self.assertEqual('FULL', self.sql("""
             SELECT JSON_UNQUOTE(JSON_EXTRACT(revision.resource_field_permissions,
@@ -347,10 +350,41 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(0, self.count("iam_resource", "code='resource-field-policy'"))
         self.assertEqual(1, self.count("iam_default_policy_revision"))
         self.assertEqual(1, self.count("biz_leaf_alloc", "biz_tag = 'iam'"))
-        # The seed carries no identity or credential rows; those come from the security use case.
+        # The catalog component does not create identities before the account seed runs.
         self.assertEqual(0, self.count("iam_account"))
         self.assertEqual(0, self.count("iam_platform_member"))
         self.assertEqual(0, self.count("iam_role_assignment"))
+
+    def test_full_initialization_creates_one_platform_admin_and_no_tenant(self):
+        self.sql(sources('bundle')[0].read_text())
+        self.assertEqual(1, self.count('iam_account'))
+        self.assertEqual('platform\t1\t1', self.sql("""
+            SELECT username, enabled, must_change_password FROM iam_account
+        """))
+        self.assertRegex(self.sql('SELECT password_hash FROM iam_account'),
+                         r'^\{bcrypt\}\$2a\$10\$[./A-Za-z0-9]{53}$')
+        self.assertEqual(1, self.count('iam_platform_member'))
+        self.assertEqual(1, self.count('iam_role_assignment'))
+        self.assertEqual(f'{ADMIN_ROLE_CODE}\tINITIALIZATION', self.sql("""
+            SELECT role.code, assignment.source
+            FROM iam_account account
+            JOIN iam_platform_member member ON member.account_id = account.id AND member.status = 'ACTIVE'
+            JOIN iam_role_assignment assignment ON assignment.platform_member_id = member.id
+                AND assignment.domain = 'PLATFORM' AND assignment.subject_type = 'MEMBER'
+                AND assignment.status = 'ACTIVE' AND assignment.valid_from <= UTC_TIMESTAMP(6)
+                AND assignment.valid_until IS NULL AND assignment.delegation_grant_id IS NULL
+            JOIN iam_role_revision revision ON revision.id = assignment.revision_id
+            JOIN iam_role_definition role ON role.id = revision.role_id AND role.kind = 'SYSTEM'
+                AND role.domain = 'PLATFORM' AND role.enabled
+            WHERE account.username = 'platform'
+        """))
+        self.assertEqual(0, self.count('iam_tenant'))
+        self.assertEqual(0, self.count('iam_tenant_member'))
+        self.sql("UPDATE iam_account SET password_hash = 'changed', must_change_password = FALSE")
+        self.sql(sources('initialAccounts')[0].read_text())
+        self.assertEqual('changed\t0', self.sql('SELECT password_hash, must_change_password FROM iam_account'))
+        self.assertEqual(1, self.count('iam_platform_member'))
+        self.assertEqual(1, self.count('iam_role_assignment'))
 
     def test_rerun_does_not_append_permissions_to_an_existing_fixed_revision(self):
         self.bootstrap()
@@ -401,7 +435,7 @@ class BootstrapSeedTest(unittest.TestCase):
 
     def test_governance_grants_cover_own_domain_only(self):
         self.bootstrap()
-        for role, domain, expected in ((ADMIN_ROLE_CODE, "PLATFORM", 108),
+        for role, domain, expected in ((ADMIN_ROLE_CODE, "PLATFORM", 137),
                                        ("tenant-governance", "TENANT", 44)):
             covered = self.sql(f"""
                 SELECT COUNT(*) FROM iam_role_grant grant_row
@@ -446,34 +480,34 @@ class BootstrapSeedTest(unittest.TestCase):
     def test_developer_pages_and_executable_operations_belong_to_an_independent_platform_app(self):
         self.bootstrap()
         self.assertEqual('PLATFORM\t0\t开发者平台', self.sql("""
-            SELECT domain, baseline, name FROM iam_application WHERE code = 'platform:develop'
+            SELECT domain, baseline, name FROM iam_application WHERE code = 'platform-developer'
         """))
         self.assertEqual('layout.main', self.sql("""
             SELECT menu.view_path FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id
-            WHERE app.code = 'platform:develop' AND menu.kind = 'DIRECTORY'
+            WHERE app.code = 'platform-developer' AND menu.kind = 'DIRECTORY'
         """))
-        self.assertEqual('platform.develop.qrcode\tplatform:develop:qrcode\n'
-                         'platform.develop.client\tplatform:develop:client:query\n'
-                         'platform.develop.social\tiam-platform:social-config:read\n'
-                         'platform.develop.id\tiam-platform:id-allocation:read', self.sql("""
+        self.assertEqual('platform.develop.qrcode\tplatform-developer:qr-code:generate\n'
+                         'platform.develop.client\tplatform-developer:oauth-client:read-list\n'
+                         'platform.develop.social\tplatform-developer:social-config:read\n'
+                         'platform.develop.id\tplatform-developer:id-allocation:read', self.sql("""
             SELECT menu.view_path, action.code FROM iam_menu menu
-            JOIN iam_application app ON app.id = menu.application_id AND app.code = 'platform:develop'
+            JOIN iam_application app ON app.id = menu.application_id AND app.code = 'platform-developer'
             JOIN iam_menu parent ON parent.id = menu.parent_id AND parent.application_id = app.id
             JOIN iam_menu_action link ON link.menu_id = menu.id AND link.application_id = app.id
             JOIN iam_action action ON action.id = link.action_id AND action.application_id = app.id
             WHERE menu.kind = 'PAGE' AND parent.route_name = 'platform.develop'
             ORDER BY menu.sort_order
         """))
-        self.assertEqual('client\nid-allocation\nqrcode\nsocial-config', self.sql("""
+        self.assertEqual('id-allocation\noauth-client\nqr-code\nsocial-config', self.sql("""
             SELECT resource.code
             FROM iam_resource resource JOIN iam_application app ON app.id = resource.application_id
-            WHERE app.code = 'platform:develop' ORDER BY resource.code
+            WHERE app.code = 'platform-developer' ORDER BY resource.code
         """))
         self.assertEqual('15', self.sql("""
             SELECT COUNT(*) FROM iam_action action
             JOIN iam_application app ON app.id = action.application_id
             JOIN iam_resource resource ON resource.id = action.resource_id AND resource.application_id = app.id
-            WHERE app.code = 'platform:develop'
+            WHERE app.code = 'platform-developer'
         """))
         self.assertEqual('0', self.sql("""
             SELECT COUNT(*) FROM iam_resource resource JOIN iam_application app ON app.id = resource.application_id
@@ -488,6 +522,85 @@ class BootstrapSeedTest(unittest.TestCase):
                       "iam_role_definition", "iam_role_revision", "iam_default_policy_revision"):
             highest = int(self.sql(f"SELECT COALESCE(MAX(id), 0) FROM {table}"))
             self.assertLess(highest, allocator_start, table)
+
+    def test_rebuilt_minimal_roles_open_only_their_authorized_page_entries(self):
+        self.sql(sources('bundle')[0].read_text())
+        self.sql("INSERT INTO iam_tenant (id, name) VALUES (850000, '隔离授权组织')")
+        fixtures = [
+            ('platform-member-read', 'PLATFORM', ['iam-platform:member:read'], ['platform.iam.personnel']),
+            ('platform-group-read', 'PLATFORM', ['iam-platform:group:read'], ['platform.iam.personnel']),
+            ('platform-personnel-read', 'PLATFORM', ['iam-platform:member:read', 'iam-platform:group:read'],
+             ['platform.iam.personnel']),
+            ('platform-diagnosis', 'PLATFORM', ['iam-platform:authorization-diagnosis:run'], ['platform.iam.authorization']),
+            ('platform-no-actions', 'PLATFORM', [], []),
+            ('tenant-application-read', 'TENANT', ['iam-tenant:application:read'], ['org.iam.applications']),
+            ('tenant-workbench', 'TENANT', ['iam-tenant:workbench:read'], ['org.iam.workbench']),
+            ('tenant-diagnosis', 'TENANT', ['iam-tenant:authorization-diagnosis:run'], ['org.iam.authorization']),
+            ('security-policy-editor', 'PLATFORM', ['platform-security:access-policy:read',
+                                                    'platform-security:access-policy:update'], ['security.access.protection']),
+            ('security-block-event-reader', 'PLATFORM', ['platform-security:block-event:read'],
+             ['security.access.protection']),
+            ('app-user-editor', 'PLATFORM', ['platform-member:user:read-list',
+                                             'platform-member:user:update'], ['member.user']),
+        ]
+        for index, (code, domain, actions, routes) in enumerate(fixtures):
+            with self.subTest(role=code):
+                role, revision = 850001 + index, 851001 + index
+                account, member, assignment = 852001 + index, 853001 + index, 854001 + index
+                kind, tenant = ('PLATFORM_CUSTOM', 'NULL') if domain == 'PLATFORM' else ('TENANT_CUSTOM', '850000')
+                self.sql(f"""
+                    INSERT INTO iam_account(id, username, password_hash) VALUES ({account}, '{code}', 'fixture');
+                    INSERT INTO iam_role_definition(id, domain, tenant_id, kind, code, name)
+                        VALUES ({role}, '{domain}', {tenant}, '{kind}', '{code}', '{code}');
+                    INSERT INTO iam_role_revision(id, role_id, kind, revision, metadata_overrides)
+                        VALUES ({revision}, {role}, '{kind}', 1, JSON_OBJECT());
+                """)
+                if domain == 'PLATFORM':
+                    self.sql(f"""
+                        INSERT INTO iam_platform_member(id, account_id, display_name)
+                            VALUES ({member}, {account}, '{code}');
+                        INSERT INTO iam_role_assignment(id, domain, subject_type, platform_member_id,
+                            revision_id, revision_kind, scope_bindings, valid_from, source)
+                            VALUES ({assignment}, '{domain}', 'MEMBER', {member},
+                                {revision}, '{kind}', JSON_OBJECT(), UTC_TIMESTAMP(6), 'MANUAL');
+                    """)
+                else:
+                    self.sql(f"""
+                        UPDATE iam_role_definition SET current_revision_id={revision} WHERE id={role};
+                        INSERT INTO iam_tenant_member(id, tenant_id, account_id, display_name)
+                            VALUES ({member}, {tenant}, {account}, '{code}');
+                        INSERT INTO iam_role_assignment(id, domain, tenant_id, subject_type, tenant_member_id,
+                            role_id, role_kind, role_tenant_key, scope_bindings, valid_from, source)
+                            VALUES ({assignment}, '{domain}', {tenant}, 'MEMBER', {member},
+                                {role}, '{kind}', {tenant}, JSON_OBJECT(), UTC_TIMESTAMP(6), 'MANUAL');
+                    """)
+                if actions:
+                    codes = ','.join("'" + action + "'" for action in actions)
+                    self.sql(f"""
+                        INSERT INTO iam_role_grant(revision_id, action_id, scopes)
+                        SELECT {revision}, action.id, JSON_ARRAY(JSON_OBJECT('kind', 'ALL'))
+                        FROM iam_action action JOIN iam_application app ON app.id = action.application_id
+                        WHERE app.domain = '{domain}' AND action.enabled AND action.code IN ({codes});
+                    """)
+                self.assertEqual(sorted(actions), self.sql(f"""
+                    SELECT action.code FROM iam_role_grant g JOIN iam_action action ON action.id = g.action_id
+                    WHERE g.revision_id = {revision} ORDER BY action.code
+                """).splitlines())
+                self.assertEqual(routes, self.sql(f"""
+                    SELECT DISTINCT menu.route_name FROM iam_menu menu
+                    JOIN iam_menu_action link ON link.menu_id = menu.id
+                    JOIN iam_role_assignment a ON a.id = {assignment} AND a.status = 'ACTIVE'
+                    LEFT JOIN iam_role_definition r ON r.id = a.role_id AND r.enabled
+                    JOIN iam_role_grant g ON g.action_id = link.action_id
+                        AND g.revision_id = COALESCE(a.revision_id, r.current_revision_id)
+                    WHERE menu.enabled AND menu.kind = 'PAGE' AND menu.access_mode = 'ACTION' AND menu.match_mode = 'ANY'
+                    ORDER BY menu.route_name
+                """).splitlines())
+        self.assertEqual(len(fixtures) + 1, self.count('iam_role_assignment'))
+        self.assertEqual(80, self.count('iam_menu_action'))
+        self.assertEqual(29, self.count('iam_menu', "kind = 'PAGE'"))
+        self.assertEqual(0, self.count('iam_action', "code IN ('platform:develop:client:query', "
+                                      "'iam-tenant:role:upgrade', 'iam-platform:authorization:diagnose')"))
 
     def test_action_menus_are_unreachable_without_a_linked_action(self):
         self.bootstrap()
@@ -532,10 +645,10 @@ class BootstrapSeedTest(unittest.TestCase):
         self.bootstrap()
         self.assertEqual(1, self.count("iam_application", "code = 'iam-tenant'"))
         self.assertEqual("500001", self.sql("SELECT id FROM iam_application WHERE code = 'iam-tenant'"))
-        self.assertEqual(12, self.count("iam_resource", "application_id = 500001"))
+        self.assertEqual(13, self.count("iam_resource", "application_id = 500001"))
         self.assertEqual(44, self.count("iam_action", "application_id = 500001"))
         self.assertEqual(14, self.count("iam_menu", "application_id = 500001"))
-        self.assertEqual(172, self.count("iam_role_grant"))
+        self.assertEqual(181, self.count("iam_role_grant"))
 
     def test_manual_verification_seed_layers_on_the_cold_start_catalog(self):
         self.bootstrap()
@@ -544,7 +657,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(2, self.count("iam_account"))
         self.assertEqual(1, self.count("iam_platform_member"))
         self.assertEqual(2, self.count("iam_role_definition"))
-        self.assertEqual(172, self.count("iam_role_grant"))
+        self.assertEqual(181, self.count("iam_role_grant"))
         # The governance assignment resolves the platform revision from the seed, not a fixed id.
         self.assertEqual("1", self.sql("""
             SELECT COUNT(*) FROM iam_role_assignment assignment

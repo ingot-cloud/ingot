@@ -3,6 +3,7 @@ package com.ingot.framework.commons.model.iam;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.IOException;
 import java.util.HashSet;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -67,6 +68,9 @@ public record MemberProfileInput(
             var input = parser.getCodec().treeToValue(node, JacksonInput.class);
             java.util.Set<String> keys = new HashSet<>();
             node.fieldNames().forEachRemaining(keys::add);
+            if (keys.remove(AssetFieldNames.AVATAR_UPLOAD_ID) && !keys.add(MemberFieldKey.VALUE_AVATAR)) {
+                throw JsonMappingException.from(parser, "头像与上传凭证不能同时提交");
+            }
             return new MemberProfileInput(input.expectedVersion(), input.displayName(), input.avatar(), input.phone(),
                     input.email(), keys);
         }
@@ -88,7 +92,7 @@ public record MemberProfileInput(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Schema(hidden = true)
-    public record JacksonInput(String expectedVersion, String displayName, String avatar, String phone, String email) {
+    public record JacksonInput(String expectedVersion, String displayName, @JsonAlias(AssetFieldNames.AVATAR_UPLOAD_ID) String avatar, String phone, String email) {
     }
 
     /** 复制提交字段集合。 */

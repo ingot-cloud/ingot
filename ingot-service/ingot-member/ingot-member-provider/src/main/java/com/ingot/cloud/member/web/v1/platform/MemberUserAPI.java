@@ -118,7 +118,7 @@ public class MemberUserAPI implements RShortcuts {
     @PutMapping("/{id}/enable")
     public R<?> enableAccount(@PathVariable Long id,
                               @RequestParam(required = false) String reason) {
-        access.require(MemberAdminResources.USER, MemberAdminResources.USER_UPDATE);
+        access.require(MemberAdminResources.USER, MemberAdminResources.USER_ENABLE);
         bizUserService.enableAccount(id, reason);
         return ok();
     }
@@ -128,7 +128,7 @@ public class MemberUserAPI implements RShortcuts {
     @PutMapping("/{id}/disable")
     public R<?> disableAccount(@PathVariable Long id,
                                @RequestParam(required = false) String reason) {
-        access.require(MemberAdminResources.USER, MemberAdminResources.USER_UPDATE);
+        access.require(MemberAdminResources.USER, MemberAdminResources.USER_DISABLE);
         bizUserService.disableAccount(id, reason);
         return ok();
     }
@@ -148,7 +148,7 @@ public class MemberUserAPI implements RShortcuts {
     @PutMapping("/{id}/unlock")
     public R<?> unlockAccount(@PathVariable Long id,
                               @RequestBody MemberAccountLockDTO params) {
-        access.require(MemberAdminResources.USER, MemberAdminResources.USER_LOCK);
+        access.require(MemberAdminResources.USER, MemberAdminResources.USER_UNLOCK);
         bizUserService.unlockAccount(id, params.getReasonDetail());
         return ok();
     }

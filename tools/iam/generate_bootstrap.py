@@ -24,7 +24,7 @@ RESOURCE_BASE = 110000
 ACTION_BASE = 120000
 # 新增操作固定保留号；避免改变历史目录操作的标识。
 ADDITIONAL_ACTION_IDS = {
-    'iam-tenant:department:leaders': 120999,
+    'iam-tenant:department:set-leaders': 120999,
     'iam-tenant:department:export': 121200,
 }
 MENU_BASE = 130000
@@ -34,11 +34,11 @@ POLICY_BASE = 150000
 DIRECTORY_VIEW_PATH = 'layout.main'
 # 二级及以下带子集的目录走简单布局，避免再套一层完整壳。
 NESTED_DIRECTORY_VIEW_PATH = 'layout.simple'
-DEVELOPER_APPLICATION = 'platform:develop'
-SECURITY_APPLICATION = 'platform:security'
-MEMBER_APPLICATION = 'platform:member'
-SECURITY_RESOURCES = {'credential-policy', 'lockout-policy', 'login-failure-policy', 'session', 'session-policy', 'security-policy'}
-DEVELOPER_PLATFORM_RESOURCES = {'id-allocation', 'social-config'}
+DEVELOPER_APPLICATION = 'platform-developer'
+SECURITY_APPLICATION = 'platform-security'
+MEMBER_APPLICATION = 'platform-member'
+SECURITY_RESOURCES = {'credential-policy', 'account-lockout-policy', 'login-failure-policy',
+                      'session', 'session-concurrency-policy', 'access-policy', 'block-event'}
 
 APPLICATIONS = {
     'iam-platform': {'id': APPLICATION_BASE + 1, 'domain': 'PLATFORM', 'name': '平台治理', 'icon': 'ep:monitor',
@@ -63,7 +63,7 @@ GOVERNANCE_ROLES = {
     'PLATFORM': {'id': ROLE_BASE + 1, 'revision_id': REVISION_BASE + 1, 'code': ADMIN_ROLE_CODE,
                  'name': '超级管理员', 'description': '系统平台超级管理员，受控直接分配并覆盖新增平台操作', 'application': 'iam-platform'},
     'TENANT': {'id': ROLE_BASE + 2, 'revision_id': REVISION_BASE + 2, 'code': 'tenant-governance',
-               'name': '组织治理', 'description': '组织所有者的全部治理操作', 'application': 'iam-tenant'},
+               'name': '组织治理系统角色', 'description': '组织治理的兼容系统角色', 'application': 'iam-tenant'},
 }
 
 DEFAULT_POLICIES = {
@@ -96,13 +96,13 @@ TENANT_MEMBER_FIELDS = [dict(field, filterable=True) if field['key'] == 'display
 RESOURCES = {
     'action': ('操作', OBJECT_SCOPES, []),
     'application': ('应用', OBJECT_SCOPES, []),
-    'assignment': ('角色授权', OBJECT_SCOPES, []),
-    'audience': ('应用可用人群', SINGLETON_SCOPES, []),
-    'audit': ('审计记录', SINGLETON_SCOPES, []),
-    'authorization': ('授权诊断', SINGLETON_SCOPES, []),
+    'role-assignment': ('角色授权', OBJECT_SCOPES, []),
+    'application-audience': ('应用可用人群', SINGLETON_SCOPES, []),
+    'authorization-audit': ('审计记录', SINGLETON_SCOPES, []),
+    'authorization-diagnosis': ('授权诊断', SINGLETON_SCOPES, []),
     'delegation': ('授权委派', OBJECT_SCOPES, []),
     'department': ('部门', DEPARTMENT_SCOPES, []),
-    'entitlement': ('应用开通', OBJECT_SCOPES, []),
+    'application-entitlement': ('应用开通', OBJECT_SCOPES, []),
     'field-policy': ('字段策略', SINGLETON_SCOPES, []),
     'group': ('用户组', OBJECT_SCOPES, []),
     'member': ('成员', MEMBER_SCOPES, MEMBER_FIELDS),
@@ -117,46 +117,48 @@ RESOURCES = {
     'dictionary': ('字典', SINGLETON_SCOPES, []),
     'id-allocation': ('发号', SINGLETON_SCOPES, []),
     'social-config': ('社会化登录配置', SINGLETON_SCOPES, []),
-    'lockout-policy': ('账号锁定策略', SINGLETON_SCOPES, []),
+    'account-lockout-policy': ('账号锁定策略', SINGLETON_SCOPES, []),
     'credential-policy': ('凭证策略', SINGLETON_SCOPES, []),
     'login-failure-policy': ('登录失败防护', SINGLETON_SCOPES, []),
     'session': ('在线会话', SINGLETON_SCOPES, []),
-    'session-policy': ('会话并发策略', SINGLETON_SCOPES, []),
-    'security-policy': ('安全策略', SINGLETON_SCOPES, []),
-    'client': ('客户端', SINGLETON_SCOPES, []),
-    'qrcode': ('二维码', SINGLETON_SCOPES, []),
+    'session-concurrency-policy': ('会话并发策略', SINGLETON_SCOPES, []),
+    'access-policy': ('安全策略', SINGLETON_SCOPES, []),
+    'oauth-client': ('客户端', SINGLETON_SCOPES, []),
+    'qr-code': ('二维码', SINGLETON_SCOPES, []),
+    'workbench': ('组织工作台', SINGLETON_SCOPES, []),
+    'block-event': ('历史封禁记录', SINGLETON_SCOPES, []),
 }
 
 # Auth注解与原页面使用的精确码；不得改码或用通配码代替。
 # 社交/发号的IAM操作仍保留现有API码，但目录归属由元数据显式指定。
 DEVELOPER_ACTIONS = {
-    'client': {
-        'platform:develop:client:query': '查看客户端',
-        'platform:develop:client:detail': '查看客户端详情',
-        'platform:develop:client:create': '创建客户端',
-        'platform:develop:client:update': '编辑客户端',
-        'platform:develop:client:delete': '删除客户端',
-        'platform:develop:client:reset': '重置客户端密钥',
+    'oauth-client': {
+        'platform-developer:oauth-client:read-list': '查看客户端',
+        'platform-developer:oauth-client:read-detail': '查看客户端详情',
+        'platform-developer:oauth-client:create': '创建客户端',
+        'platform-developer:oauth-client:update': '编辑客户端',
+        'platform-developer:oauth-client:delete': '删除客户端',
+        'platform-developer:oauth-client:reset-secret': '重置客户端密钥',
     },
-    'qrcode': {'platform:develop:qrcode': '生成二维码'},
+    'qr-code': {'platform-developer:qr-code:generate': '生成二维码'},
 }
 
 # ACTION 展示名由动词加资源名合成，保证同一操作码在两个域下命名一致。
 VERBS = {
     'create': '创建',
     'delete': '删除',
-    'departments': '调整任职',
-    'leaders': '设置部门负责人',
-    'diagnose': '诊断',
+    'set-departments': '调整任职',
+    'set-leaders': '设置部门负责人',
+    'run': '诊断',
     'export': '导出',
-    'owner-transfer': '转交所有者',
+    'transfer-owner': '转交所有者',
     'preview': '预览',
-    'publish': '发布版本',
+    'publish-version': '发布版本',
     'read': '查看',
     'remove': '移出',
-    'status': '启停',
+    'change-status': '启停',
     'update': '编辑',
-    'upgrade': '升级',
+    'apply-version': '升级',
     'lookup': '查找',
     'enable': '启用',
     'disable': '停用',
@@ -165,37 +167,43 @@ VERBS = {
     'reset-password': '重置密码',
     'revoke': '撤销',
     'purge': '强制清除',
+    'refresh': '刷新',
 }
 
 # 无宾语动词直接作为展示名，避免出现「转交所有者组织设置」这类拼接。
 
-STANDALONE_VERBS = {'owner-transfer', 'departments', 'leaders', 'diagnose', 'reset-password', 'revoke'}
+STANDALONE_VERBS = {'transfer-owner', 'set-departments', 'set-leaders', 'run', 'reset-password', 'revoke'}
 
 MEMBER_ACTIONS = {
     'user': {
-        f'{MEMBER_APPLICATION}:user:query': '查看用户列表',
-        f'{MEMBER_APPLICATION}:user:detail': '查看用户详情',
-        f'{MEMBER_APPLICATION}:user:create': '新增用户',
-        f'{MEMBER_APPLICATION}:user:update': '编辑或启停用户',
+        f'{MEMBER_APPLICATION}:user:read-list': '查看用户列表',
+        f'{MEMBER_APPLICATION}:user:read-detail': '查看用户详情',
+        f'{MEMBER_APPLICATION}:user:create': '创建 App 用户',
+        f'{MEMBER_APPLICATION}:user:update': '编辑 App 用户',
         f'{MEMBER_APPLICATION}:user:delete': '删除用户',
-        f'{MEMBER_APPLICATION}:user:reset-pwd': '重置用户密码',
-        f'{MEMBER_APPLICATION}:user:roles:query': '查看用户角色',
-        f'{MEMBER_APPLICATION}:user:roles:set': '配置用户角色',
-        f'{MEMBER_APPLICATION}:user:lock': '锁定或解锁用户',
+        f'{MEMBER_APPLICATION}:user:reset-password': '重置用户密码',
+        f'{MEMBER_APPLICATION}:user:read-roles': '查看用户角色',
+        f'{MEMBER_APPLICATION}:user:set-roles': '配置用户角色',
+        f'{MEMBER_APPLICATION}:user:lock': '锁定 App 用户',
+        f'{MEMBER_APPLICATION}:user:unlock': '解锁 App 用户',
+        f'{MEMBER_APPLICATION}:user:enable': '启用 App 用户',
+        f'{MEMBER_APPLICATION}:user:disable': '停用 App 用户',
     },
     'role': {
-        f'{MEMBER_APPLICATION}:role:query': '查看角色',
-        f'{MEMBER_APPLICATION}:role:create': '新增角色',
-        f'{MEMBER_APPLICATION}:role:update': '编辑或启停角色',
+        f'{MEMBER_APPLICATION}:role:read': '查看角色',
+        f'{MEMBER_APPLICATION}:role:create': '创建 App 角色',
+        f'{MEMBER_APPLICATION}:role:update': '编辑 App 角色',
+        f'{MEMBER_APPLICATION}:role:change-status': '启停 App 角色',
         f'{MEMBER_APPLICATION}:role:delete': '删除角色',
-        f'{MEMBER_APPLICATION}:role:user:assign': '分配角色用户',
-        f'{MEMBER_APPLICATION}:role:permissions:query': '查看角色权限',
-        f'{MEMBER_APPLICATION}:role:permissions:set': '配置角色权限',
+        f'{MEMBER_APPLICATION}:role:assign-users': '分配角色用户',
+        f'{MEMBER_APPLICATION}:role:read-permissions': '查看角色权限',
+        f'{MEMBER_APPLICATION}:role:set-permissions': '配置角色权限',
     },
     'permission': {
-        f'{MEMBER_APPLICATION}:permission:query': '查看权限',
-        f'{MEMBER_APPLICATION}:permission:create': '新增权限',
-        f'{MEMBER_APPLICATION}:permission:update': '编辑或启停权限',
+        f'{MEMBER_APPLICATION}:permission:read': '查看权限',
+        f'{MEMBER_APPLICATION}:permission:create': '创建 App 权限',
+        f'{MEMBER_APPLICATION}:permission:update': '编辑 App 权限',
+        f'{MEMBER_APPLICATION}:permission:change-status': '启停 App 权限',
         f'{MEMBER_APPLICATION}:permission:delete': '删除权限',
     },
 }
@@ -211,20 +219,20 @@ MEMBER_RESOURCES = {
 # 目录节点携带其子页 ACTION 的并集并使用 ANY，子页全部不可见时目录随之隐藏。
 # 一级目录使用两管理台已离线打包的 ep 图标集。
 PLATFORM_MENUS = [
-    ('组织与租户', 'platform.iam.tenant', 'ep:office-building', [
-        ('租户管理', 'platform.iam.tenants', ['iam-platform:tenant:read']),
+    ('租户管理', 'platform.iam.tenant', 'ep:office-building', [
+        ('租户列表', 'platform.iam.tenants', ['iam-platform:tenant:read']),
     ]),
     ('应用与配置', 'platform.iam.config', 'ep:setting', [
         ('应用目录', 'platform.iam.applications', ['iam-platform:application:read']),
-        ('套餐', 'platform.iam.plans', ['iam-platform:plan:read']),
+        ('租户套餐', 'platform.iam.plans', ['iam-platform:plan:read']),
         ('共享角色', 'platform.iam.shared.roles', ['iam-platform:shared-role:read']),
     ]),
     ('平台管理', 'platform.iam.manage', 'ep:monitor', [
         ('全局账号', 'platform.iam.accounts', ['iam-platform:account:read']),
-        ('平台人员', 'platform.iam.personnel', ['iam-platform:member:read']),
+        ('平台成员与用户组', 'platform.iam.personnel', ['iam-platform:member:read', 'iam-platform:group:read']),
         ('角色与授权', 'platform.iam.authorization',
-         ['iam-platform:role:read', 'iam-platform:assignment:read', 'iam-platform:delegation:read']),
-        ('平台授权审计', 'platform.iam.authorization.audit', ['iam-platform:audit:read']),
+         ['iam-platform:role:read', 'iam-platform:role-assignment:read', 'iam-platform:delegation:read', 'iam-platform:authorization-diagnosis:run']),
+        ('平台授权审计', 'platform.iam.authorization.audit', ['iam-platform:authorization-audit:read']),
     ]),
     ('系统设置', 'platform.settings', 'ep:setting', [
         ('字典管理', 'platform.settings.dictionaries', ['iam-platform:dictionary:read']),
@@ -242,39 +250,39 @@ TENANT_MENUS = [
     ]),
     ('权限与应用', 'org.iam.authorization.root', 'ep:connection', [
         ('角色与授权', 'org.iam.authorization',
-         ['iam-tenant:role:read', 'iam-tenant:assignment:read', 'iam-tenant:delegation:read']),
-        ('应用管理', 'org.iam.applications', ['iam-tenant:application:read']),
+         ['iam-tenant:role:read', 'iam-tenant:role-assignment:read', 'iam-tenant:delegation:read', 'iam-tenant:authorization-diagnosis:run']),
+        ('已开通应用', 'org.iam.applications', ['iam-tenant:application:read']),
     ]),
     ('安全与合规', 'org.iam.compliance', 'ep:lock', [
-        ('字段策略', 'org.iam.field.policies',
+        ('资源字段策略', 'org.iam.field.policies',
          ['iam-tenant:field-policy:read']),
-        ('组织授权审计', 'org.iam.authorization.audit', ['iam-tenant:audit:read']),
+        ('组织授权审计', 'org.iam.authorization.audit', ['iam-tenant:authorization-audit:read']),
     ]),
     ('工作台', 'org.iam.workspace', 'ep:grid', [
-        ('工作台', 'org.iam.workbench', ['iam-tenant:application:read']),
+        ('组织概览', 'org.iam.workbench', ['iam-tenant:workbench:read']),
     ]),
 ]
 
 DEVELOPER_MENUS = [
     ('开发者平台', 'platform.develop', 'ep:cpu', [
-        ('生成二维码', 'platform.develop.qrcode', ['platform:develop:qrcode']),
-        ('客户端管理', 'platform.develop.client', ['platform:develop:client:query']),
-        ('社交管理', 'platform.develop.social', ['iam-platform:social-config:read']),
-        ('业务ID管理', 'platform.develop.id', ['iam-platform:id-allocation:read']),
+        ('生成二维码', 'platform.develop.qrcode', ['platform-developer:qr-code:generate']),
+        ('OAuth 2.0 客户端', 'platform.develop.client', ['platform-developer:oauth-client:read-list']),
+        ('社会化登录配置', 'platform.develop.social', ['platform-developer:social-config:read']),
+        ('业务 ID 发号', 'platform.develop.id', ['platform-developer:id-allocation:read']),
     ]),
 ]
 
 SECURITY_MENUS = [('安全中心', 'security.root', 'ep:lock', [
-    ('凭证策略', 'security.credential.policies', ['iam-platform:credential-policy:read']),
-    ('账号保护', 'security.account.protection', ['iam-platform:lockout-policy:read']),
-    ('访问防护', 'security.access.protection', ['iam-platform:security-policy:read', 'iam-platform:login-failure-policy:read']),
-    ('会话管理', 'security.sessions', ['iam-platform:session:read', 'iam-platform:session-policy:read']),
+    ('凭证策略', 'security.credential.policies', ['platform-security:credential-policy:read']),
+    ('账号保护', 'security.account.protection', ['platform-security:account-lockout-policy:read']),
+    ('访问防护', 'security.access.protection', ['platform-security:access-policy:read', 'platform-security:login-failure-policy:read', 'platform-security:block-event:read']),
+    ('会话管理', 'security.sessions', ['platform-security:session:read', 'platform-security:session-concurrency-policy:read']),
 ])]
 
 MEMBER_MENUS = [('App 用户管理', 'member.root', 'ep:iphone', [
-    ('用户管理', 'member.user', [f'{MEMBER_APPLICATION}:user:query']),
-    ('角色管理', 'member.role', [f'{MEMBER_APPLICATION}:role:query']),
-    ('权限管理', 'member.permission', [f'{MEMBER_APPLICATION}:permission:query']),
+    ('App 用户', 'member.user', [f'{MEMBER_APPLICATION}:user:read-list']),
+    ('App 角色', 'member.role', [f'{MEMBER_APPLICATION}:role:read']),
+    ('App 权限', 'member.permission', [f'{MEMBER_APPLICATION}:permission:read']),
 ])]
 
 PAGE_ICONS = {'member.user': 'ep:user', 'member.role': 'ep:avatar', 'member.permission': 'ep:key'}
@@ -328,16 +336,35 @@ def route_name(view_key):
     return view_key
 
 
-def action_name(code):
-    """由操作码合成展示名，例如 iam-tenant:member:read → 查看成员。"""
+RESOURCE_NAMES = {
+    'iam-platform': {'account': '全局账号', 'action': '应用操作', 'application': '应用目录', 'role-assignment': '平台角色分配', 'authorization-audit': '平台授权审计', 'authorization-diagnosis': '平台权限诊断', 'delegation': '平台授权委派', 'dictionary': '字典', 'application-entitlement': '租户应用开通', 'group': '平台用户组', 'member': '平台成员', 'menu': '应用菜单', 'plan': '租户套餐', 'resource': '应用资源', 'role': '平台角色', 'shared-role': '共享角色', 'tenant': '租户'},
+    'iam-tenant': {'application': '已开通应用', 'role-assignment': '组织角色分配', 'application-audience': '应用可用人群', 'authorization-audit': '组织授权审计', 'authorization-diagnosis': '组织权限诊断', 'delegation': '组织授权委派', 'department': '部门', 'field-policy': '资源字段策略', 'group': '组织用户组', 'member': '组织成员', 'role': '组织角色', 'settings': '组织设置', 'workbench': '组织工作台'},
+    'platform-developer': {'oauth-client': 'OAuth 2.0 客户端', 'id-allocation': '业务 ID 发号', 'qr-code': '二维码', 'social-config': '社会化登录配置'},
+    'platform-security': {'credential-policy': '凭证策略', 'account-lockout-policy': '账号锁定策略', 'login-failure-policy': '登录失败防护', 'access-policy': '访问防护策略', 'session': '在线会话', 'session-concurrency-policy': '会话并发策略', 'block-event': '历史封禁记录'},
+    'platform-member': {'permission': 'App 权限', 'role': 'App 角色', 'user': 'App 用户'},
+}
+
+
+def action_name(application, resource, code):
+    """按应用内资源显示名生成精确操作名称。"""
     for actions in (*DEVELOPER_ACTIONS.values(), *MEMBER_ACTIONS.values()):
         if code in actions:
             return actions[code]
-    _, resource, suffix = code.split(':', 2)
-    verb = VERBS[suffix]
+    suffix = code.rsplit(':', 1)[-1]
+    name = RESOURCE_NAMES[application][resource]
+    if suffix == 'run':
+        return '运行' + name
+    if suffix == 'publish-version':
+        return '发布' + name + '版本'
+    if suffix == 'apply-version':
+        return '应用角色版本'
+    if suffix == 'reset-password':
+        return '重置' + name + '密码'
+    if suffix == 'update' and application == 'iam-tenant' and resource == 'role':
+        return '保存组织角色权限'
     if suffix in STANDALONE_VERBS:
-        return verb
-    return verb + RESOURCES[resource][0]
+        return VERBS[suffix]
+    return VERBS[suffix] + name
 
 
 def collect(routes):
@@ -348,17 +375,13 @@ def collect(routes):
         if not code:
             continue
         application, resource, _ = code.split(':', 2)
-        if application == 'iam-platform' and resource in DEVELOPER_PLATFORM_RESOURCES:
-            application = DEVELOPER_APPLICATION
-        if application == 'iam-platform' and resource in SECURITY_RESOURCES:
-            application = SECURITY_APPLICATION
         if application not in catalog:
             raise SystemExit(f'未登记的应用命名空间 {application}')
         if resource not in RESOURCES:
             raise SystemExit(f'未登记的资源 {resource}，请补充 RESOURCES')
         catalog[application].setdefault(resource, set()).add(code)
     action_source = (ROOT / 'ingot-framework/ingot-commons/src/main/java/com/ingot/framework/commons/model/iam/IamAction.java').read_text()
-    for code in re.findall(r'\"(iam-platform:[^\"]+)\"', action_source):
+    for code in re.findall(r'\"(platform-security:[^\"]+)\"', action_source):
         resource = code.split(':')[1]
         if resource in SECURITY_RESOURCES:
             catalog[SECURITY_APPLICATION].setdefault(resource, set()).add(code)
@@ -420,7 +443,6 @@ def insert(table, columns, values, exists, source='DUAL', where=None):
 def build(check=False):
     routes = json.loads(ROUTES.read_text())
     catalog = collect(routes)
-    catalog.setdefault('iam-tenant',{}).setdefault('role',set()).add('iam-tenant:role:upgrade')
     stable_ids = json.loads((ROOT / 'tools/iam/tenant_live/action_ids.json').read_text())
     stable_ids.update(ADDITIONAL_ACTION_IDS)
 
@@ -457,7 +479,8 @@ def build(check=False):
         for resource in sorted(catalog[application]):
             resource_count += 1
             resources = MEMBER_RESOURCES if application == MEMBER_APPLICATION else RESOURCES
-            name, scopes, fields = resources[resource]
+            _, scopes, fields = resources[resource]
+            name = RESOURCE_NAMES[application][resource]
             if resource == 'member': fields = PLATFORM_MEMBER_FIELDS if application == 'iam-platform' else TENANT_MEMBER_FIELDS
             if APPLICATIONS[application]['domain'] == 'PLATFORM':
                 scopes = [scope for scope in scopes if scope not in ('MEMBER_DEPARTMENTS', 'MANAGED_DEPARTMENTS')]
@@ -483,7 +506,7 @@ def build(check=False):
                     ['id', 'application_id', 'resource_id', 'code', 'name', 'enabled'],
                     [reserved_id('iam_action', stable_ids.get(code,ACTION_BASE + action_count), ACTION_BASE, MENU_BASE),
                      'res.application_id', 'res.id', quote(code),
-                     quote(action_name(code)), 'FALSE' if code=='iam-tenant:role:upgrade' else 'TRUE'],
+                     quote(action_name(application, resource, code)), 'TRUE'],
                     f"code = {quote(code)}",
                     source='iam_resource res JOIN iam_application app ON app.id = res.application_id',
                     where=f"app.code = {quote(application)} AND res.code = {quote(resource)}"))

@@ -35,8 +35,8 @@ class ConfigError(ValueError):
 
 
 def ddl_files():
-    """权威清单顺序：001–005 → 框架DDL → 006；不含历史ALTER或人工种子。"""
-    return initialization_files()
+    """测试环境的权威清单顺序：001–005 → 框架DDL → 006。"""
+    return initialization_files(seed_platform_account=False)
 
 
 def load_config(path: Path) -> dict:

@@ -102,7 +102,7 @@ class TenantQueryServiceTest {
                     if (!"ok".equals(command.getPassword())) {
                         throw new ConfirmPasswordFailedException();
                     }
-                }),
+                }), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.images(),
                 new DataSourceTransactionManager(dataSource));
         authenticate(TENANT);
     }

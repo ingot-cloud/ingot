@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonParser;
@@ -36,6 +37,7 @@ import jakarta.validation.constraints.Pattern;
  * @param displayName 当前租户显示名
  * @param phone 11 位大陆手机号，写入组织通讯录
  * @param email 组织通讯录邮箱，可空
+ * @param avatar 可选头像上传凭证
  * @param departments 任职部门，可空且最多一个主部门
  * @param suppliedFields HTTP 实际提交字段，仅用于写入校验，不传输
  */
@@ -51,13 +53,15 @@ public record TenantMemberRejoinInput(
         @Schema(description = "11 位大陆手机号，写入组织通讯录", requiredMode = Schema.RequiredMode.REQUIRED) String phone,
         @FieldBinding(key = MemberFieldKey.VALUE_EMAIL, uses = FieldUse.WRITE)
         @Schema(description = "组织通讯录邮箱，可空") String email,
+        @FieldBinding(key = MemberFieldKey.VALUE_AVATAR, uses = FieldUse.WRITE)
+        @Schema(description = "可选头像上传凭证") String avatar,
         @PublicField @NotNull @Schema(description = "任职部门，可空且最多一个主部门",
                 requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid MemberDepartmentBinding> departments,
         @JsonIgnore @Schema(hidden = true) Set<String> suppliedFields) {
 
     private static final String EXPECTED_VERSION = "expectedVersion";
     private static final Set<String> KNOWN_PROPERTIES = Set.of(EXPECTED_VERSION, MemberFieldKey.VALUE_DISPLAY_NAME,
-            MemberFieldKey.VALUE_PHONE, MemberFieldKey.VALUE_EMAIL, "departments");
+            MemberFieldKey.VALUE_PHONE, MemberFieldKey.VALUE_EMAIL, MemberFieldKey.VALUE_AVATAR, "departments");
 
     /**
      * 保留 Java 创建契约，空邮箱仍表示未提交。
@@ -70,7 +74,7 @@ public record TenantMemberRejoinInput(
      */
     public TenantMemberRejoinInput(String expectedVersion, String displayName, String phone, String email,
             List<MemberDepartmentBinding> departments) {
-        this(expectedVersion, displayName, phone, email, departments, supplied(email));
+        this(expectedVersion, displayName, phone, email, null, departments, supplied(email));
     }
 
     private static Set<String> supplied(String email) {
@@ -122,8 +126,11 @@ public record TenantMemberRejoinInput(
             var input = parser.getCodec().treeToValue(node, JacksonInput.class);
             Set<String> keys = new HashSet<>();
             node.fieldNames().forEachRemaining(keys::add);
+            if (keys.remove(AssetFieldNames.AVATAR_UPLOAD_ID) && !keys.add(MemberFieldKey.VALUE_AVATAR)) {
+                throw JsonMappingException.from(parser, "头像与上传凭证不能同时提交");
+            }
             return new TenantMemberRejoinInput(input.expectedVersion(), input.displayName(), input.phone(),
-                    input.email(), input.departments(), keys);
+                    input.email(), input.avatar(), input.departments(), keys);
         }
     }
 
@@ -138,6 +145,7 @@ public record TenantMemberRejoinInput(
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Schema(hidden = true)
     public record JacksonInput(String expectedVersion, String displayName, String phone, String email,
+            @JsonAlias(AssetFieldNames.AVATAR_UPLOAD_ID) String avatar,
             List<MemberDepartmentBinding> departments) {
     }
 

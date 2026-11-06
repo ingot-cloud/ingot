@@ -2,6 +2,7 @@ package com.ingot.cloud.iam.persistence.mapper;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Set;
 
 import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.ingot.cloud.iam.persistence.IamMembershipSql;
@@ -22,6 +23,13 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 @InterceptorIgnore(tenantLine = IamPersistence.EXPLICIT_BOUNDARY, dataPermission = IamPersistence.EXPLICIT_BOUNDARY)
 public interface IamTenantGroupMemberMapper extends BaseMapper<IamTenantGroupMemberEntity> {
+    /** 当前关联页和总数共享的组范围条件，null 表示全量。 */
+    String GROUP_SCOPE = """
+            <if test="groupIds != null">
+              AND mg.id IN
+              <foreach collection="groupIds" item="groupId" open="(" separator="," close=")">#{groupId}</foreach>
+            </if>
+            """;
     /**
      * 统计组的有效成员数：显式成员并入部门来源成员，连带下级的部门规则沿部门树向下展开后去重。
      *
@@ -47,30 +55,35 @@ public interface IamTenantGroupMemberMapper extends BaseMapper<IamTenantGroupMem
      *
      * @param tenantId 已授权租户 ID
      * @param memberId 租户成员 ID
+     * @param groupIds 已编译的可见组 ID，null 表示全量
      * @return 去重后的组数
      */
-    @Select(IamMembershipSql.DEPARTMENT_REACH + IamMembershipSql.MEMBER_GROUPS
-            + " SELECT COUNT(*) FROM member_groups")
-    long countGroupsOfMember(@Param("tenantId") BigInteger tenantId, @Param("memberId") BigInteger memberId);
+    @Select("<script>" + IamMembershipSql.DEPARTMENT_REACH + IamMembershipSql.MEMBER_GROUPS
+            + " SELECT COUNT(*) FROM member_groups mg WHERE 1=1 " + GROUP_SCOPE + "</script>")
+    long countGroupsOfMember(@Param("tenantId") BigInteger tenantId, @Param("memberId") BigInteger memberId,
+                             @Param("groupIds") Set<BigInteger> groupIds);
 
     /**
      * 按组 ID 升序分页读取成员所属租户组，展开规则与 {@link #countGroupsOfMember} 一致。
      *
      * @param tenantId 已授权租户 ID
      * @param memberId 租户成员 ID
+     * @param groupIds 已编译的可见组 ID，null 表示全量
      * @param limit 页大小
      * @param offset 偏移
      * @return 当前页组
      */
-    @Select(IamMembershipSql.DEPARTMENT_REACH + IamMembershipSql.MEMBER_GROUPS + """
+    @Select("<script>" + IamMembershipSql.DEPARTMENT_REACH + IamMembershipSql.MEMBER_GROUPS + """
              SELECT g.id, g.tenant_id, g.name, g.description, g.version
                FROM iam_tenant_group g
                JOIN member_groups mg ON mg.id=g.id
               WHERE g.tenant_id=#{tenantId}
+            """ + GROUP_SCOPE + """
               ORDER BY g.id
               LIMIT #{limit} OFFSET #{offset}
-            """)
+            </script>""")
     List<IamTenantGroupEntity> pageGroupsOfMember(@Param("tenantId") BigInteger tenantId,
                                                   @Param("memberId") BigInteger memberId,
+                                                  @Param("groupIds") Set<BigInteger> groupIds,
                                                   @Param("limit") int limit, @Param("offset") int offset);
 }

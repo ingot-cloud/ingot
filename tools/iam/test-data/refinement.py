@@ -16,7 +16,7 @@ ACTORS = ("refine-governor", "refine-limited", "refine-both", "refine-recipient-
           "refine-recipient-b", "refine-outsider", "refine-overlap", "refine-partial", "refine-disjoint")
 PREFIX = "/v1/platform"
 SCOPE = [{"kind": "OBJECT_SET", "parameterKey": "members"}]
-ENTRY_CODES = {"iam-platform:assignment:" + operation for operation in ("read", "create", "update", "delete")}
+ENTRY_CODES = {"iam-platform:role-assignment:" + operation for operation in ("read", "create", "update", "revoke")}
 
 
 def candidates(session, token, kind, **query):

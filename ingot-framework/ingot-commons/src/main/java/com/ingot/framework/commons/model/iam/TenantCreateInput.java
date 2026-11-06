@@ -1,5 +1,6 @@
 package com.ingot.framework.commons.model.iam;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +35,7 @@ public record TenantCreateInput(
         @Size(max = 128) @Schema(description = "根部门名称，可空时使用组织名称")
         String rootDepartmentName,
         @Schema(description = "组织头像，可空；可提交时效链接或对象路径，入库只保存路径")
-        String avatar,
+        @JsonAlias(AssetFieldNames.AVATAR_UPLOAD_ID) String avatar,
         @Schema(description = "可选套餐；与自选应用取并集")
         String planId,
         @Schema(description = "自选应用及期限覆盖，可空；不是完整目录")

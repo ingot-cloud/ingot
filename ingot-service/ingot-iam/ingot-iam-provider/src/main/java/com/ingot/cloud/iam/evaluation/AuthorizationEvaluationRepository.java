@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.evaluation;
 
 import java.math.BigInteger;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -161,6 +162,11 @@ public class AuthorizationEvaluationRepository {
      */
     public List<AuthorizationEvalRows.Action> listActions(BigInteger actionId) {
         return actions.listWithApplication(actionId);
+    }
+
+    /** 返回启用操作在目录中的实际资源身份。 */
+    public ResourceKey resourceKey(BigInteger actionId) {
+        return actions.resourceKey(actionId);
     }
 
     /**

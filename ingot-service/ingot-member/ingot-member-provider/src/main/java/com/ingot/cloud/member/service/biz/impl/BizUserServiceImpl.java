@@ -1,5 +1,8 @@
 package com.ingot.cloud.member.service.biz.impl;
 
+import com.ingot.cloud.member.asset.MemberImageAccess;
+import com.ingot.framework.commons.model.iam.ImageUploadPurpose;
+import com.ingot.framework.security.core.context.SecurityAuthContext;
 import java.util.List;
 
 import cn.hutool.core.util.BooleanUtil;
@@ -48,6 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class BizUserServiceImpl implements BizUserService {
+    private final MemberImageAccess images;
     private final MemberUserService userService;
     private final MemberUserTenantService userTenantService;
     private final MemberUserSocialService userSocialService;
@@ -111,6 +115,7 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateUserBaseInfo(long id, MemberUserBaseInfoDTO params) {
         MemberUser current = userService.getById(id);
         assertionChecker.checkOperation(current != null,
@@ -118,6 +123,8 @@ public class BizUserServiceImpl implements BizUserService {
         assert current != null;
 
         MemberUser user = MemberUserConvert.INSTANCE.toEntity(params);
+        user.setId(id);
+        user.setAvatar(images.bind(ImageUploadPurpose.APP_USER_UPDATE, id, params.getAvatar(), current.getAvatar()));
         if (StrUtil.isNotEmpty(user.getPhone())
                 && !StrUtil.equals(user.getPhone(), current.getPhone())) {
             assertionChecker.checkOperation(userService.count(Wrappers.<MemberUser>lambdaQuery()
@@ -151,7 +158,6 @@ public class BizUserServiceImpl implements BizUserService {
                     .userType(UserTypeEnum.APP)
                     .phone(params.getPhone())
                     .nickname(params.getNickname())
-                    .avatar(params.getAvatar())
                     .mustChangePwd(Boolean.TRUE)
                     .eventSource(EventSource.MEMBER)
                     .build());
@@ -164,8 +170,10 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResetPwdVO createUser(MemberUserDTO params) {
         MemberUser user = MemberUserConvert.INSTANCE.toEntity(params);
+        user.setAvatar(images.bind(ImageUploadPurpose.APP_USER_CREATE, null, params.getAvatar(), null));
 
         // 默认初始化密码（按初始密码策略生成）
         String initPwd = initialPasswordService.generate();
@@ -181,8 +189,21 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateUser(MemberUserDTO params) {
         MemberUser user = MemberUserConvert.INSTANCE.toEntity(params);
+        if (params.getAvatar() != null) {
+            MemberUser current = userService.getById(user.getId());
+            assertionChecker.checkOperation(current != null, "MemberUserServiceImpl.UserNonExist");
+            var actor = SecurityAuthContext.getUser();
+            boolean self = actor != null && UserTypeEnum.APP.getValue().equals(actor.getUserType());
+            if (self && !java.util.Objects.equals(user.getId(), images.requireAppUser())) {
+                throw new com.ingot.framework.commons.error.BizException(
+                        com.ingot.framework.commons.model.iam.IamReasonCode.ACTION_DENIED);
+            }
+            var purpose = self ? ImageUploadPurpose.APP_SELF_UPDATE : ImageUploadPurpose.APP_USER_UPDATE;
+            user.setAvatar(images.bind(purpose, user.getId(), params.getAvatar(), current.getAvatar()));
+        }
         userService.update(user);
     }
 

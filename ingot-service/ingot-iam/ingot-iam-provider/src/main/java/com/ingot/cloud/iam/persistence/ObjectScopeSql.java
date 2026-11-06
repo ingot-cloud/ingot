@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ObjectScopeClause;
 import com.ingot.cloud.iam.persistence.entity.IamAccountEntity;
@@ -126,6 +127,34 @@ public final class ObjectScopeSql {
             }
         }
         return false;
+    }
+
+    /**
+     * 限制只支持全量或指定对象的资源查询。
+     * @param wrapper 已绑定域或租户条件的查询
+     * @param id 主键列
+     * @param scope 本次操作的对象范围
+     * @param <T> 查询实体
+     */
+    public static <T> void restrictIds(LambdaQueryWrapper<T> wrapper, SFunction<T, BigInteger> id,
+                                       ObjectScope scope) {
+        if (scope.coversAll()) {
+            return;
+        }
+        Set<BigInteger> ids = objectIds(scope);
+        if (ids.isEmpty()) {
+            wrapper.apply("1 = 0");
+        } else {
+            wrapper.in(id, ids);
+        }
+    }
+
+    /** 取指定对象范围的 ID 并集，调用方单独处理全域。 */
+    public static Set<BigInteger> objectIds(ObjectScope scope) {
+        return scope.clauses().stream()
+                .filter(clause -> clause.departmentSets().isEmpty())
+                .flatMap(clause -> clause.requiredIds().stream())
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     /**

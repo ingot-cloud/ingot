@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.tenant;
 
+import com.ingot.cloud.iam.asset.IamImageBinding;
+import com.ingot.framework.commons.model.iam.ImageUploadPurpose;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -64,6 +66,7 @@ public class TenantQueryService {
     private final AssignmentRepository assignments;
     private final SensitiveConfirmationGuard confirmations;
     private final TransactionTemplate transaction;
+    private final IamImageBinding images;
 
     /**
      * 绑定身份、审计、失效、组织与分配表。
@@ -80,7 +83,7 @@ public class TenantQueryService {
     public TenantQueryService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
                               TenantRepository tenants, AssignmentRepository assignments,
                               SensitiveConfirmationGuard confirmations,
-                              PlatformTransactionManager transactionManager) {
+                              IamImageBinding images, PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
         this.changes = changes;
@@ -88,6 +91,7 @@ public class TenantQueryService {
         this.assignments = assignments;
         this.confirmations = confirmations;
         this.transaction = new TransactionTemplate(transactionManager);
+        this.images = images;
     }
 
     /**
@@ -135,7 +139,10 @@ public class TenantQueryService {
         return transaction.execute(status -> {
             ResourceDetail<TenantRecord> current = lock(tenantId);
             IamIds.requireVersion(input.expectedVersion(), current.version());
-            requireApplied(tenants.update(tenantId, input.name(), input.avatar(),
+            access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_TENANT_UPDATE);
+            String avatar = images.bind(actor.context(), ImageUploadPurpose.PLATFORM_TENANT_UPDATE,
+                    IamIds.text(tenantId), input.avatar(), current.record().avatar());
+            requireApplied(tenants.update(tenantId, input.name(), avatar,
                     input.status() == ConfigurationStatus.ENABLED, new BigInteger(current.version())));
             audits.write(actor.context(), access.nextId(), TENANT, id, AuditChangeType.UPDATE,
                     Map.of(AuditField.NAME, current.record().name()), Map.of(AuditField.NAME, input.name()),
@@ -172,7 +179,10 @@ public class TenantQueryService {
         return transaction.execute(status -> {
             ResourceDetail<TenantRecord> current = lock(tenantId);
             IamIds.requireVersion(input.expectedVersion(), current.version());
-            requireApplied(tenants.update(tenantId, input.name(), input.avatar(), null,
+            access.require(AuthorizationDomain.TENANT, IamAction.TENANT_SETTINGS_UPDATE);
+            String avatar = images.bind(actor.context(), ImageUploadPurpose.TENANT_SETTINGS_UPDATE, null,
+                    input.avatar(), current.record().avatar());
+            requireApplied(tenants.update(tenantId, input.name(), avatar, null,
                     new BigInteger(current.version())));
             audits.write(actor.context(), access.nextId(), TENANT, IamIds.text(tenantId), AuditChangeType.UPDATE,
                     Map.of(AuditField.NAME, current.record().name()), Map.of(AuditField.NAME, input.name()),

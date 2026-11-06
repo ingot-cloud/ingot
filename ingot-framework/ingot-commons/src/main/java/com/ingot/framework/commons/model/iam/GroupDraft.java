@@ -13,7 +13,7 @@ import jakarta.validation.constraints.*;
  * @since 1.0.0
  * @param name 组名称
  * @param description 可选说明
- * @param selection 当前域成员和部门；平台必须无部门
+ * @param selection 当前域成员和部门，创建必填，更新时省略表示保留现有关联
  */
 @Schema(description = "声明当前域静态组内容，修改后必须重验委派派生授权")
 public record GroupDraft(
@@ -21,6 +21,6 @@ public record GroupDraft(
         String name,
         @Valid @Schema(description = "可选说明")
         String description,
-        @NotNull @Valid @Schema(description = "当前域成员和部门；平台必须无部门", requiredMode = Schema.RequiredMode.REQUIRED)
+        @Valid @Schema(description = "当前域成员和部门。创建必填，更新时省略表示保留关联，平台组无部门")
         Selection selection) {
 }

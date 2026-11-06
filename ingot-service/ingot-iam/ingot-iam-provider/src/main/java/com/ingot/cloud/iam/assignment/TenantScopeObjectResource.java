@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum TenantScopeObjectResource {
     APPLICATION("application"),
-    ASSIGNMENT("assignment"),
+    ASSIGNMENT("role-assignment"),
     DELEGATION("delegation"),
     DEPARTMENT("department"),
     GROUP("group"),

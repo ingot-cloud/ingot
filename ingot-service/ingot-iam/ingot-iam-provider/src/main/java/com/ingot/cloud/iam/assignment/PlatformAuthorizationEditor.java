@@ -417,12 +417,20 @@ public class PlatformAuthorizationEditor {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         var view = evaluator.evaluate(actor.context());
+        if (kind == AuthorizationCandidateKind.MEMBER
+                && !view.actionCodes().contains(IamAction.VALUE_PLATFORM_MEMBER_READ)) {
+            return com.ingot.cloud.iam.diagnose.DiagnoseSubjects.self(actor.context(), keyword, ids, page, pageSize);
+        }
         List<BigInteger> visible = kind == AuthorizationCandidateKind.MEMBER
-                ? visibleIds(view.scope(IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode()), actor.context().memberId())
-                : null;
-        if(kind==AuthorizationCandidateKind.OBJECT) {
-            var provider=objectResource(objectActions(null,null,actionId,null));
-            if(provider==null)return unsupported(page,pageSize);
+                ? visibleIds(view.scope(IamAction.VALUE_PLATFORM_MEMBER_READ), actor.context().memberId()) : null;
+        if (kind == AuthorizationCandidateKind.OBJECT) {
+            var actions = objectActions(null, null, actionId, null);
+            if (actions.size() != 1 || applicationId != null
+                    && !BigInteger.valueOf(IamIds.require(applicationId)).equals(actions.getFirst().applicationId())) {
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            }
+            var provider = objectResource(actions);
+            if (provider == null) return unsupported(page, pageSize);
             String read=provider.descriptor().readAction();
             var scope=view.scope(read);
             List<String> allowed=view.actionCodes().contains(read)

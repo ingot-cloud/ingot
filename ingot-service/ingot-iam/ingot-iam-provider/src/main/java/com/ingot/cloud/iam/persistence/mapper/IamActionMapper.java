@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.persistence.mapper;
 
 import java.math.BigInteger;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
 import java.util.Collection;
 import java.util.List;
 
@@ -43,6 +44,15 @@ public interface IamActionMapper extends BaseMapper<IamActionEntity> {
              WHERE a.id=#{id}
             """)
     List<AuthorizationEvalRows.Action> listWithApplication(@Param("id") BigInteger id);
+
+    /** 从真实目录关系解析操作的域和资源身份。 */
+    @Select("""
+            SELECT app.domain, app.code AS application_code, r.code AS resource_code
+              FROM iam_action a JOIN iam_application app ON app.id=a.application_id
+              JOIN iam_resource r ON r.id=a.resource_id AND r.application_id=app.id
+             WHERE a.id=#{id} AND app.enabled=TRUE AND r.enabled=TRUE AND a.enabled=TRUE
+            """)
+    ResourceKey resourceKey(@Param("id") BigInteger id);
 
     /**
      * 批量读取操作与应用信息，保持与单操作查询相同的启停和域投影。

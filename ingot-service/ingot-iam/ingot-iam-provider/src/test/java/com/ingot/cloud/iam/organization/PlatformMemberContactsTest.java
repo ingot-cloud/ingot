@@ -75,7 +75,7 @@ class PlatformMemberContactsTest {
         members = spy(IamMybatisTestAccess.memberQueries(source));
         service = new MemberQueryService(access, scopes, capabilities, fields, audits,
                 members, mock(GroupRepository.class), assignments,
-                mock(GroupService.class), new DataSourceTransactionManager(source), policies, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), new com.ingot.framework.authorization.field.FieldWriteExecutor(new com.ingot.framework.authorization.field.FieldPolicyProvider() {
+                mock(GroupService.class), new DataSourceTransactionManager(source), policies, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.images(), new com.ingot.framework.authorization.field.FieldWriteExecutor(new com.ingot.framework.authorization.field.FieldPolicyProvider() {
                     public com.ingot.framework.commons.model.iam.extension.AuthorizationDecision read(
                             com.ingot.framework.commons.model.iam.extension.ResourceKey resource, String action) { return write(resource, action); }
                     public com.ingot.framework.commons.model.iam.extension.AuthorizationDecision write(

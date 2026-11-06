@@ -1,5 +1,6 @@
 package com.ingot.framework.commons.model.iam;
 
+import jakarta.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +28,7 @@ public record ApplicationBundleResource(
         @NotBlank @Size(max = 64) @Schema(description = "客户端临时 ID", requiredMode = Schema.RequiredMode.REQUIRED)
         String tempId,
         @NotBlank @Size(max = 64) @Schema(description = "应用内资源编码", requiredMode = Schema.RequiredMode.REQUIRED)
-        String code,
+        @Pattern(regexp = ActionCodes.SEGMENT_PATTERN) String code,
         @NotBlank @Size(max = 128) @Schema(description = "资源名称", requiredMode = Schema.RequiredMode.REQUIRED)
         String name,
         @NotNull @Schema(description = "允许的范围种类", requiredMode = Schema.RequiredMode.REQUIRED)

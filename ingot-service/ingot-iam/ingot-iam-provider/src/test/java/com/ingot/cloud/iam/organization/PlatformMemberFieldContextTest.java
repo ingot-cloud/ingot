@@ -49,7 +49,7 @@ class PlatformMemberFieldContextTest {
         authorize(List.of(IamAction.VALUE_PLATFORM_MEMBER_READ, IamAction.VALUE_PLATFORM_MEMBER_CREATE));
         service = new MemberQueryService(access, mock(ResourceAccess.class), capabilities,
                 mock(FieldAccessEvaluator.class), mock(IamAuditWriter.class), members, mock(GroupRepository.class),
-                mock(AssignmentService.class), mock(GroupService.class), mock(PlatformTransactionManager.class), fields, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), mock(com.ingot.framework.authorization.field.FieldWriteExecutor.class));
+                mock(AssignmentService.class), mock(GroupService.class), mock(PlatformTransactionManager.class), fields, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.images(), mock(com.ingot.framework.authorization.field.FieldWriteExecutor.class));
     }
 
     @Test

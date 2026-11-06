@@ -66,7 +66,7 @@ def member_routes(domain, prefix, ns, list_query=None):
         route(f'{prefix}/members', 'post', f'{domain.lower()}CreateMember', '创建成员资格', domain, f'{ns}:member:create', 'MemberCreateInput', created, exec_member),
         route(f'{prefix}/members/{{id}}', 'get', f'{domain.lower()}GetMember', '成员详情', domain, f'{ns}:member:read', None, detail, exec_member),
         route(f'{prefix}/members/{{id}}', 'patch', f'{domain.lower()}PatchMember', '更新成员资料', domain, f'{ns}:member:update', 'MemberProfileInput', detail, exec_member),
-        route(f'{prefix}/members/{{id}}/status', 'patch', f'{domain.lower()}PatchMemberStatus', '暂停或恢复成员', domain, f'{ns}:member:status', 'MemberStatusInput', created, exec_member),
+        route(f'{prefix}/members/{{id}}/status', 'patch', f'{domain.lower()}PatchMemberStatus', '暂停或恢复成员', domain, f'{ns}:member:change-status', 'MemberStatusInput', created, exec_member),
         route(f'{prefix}/members/{{id}}/remove', 'post', f'{domain.lower()}RemoveMember', '移出当前域', domain, f'{ns}:member:remove', 'VersionInput', created, exec_member),
     ]
 
@@ -106,13 +106,13 @@ def role_routes(domain, prefix, ns, shared=False):
               'role-create' if domain == 'TENANT' and not shared else None),
         route(f'{path}/{{id}}', 'get', f'{prefix_id}GetRole', '角色元数据', domain, f'{ns}:{kind}:read', None, detail, execution),
         route(f'{path}/{{id}}/grants', 'get', f'{prefix_id}ListRoleGrants', '角色当前绑定权限', domain, f'{ns}:{kind}:read', None, 'RRoleGrantList', execution),
-        route(f'{path}/{{id}}', 'patch', f'{prefix_id}PatchRoleStatus', '启停角色', domain, f'{ns}:{kind}:status', 'ConfigurationStatusInput', created, execution),
+        route(f'{path}/{{id}}', 'patch', f'{prefix_id}PatchRoleStatus', '启停角色', domain, f'{ns}:{kind}:change-status', 'ConfigurationStatusInput', created, execution),
         route(f'{path}/{{id}}', 'delete', f'{prefix_id}DeleteRole', '删除未引用角色', domain, f'{ns}:{kind}:delete', None, created, execution),
         route(f'{path}/{{id}}/revisions', 'get', f'{prefix_id}ListRoleRevisions', '角色版本', domain, f'{ns}:{kind}:read', None, revision_page, execution, query=PAGE),
         route(f'{path}/{{id}}/revisions/{{revisionId}}', 'get', f'{prefix_id}GetRoleRevision', '固定版本详情', domain, f'{ns}:{kind}:read', None, revision_detail, execution),
         route(f'{path}/{{id}}/revisions/{{revisionId}}/grants', 'get', f'{prefix_id}ListRevisionGrants', '固定版本完整授权', domain, f'{ns}:{kind}:read', None, 'RRoleGrantList', execution),
-        route(f'{path}/{{id}}/revisions/{{revisionId}}/metadata', 'patch', f'{prefix_id}PatchRevisionMetadata', '独立修改版本名称及备注', domain, f'{ns}:{kind}:status', 'RoleRevisionMetadataInput', created, '仅改展示元数据及独立乐观锁；系统角色只读；不改变权限内容、引用或授权缓存'),
-        route(f'{path}/{{id}}/revisions', 'post', f'{prefix_id}PublishRoleRevision', '发布新版本', domain, f'{ns}:{kind}:publish', 'RolePublishInput', created, execution, 'role-publish'),
+        route(f'{path}/{{id}}/revisions/{{revisionId}}/metadata', 'patch', f'{prefix_id}PatchRevisionMetadata', '独立修改版本名称及备注', domain, f'{ns}:{kind}:change-status', 'RoleRevisionMetadataInput', created, '仅改展示元数据及独立乐观锁；系统角色只读；不改变权限内容、引用或授权缓存'),
+        route(f'{path}/{{id}}/revisions', 'post', f'{prefix_id}PublishRoleRevision', '发布新版本', domain, f'{ns}:{kind}:publish-version', 'RolePublishInput', created, execution, 'role-publish'),
         route(f'{path}/{{id}}/preview', 'post', f'{prefix_id}PreviewRole', '预览待发布定义', domain, f'{ns}:{kind}:preview', 'RoleDefinitionDraft', preview, execution, query=[{'name': 'sourceRevisionId', 'required': False, 'schema': {'type': 'string'}}]),
     ]
     return items
@@ -129,10 +129,10 @@ def assignment_routes(domain, prefix, ns):
         {'name': 'effectiveStatus', 'required': False, 'schema': {'type': 'string', 'enum': ['PENDING', 'ACTIVE', 'EXPIRED', 'REVOKED', 'SOURCE_INVALID']}},
     ]
     return [
-        route(f'{prefix}/assignments', 'get', f'{domain.lower()}ListAssignments', '授权列表', domain, f'{ns}:assignment:read', None, page, execution, query=list_query),
-        route(f'{prefix}/assignments', 'post', f'{domain.lower()}CreateAssignments', '原子批量分配', domain, f'{ns}:assignment:create', 'AssignmentBatchInput', created, execution),
-        route(f'{prefix}/assignments/{{id}}', 'put', f'{domain.lower()}PutAssignment', '调整授权', domain, f'{ns}:assignment:update', 'AssignmentUpdateInput', detail, execution),
-        route(f'{prefix}/assignments/{{id}}', 'delete', f'{domain.lower()}DeleteAssignment', '撤销授权并保留审计', domain, f'{ns}:assignment:delete', None, created, execution),
+        route(f'{prefix}/assignments', 'get', f'{domain.lower()}ListAssignments', '授权列表', domain, f'{ns}:role-assignment:read', None, page, execution, query=list_query),
+        route(f'{prefix}/assignments', 'post', f'{domain.lower()}CreateAssignments', '原子批量分配', domain, f'{ns}:role-assignment:create', 'AssignmentBatchInput', created, execution),
+        route(f'{prefix}/assignments/{{id}}', 'put', f'{domain.lower()}PutAssignment', '调整授权', domain, f'{ns}:role-assignment:update', 'AssignmentUpdateInput', detail, execution),
+        route(f'{prefix}/assignments/{{id}}', 'delete', f'{domain.lower()}DeleteAssignment', '撤销授权并保留审计', domain, f'{ns}:role-assignment:revoke', None, created, execution),
     ]
 
 
@@ -149,7 +149,7 @@ def delegation_routes(domain, prefix, ns):
         route(f'{prefix}/delegations', 'post', f'{domain.lower()}CreateDelegation', '创建委派', domain, f'{ns}:delegation:create', 'DelegationInput', created, execution, 'delegation'),
         route(f'{prefix}/delegations/{{id}}', 'get', f'{domain.lower()}GetDelegation', '委派详情', domain, f'{ns}:delegation:read', None, detail, execution),
         route(f'{prefix}/delegations/{{id}}', 'put', f'{domain.lower()}PutDelegation', '调整委派', domain, f'{ns}:delegation:update', 'DelegationUpdateInput', detail, execution),
-        route(f'{prefix}/delegations/{{id}}', 'delete', f'{domain.lower()}DeleteDelegation', '撤销委派', domain, f'{ns}:delegation:delete', None, created, execution),
+        route(f'{prefix}/delegations/{{id}}', 'delete', f'{domain.lower()}DeleteDelegation', '撤销委派', domain, f'{ns}:delegation:revoke', None, created, execution),
         route(f'{prefix}/delegations/{{id}}/preview', 'post', f'{domain.lower()}PreviewDelegation', '预览委派收缩影响', domain, f'{ns}:delegation:preview', 'DelegationUpdateInput', preview, execution),
     ]
 
@@ -162,7 +162,7 @@ def live_role_routes(domain, path, namespace, key):
       route(path,'post',key+'CreateRole','创建当前角色',domain,namespace+':create','CurrentRoleCreateInput','RCreatedResource',execution),
       route(path+'/preview','post',key+'CreatePreview','预览角色创建',domain,namespace+':create','CurrentRoleCreateInput','RPreviewCurrentRolePreviewResult',execution),
       route(path+'/{id}','get',key+'GetRole','当前角色详情',domain,namespace+':read',None,current,execution),
-      route(path+'/{id}','patch',key+'ProfileRole','保存角色基本信息',domain,namespace+':status','CurrentRoleProfileInput',current,execution),
+      route(path+'/{id}','patch',key+'ProfileRole','保存角色基本信息',domain,namespace+':change-status','CurrentRoleProfileInput',current,execution),
       route(path+'/{id}','delete',key+'DeleteRole','删除未引用角色',domain,namespace+':delete',None,'RCreatedResource',execution),
       route(path+'/{id}/grants','get',key+'GetGrants','当前完整权限',domain,namespace+':read',None,'RCurrentRoleGrantList',execution),
       route(path+'/{id}/grants','put',key+'SaveGrants','保存当前权限并自动生效',domain,namespace+':update','CurrentRolePermissionInput','RCurrentRolePermissionResult',execution),
@@ -189,8 +189,8 @@ def current_routes(routes):
             item['query']=[{**q,'name':'roleId'} if q['name']=='revisionId' else q for q in item.get('query',[])]+[{'name':'delegationGrantId','schema':{'type':'string'}}]
     for path, operation, response, query, action in [
       ('/v1/tenant/roles/grant-catalog','tenantCurrentCatalog','RListCurrentRoleCatalogAction',[{'name':'applicationId','required':True,'schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}],'iam-tenant:role:create'),
-      ('/v1/tenant/assignments/options','tenantAssignmentOptions','RPageResponseTenantAssignmentOption',PAGE+[{'name':'departmentId','schema':{'type':'string'}},{'name':'kind','required':True,'schema':{'type':'string','enum':['ROLE','MEMBER','GROUP','RESOURCE']}},{'name':'delegationGrantId','schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}],'iam-tenant:assignment:read'),
-      ('/v1/tenant/assignments/roles/{id}','tenantAssignmentRole','RCurrentRoleGrantList',[{'name':'delegationGrantId','schema':{'type':'string'}}],'iam-tenant:assignment:read'),
+      ('/v1/tenant/assignments/options','tenantAssignmentOptions','RPageResponseTenantAssignmentOption',PAGE+[{'name':'departmentId','schema':{'type':'string'}},{'name':'kind','required':True,'schema':{'type':'string','enum':['ROLE','MEMBER','GROUP','RESOURCE']}},{'name':'delegationGrantId','schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}],'iam-tenant:role-assignment:read'),
+      ('/v1/tenant/assignments/roles/{id}','tenantAssignmentRole','RCurrentRoleGrantList',[{'name':'delegationGrantId','schema':{'type':'string'}}],'iam-tenant:role-assignment:read'),
       ('/v1/tenant/delegations/mine','tenantMyDelegations','RListTenantDelegationMine',None,None),
       ('/v1/tenant/delegations/scope-candidates','tenantDelegationScopeCandidates','RAuthorizationCandidatePage',PAGE+[{'name':'resourceId','required':True,'schema':{'type':'string'}},{'name':'parameterKey','required':True,'schema':{'type':'string'}}],'iam-tenant:delegation:create')]:
         execution='选定应用后一次返回全部已开通操作' if path=='/v1/tenant/roles/grant-catalog' else '可信当前租户；本人有效来源或独立治理；过滤后分页回显'
@@ -231,12 +231,12 @@ def build():
         route('/v1/platform/tenants/{id}', 'patch', 'platformPatchTenant', '更新组织实体', 'PLATFORM', 'iam-platform:tenant:update',
               'TenantUpdateInput', 'RResourceDetailTenantRecord', '不修改租户业务资料'),
         route('/v1/platform/tenants/{id}/entitlements', 'get', 'platformListEntitlements', '组织开通', 'PLATFORM',
-              'iam-platform:entitlement:read', None, 'RPageResponseResourceDetailEntitlementRecord', '开通不等于业务授权', query=PAGE),
+              'iam-platform:application-entitlement:read', None, 'RPageResponseResourceDetailEntitlementRecord', '开通不等于业务授权', query=PAGE),
         route('/v1/platform/tenants/{id}/entitlements', 'put', 'platformPutEntitlements', '替换组织开通', 'PLATFORM',
-              'iam-platform:entitlement:update', 'EntitlementReplaceInput', 'RPageResponseResourceDetailEntitlementRecord',
+              'iam-platform:application-entitlement:update', 'EntitlementReplaceInput', 'RPageResponseResourceDetailEntitlementRecord',
               '重验版本、应用域与期限；基础治理入口不可关闭'),
         route('/v1/platform/tenants/{id}/entitlements/preview', 'post', 'platformPreviewEntitlements', '预览开通影响', 'PLATFORM',
-              'iam-platform:entitlement:preview', 'EntitlementReplaceInput', 'RPreviewEntitlementPreviewResult', '无写入'),
+              'iam-platform:application-entitlement:preview', 'EntitlementReplaceInput', 'RPreviewEntitlementPreviewResult', '无写入'),
         route('/v1/platform/applications', 'get', 'platformListApplications', '应用目录', 'PLATFORM', 'iam-platform:application:read', None,
               'RPageResponseResourceDetailApplicationRecord',
               '启用状态不等于业务授权；可选 name 包含匹配、status=ENABLED|DISABLED、baseline',
@@ -248,7 +248,7 @@ def build():
         route('/v1/platform/applications/{id}', 'put', 'platformPutApplication', '更新应用', 'PLATFORM', 'iam-platform:application:update',
               'ApplicationUpdateInput', 'RResourceDetailApplicationRecord', '不能改写命名空间或管理域'),
         route('/v1/platform/applications/{id}', 'patch', 'platformPatchApplicationStatus', '启停应用', 'PLATFORM',
-              'iam-platform:application:status', 'ConfigurationStatusInput', 'RCreatedResource', '全局停用约束所有旧版本'),
+              'iam-platform:application:change-status', 'ConfigurationStatusInput', 'RCreatedResource', '全局停用约束所有旧版本'),
         route('/v1/platform/applications/{id}', 'delete', 'platformDeleteApplication', '删除未引用应用', 'PLATFORM',
               'iam-platform:application:delete', None, 'RCreatedResource', '被引用拒绝物理删除'),
         route('/v1/platform/applications/{id}/purge', 'post', 'platformPurgeApplication', '强制清除应用', 'PLATFORM',
@@ -269,7 +269,7 @@ def build():
         route('/v1/platform/applications/{id}/actions/{actionId}', 'put', 'platformPutAction', '更新操作', 'PLATFORM',
               'iam-platform:action:update', 'ActionUpdateInput', 'RResourceDetailActionRecord', '不能改写操作码或所属资源'),
         route('/v1/platform/applications/{id}/actions/{actionId}', 'patch', 'platformPatchActionStatus', '启停操作', 'PLATFORM',
-              'iam-platform:action:status', 'ConfigurationStatusInput', 'RCreatedResource', '全局停用约束所有旧版本'),
+              'iam-platform:action:change-status', 'ConfigurationStatusInput', 'RCreatedResource', '全局停用约束所有旧版本'),
         route('/v1/platform/applications/{id}/actions/{actionId}', 'delete', 'platformDeleteAction', '删除未引用操作', 'PLATFORM',
               'iam-platform:action:delete', None, 'RCreatedResource', '被引用拒绝物理删除'),
         route('/v1/platform/applications/{id}/menus', 'get', 'platformListMenus', '应用菜单', 'PLATFORM',
@@ -296,12 +296,12 @@ def build():
         route('/v1/platform/members/{id}/roles', 'get', 'platformMemberRoles', '成员直接角色', 'PLATFORM',
               'iam-platform:member:read', None, 'RListMemberRoleView', '仅返回简单直接分配；成员对象范围'),
         route('/v1/platform/members/{id}/assignments', 'get', 'platformMemberAssignments',
-              '成员角色分配', 'PLATFORM', 'iam-platform:assignment:read', None,
+              '成员角色分配', 'PLATFORM', 'iam-platform:role-assignment:read', None,
               'RPageResponseResourceDetailAssignmentRecord',
               '成员对象可见且沿用分配来源边界；按关联表分页，返回逐条能力', query=PAGE),
         route('/v1/platform/members/{id}/roles', 'put', 'platformReplaceMemberRoles', '替换成员直接角色', 'PLATFORM',
               'iam-platform:member:update', 'MemberRoleReplaceInput', 'RListMemberRoleView',
-              '成员对象边界；同时要求非委派的 assignment:create/delete；新增和移除同事务审计'),
+              '成员对象边界；同时要求非委派的 role-assignment:create/revoke；新增和移除同事务审计'),
         route('/v1/platform/groups/{id}/members', 'get', 'platformGroupMembers', '用户组成员分页', 'PLATFORM',
               'iam-platform:group:read', None, 'RPageResponseResourceDetailMemberRecord', '可信平台组与成员可见范围', query=PAGE + [{'name': 'name', 'required': False, 'schema': {'type': 'string'}}]),
         route('/v1/platform/applications/bundles', 'post', 'platformCreateApplicationBundle', '整包创建应用', 'PLATFORM',
@@ -323,16 +323,16 @@ def build():
     routes += assignment_routes('PLATFORM', '/v1/platform', 'iam-platform')
     routes += [
         route('/v1/platform/assignments/preview', 'post', 'platformPreviewAssignments', '预览原子分配批次', 'PLATFORM',
-              'iam-platform:assignment:create', 'AssignmentBatchInput', 'RPreviewAssignmentPreviewResult',
+              'iam-platform:role-assignment:create', 'AssignmentBatchInput', 'RPreviewAssignmentPreviewResult',
               '无写入；逐接收者检查角色、范围、委派和时间；平台不得使用部门；同一请求全量重验'),
     ]
     routes += delegation_routes('PLATFORM', '/v1/platform', 'iam-platform')
     routes += [
         route('/v1/platform/authorization/diagnose', 'post', 'platformDiagnose', '受限授权诊断', 'PLATFORM',
-              'iam-platform:authorization:diagnose', 'DiagnoseInput', 'RDecision',
+              'iam-platform:authorization-diagnosis:run', 'DiagnoseInput', 'RDecision',
               '可信当前域解析身份；精确应用操作；限制对象及来源披露；无实际操作'),
         route('/v1/platform/authorization/audits', 'get', 'platformListAudits', '平台审计', 'PLATFORM',
-              'iam-platform:audit:read', None, 'RAuditCursorPage',
+              'iam-platform:authorization-audit:read', None, 'RAuditCursorPage',
               '可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
     ]
     routes += member_routes('TENANT', '/v1/tenant', 'iam-tenant', PAGE + PHONE_EMAIL)
@@ -341,7 +341,7 @@ def build():
               'iam-tenant:member:read', None, 'RPageResponseResourceDetailGroupRecord',
               '成员可见范围；显式成员并入部门来源', query=PAGE),
         route('/v1/tenant/members/{id}/departments', 'put', 'tenantReplaceMemberDepartments', '调整成员任职', 'TENANT',
-              'iam-tenant:member:departments', 'MemberDepartmentInput', 'RResourceDetailMemberRecord',
+              'iam-tenant:member:set-departments', 'MemberDepartmentInput', 'RResourceDetailMemberRecord',
               '只校验受影响原/目标关系；覆盖全部部门写入审计'),
         route('/v1/tenant/members/export', 'post', 'tenantExportMembers', '导出成员', 'TENANT',
               'iam-tenant:member:export', 'VersionInput', 'RCreatedResource',
@@ -384,9 +384,9 @@ def build():
               query=PAGE+[{'name':'departmentId','schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}]),
         route('/v1/tenant/departments/{id}/leaders', 'get', 'tenantListDepartmentLeaders', '部门负责人列表', 'TENANT', 'iam-tenant:department:read', None,
               'RDepartmentLeaderPage', '部门读取和成员读取范围交集；独立关联分页；字段投影；不扩大权限', implemented=True, query=PAGE + [{'name': 'keyword', 'required': False, 'schema': {'type': 'string'}}]),
-        route('/v1/tenant/departments/{id}/leader-candidates', 'get', 'tenantDepartmentLeaderCandidates', '部门负责人候选', 'TENANT', 'iam-tenant:department:leaders', None,
+        route('/v1/tenant/departments/{id}/leader-candidates', 'get', 'tenantDepartmentLeaderCandidates', '部门负责人候选', 'TENANT', 'iam-tenant:department:set-leaders', None,
               'RDepartmentLeaderPage', '另需部门读取及成员读取；仅当前范围内有效未绑定人员；浏览部门只收窄原范围', implemented=True, query=PAGE + [{'name': 'keyword', 'required': False, 'schema': {'type': 'string'}}, {'name':'browseDepartmentId','schema':{'type':'string'}}]),
-        route('/v1/tenant/departments/{id}/leaders', 'patch', 'tenantUpdateDepartmentLeaders', '设置部门负责人', 'TENANT', 'iam-tenant:department:leaders', 'DepartmentLeaderUpdateInput',
+        route('/v1/tenant/departments/{id}/leaders', 'patch', 'tenantUpdateDepartmentLeaders', '设置部门负责人', 'TENANT', 'iam-tenant:department:set-leaders', 'DepartmentLeaderUpdateInput',
               'RCreatedResource', '组织锁及版本检查；差量原子保存；不授予权限；普通部门限定', implemented=True),
         route('/v1/tenant/departments/workbook/template', 'get', 'tenantDepartmentWorkbookTemplate', '下载部门导入模板', 'TENANT', 'iam-tenant:department:create', None,
               'RMemberWorkbookFile', '空白创建模板，同步返回', implemented=True),
@@ -406,14 +406,14 @@ def build():
         route('/v1/tenant/settings', 'put', 'tenantPutSettings', '更新组织设置', 'TENANT', 'iam-tenant:settings:update',
               'TenantSettingsInput', 'RResourceDetailTenantRecord', '不能通过设置移除最后所有者'),
         route('/v1/tenant/settings/owner-transfer', 'post', 'tenantTransferOwner', '转交所有者', 'TENANT',
-              'iam-tenant:settings:owner-transfer', 'OwnerTransferInput', 'RCreatedResource',
+              'iam-tenant:settings:transfer-owner', 'OwnerTransferInput', 'RCreatedResource',
               '锁定组织及相关成员并检查版本'),
         route('/v1/tenant/applications', 'get', 'tenantListApplications', '已开通应用', 'TENANT', 'iam-tenant:application:read', None,
               'RPageResponseResourceDetailEntitlementRecord', '开通不等于业务操作权', query=PAGE),
         route('/v1/tenant/applications/{id}/audience', 'get', 'tenantGetAudience', '应用可用人群', 'TENANT',
-              'iam-tenant:audience:read', None, 'RResourceDetailAudienceDraft', '停用强于授权'),
+              'iam-tenant:application-audience:read', None, 'RResourceDetailAudienceDraft', '停用强于授权'),
         route('/v1/tenant/applications/{id}/audience', 'put', 'tenantPutAudience', '更新可用人群', 'TENANT',
-              'iam-tenant:audience:update', 'AudienceUpdateInput', 'RResourceDetailAudienceDraft',
+              'iam-tenant:application-audience:update', 'AudienceUpdateInput', 'RResourceDetailAudienceDraft',
               'ALL 不携带选择器或组'),
         route('/v1/tenant/applications/{id}/actions', 'get', 'tenantListApplicationActions', '已开通应用操作候选', 'TENANT',
               'iam-tenant:application:read', None, 'RPageResponseResourceDetailActionRecord',
@@ -421,18 +421,10 @@ def build():
     ]
     routes += group_routes('TENANT', '/v1/tenant', 'iam-tenant')
     routes += role_routes('TENANT', '/v1/tenant', 'iam-tenant')
-    routes += [
-        route('/v1/tenant/roles/{id}/upgrade-preview', 'post', 'tenantPreviewRoleUpgrade', '预览共享基础升级', 'TENANT',
-              'iam-tenant:role:upgrade', 'UpgradePreviewInput', 'RPreviewUpgradePreview',
-              '三方比较；无写入；不自动选择新旧定义'),
-        route('/v1/tenant/roles/{id}/upgrade', 'post', 'tenantUpgradeRole', '提交共享基础升级', 'TENANT',
-              'iam-tenant:role:upgrade', 'UpgradeInput', 'RCreatedResource',
-              '未解决冲突拒绝；选定授权逐条验证，失败整次回滚', 'role-upgrade'),
-    ]
     routes += assignment_routes('TENANT', '/v1/tenant', 'iam-tenant')
     routes.append(route('/v1/tenant/assignments/scope-candidates', 'get',
         'tenantAssignmentScopeCandidates', '租户分配范围对象候选', 'TENANT',
-        'iam-tenant:assignment:create', None, 'RAuthorizationCandidatePage',
+        'iam-tenant:role-assignment:create', None, 'RAuthorizationCandidatePage',
         '分配 CREATE 或 UPDATE 资格；固定版本与参数键重验；只返回当前租户真实对象；未知资源显式不支持',
         query=PAGE + [
             {'name': 'revisionId', 'required': True, 'schema': {'type': 'string'}},
@@ -444,7 +436,7 @@ def build():
         ]))
     routes += [
         route('/v1/tenant/assignments/preview', 'post', 'tenantPreviewAssignments', '预览原子分配批次', 'TENANT',
-              'iam-tenant:assignment:create', 'AssignmentBatchInput', 'RPreviewAssignmentPreviewResult',
+              'iam-tenant:role-assignment:create', 'AssignmentBatchInput', 'RPreviewAssignmentPreviewResult',
               '无写入；逐接收者检查角色、范围、委派和时间；平台不得使用部门；同一请求全量重验'),
         route('/v1/tenant/policies/field-resources', 'get', 'listFieldPolicyResources', '列出已接入字段策略的资源', 'TENANT',
               'iam-tenant:field-policy:read', None, 'RListFieldPolicyResource',
@@ -456,10 +448,10 @@ def build():
               'iam-tenant:field-policy:update', 'FieldPolicyInput', 'RResourceDetailFieldPolicyDraft',
               '可信租户；字段、可见性、编辑、筛选和动作必须属于路径中的资源', 'field-policy'),
         route('/v1/tenant/authorization/diagnose', 'post', 'tenantDiagnose', '受限授权诊断', 'TENANT',
-              'iam-tenant:authorization:diagnose', 'DiagnoseInput', 'RDecision',
+              'iam-tenant:authorization-diagnosis:run', 'DiagnoseInput', 'RDecision',
               '可信当前域解析身份；精确应用操作；限制对象及来源披露；无实际操作'),
         route('/v1/tenant/authorization/diagnose/candidates', 'get', 'tenantDiagnoseCandidates', '诊断候选',
-              'TENANT', 'iam-tenant:authorization:diagnose', None, 'RAuthorizationCandidatePage',
+              'TENANT', 'iam-tenant:authorization-diagnosis:run', None, 'RAuthorizationCandidatePage',
               '精确 DIAGNOSE 操作；成员按成员读取范围、应用为已开通、操作为已启用、对象与诊断目标校验同口径；未接入对象显式不支持',
               query=PAGE + [
                   {'name': 'kind', 'required': True,
@@ -469,7 +461,7 @@ def build():
                   {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
               ]),
         route('/v1/tenant/authorization/audits', 'get', 'tenantListAudits', '租户审计', 'TENANT',
-              'iam-tenant:audit:read', None, 'RAuditCursorPage',
+              'iam-tenant:authorization-audit:read', None, 'RAuditCursorPage',
               '可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
     ]
     routes += delegation_routes('TENANT', '/v1/tenant', 'iam-tenant')
@@ -515,31 +507,31 @@ def build():
         route('/v1/platform/dictionaries/{id}/status/{status}', 'patch', 'platformPatchDictionaryStatus', '切换字典状态', 'PLATFORM',
               'iam-platform:dictionary:update', None, 'RVoid', retained),
         route('/v1/platform/id-allocations', 'get', 'platformListIdAllocations', '发号配置列表', 'PLATFORM',
-              'iam-platform:id-allocation:read', None, 'RJson', retained, query=MYBATIS_PAGE),
+              'platform-developer:id-allocation:read', None, 'RJson', retained, query=MYBATIS_PAGE),
         route('/v1/platform/id-allocations', 'post', 'platformCreateIdAllocation', '创建发号配置', 'PLATFORM',
-              'iam-platform:id-allocation:create', None, 'RVoid', retained),
+              'platform-developer:id-allocation:create', None, 'RVoid', retained),
         route('/v1/platform/id-allocations/{id}', 'put', 'platformPutIdAllocation', '更新发号配置', 'PLATFORM',
-              'iam-platform:id-allocation:update', None, 'RVoid', retained),
+              'platform-developer:id-allocation:update', None, 'RVoid', retained),
         route('/v1/platform/id-allocations/{id}', 'delete', 'platformDeleteIdAllocation', '删除发号配置', 'PLATFORM',
-              'iam-platform:id-allocation:delete', None, 'RVoid', retained),
+              'platform-developer:id-allocation:delete', None, 'RVoid', retained),
         route('/v1/platform/social-configs', 'get', 'platformListSocialConfigs', '社会化登录配置列表', 'PLATFORM',
-              'iam-platform:social-config:read', None, 'RJson', retained, query=MYBATIS_PAGE),
+              'platform-developer:social-config:read', None, 'RJson', retained, query=MYBATIS_PAGE),
         route('/v1/platform/social-configs', 'post', 'platformCreateSocialConfig', '创建社会化登录配置', 'PLATFORM',
-              'iam-platform:social-config:create', None, 'RVoid', retained),
+              'platform-developer:social-config:create', None, 'RVoid', retained),
         route('/v1/platform/social-configs/{id}', 'put', 'platformPutSocialConfig', '更新社会化登录配置', 'PLATFORM',
-              'iam-platform:social-config:update', None, 'RVoid', retained),
+              'platform-developer:social-config:update', None, 'RVoid', retained),
         route('/v1/platform/social-configs/{id}', 'delete', 'platformDeleteSocialConfig', '删除社会化登录配置', 'PLATFORM',
-              'iam-platform:social-config:delete', None, 'RVoid', retained),
+              'platform-developer:social-config:delete', None, 'RVoid', retained),
     ]
     for path, operation_id, action, kinds, arguments, admission in [
-        ('assignments/candidates', 'platformAssignmentCandidates', 'assignment:read',
+        ('assignments/candidates', 'platformAssignmentCandidates', 'role-assignment:read',
          ['DELEGATION', 'ROLE_REVISION', 'MEMBER', 'GROUP', 'OBJECT'],
          ['delegationGrantId', 'revisionId', 'parameterKey', 'actionId'],
          '分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据候选按单条来源筛选'),
         ('delegations/candidates', 'platformDelegationCandidates', 'delegation:read',
          ['ROLE_REVISION', 'MEMBER', 'OBJECT'], ['actionId', 'excludeMemberId'],
          '委派 READ、CREATE、UPDATE 任一独立治理资格'),
-        ('authorization/diagnose/candidates', 'platformDiagnoseCandidates', 'authorization:diagnose',
+        ('authorization/diagnose/candidates', 'platformDiagnoseCandidates', 'authorization-diagnosis:run',
          ['MEMBER', 'APPLICATION', 'ACTION', 'OBJECT'], ['actionId', 'applicationId'],
          '精确 DIAGNOSE 操作及目标可披露边界'),
     ]:
@@ -558,16 +550,16 @@ def build():
             admission + '；分页搜索及已选回显；未知对象适配器显式不支持', query=editor_query))
     routes += [
         route('/v1/platform/assignments/context', 'get', 'platformAssignmentContext', '平台分配上下文', 'PLATFORM',
-            'iam-platform:assignment:read', None, 'RAssignmentContext', '分配 READ/CREATE/UPDATE/DELETE 任一入口；独立直接资格与有效委派数；入口不计入治理资格'),
+            'iam-platform:role-assignment:read', None, 'RAssignmentContext', '分配 READ/CREATE/UPDATE/DELETE 任一入口；独立直接资格与有效委派数；入口不计入治理资格'),
         route('/v1/platform/assignments/{id}', 'get', 'platformAssignmentDetail', '分配详情', 'PLATFORM',
-            'iam-platform:assignment:read', None, 'RResourceDetailAssignmentRecord', '同列表的当前可信身份及持有来源边界'),
+            'iam-platform:role-assignment:read', None, 'RResourceDetailAssignmentRecord', '同列表的当前可信身份及持有来源边界'),
         route('/v1/platform/assignments/{id}/preview', 'post', 'platformPreviewAssignmentUpdate', '预览分配调整', 'PLATFORM',
-            'iam-platform:assignment:update', 'AssignmentUpdateInput', 'RPreviewAssignmentPreviewResult', '主体、版本和依据固定；编辑边界及版本校验'),
+            'iam-platform:role-assignment:update', 'AssignmentUpdateInput', 'RPreviewAssignmentPreviewResult', '主体、版本和依据固定；编辑边界及版本校验'),
         route('/v1/platform/delegations/preview', 'post', 'platformPreviewDelegationCreate', '预览创建委派', 'PLATFORM',
             'iam-platform:delegation:create', 'DelegationInput', 'RPreviewReferenceImpactPreview', '完整独立治理资格；全部固定版本操作必须有范围上限'),
     ]
     routes.append(route('/v1/platform/assignments/role-candidates', 'get', 'platformAssignmentRoleCandidates',
-        '角色分配两级树候选', 'PLATFORM', 'iam-platform:assignment:read', None,
+        '角色分配两级树候选', 'PLATFORM', 'iam-platform:role-assignment:read', None,
         'RAuthorizationRoleCandidatePage',
         '分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据按本人单条有效委派过滤；角色及版本分别分页，版本倒序；不合成版本授权',
         query=PAGE + [
@@ -600,16 +592,16 @@ def build():
             {'name': 'actionId', 'required': False, 'schema': {'type': 'string'}},
         ]))
     routes.append(route('/v1/platform/assignments/{id}/selected-candidates', 'get', 'platformAssignmentSelectedCandidates',
-        '角色分配已选候选', 'PLATFORM', 'iam-platform:assignment:read', None, 'RAuthorizationCandidatePage',
+        '角色分配已选候选', 'PLATFORM', 'iam-platform:role-assignment:read', None, 'RAuthorizationCandidatePage',
         '分配详情相同 READ/来源归属边界；仅返回固定版本和持久化参数绑定关系，OBJECT 与当前来源上限交集；SQL 同边界分页/计数，来源失效明确不支持', query=PAGE + [
             {'name': 'kind', 'required': True, 'schema': {'type': 'string', 'enum': ['ROLE_REVISION', 'OBJECT']}},
             {'name': 'parameterKey', 'required': False, 'schema': {'type': 'string'}},
         ]))
     upgrade_exec='独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效'
-    routes += [route('/v1/platform/assignments/upgrade/preview','post','platformPreviewAssignmentUpgrade','预览分配版本升级','PLATFORM','iam-platform:assignment:upgrade','AssignmentUpgradeInput','RPreviewAssignmentUpgradeResult',upgrade_exec),route('/v1/platform/assignments/upgrade','post','platformAssignmentUpgrade','升级分配版本','PLATFORM','iam-platform:assignment:upgrade','AssignmentUpgradeInput','RAssignmentUpgradeResult',upgrade_exec,example='assignment-upgrade')]
+    routes += [route('/v1/platform/assignments/upgrade/preview','post','platformPreviewAssignmentUpgrade','预览分配版本升级','PLATFORM','iam-platform:role-assignment:apply-version','AssignmentUpgradeInput','RPreviewAssignmentUpgradeResult',upgrade_exec),route('/v1/platform/assignments/upgrade','post','platformAssignmentUpgrade','升级分配版本','PLATFORM','iam-platform:role-assignment:apply-version','AssignmentUpgradeInput','RAssignmentUpgradeResult',upgrade_exec,example='assignment-upgrade')]
     upgrade_query=PAGE+[{'name':'assignmentId','required':True,'schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}]
-    routes.append(route('/v1/platform/assignments/upgrade/role-candidates','get','platformAssignmentUpgradeRoles','升级目标角色版本候选','PLATFORM','iam-platform:assignment:upgrade',None,'RAuthorizationRoleCandidatePage',upgrade_exec,query=upgrade_query+[{'name':'roleId','schema':{'type':'string'}}]))
-    routes.append(route('/v1/platform/assignments/upgrade/candidates','get','platformAssignmentUpgradeCandidates','升级版本与对象候选','PLATFORM','iam-platform:assignment:upgrade',None,'RAuthorizationCandidatePage',upgrade_exec,query=upgrade_query+[{'name':'kind','required':True,'schema':{'type':'string','enum':['ROLE_REVISION','OBJECT']}},{'name':'revisionId','schema':{'type':'string'}},{'name':'parameterKey','schema':{'type':'string'}},{'name':'tree','schema':{'type':'boolean'}},{'name':'parentId','schema':{'type':'string'}}]))
+    routes.append(route('/v1/platform/assignments/upgrade/role-candidates','get','platformAssignmentUpgradeRoles','升级目标角色版本候选','PLATFORM','iam-platform:role-assignment:apply-version',None,'RAuthorizationRoleCandidatePage',upgrade_exec,query=upgrade_query+[{'name':'roleId','schema':{'type':'string'}}]))
+    routes.append(route('/v1/platform/assignments/upgrade/candidates','get','platformAssignmentUpgradeCandidates','升级版本与对象候选','PLATFORM','iam-platform:role-assignment:apply-version',None,'RAuthorizationCandidatePage',upgrade_exec,query=upgrade_query+[{'name':'kind','required':True,'schema':{'type':'string','enum':['ROLE_REVISION','OBJECT']}},{'name':'revisionId','schema':{'type':'string'}},{'name':'parameterKey','schema':{'type':'string'}},{'name':'tree','schema':{'type':'boolean'}},{'name':'parentId','schema':{'type':'string'}}]))
     routes.append(route('/v1/platform/roles/preview', 'post', 'platformPreviewRoleCreate',
                         '预览平台角色创建与字段权限', 'PLATFORM', 'iam-platform:role:create',
                         'RoleCreateInput', 'RPreviewRoleDefinitionDraft',
@@ -641,10 +633,49 @@ def build():
         ('/{id}/confirm', 'post', 'Confirm', '确认执行版本应用', 'RoleApplicationConfirmInput', 'RRoleApplicationTask', None),
     ]:
         routes.append(route(application_path + suffix, method, 'platformRoleApplication' + operation,
-                            summary, 'PLATFORM', 'iam-platform:assignment:upgrade', request, response, application_exec, query=query))
+                            summary, 'PLATFORM', 'iam-platform:role-assignment:apply-version', request, response, application_exec, query=query))
+    routes = current_routes(routes)
+    routes += [
+        route('/v1/tenant/workbench/statistics', 'get', 'tenantWorkbench', '查看组织工作台', 'TENANT',
+              'iam-tenant:workbench:read', None, 'RTenantWorkbenchStatistics', '可信组织；各项指标沿用资源范围'),
+        route('/v1/tenant/applications/{id}/action-catalog', 'get', 'tenantApplicationActionCatalog', '已开通应用权限树', 'TENANT',
+              'iam-tenant:application:read', None, 'RActionCatalogView', '当前组织有效开通'),
+        route('/v1/tenant/members/{id}/rejoin', 'post', 'tenantMemberRejoin', '重新加入已移出成员', 'TENANT',
+              'iam-tenant:member:create', 'TenantMemberRejoinInput', 'RTenantMemberCreated', '目标状态、范围、字段和版本全部复核'),
+        route('/v1/tenant/downloads', 'get', 'tenantDownloadPage', '我的下载任务', 'TENANT', None,
+              None, 'RPageResponseDownloadTask', '可信组织及本人任务', query=PAGE),
+        route('/v1/tenant/downloads/{id}', 'get', 'tenantDownloadDetail', '我的下载任务详情', 'TENANT', None,
+              None, 'RDownloadTask', '可信组织及本人任务'),
+        route('/v1/tenant/downloads/{id}/link', 'post', 'tenantDownloadLink', '签发下载链接', 'TENANT', None,
+              None, 'RDownloadLink', '可信组织、本人任务、有效状态及实时来源操作'),
+        route('/v1/tenant/roles/{id}/members', 'get', 'tenantRoleMembers', '角色有效成员', 'TENANT',
+              'iam-tenant:role:read', None, 'RRoleSubjectPage', '角色与分配读取范围交集', query=PAGE),
+        route('/v1/tenant/roles/{id}/groups', 'get', 'tenantRoleGroups', '角色有效用户组', 'TENANT',
+              'iam-tenant:role:read', None, 'RRoleSubjectPage', '角色与分配及用户组读取范围交集', query=PAGE),
+        route('/v1/tenant/roles/{id}/members/{memberId}/assignments', 'get', 'tenantRoleMemberAssignments',
+              '角色成员有效授权来源', 'TENANT', 'iam-tenant:role:read', None,
+              'RPageResponseResourceDetailTenantAssignmentRecord', '角色与分配读取范围交集', query=PAGE),
+        route('/v1/assets/uploads', 'post', 'stageBusinessImage', '暂存业务图片', 'CURRENT', None, None,
+              'RAssetUpload', '业务用途、可信域、操作、目标和字段；返回限时凭证'),
+    ]
+    for tail, method, identifier, title, action, request, response, rule in [
+        ('/template', 'get', 'Template', '下载成员导入模板', 'iam-tenant:member:create', None,
+         'RMemberWorkbookFile', '创建权限'),
+        ('/import', 'post', 'Import', '导入成员表格', None, None, 'RCreatedResource',
+         '按模式和实际字段校验成员 create、update 或 set-departments'),
+        ('/export', 'post', 'Export', '导出成员表格', 'iam-tenant:member:export', 'MemberWorkbookExportInput',
+         'RCreatedResource', '登记本人下载任务，复核导出范围'),
+        ('/history', 'get', 'History', '成员导入历史', None, None, 'RListMemberWorkbookHistoryItem',
+         '仅发起人，按创建或更新、任职操作授权'),
+        ('/{id}/status', 'get', 'Status', '成员表格任务状态', None, None, 'RMemberWorkbookTask',
+         '仅发起人并复核任务来源权限'),
+        ('/{id}/file', 'get', 'File', '下载成员表格产物', None, None, 'RMemberWorkbookFile',
+         '仅发起人并复核任务来源权限，初始密码只允许下载一次'),
+    ]:
+        routes.append(route('/v1/tenant/members/workbook' + tail, method, 'tenantMemberWorkbook' + identifier,
+                            title, 'TENANT', action, request, response, rule))
     for item in routes:
         item['implemented'] = True
-    routes = current_routes(routes)
     seen = set()
     for item in routes:
         key = (item['path'], item['method'])

@@ -66,13 +66,13 @@
 mysql --database=iam_test < databases/ingot_iam.sql
 ```
 
-完整文件可重复导入，会先对清单内56张表执行 `DROP TABLE IF EXISTS`，清空旧账号、授权及业务数据，目录默认布局为 `layout.main`；没有账号种子，重建后须重新选择下方一种身份初始化方式。分片仅用于空库，来源和顺序以 `databases/iam/manifest.json` 为准：001–005 → 框架表CREATE → 006。导出任务已并入004，平台字段配置保存在角色版本；历史ALTER位于migrations目录，不作为新库初始化执行。框架密码DDL中的固定USE已从完整文件投影移除，避免误写其他库。
+完整文件会重建清单内的表，写入治理目录和唯一的平台账号 `platform`，初始密码为 `11111111`，首次登录需改密。租户由管理员手动创建。
 
-到这里库里只有治理目录，没有测试账号。`006` 可重复执行且不覆盖人工改过的行。
+验证启动器或历史人工夹具时，从空库按 manifest 分片导入 001–005、框架 CREATE 和 006。具体顺序见 [数据库初始化说明](../../../../databases/iam/README.md)。
 
-初始化目录含3应用：`iam-platform`（平台治理）、`iam-tenant`（组织治理）及独立 `platform:develop`（开发者平台）。“平台管理”下有全局账号；开发者应用下有生成二维码、客户端管理、社交管理和业务ID管理。客户端仍调用Auth，社交/业务ID仍调用现有IAM API，精确权限码没有更改。单独重跑006不会给已发布SYSTEM版本追加这些权限，旧测试库要按本节完整重建后验证。
+应用、资源、操作和菜单见 [新版治理目录](../20261106-iam-resource-catalog/DESIGN.md)。单独重跑 006 不会给已发布的 SYSTEM 版本追加权限。
 
-**二选一，不要两个都做：**
+分片导入到 006 后，按场景选择一种身份初始化方式：
 
 - **联调 D02（推荐）**：打开 IAM 的 `ingot.iam.bootstrap.enabled=true`，启动一次 IAM，从 WARN 日志取出受控平台账号口令（默认登录名 `platform`），登录后立刻改密。然后用第 3.6 节工具 `build`。
 - **历史小型 Bruno**：额外执行 `databases/iam/seed-manual-verification.sql`，得到固定口令 `password` 的 `platform` / `owner`。这套账号**不能**当作 `iam-test-*` 场景数据。

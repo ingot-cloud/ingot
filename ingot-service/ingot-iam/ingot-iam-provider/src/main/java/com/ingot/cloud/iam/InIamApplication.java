@@ -1,10 +1,12 @@
 package com.ingot.cloud.iam;
 
 import com.ingot.framework.openapi.EnableOpenAPI;
+import com.ingot.framework.oss.upload.AssetUploadConfiguration;
 import com.ingot.framework.security.config.annotation.web.configuration.EnableInWebSecurity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableInWebSecurity
 @EnableTransactionManagement
 @EnableDiscoveryClient
+@Import(AssetUploadConfiguration.class)
 @SpringBootApplication
 public class InIamApplication {
 

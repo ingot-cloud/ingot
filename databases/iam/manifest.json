@@ -11,5 +11,6 @@
     "ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql"
   ],
   "bootstrap": "databases/iam/006_bootstrap.sql",
+  "initialAccounts": "databases/iam/007_initial_platform_account.sql",
   "bundle": "databases/ingot_iam.sql"
 }

@@ -34,7 +34,7 @@ public enum IamActionOperation {
     /**
      * 诊断授权来源，不执行目标操作。
      */
-    DIAGNOSE("diagnose", false),
+    DIAGNOSE("run", false),
     /**
      * 导出，按导出时身份重验后读取。
      */
@@ -54,11 +54,11 @@ public enum IamActionOperation {
     /**
      * 暂停或恢复。
      */
-    STATUS("status", true),
+    STATUS("change-status", true),
     /**
      * 发布版本或策略。
      */
-    PUBLISH("publish", true),
+    PUBLISH("publish-version", true),
     /**
      * 移出成员资格，不删除账号。
      */
@@ -66,17 +66,17 @@ public enum IamActionOperation {
     /**
      * 把已分配主体升级到新角色版本。
      */
-    UPGRADE("upgrade", true),
+    UPGRADE("apply-version", true),
     /**
      * 转交组织所有者。
      */
-    OWNER_TRANSFER("owner-transfer", true),
+    OWNER_TRANSFER("transfer-owner", true),
     /**
      * 整体替换成员任职部门。
      */
-    DEPARTMENTS("departments", true),
+    DEPARTMENTS("set-departments", true),
     /** 维护部门负责人关系，不授予权限。 */
-    LEADERS("leaders", true),
+    LEADERS("set-leaders", true),
     /**
      * 受限精确查找，不返回组织关系。
      */
@@ -108,7 +108,9 @@ public enum IamActionOperation {
     /**
      * 强制清除对象及其全部关联。
      */
-    PURGE("purge", true);
+    PURGE("purge", true),
+    /** 广播访问防护策略刷新。 */
+    REFRESH("refresh", true);
 
     /**
      * ACTION 码末段使用的稳定字面量。
@@ -140,7 +142,7 @@ public enum IamActionOperation {
     /**
      * 从完整 ACTION 码解析操作语义。
      *
-     * @param code 形如 {@code iam-tenant:member:status} 的精确操作码
+     * @param code 形如 {@code iam-tenant:member:change-status} 的精确操作码
      * @return 对应枚举
      * @throws IllegalArgumentException 码不含操作段，或末段未登记
      */

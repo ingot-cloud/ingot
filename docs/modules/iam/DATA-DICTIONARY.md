@@ -2,7 +2,7 @@
 
 <!-- 自动生成：python3 tools/iam/generate_database.py；说明在权威 DDL 维护。 -->
 
-manifest 管理 64 张表、532 个字段。
+manifest 管理 65 张表、540 个字段。
 
 ## 阅读约定
 
@@ -1726,6 +1726,31 @@ KEY `idx_unique_type_user` (`unique_id`,`type`,`user_id`) USING BTREE COMMENT '�
 
 ```sql
 PRIMARY KEY (`id`)
+```
+
+## asset_upload
+
+业务图片暂存与一次性绑定凭证
+
+权威来源：[databases/iam/005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)
+
+| 字段 | 定义 | 说明 |
+|---|---|---|
+| `id` | ``id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 一次性上传凭证 ID |
+| `owner_key` | ``owner_key VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 服务端恢复的域、组织和操作者 |
+| `purpose` | ``purpose VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 固定业务用途编码 |
+| `target_key` | ``target_key VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 既有目标 ID 或空字符串 |
+| `bucket_name` | ``bucket_name VARCHAR(63) NOT NULL`` | 服务端选定的私有 bucket |
+| `object_name` | ``object_name VARCHAR(255) NOT NULL`` | 服务端生成的对象名 |
+| `state` | ``state VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 暂存状态，消费成功随业务事务移除 |
+| `expires_at` | ``expires_at DATETIME(6) NOT NULL`` | 凭证到期时间，UTC |
+
+约束与索引：
+
+```sql
+PRIMARY KEY (id)
+KEY idx_asset_upload_expires (expires_at, id)
+CONSTRAINT ck_asset_upload_state CHECK (state IN ('PENDING','READY'))
 ```
 
 ## account_lock_state

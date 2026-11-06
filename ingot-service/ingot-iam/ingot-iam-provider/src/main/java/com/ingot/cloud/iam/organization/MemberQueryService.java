@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.organization;
 
+import com.ingot.cloud.iam.asset.IamImageBinding;
+import com.ingot.framework.commons.model.iam.ImageUploadPurpose;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -110,6 +112,7 @@ public class MemberQueryService {
     private final GroupService groupCommands;
 
     private final TransactionTemplate transaction;
+    private final IamImageBinding images;
 
     /**
      * 绑定身份、范围、字段策略与成员表。
@@ -132,7 +135,7 @@ public class MemberQueryService {
             FieldAccessEvaluator fields, IamAuditWriter audits, MemberQueryRepository members, GroupRepository groups,
             AssignmentService assignments, GroupService groupCommands, PlatformTransactionManager transactionManager,
             RoleFieldPermissionService platformFields, com.ingot.framework.authorization.field.FieldProjectionEngine projection,
-            com.ingot.framework.authorization.field.FieldWriteExecutor fieldWrites) {
+            IamImageBinding images, com.ingot.framework.authorization.field.FieldWriteExecutor fieldWrites) {
         this.platformFields = platformFields;
         this.projection = projection;
         this.fieldWrites = fieldWrites;
@@ -146,6 +149,7 @@ public class MemberQueryService {
         this.assignments = assignments;
         this.groupCommands = groupCommands;
         this.transaction = new TransactionTemplate(transactionManager);
+        this.images = images;
     }
 
     /**
@@ -479,6 +483,7 @@ public class MemberQueryService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_GROUP_READ);
         IamPages.require(page, pageSize);
         long id = IamIds.require(groupId);
+        scopes.requireVisibleObject(actor.context(), IamAction.PLATFORM_GROUP_READ, id);
         if (groups.findPlatform(id) == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
@@ -489,7 +494,8 @@ public class MemberQueryService {
         if (name != null && !name.isBlank()) {
             FieldPolicyProcessor.requireOriginalLookup(policy, MemberFieldKey.VALUE_DISPLAY_NAME);
         }
-        Page<IamPlatformMemberEntity> result = members.pagePlatformByGroup(ObjectScope.all(), id, page, pageSize,
+        var scope = scopes.memberRead(actor.context(), IamAction.PLATFORM_MEMBER_READ);
+        Page<IamPlatformMemberEntity> result = members.pagePlatformByGroup(scope, id, page, pageSize,
                 IamFilters.containsName(name));
         Map<BigInteger, IamAccountEntity> contacts = members
             .accountContacts(result.getRecords().stream().map(IamPlatformMemberEntity::getAccountId).toList());
@@ -517,11 +523,12 @@ public class MemberQueryService {
         if (members.findPlatform(id) == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        Page<IamPlatformGroupEntity> rows = groups.pagePlatformByMember(id, page, pageSize);
+        var scope = scopes.objects(actor.context(), IamAction.PLATFORM_GROUP_READ);
+        Page<IamPlatformGroupEntity> rows = groups.pagePlatformByMember(id, page, pageSize, scope);
         List<ResourceDetail<GroupRecord>> items = rows.getRecords()
             .stream()
             .map(row -> IamDetails.of(new GroupRecord(row.getId().toString(), row.getName(), row.getDescription(),
-                    new Selection(List.of(), List.of()), null), version(row.getVersion())))
+                    new Selection(List.of(), List.of()), null, null), version(row.getVersion())))
             .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
@@ -543,11 +550,12 @@ public class MemberQueryService {
         if (members.findTenant(tenantId, id) == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        Page<IamTenantGroupEntity> rows = groups.pageTenantByMember(tenantId, id, page, pageSize);
+        var scope = scopes.objects(actor.context(), IamAction.TENANT_GROUP_READ);
+        Page<IamTenantGroupEntity> rows = groups.pageTenantByMember(tenantId, id, page, pageSize, scope);
         List<ResourceDetail<GroupRecord>> items = rows.getRecords()
             .stream()
             .map(row -> IamDetails.of(new GroupRecord(row.getId().toString(), row.getName(), row.getDescription(),
-                    new Selection(List.of(), List.of()), null), version(row.getVersion())))
+                    new Selection(List.of(), List.of()), null, null), version(row.getVersion())))
             .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
@@ -622,7 +630,9 @@ public class MemberQueryService {
                     new ScopeTarget(IamIds.text(id), IamIds.text(id), actor.context().tenantId(), List.copyOf(departmentIds)), submitted);
             String displayName = input.displayName() == null || input.displayName().isBlank() ? "成员"
                     : input.displayName().trim();
-            String avatar = input.avatar() == null || input.avatar().isBlank() ? null : input.avatar().trim();
+            String avatar = images.bind(actor.context(), domain == AuthorizationDomain.PLATFORM
+                    ? ImageUploadPurpose.PLATFORM_MEMBER_CREATE : ImageUploadPurpose.TENANT_MEMBER_CREATE,
+                    null, input.avatar(), null);
             try {
                 if (domain == AuthorizationDomain.PLATFORM) {
                     members.insertPlatform(id, accountId, displayName, avatar);
@@ -688,14 +698,17 @@ public class MemberQueryService {
             fieldWrites.require(resource, domain == AuthorizationDomain.PLATFORM ? IamAction.VALUE_PLATFORM_MEMBER_UPDATE
                     : IamAction.VALUE_TENANT_MEMBER_UPDATE,
                     new ScopeTarget(memberId, memberId, actor.context().tenantId(), actualDepartments), submitted);
+            String avatar = images.bind(actor.context(), domain == AuthorizationDomain.PLATFORM
+                    ? ImageUploadPurpose.PLATFORM_MEMBER_UPDATE : ImageUploadPurpose.TENANT_MEMBER_UPDATE,
+                    IamIds.text(id), input.avatar(), current.record().avatar());
             if (domain == AuthorizationDomain.PLATFORM) {
-                requireApplied(members.updatePlatform(id, input.displayName(), input.avatar(), input.phone(),
+                requireApplied(members.updatePlatform(id, input.displayName(), avatar, input.phone(),
                         input.email(), version, input.suppliedFields()));
             }
             else {
                 long tenantId = IamIds.require(actor.context().tenantId());
                 long viewerId = IamIds.require(actor.context().memberId());
-                requireApplied(members.updateTenant(tenantId, id, input.displayName(), input.avatar(), input.phone(),
+                requireApplied(members.updateTenant(tenantId, id, input.displayName(), avatar, input.phone(),
                         input.email(), version, input.suppliedFields()));
             }
             ResourceDetail<MemberRecord> next = load(domain, actor, id);

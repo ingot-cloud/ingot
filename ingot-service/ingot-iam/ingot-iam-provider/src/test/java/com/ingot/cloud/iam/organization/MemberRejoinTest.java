@@ -232,7 +232,7 @@ class MemberRejoinTest {
                         IamMybatisTestAccess.mapper(dataSource, IamTenantMemberMapper.class)),
                 IamMybatisTestAccess.entitlements(dataSource), IamMybatisTestAccess.policies(dataSource), projection,
                 fieldWrites, IamMybatisTestAccess.audits(dataSource),
-                new AuthorizationChangeNotifier(event -> invalidations.incrementAndGet()),
+                new AuthorizationChangeNotifier(event -> invalidations.incrementAndGet()), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.images(),
                 new DataSourceTransactionManager(dataSource));
     }
 

@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.identity;
 
+import com.ingot.cloud.iam.asset.IamImageBinding;
+import com.ingot.framework.commons.model.iam.ImageUploadPurpose;
 import java.util.Map;
 import java.util.Objects;
 
@@ -30,6 +32,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class TenantInitializer {
     private static final String TENANT_RESOURCE = "tenant";
     private final TransactionTemplate transaction;
+    private final IamImageBinding images;
     private final ActiveIdentityService identities;
     private final TenantInitializationRepository repository;
     private final IamAuditWriter audits;
@@ -42,8 +45,9 @@ public class TenantInitializer {
      * @param audits 同事务审计
      */
     public TenantInitializer(PlatformTransactionManager transactionManager, ActiveIdentityService identities,
-                             TenantInitializationRepository repository, IamAuditWriter audits) {
+                             TenantInitializationRepository repository, IamImageBinding images, IamAuditWriter audits) {
         this.transaction = new TransactionTemplate(transactionManager);
+        this.images = images;
         this.identities = identities;
         this.repository = repository;
         this.audits = audits;
@@ -76,7 +80,8 @@ public class TenantInitializer {
             if (!repository.lockDefaultRevision(plan.fieldRevisionId(), DefaultPolicyKind.FIELD)) {
                 throw new BizException(IamReasonCode.POLICY_CONFLICT);
             }
-            String version = repository.insertOrganization(plan);
+            String avatar = images.bind(actor, ImageUploadPurpose.PLATFORM_TENANT_CREATE, null, plan.avatar(), null);
+            String version = repository.insertOrganization(plan, avatar);
             audits.write(actor, plan.auditId(), TENANT_RESOURCE, Long.toString(plan.tenantId()),
                     AuditChangeType.CREATE, Map.of(),
                     Map.of(AuditField.NAME, plan.name(), AuditField.OWNER_MEMBER, Long.toString(plan.ownerMemberId())),

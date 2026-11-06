@@ -33,7 +33,6 @@ import com.ingot.framework.commons.model.iam.RoleUpdateInput;
 import com.ingot.framework.commons.model.iam.ScopeBindingKind;
 import com.ingot.framework.commons.model.iam.ScopeExpression;
 import com.ingot.framework.commons.model.iam.ScopeKind;
-import com.ingot.framework.commons.model.iam.UpgradeInput;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.userdetails.InUser;
 import org.junit.jupiter.api.AfterEach;
@@ -95,7 +94,7 @@ class RoleServiceTest {
                 + " name VARCHAR(128), description VARCHAR(512), icon VARCHAR(512), sort_order INT,"
                 + " baseline BOOLEAN, enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY, application_id BIGINT, code VARCHAR(64),"
-                + " name VARCHAR(128), scope_capabilities VARCHAR(512), field_capabilities VARCHAR(512),"
+                + " name VARCHAR(128), scope_capabilities VARCHAR(512), field_capabilities VARCHAR(512), field_policy VARCHAR(512),"
                 + " enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_action(id BIGINT PRIMARY KEY, application_id BIGINT, resource_id BIGINT,"
                 + " code VARCHAR(192), name VARCHAR(128), enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
@@ -174,7 +173,7 @@ class RoleServiceTest {
         service = new RoleService(access, IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> { }), new RoleSynthesisCache(),
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
-                IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
+                IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.catalogService(access, dataSource, transactions),
                 IamMybatisTestAccess.roleFields(dataSource), IamMybatisTestAccess.fieldMetadata(dataSource), transactions);
         authenticate();
@@ -204,8 +203,9 @@ class RoleServiceTest {
     @Test
     void historicalTenantSourceKeepsItsOwnSharedBaseAndRejectsAnotherRolesRevision() {
         based();
-        var newer = service.upgrade("22", new UpgradeInput("0", "31", List.of(), List.of(), "增加修改", "共享基础升级"));
-        assertEquals("31", service.getRevision(AuthorizationDomain.TENANT, false, "22", newer.id()).record().baseRevisionId());
+        jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind,revision,base_revision_id)"
+                + " VALUES (34,22,'TENANT_CUSTOM',2,31)");
+        jdbc.update("UPDATE iam_role_definition SET version=1 WHERE id=22");
         var old = service.getRevision(AuthorizationDomain.TENANT, false, "22", "32").record();
         var draft = new RoleDefinitionDraft(old.grants(), old.deltas(), old.parameterDefinitions(), old.metadataOverrides(), old.resourceFieldPermissions());
         var preview = service.preview(AuthorizationDomain.TENANT, false, "22", draft, "32");
@@ -419,78 +419,6 @@ class RoleServiceTest {
         assertEquals(List.of(), acceptable.errors());
     }
 
-    @Test
-    void upgradeMovesOnlyTheSelectedAssignment() {
-        based();
-        assignment(81, 32, null, "ACTIVE", 10);
-        assignment(82, 32, null, "ACTIVE", 10);
-
-        service.upgrade("22", new UpgradeInput("0", "31", List.of(), List.of("81")));
-
-        long moved = jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81", Long.class);
-        assertEquals(latestRevision(22), moved);
-        assertEquals(32L, jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=82", Long.class));
-        assertEquals(1L, jdbc.queryForObject("SELECT version FROM iam_role_assignment WHERE id=81", Long.class));
-    }
-
-    @Test
-    void upgradeRefusesAssignmentsOutsideTheTenantRoleOrLifecycle() {
-        based();
-        assignment(81, 32, null, "ACTIVE", 10);
-        assignment(82, 32, null, "ACTIVE", 20);
-        assignment(83, 33, null, "ACTIVE", 10);
-        assignment(84, 32, null, "REVOKED", 10);
-
-        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), rejectsUpgrade(List.of("82")));
-        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), rejectsUpgrade(List.of("83")));
-        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), rejectsUpgrade(List.of("84")));
-        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), rejectsUpgrade(List.of("81", "999")));
-        assertEquals(32L, jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81", Long.class));
-        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_revision WHERE role_id=22", Integer.class));
-    }
-
-    @Test
-    void upgradeRequiresTheDelegationToAllowTheNewRevision() {
-        based();
-        assignment(81, 32, null, "ACTIVE", 10);
-        assignment(85, 32, 61L, "ACTIVE", 10);
-        delegation(61, 32);
-
-        assertEquals(IamReasonCode.ACTION_DENIED.getCode(), rejectsUpgrade(List.of("81", "85")));
-        assertEquals(32L, jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81", Long.class));
-
-        // 委派显式放开升级后的版本，才允许把派生授权迁过去；版本 ID 由发号器给出，升级返回值回过头验证预测正确。
-        long next = ids.get() + 1;
-        jdbc.update("INSERT INTO iam_delegation_role_revision VALUES (61,?,'TENANT_CUSTOM')", next);
-        var created = service.upgrade("22", new UpgradeInput("0", "31", List.of(), List.of("81", "85")));
-
-        assertEquals(Long.toString(next), created.id());
-        assertEquals(next,
-                jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=85", Long.class));
-    }
-
-    @Test
-    void upgradeRejectsWhenTheNewRevisionNeedsAnUnboundParameter() {
-        based();
-        jdbc.update("INSERT INTO iam_role_parameter VALUES (32,'scope','DEPARTMENTS')");
-        jdbc.update("UPDATE iam_role_grant SET scopes=? WHERE revision_id=31 AND action_id=12", MANAGED);
-        assignment(81, 32, null, "ACTIVE", 10);
-
-        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), rejectsUpgrade(List.of("81")));
-        assertEquals(32L, jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81", Long.class));
-    }
-
-    @Test
-    void roleWithoutSharedBaseCannotUpgrade() {
-        var created = service.create(AuthorizationDomain.TENANT, false, input(null,
-                new RoleDefinitionDraft(List.of(grant("11", ScopeKind.ALL)), List.of(), List.of(), null)));
-
-        BizException failure = assertThrows(BizException.class, () -> service.upgrade(created.id(),
-                new UpgradeInput("0", "31", List.of(), List.of())));
-
-        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), failure.getCode());
-    }
-
     /** 建立以共享版本 30 为基础的租户定制角色 22 及无关角色 23。 */
     private void based() {
         jdbc.update("INSERT INTO iam_role_definition(id,domain,tenant_id,kind,code,name,enabled,version)"
@@ -499,26 +427,6 @@ class RoleServiceTest {
         jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind,revision,base_revision_id)"
                 + " VALUES (32,22,'TENANT_CUSTOM',1,30),(33,23,'TENANT_CUSTOM',1,30)");
     }
-
-    private void assignment(long id, long revisionId, Long delegationId, String status, long tenantId) {
-        jdbc.update("INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,tenant_member_id,revision_id,"
-                        + "revision_kind,scope_bindings,delegation_grant_id,valid_from,valid_until,status,source,version)"
-                        + " VALUES (?,'TENANT',?,'MEMBER',102,?,'TENANT_CUSTOM','{}',?,"
-                        + "TIMESTAMP '2026-01-01 00:00:00',TIMESTAMP '2026-01-02 00:00:00',?,'MANUAL',0)",
-                id, tenantId, revisionId, delegationId, status);
-    }
-
-    /** 建立由当前操作者持有、只放开指定版本的委派，操作 11/12 的范围上限为全部。 */
-    private void delegation(long id, long allowedRevisionId) {
-        jdbc.update("INSERT INTO iam_delegation_grant(id,domain,tenant_id,tenant_administrator_id,valid_from,"
-                + "max_assignment_duration_seconds,max_assignment_duration_nanos,status,version)"
-                + " VALUES (?,'TENANT',10,101,TIMESTAMP '2000-01-01 00:00:00',864000,0,'ACTIVE',0)", id);
-        jdbc.update("INSERT INTO iam_delegation_role_revision VALUES (?,?,'TENANT_CUSTOM')", id, allowedRevisionId);
-        jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES (?,'TENANT',10,NULL,102)", id);
-        jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES (?,11,?,'{}'),(?,12,?,'{}')",
-                id, ALL, id, ALL);
-    }
-
 
     @Test
     void platformCustomRoleCannotUseReservedAdministratorCode() {
@@ -551,11 +459,6 @@ class RoleServiceTest {
     private String rejects(RoleCreateInput input) {
         return assertThrows(BizException.class,
                 () -> service.create(AuthorizationDomain.TENANT, false, input)).getCode();
-    }
-
-    private String rejectsUpgrade(List<String> assignmentIds) {
-        return assertThrows(BizException.class, () -> service.upgrade("22",
-                new UpgradeInput("0", "31", List.of(), assignmentIds))).getCode();
     }
 
     private long revisionOf(String roleId) {

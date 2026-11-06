@@ -14,19 +14,22 @@ import com.ingot.framework.commons.model.iam.extension.ResourceKey;
  */
 public final class SecurityResources {
     /** 安全中心平台应用编码。 */
-    public static final String APPLICATION = "platform:security";
+    public static final String APPLICATION = "platform-security";
     /** credential policy 资源编码。 */
     public static final String CREDENTIAL_POLICY = "credential-policy";
     /** lockout policy 资源编码。 */
-    public static final String LOCKOUT_POLICY = "lockout-policy";
+    public static final String LOCKOUT_POLICY = "account-lockout-policy";
     /** login failure policy 资源编码。 */
     public static final String LOGIN_FAILURE_POLICY = "login-failure-policy";
     /** session 资源编码。 */
     public static final String SESSION = "session";
     /** session policy 资源编码。 */
-    public static final String SESSION_POLICY = "session-policy";
+    public static final String SESSION_POLICY = "session-concurrency-policy";
     /** security policy 资源编码。 */
-    public static final String SECURITY_POLICY = "security-policy";
+    public static final String SECURITY_POLICY = "access-policy";
+    /** 访问防护历史封禁记录。 */
+    public static final String BLOCK_EVENT = "block-event";
+
     private SecurityResources() {
     }
 
@@ -44,14 +47,18 @@ public final class SecurityResources {
             descriptor(SESSION, List.of(IamAction.PLATFORM_SESSION_READ, IamAction.PLATFORM_SESSION_REVOKE),
                     IamAction.VALUE_PLATFORM_SESSION_READ),
             descriptor(SESSION_POLICY, List.of(
-                    IamAction.PLATFORM_SESSION_POLICY_READ, IamAction.PLATFORM_SESSION_POLICY_UPDATE),
+                    IamAction.PLATFORM_SESSION_POLICY_READ, IamAction.PLATFORM_SESSION_POLICY_UPDATE,
+                    IamAction.PLATFORM_SESSION_POLICY_CREATE, IamAction.PLATFORM_SESSION_POLICY_DELETE),
                     IamAction.VALUE_PLATFORM_SESSION_POLICY_READ),
             descriptor(SECURITY_POLICY, List.of(
                     IamAction.PLATFORM_SECURITY_POLICY_READ, IamAction.PLATFORM_SECURITY_POLICY_CREATE,
-                    IamAction.PLATFORM_SECURITY_POLICY_UPDATE, IamAction.PLATFORM_SECURITY_POLICY_DELETE),
-                    IamAction.VALUE_PLATFORM_SECURITY_POLICY_READ));
+                    IamAction.PLATFORM_SECURITY_POLICY_UPDATE, IamAction.PLATFORM_SECURITY_POLICY_DELETE,
+                    IamAction.PLATFORM_SECURITY_POLICY_REFRESH),
+                    IamAction.VALUE_PLATFORM_SECURITY_POLICY_READ),
+            descriptor(BLOCK_EVENT, List.of(IamAction.PLATFORM_BLOCK_EVENT_READ),
+                    IamAction.VALUE_PLATFORM_BLOCK_EVENT_READ));
 
-    /** 返回安全中心六种 ALL 资源的不可变执行描述。 */
+    /** 返回安全中心七种 ALL 资源的不可变执行描述。 */
     public static List<ResourceDescriptor> descriptors() {
         return DESCRIPTORS;
     }

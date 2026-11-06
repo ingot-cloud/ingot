@@ -28,6 +28,16 @@ def retain_envelopes(schemas):
             'success': {'type': 'boolean'},
         },
     })
+    schemas.setdefault('AssetUpload', {'type': 'object', 'required': ['uploadId'],
+                                      'properties': {'uploadId': {'type': 'string'}}})
+    schemas.setdefault('RAssetUpload', {
+        'type': 'object',
+        'required': ['code', 'message', 'data', 'success'],
+        'properties': {
+            'code': {'type': 'string'}, 'message': {'type': 'string'}, 'success': {'type': 'boolean'},
+            'data': ref('AssetUpload'),
+        },
+    })
     schemas.setdefault('RVoid', {
         'type': 'object',
         'required': ['code', 'message', 'data', 'success'],
@@ -41,8 +51,26 @@ def retain_envelopes(schemas):
     return schemas
 
 
+def add_image_upload_fields(schemas):
+    """公布 Java 业务请求所支持的图片上传字段。"""
+    field_models = {
+        'avatarUploadId': ('MemberCreateInput', 'MemberProfileInput', 'PlatformMemberEditInput',
+                           'TenantMemberCreateInput', 'TenantMemberRejoinInput', 'TenantCreateInput',
+                           'TenantUpdateInput', 'TenantSettingsInput'),
+        'iconUploadId': ('ApplicationDraft', 'ApplicationUpdateInput'),
+    }
+    for field, models in field_models.items():
+        for model in models:
+            schema = schemas[model]
+            schema['properties'][field] = {
+                'type': 'string',
+                'description': '该写入用途的限时上传凭证，和已有图片字段二选一',
+            }
+    return schemas
+
+
 def build(schemas):
-    schemas = retain_envelopes(dict(schemas))
+    schemas = add_image_upload_fields(retain_envelopes(dict(schemas)))
     routes = json.loads((CONTRACT / 'routes.json').read_text())
     paths = {}
     operation_ids = set()
@@ -61,6 +89,11 @@ def build(schemas):
         }
         if route.get('deprecated'):
             operation['deprecated'] = True
+        if route['path'] == '/v1/assets/uploads':
+            operation['requestBody'] = {'required': True, 'content': {'multipart/form-data': {'schema': {
+                'type': 'object', 'additionalProperties': False, 'required': ['purpose', 'file'],
+                'properties': {'purpose': {'type': 'string'}, 'targetId': {'type': 'string'},
+                               'file': {'type': 'string', 'format': 'binary'}}}}}}
         if route.get('request'):
             operation['requestBody'] = {'required': True, 'content': {
                 MEDIA_TYPE: {'schema': ref(route['request'])}}}

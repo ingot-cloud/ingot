@@ -1,5 +1,7 @@
 package com.ingot.framework.commons.model.iam;
 
+import jakarta.validation.constraints.Pattern;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
@@ -23,7 +25,7 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "创建应用目录项，基础应用标记仅允许租户域")
 public record ApplicationDraft(
         @NotBlank @Size(max = 64) @Schema(description = "应用命名空间", requiredMode = Schema.RequiredMode.REQUIRED)
-        String code,
+        @Pattern(regexp = ActionCodes.SEGMENT_PATTERN) String code,
         @NotNull @Schema(description = "应用所属管理域", requiredMode = Schema.RequiredMode.REQUIRED)
         AuthorizationDomain domain,
         @NotBlank @Size(max = 128) @Schema(description = "应用名称", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -31,7 +33,7 @@ public record ApplicationDraft(
         @Schema(description = "说明，可空")
         String description,
         @Schema(description = "Iconify 名或 Logo 对象路径，可空")
-        String icon,
+        @JsonAlias(AssetFieldNames.ICON_UPLOAD_ID) String icon,
         @Schema(description = "展示顺序", requiredMode = Schema.RequiredMode.REQUIRED)
         int sortOrder,
         @Schema(description = "是否在组织初始化时开通；仅租户域可为 true", requiredMode = Schema.RequiredMode.REQUIRED)

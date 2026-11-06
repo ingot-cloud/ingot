@@ -2,7 +2,8 @@ package com.ingot.cloud.member.api.model.dto.user;
 
 import java.io.Serializable;
 
-import com.ingot.framework.oss.common.OssSaveUrl;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.ingot.framework.commons.model.iam.AssetFieldNames;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -42,7 +43,7 @@ public class MemberUserDTO implements Serializable {
      * 头像
      */
     @Schema(description = "头像")
-    @OssSaveUrl
+    @JsonAlias(AssetFieldNames.AVATAR_UPLOAD_ID)
     private String avatar;
 }
 

@@ -32,9 +32,10 @@ def schema_files():
     return sources('schemas')
 
 
-def initialization_files():
-    """结构、框架表、正式种子的完整顺序；框架源需经过read_source投影。"""
-    return schema_files() + sources('frameworkSchemas') + sources('bootstrap')
+def initialization_files(*, seed_platform_account=True):
+    """结构、框架表、治理目录及平台账号的完整顺序。"""
+    catalog = schema_files() + sources('frameworkSchemas') + sources('bootstrap')
+    return catalog + sources('initialAccounts') if seed_platform_account else catalog
 
 
 def read_source(path):
@@ -64,7 +65,7 @@ def render_bundle():
         '-- 自动生成：python3 tools/iam/generate_database.py；不要手工编辑。',
         '-- 来源顺序：databases/iam/manifest.json；框架DDL仍由原模块维护。',
         '-- 在调用者选定的数据库执行；先备份并停止服务，无CREATE/DROP DATABASE或固定USE。',
-        '-- 不包含账号、凭证、业务组织、授权记录或登录运行状态。',
+        '-- 写入正式治理目录和唯一的平台管理员账号；业务组织由管理员手动创建。',
         '-- MySQL 8.0.16+；仅删除阶段关闭外键，建表/种子阶段开启，最后恢复原设置；数据时间按UTC写入。',
         'SET NAMES utf8mb4;',
         "SET SESSION time_zone = '+00:00';",

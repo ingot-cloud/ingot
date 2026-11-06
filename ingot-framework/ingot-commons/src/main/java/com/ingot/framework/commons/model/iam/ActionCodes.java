@@ -1,5 +1,7 @@
 package com.ingot.framework.commons.model.iam;
 
+import java.util.regex.Pattern;
+
 import com.ingot.framework.commons.error.BizException;
 
 /**
@@ -14,6 +16,10 @@ public final class ActionCodes {
      */
     public static final String SEGMENT_SEPARATOR = ":";
 
+    /** 目录编码段须采用小写 kebab-case。 */
+    public static final String SEGMENT_PATTERN = "[a-z0-9]+(?:-[a-z0-9]+)*";
+    private static final Pattern SEGMENT = Pattern.compile(SEGMENT_PATTERN);
+
     private ActionCodes() {
     }
 
@@ -27,7 +33,7 @@ public final class ActionCodes {
      * @throws BizException 编码为空、含通配符或末段仍含分隔符
      */
     public static String compose(String applicationCode, String resourceCode, String localCode) {
-        if (blank(applicationCode) || blank(resourceCode) || blank(localCode)) {
+        if (!validSegment(applicationCode) || !validSegment(resourceCode) || localCode == null) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         String prefix = applicationCode + SEGMENT_SEPARATOR + resourceCode + SEGMENT_SEPARATOR;
@@ -35,13 +41,13 @@ public final class ActionCodes {
         if (local.startsWith(prefix)) {
             local = local.substring(prefix.length()).trim();
         }
-        if (local.isEmpty() || local.indexOf('*') >= 0 || local.contains(SEGMENT_SEPARATOR)) {
+        if (!validSegment(local)) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         return prefix + local;
     }
 
-    private static boolean blank(String value) {
-        return value == null || value.isBlank();
+    private static boolean validSegment(String value) {
+        return value != null && SEGMENT.matcher(value).matches();
     }
 }

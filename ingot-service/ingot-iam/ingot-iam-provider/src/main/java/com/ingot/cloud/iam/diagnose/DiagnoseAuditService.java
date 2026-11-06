@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluationRepository;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
-import com.ingot.cloud.iam.assignment.PlatformScopeObjectResource;
+import com.ingot.cloud.iam.assignment.PlatformAuthorizationEditor;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.entity.IamApplicationEntity;
 import com.ingot.cloud.iam.persistence.entity.IamPlatformMemberEntity;
@@ -22,6 +22,7 @@ import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.framework.commons.model.iam.AuthorizationCandidateKind;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.Decision;
 import com.ingot.framework.commons.model.iam.DecisionSource;
@@ -30,6 +31,8 @@ import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberStatus;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
+import com.ingot.cloud.iam.extension.BuiltinResourceProviders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -51,6 +54,8 @@ public class DiagnoseAuditService {
     private final IamPlatformMemberMapper platformMembers;
     private final IamTenantMemberMapper tenantMembers;
     private final IamApplicationMapper applications;
+    private final PlatformAuthorizationEditor platformCandidates;
+    private final TenantDiagnoseCandidates tenantCandidates;
 
     /**
      * 对当前域目标身份做只读诊断。
@@ -62,15 +67,11 @@ public class DiagnoseAuditService {
     public Decision diagnose(AuthorizationDomain domain, DiagnoseInput input) {
         ActiveIdentity actor = access.require(domain, domain == AuthorizationDomain.PLATFORM
                 ? IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE : IamAction.TENANT_AUTHORIZATION_DIAGNOSE);
-        String memberId = resolveMember(domain, actor, input);
-        IamAction memberRead = domain == AuthorizationDomain.PLATFORM
-                ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ;
-        if (domain == AuthorizationDomain.PLATFORM) {
-            if (!scopes.targetAllowed(actor.context(), evaluator.evaluate(actor.context()),
-                    IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode(), memberId)) {
-                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-            }
-        } else {
+        AuthorizationContext target = resolveMember(domain, actor, input);
+        String memberId = target.memberId();
+        if (!memberId.equals(actor.context().memberId())) {
+            IamAction memberRead = domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ;
             scopes.requireVisibleMember(actor.context(), memberRead, IamIds.require(memberId));
         }
         IamApplicationEntity application = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
@@ -84,12 +85,13 @@ public class DiagnoseAuditService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         AuthorizationEvalRows.Action action = actionRows.getFirst();
-        AuthorizationContext target = new AuthorizationContext(domain,
-                domain == AuthorizationDomain.TENANT ? actor.context().tenantId() : null,
-                actor.context().accountId(), memberId);
-        requireOperatorTarget(actor, memberRead, input.targetId(), action.code());
+        ResourceKey resource = null;
+        if (input.targetId() != null && !input.targetId().isBlank()) {
+            resource = evaluations.resourceKey(id(IamIds.require(input.actionId())));
+            requireOperatorTarget(domain, input, resource);
+        }
         AuthorizationEvaluator.AuthorizationView view = evaluator.evaluate(target);
-        IamReasonCode denied = denial(domain, actor, target, application, action, view, input.targetId());
+        IamReasonCode denied = denial(domain, actor, target, application, action, resource, view, input.targetId());
         boolean allowed = denied == null;
         AuthorizationEvaluator.AuthorizationView operatorView = evaluator.evaluate(actor.context());
         List<DecisionSource> sources = List.of();
@@ -103,46 +105,40 @@ public class DiagnoseAuditService {
                     .filter(source -> source.delegationId() != null && owned.contains(source.delegationId())).toList();
         }
         return new Decision(allowed, denied, allowed ? "当前计算允许该操作" : denied.getText(), sources, SCOPE_SUMMARY,
-                discloseFields(actor, input.targetId()), view.version(), view.expiresAt());
+                discloseFields(actor, resource, input.targetId()), view.version(), view.expiresAt());
     }
 
-    private String resolveMember(AuthorizationDomain domain, ActiveIdentity actor, DiagnoseInput input) {
-        if (input.memberId() != null && !input.memberId().isBlank()) {
-            long memberId = IamIds.require(input.memberId());
-            long count = domain == AuthorizationDomain.PLATFORM
-                    ? platformMembers.selectCount(Wrappers.<IamPlatformMemberEntity>lambdaQuery()
-                    .eq(IamPlatformMemberEntity::getId, id(memberId))
-                    .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED))
-                    : tenantMembers.selectCount(Wrappers.<IamTenantMemberEntity>lambdaQuery()
-                    .eq(IamTenantMemberEntity::getTenantId, id(IamIds.require(actor.context().tenantId())))
-                    .eq(IamTenantMemberEntity::getId, id(memberId))
-                    .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED));
-            if (count == 0) {
+    private AuthorizationContext resolveMember(AuthorizationDomain domain, ActiveIdentity actor, DiagnoseInput input) {
+        var current = actor.context();
+        if (current.memberId().equals(input.memberId()) || current.accountId().equals(input.accountId())) {
+            return current;
+        }
+        boolean byMember = input.memberId() != null && !input.memberId().isBlank();
+        BigInteger value = id(IamIds.require(byMember ? input.memberId() : input.accountId()));
+        if (domain == AuthorizationDomain.PLATFORM) {
+            var query = Wrappers.<IamPlatformMemberEntity>lambdaQuery()
+                    .eq(byMember ? IamPlatformMemberEntity::getId : IamPlatformMemberEntity::getAccountId, value)
+                    .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED);
+            var member = platformMembers.selectOne(query);
+            if (member == null) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
-            return input.memberId();
+            return new AuthorizationContext(domain, null, member.getAccountId().toString(), member.getId().toString());
         }
-        long accountId = IamIds.require(input.accountId());
-        List<String> members = domain == AuthorizationDomain.PLATFORM
-                ? platformMembers.selectList(Wrappers.<IamPlatformMemberEntity>lambdaQuery()
-                        .select(IamPlatformMemberEntity::getId)
-                        .eq(IamPlatformMemberEntity::getAccountId, id(accountId))
-                        .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED)).stream()
-                .map(row -> row.getId().toString()).toList()
-                : tenantMembers.selectList(Wrappers.<IamTenantMemberEntity>lambdaQuery()
-                        .select(IamTenantMemberEntity::getId)
-                        .eq(IamTenantMemberEntity::getTenantId, id(IamIds.require(actor.context().tenantId())))
-                        .eq(IamTenantMemberEntity::getAccountId, id(accountId))
-                        .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED)).stream()
-                .map(row -> row.getId().toString()).toList();
-        if (members.size() != 1) {
+        var query = Wrappers.<IamTenantMemberEntity>lambdaQuery()
+                .eq(IamTenantMemberEntity::getTenantId, id(IamIds.require(current.tenantId())))
+                .eq(byMember ? IamTenantMemberEntity::getId : IamTenantMemberEntity::getAccountId, value)
+                .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED);
+        var member = tenantMembers.selectOne(query);
+        if (member == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return members.getFirst();
+        return new AuthorizationContext(domain, current.tenantId(), member.getAccountId().toString(),
+                member.getId().toString());
     }
 
     private IamReasonCode denial(AuthorizationDomain domain, ActiveIdentity actor, AuthorizationContext target,
-                                 IamApplicationEntity application, AuthorizationEvalRows.Action action,
+                                 IamApplicationEntity application, AuthorizationEvalRows.Action action, ResourceKey resource,
                                  AuthorizationEvaluator.AuthorizationView view, String targetId) {
         if (!Boolean.TRUE.equals(application.getEnabled()) || !Boolean.TRUE.equals(action.appEnabled())) {
             return IamReasonCode.APPLICATION_UNAVAILABLE;
@@ -159,52 +155,33 @@ public class DiagnoseAuditService {
             return IamReasonCode.ACTION_DENIED;
         }
         if (targetId != null && !targetId.isBlank()
-                && !scopes.targetAllowed(target, view, action.code(), targetId)) {
+                && !scopes.targetAllowed(target, view, resource, action.code(), targetId)) {
             return IamReasonCode.DATA_SCOPE_DENIED;
         }
         return null;
     }
 
-    private void requireOperatorTarget(ActiveIdentity actor, IamAction memberRead, String targetId, String actionCode) {
-        if (targetId == null || targetId.isBlank()) {
-            return;
+    private void requireOperatorTarget(AuthorizationDomain domain, DiagnoseInput input, ResourceKey resource) {
+        if (resource == null || resource.domain() != domain) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        if (actor.context().domain() == AuthorizationDomain.PLATFORM) {
-            PlatformScopeObjectResource resource = PlatformScopeObjectResource.find(resourceOf(actionCode));
-            if (resource == null || !scopes.targetAllowed(actor.context(), evaluator.evaluate(actor.context()),
-                    resource.getReadAction().getCode(), targetId)) {
-                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-            }
-            return;
-        }
-        String resource = resourceOf(actionCode);
-        if ("member".equals(resource)) {
-            scopes.requireVisibleMember(actor.context(), memberRead, IamIds.require(targetId));
-            return;
-        }
-        if ("department".equals(resource)) {
-            if (actor.context().domain() != AuthorizationDomain.TENANT) {
-                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-            }
-            AuthorizationEvaluator.AuthorizationView operatorView = evaluator.evaluate(actor.context());
-            if (!scopes.departmentAllowed(actor.context(), operatorView, IamAction.TENANT_DEPARTMENT_READ,
-                    IamIds.require(targetId))) {
-                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-            }
-            return;
-        }
-        AuthorizationEvaluator.AuthorizationView operatorView = evaluator.evaluate(actor.context());
-        if (!scopes.targetAllowed(actor.context(), operatorView, actionCode, targetId)) {
+        var ids = List.of(input.targetId());
+        var candidates = domain == AuthorizationDomain.PLATFORM
+                ? platformCandidates.diagnose(AuthorizationCandidateKind.OBJECT, input.actionId(),
+                        input.applicationId(), null, ids, 1, 1)
+                : tenantCandidates.list(AuthorizationCandidateKind.OBJECT, input.applicationId(), input.actionId(),
+                        null, ids, 1, 1);
+        if (!candidates.supported() || candidates.items().stream().noneMatch(item -> input.targetId().equals(item.id()))) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
     }
 
-    private Map<String, FieldAccess> discloseFields(ActiveIdentity actor, String targetId) {
-        if (targetId == null || targetId.isBlank() || actor.context().domain() != AuthorizationDomain.TENANT) {
+    private Map<String, FieldAccess> discloseFields(ActiveIdentity actor, ResourceKey resource, String targetId) {
+        if (targetId == null || targetId.isBlank() || !BuiltinResourceProviders.TENANT_MEMBER_RESOURCE.equals(resource)) {
             return Map.of();
         }
         return fieldAccess.memberAccess(IamIds.require(actor.context().tenantId()),
-                IamIds.require(actor.context().memberId()), IamIds.require(targetId), com.ingot.cloud.iam.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
+                IamIds.require(actor.context().memberId()), IamIds.require(targetId), resource);
     }
 
     private static boolean discloseSources(AuthorizationDomain domain, ActiveIdentity actor, String memberId,
@@ -215,15 +192,6 @@ public class DiagnoseAuditService {
         IamAction assignmentRead = domain == AuthorizationDomain.PLATFORM
                 ? IamAction.PLATFORM_ASSIGNMENT_READ : IamAction.TENANT_ASSIGNMENT_READ;
         return operatorView.governedCodes().contains(assignmentRead.getCode());
-    }
-
-    private static String resourceOf(String actionCode) {
-        int first = actionCode.indexOf(':');
-        int last = actionCode.lastIndexOf(':');
-        if (first < 0 || last <= first) {
-            return "";
-        }
-        return actionCode.substring(first + 1, last);
     }
 
     private static BigInteger id(long value) {

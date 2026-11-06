@@ -1,5 +1,6 @@
 package com.ingot.framework.commons.model.iam;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -25,7 +26,7 @@ public record ApplicationUpdateInput(
         @Schema(description = "说明，可空")
         String description,
         @Schema(description = "Iconify 名或 Logo 对象路径，可空")
-        String icon,
+        @JsonAlias(AssetFieldNames.ICON_UPLOAD_ID) String icon,
         @Schema(description = "展示顺序", requiredMode = Schema.RequiredMode.REQUIRED)
         int sortOrder,
         @Schema(description = "是否在组织初始化时开通；仅租户域可为 true", requiredMode = Schema.RequiredMode.REQUIRED)

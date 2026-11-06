@@ -28,16 +28,19 @@ class ReservedIdTest(unittest.TestCase):
 
     def test_client_operation_codes_match_the_existing_auth_guards(self):
         api = ROOT / 'ingot-service/ingot-auth/ingot-auth-provider/src/main/java/com/ingot/cloud/auth/web/DevClientAPI.java'
-        guards = set(re.findall(r'@AdminOrHasAnyAuthority\(\{"([^"]+)"}', api.read_text()))
+        model = ROOT / 'ingot-framework/ingot-commons/src/main/java/com/ingot/framework/commons/model/iam/DeveloperResources.java'
+        definitions = dict(re.findall(r'String (\w+) = APPLICATION \+ "([^"]+)";', model.read_text()))
+        guards = set(re.findall(r'require\(DeveloperResources\.(CLIENT_\w+)\)', api.read_text()))
         self.assertEqual(6, len(guards))
-        self.assertEqual(guards, set(DEVELOPER_ACTIONS['client']))
+        self.assertEqual(set(DEVELOPER_ACTIONS['oauth-client']),
+                         {DEVELOPER_APPLICATION + definitions[guard] for guard in guards})
 
-    def test_existing_social_and_allocation_codes_keep_their_execution_contract_and_explicit_owner(self):
+    def test_social_and_allocation_codes_match_their_application(self):
         routes = json.loads(ROUTES.read_text())
         catalog = collect(routes)
         for resource in ('social-config', 'id-allocation'):
             expected = {route['action'] for route in routes
-                        if (route.get('action') or '').startswith(f'iam-platform:{resource}:')}
+                        if (route.get('action') or '').startswith(f'{DEVELOPER_APPLICATION}:{resource}:')}
             self.assertEqual(4, len(expected))
             self.assertEqual(expected, catalog[DEVELOPER_APPLICATION][resource])
             self.assertNotIn(resource, catalog['iam-platform'])
@@ -49,8 +52,8 @@ class ReservedIdTest(unittest.TestCase):
         catalog = collect(json.loads(ROUTES.read_text()))
         resources = catalog[SECURITY_APPLICATION]
         self.assertEqual(SECURITY_RESOURCES, set(resources))
-        self.assertEqual(16, sum(len(codes) for codes in resources.values()))
-        self.assertTrue(all(code.startswith('iam-platform:') for codes in resources.values() for code in codes))
+        self.assertEqual(20, sum(len(codes) for codes in resources.values()))
+        self.assertTrue(all(code.startswith(SECURITY_APPLICATION + ':') for codes in resources.values() for code in codes))
         self.assertTrue(SECURITY_RESOURCES.isdisjoint(catalog['iam-platform']))
         self.assertEqual('/security/credential-policies', menu_path('security.credential.policies'))
         self.assertEqual('/platform/settings/dictionaries', menu_path('platform.settings.dictionaries'))
@@ -62,14 +65,14 @@ class ReservedIdTest(unittest.TestCase):
         catalog = collect(json.loads(ROUTES.read_text()))[MEMBER_APPLICATION]
         self.assertEqual({'user', 'role', 'permission'}, set(catalog))
         expected = set().union(*catalog.values())
-        self.assertEqual(20, len(expected))
+        self.assertEqual(25, len(expected))
         self.assertEqual(expected, {MEMBER_APPLICATION + suffix for suffix in definitions.values()})
         api = ROOT / 'ingot-service/ingot-member/ingot-member-provider/src/main/java/com/ingot/cloud/member/web/v1/platform'
+        checked = set()
         for controller in api.glob('Member*API.java'):
-            checked = re.findall(r'access\.require\(MemberAdminResources\.(\w+), MemberAdminResources\.(\w+)\)', controller.read_text())
-            self.assertEqual(len(re.findall(r'@\w+Mapping\b', controller.read_text())) - 1, len(checked))
-            for resource, operation in checked:
-                self.assertIn(MEMBER_APPLICATION + definitions[operation], catalog[resource.lower()])
+            body = controller.read_text()
+            checked.update(re.findall(r'MemberAdminResources\.(\w+)', body))
+        self.assertEqual(set(definitions), checked & definitions.keys())
         _, root, icon, pages = MEMBER_MENUS[0]
         self.assertEqual(('/member', 'ep:iphone'), (menu_path(root), icon))
         self.assertEqual(

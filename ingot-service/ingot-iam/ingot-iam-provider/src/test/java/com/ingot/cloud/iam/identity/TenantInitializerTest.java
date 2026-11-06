@@ -36,7 +36,7 @@ class TenantInitializerTest {
         jdbc = new JdbcTemplate(dataSource);
         initializer = new TenantInitializer(new DataSourceTransactionManager(dataSource),
                 new ActiveIdentityService(com.ingot.cloud.iam.persistence.IamMybatisTestAccess.identity(dataSource)),
-                com.ingot.cloud.iam.persistence.IamMybatisTestAccess.tenantInit(dataSource),
+                com.ingot.cloud.iam.persistence.IamMybatisTestAccess.tenantInit(dataSource), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.images(),
                 com.ingot.cloud.iam.persistence.IamMybatisTestAccess.audits(dataSource));
     }
 

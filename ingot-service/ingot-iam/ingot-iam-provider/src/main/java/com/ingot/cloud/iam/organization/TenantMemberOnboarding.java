@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.organization;
 
+import com.ingot.cloud.iam.asset.IamImageBinding;
+import com.ingot.framework.commons.model.iam.ImageUploadPurpose;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -72,6 +74,7 @@ public class TenantMemberOnboarding {
     private final InitialPasswordService initialPasswords;
     private final MemberRejoin rejoins;
     private final TransactionTemplate transaction;
+    private final IamImageBinding images;
 
     /**
      * 绑定身份、账号注册与成员写入。
@@ -96,7 +99,7 @@ public class TenantMemberOnboarding {
             MemberQueryRepository members, AccountQueryRepository accounts, FieldProjectionEngine projection,
             FieldWriteExecutor fieldWrites, IamAuditWriter audits, RegisterUserUseCase registerUser,
             InitialPasswordService initialPasswords, MemberRejoin rejoins,
-            PlatformTransactionManager transactionManager) {
+            IamImageBinding images, PlatformTransactionManager transactionManager) {
         this.access = access;
         this.scopes = scopes;
         this.assignments = assignments;
@@ -109,6 +112,7 @@ public class TenantMemberOnboarding {
         this.initialPasswords = initialPasswords;
         this.rejoins = rejoins;
         this.transaction = new TransactionTemplate(transactionManager);
+        this.images = images;
     }
 
     /**
@@ -149,11 +153,13 @@ public class TenantMemberOnboarding {
                     new ScopeTarget(IamIds.text(id), IamIds.text(id), actor.context().tenantId(),
                             List.copyOf(departmentIds)),
                     submitted);
+            String avatar = images.bind(actor.context(), ImageUploadPurpose.TENANT_MEMBER_CREATE, null,
+                    input.avatar(), null);
             if (existing != null) {
-                return rejoins.applyLocked(actor, existing, displayName, phone, email, departmentBindings);
+                return rejoins.applyLocked(actor, existing, displayName, phone, email, avatar, departmentBindings);
             }
             try {
-                members.insertTenant(id, tenantId, resolved.accountId(), displayName, null, phone, email);
+                members.insertTenant(id, tenantId, resolved.accountId(), displayName, avatar, phone, email);
                 replaceDepartments(tenantId, id, departmentBindings);
             } catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), MEMBERSHIP_EXISTS);

@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -115,6 +116,9 @@ public record MemberCreateInput(
             var input = parser.getCodec().treeToValue(node, JacksonInput.class);
             Set<String> keys = new HashSet<>();
             node.fieldNames().forEachRemaining(keys::add);
+            if (keys.remove(AssetFieldNames.AVATAR_UPLOAD_ID) && !keys.add(MemberFieldKey.VALUE_AVATAR)) {
+                throw JsonMappingException.from(parser, "头像与上传凭证不能同时提交");
+            }
             return new MemberCreateInput(input.accountId(), input.displayName(), input.avatar(), input.departments(),
                     input.roleIds(), input.groupIds(), input.roleAssignments(), keys);
         }
@@ -131,7 +135,7 @@ public record MemberCreateInput(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Schema(hidden = true)
-    public record JacksonInput(String accountId, String displayName, String avatar,
+    public record JacksonInput(String accountId, String displayName, @JsonAlias(AssetFieldNames.AVATAR_UPLOAD_ID) String avatar,
             List<MemberDepartmentBinding> departments, List<String> roleIds, List<String> groupIds,
             List<MemberRoleAssignmentDraft> roleAssignments) {
     }

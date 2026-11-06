@@ -77,10 +77,12 @@ public class TenantDiagnoseCandidates {
         long tenantId = IamIds.require(actor.context().tenantId());
         List<BigInteger> selected = ids(ids);
         return switch (kind) {
-            case MEMBER -> members(actor, tenantId, keyword, selected, page, pageSize);
+            case MEMBER -> access.allows(AuthorizationDomain.TENANT, IamAction.TENANT_MEMBER_READ, false)
+                    ? members(actor, tenantId, keyword, selected, page, pageSize)
+                    : DiagnoseSubjects.self(actor.context(), keyword, ids, page, pageSize);
             case APPLICATION -> applications(tenantId, keyword, selected, page, pageSize);
             case ACTION -> actions(tenantId, applicationId, keyword, selected, page, pageSize);
-            default -> objects(actor, tenantId, actionId, keyword, selected, page, pageSize);
+            default -> objects(actor, tenantId, applicationId, actionId, keyword, selected, page, pageSize);
         };
     }
 
@@ -121,7 +123,7 @@ public class TenantDiagnoseCandidates {
         return slice(rows, page, pageSize);
     }
 
-    private AuthorizationCandidatePage objects(ActiveIdentity actor, long tenantId, String actionId, String keyword,
+    private AuthorizationCandidatePage objects(ActiveIdentity actor, long tenantId, String applicationId, String actionId, String keyword,
                                                List<BigInteger> selected, int page, int pageSize) {
         if (actionId == null || actionId.isBlank()) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
@@ -131,6 +133,11 @@ public class TenantDiagnoseCandidates {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         TenantLiveRows.Action action = actions.getFirst();
+        if ((applicationId != null && !BigInteger.valueOf(IamIds.require(applicationId)).equals(action.applicationId()))
+                || live.catalog(BigInteger.valueOf(tenantId), action.applicationId(), null,
+                        List.of(action.actionId())).isEmpty()) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
         var resource = live.resource(action.resourceId());
         TenantScopeObjectResource target = resource == null
                 || !TenantAuthorizationConstants.CORE_APPLICATION.equals(resource.applicationCode())
@@ -145,10 +152,18 @@ public class TenantDiagnoseCandidates {
             return departments(actor, tenantId, keyword, selected, page, pageSize);
         }
         var view = evaluator.evaluate(actor.context());
-        if (!view.actionCodes().contains(action.actionCode())) {
+        String read = switch (target) {
+            case APPLICATION -> IamAction.VALUE_TENANT_APPLICATION_READ;
+            case ASSIGNMENT -> IamAction.VALUE_TENANT_ASSIGNMENT_READ;
+            case DELEGATION -> IamAction.VALUE_TENANT_DELEGATION_READ;
+            case GROUP -> IamAction.VALUE_TENANT_GROUP_READ;
+            case ROLE -> IamAction.VALUE_TENANT_ROLE_READ;
+            case MEMBER, DEPARTMENT -> throw new IllegalStateException("对象范围未匹配");
+        };
+        if (!view.actionCodes().contains(read)) {
             return empty(page, pageSize);
         }
-        List<BigInteger> allowed = allowedObjects(view.scope(action.actionCode()));
+        List<BigInteger> allowed = allowedObjects(view.scope(read));
         List<BigInteger> chosen = allowed == null ? selected
                 : selected.isEmpty() ? allowed : selected.stream().filter(allowed::contains).toList();
         if (allowed != null && chosen.isEmpty()) {

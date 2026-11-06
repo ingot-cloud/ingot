@@ -95,14 +95,15 @@ public class TenantInitializationRepository {
     /**
      * 按服务器计划写入最小组织、所有者、根部门、治理授权、开通与默认策略引用。
      * @param plan 已通过目录解析的初始化计划
+     * @param avatar 已在事务内消费凭证得到的头像路径
      * @return 新组织初始版本
      */
-    public String insertOrganization(TenantInitializationPlan plan) {
+    public String insertOrganization(TenantInitializationPlan plan, String avatar) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         IamTenantEntity tenant = new IamTenantEntity();
         tenant.setId(id(plan.tenantId()));
         tenant.setName(plan.name());
-        tenant.setAvatar(IamOssPaths.store(plan.avatar()));
+        tenant.setAvatar(avatar);
         tenant.setPlanId(plan.planId() == null ? null : id(plan.planId()));
         tenants.insert(tenant);
         IamTenantMemberEntity owner = new IamTenantMemberEntity();

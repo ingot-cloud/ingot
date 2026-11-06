@@ -161,7 +161,7 @@ class AssignmentServiceTest {
                 new AtomicLong(9000)::incrementAndGet, org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
         var roles = new RoleService(access, audits, changes, new RoleSynthesisCache(),
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
-                IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
+                IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.catalogService(access, dataSource, transactions),
                 IamMybatisTestAccess.roleFields(dataSource), IamMybatisTestAccess.fieldMetadata(dataSource), transactions);
         var objectAccess = org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.ResourceAccess.class);

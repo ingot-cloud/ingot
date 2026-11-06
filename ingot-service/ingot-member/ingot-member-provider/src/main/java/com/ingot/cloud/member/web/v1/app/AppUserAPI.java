@@ -1,6 +1,7 @@
 package com.ingot.cloud.member.web.v1.app;
 
 import com.ingot.cloud.member.api.model.dto.user.MemberUserDTO;
+import com.ingot.cloud.member.asset.MemberImageAccess;
 import com.ingot.cloud.member.service.biz.BizAuthService;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.framework.commons.model.support.R;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/app/user")
 @RequiredArgsConstructor
 public class AppUserAPI implements RShortcuts {
+    private final MemberImageAccess images;
     private final BizAuthService bizAuthService;
     private final BizUserService bizUserService;
 
@@ -30,13 +32,14 @@ public class AppUserAPI implements RShortcuts {
     @InCryptoHybridContext
     @GetMapping
     public R<?> user() {
+        images.requireAppUser();
         return ok(bizAuthService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
     @Operation(summary = "更新当前用户信息", description = "更新当前用户信息")
     @PutMapping
     public R<?> updateUser(@RequestBody MemberUserDTO params) {
-        params.setId(SecurityAuthContext.getUser().getId());
+        params.setId(images.requireAppUser());
         bizUserService.updateUser(params);
         return ok();
     }

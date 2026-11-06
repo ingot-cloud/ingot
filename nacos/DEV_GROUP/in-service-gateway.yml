@@ -10,11 +10,25 @@ spring:
                 - Path=/v3/api-docs/**
               filters:
                 - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/$\{path}/v3/api-docs
+            - id: in-service-iam-image-upload
+              uri: lb://in-service-iam
+              predicates:
+                - Path=/iam/v1/assets/uploads
+              filters:
+                - RequestSize=6MB
+                - StripPrefix=1
             - id: in-service-iam
               uri: lb://in-service-iam
               predicates:
                 - Path=/iam/**
               filters:
+                - StripPrefix=1
+            - id: in-service-member-image-upload
+              uri: lb://in-service-member
+              predicates:
+                - Path=/member/v1/assets/uploads
+              filters:
+                - RequestSize=6MB
                 - StripPrefix=1
             - id: in-service-member
               uri: lb://in-service-member

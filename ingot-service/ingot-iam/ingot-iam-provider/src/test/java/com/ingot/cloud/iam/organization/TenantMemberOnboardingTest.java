@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -94,7 +95,7 @@ class TenantMemberOnboardingTest {
         when(members.lockDepartment(anyLong(), anyLong())).thenReturn(true);
         when(members.lockTenantByAccount(anyLong(), anyLong())).thenReturn(null);
         service = new TenantMemberOnboarding(access, scopes, assignments, members, accounts, projection, fieldWrites,
-                audits, registerUser, initialPasswords, rejoins, passthroughTransactions());
+                audits, registerUser, initialPasswords, rejoins, com.ingot.cloud.iam.persistence.IamMybatisTestAccess.images(), passthroughTransactions());
     }
 
     @Test
@@ -131,7 +132,7 @@ class TenantMemberOnboardingTest {
         assertNull(result.initialPassword());
         verify(registerUser, never()).register(any());
         verify(members).insertTenant(9000L, 10L, 88L, "张三", null, PHONE, "a@example.com");
-        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), any());
+        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), isNull(), any());
     }
 
     @Test
@@ -139,7 +140,7 @@ class TenantMemberOnboardingTest {
         when(accounts.listByPhone(PHONE)).thenReturn(List.of(account(88, PHONE, true)));
         IamTenantMemberEntity removed = member(77, 88, MemberStatus.REMOVED);
         when(members.lockTenantByAccount(10L, 88L)).thenReturn(removed);
-        when(rejoins.applyLocked(any(), eq(removed), eq("张三"), eq(PHONE), eq("a@example.com"), any()))
+        when(rejoins.applyLocked(any(), eq(removed), eq("张三"), eq(PHONE), eq("a@example.com"), isNull(), any()))
                 .thenReturn(new TenantMemberCreated("77", "2", false, null, true));
 
         var result = service.create(input());
@@ -148,7 +149,7 @@ class TenantMemberOnboardingTest {
         assertTrue(result.rejoined());
         assertFalse(result.accountCreated());
         verify(members, never()).insertTenant(anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
-        verify(rejoins).applyLocked(any(), eq(removed), eq("张三"), eq(PHONE), eq("a@example.com"), any());
+        verify(rejoins).applyLocked(any(), eq(removed), eq("张三"), eq(PHONE), eq("a@example.com"), isNull(), any());
     }
 
     @Test
@@ -159,7 +160,7 @@ class TenantMemberOnboardingTest {
         BizException failure = assertThrows(BizException.class, () -> service.create(input()));
         assertEquals(TenantMemberOnboarding.MEMBERSHIP_EXISTS, failure.getMessage());
         verify(members, never()).insertTenant(anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
-        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), any());
+        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), isNull(), any());
     }
 
     @Test
@@ -170,7 +171,7 @@ class TenantMemberOnboardingTest {
         BizException failure = assertThrows(BizException.class, () -> service.create(input()));
         assertEquals(TenantMemberOnboarding.MEMBERSHIP_EXISTS, failure.getMessage());
         verify(members, never()).insertTenant(anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
-        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), any());
+        verify(rejoins, never()).applyLocked(any(), any(), any(), any(), any(), isNull(), any());
     }
 
     @Test

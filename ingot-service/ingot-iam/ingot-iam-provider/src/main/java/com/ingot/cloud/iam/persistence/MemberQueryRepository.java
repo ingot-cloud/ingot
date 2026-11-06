@@ -561,10 +561,11 @@ public class MemberQueryRepository {
      * @param displayName 显示名称
      * @param phone 组织通讯录手机号
      * @param email 组织通讯录邮箱，可空
+     * @param avatar 已授权的头像路径
      * @param version 锁定时读到的版本
      * @return 受影响行数；为 0 表示版本冲突或资格已不是移出
      */
-    public int rejoinTenant(long tenantId, long memberId, String displayName, String phone, String email,
+    public int rejoinTenant(long tenantId, long memberId, String displayName, String phone, String email, String avatar,
             BigInteger version) {
         return tenantMembers.update(Wrappers.<IamTenantMemberEntity>lambdaUpdate()
                 .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
@@ -572,7 +573,7 @@ public class MemberQueryRepository {
                 .eq(IamTenantMemberEntity::getVersion, version)
                 .eq(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED)
                 .set(IamTenantMemberEntity::getDisplayName, displayName)
-                .set(IamTenantMemberEntity::getAvatar, null)
+                .set(IamTenantMemberEntity::getAvatar, avatar)
                 .set(IamTenantMemberEntity::getPhone, phone)
                 .set(IamTenantMemberEntity::getEmail, email)
                 .set(IamTenantMemberEntity::getStatus, MemberStatus.ACTIVE)

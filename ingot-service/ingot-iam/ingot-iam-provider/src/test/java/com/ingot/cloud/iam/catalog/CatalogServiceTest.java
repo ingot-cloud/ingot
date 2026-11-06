@@ -170,7 +170,7 @@ class CatalogServiceTest {
                 new AuthorizationChangeNotifier(event -> {
                 }), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalogs(dataSource),
                 new SensitiveConfirmationGuard(passwords),
-                com.ingot.cloud.iam.persistence.IamMybatisTestAccess.fieldMetadata(dataSource),
+                com.ingot.cloud.iam.persistence.IamMybatisTestAccess.fieldMetadata(dataSource), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.images(),
                 new DataSourceTransactionManager(dataSource));
     }
 

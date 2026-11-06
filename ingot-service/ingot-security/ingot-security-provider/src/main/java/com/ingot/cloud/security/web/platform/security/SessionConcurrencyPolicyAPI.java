@@ -61,9 +61,9 @@ public class SessionConcurrencyPolicyAPI implements RShortcuts {
     /** 新增并发会话策略；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @PostMapping
     @Operation(summary = "新增并发会话策略")
-    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_UPDATE})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_CREATE})
     public R<SessionConcurrencyPolicy> create(@RequestBody SessionConcurrencyPolicy policy) {
-        access.require(IamAction.PLATFORM_SESSION_POLICY_UPDATE);
+        access.require(IamAction.PLATFORM_SESSION_POLICY_CREATE);
         return ok(adminService.create(policy));
     }
 
@@ -79,9 +79,9 @@ public class SessionConcurrencyPolicyAPI implements RShortcuts {
     /** 删除并发会话策略；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除并发会话策略")
-    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_UPDATE})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_DELETE})
     public R<Void> delete(@PathVariable Long id) {
-        access.require(IamAction.PLATFORM_SESSION_POLICY_UPDATE);
+        access.require(IamAction.PLATFORM_SESSION_POLICY_DELETE);
         adminService.delete(id);
         return ok();
     }

@@ -803,6 +803,7 @@
           "code": {
             "maxLength": 64,
             "minLength": 0,
+            "pattern": "[a-z0-9]+(?:-[a-z0-9]+)*",
             "type": "string",
             "description": "应用内资源编码"
           },
@@ -857,6 +858,7 @@
           "code": {
             "maxLength": 64,
             "minLength": 0,
+            "pattern": "[a-z0-9]+(?:-[a-z0-9]+)*",
             "type": "string",
             "description": "应用命名空间"
           },
@@ -3149,6 +3151,82 @@
         },
         "description": "声明诊断目标身份，服务端在当前域解析且限制可披露来源"
       },
+      "DownloadLink": {
+        "required": [
+          "expiresAt",
+          "filename",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "下载链接"
+      },
+      "DownloadTask": {
+        "required": [
+          "createdAt",
+          "expiresAt",
+          "id",
+          "source",
+          "status",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "EXPIRED"
+            ]
+          },
+          "filename": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failureReason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "下载任务"
+      },
       "EffectiveRole": {
         "required": [
           "grants",
@@ -3836,8 +3914,7 @@
       },
       "GroupDraft": {
         "required": [
-          "name",
-          "selection"
+          "name"
         ],
         "type": "object",
         "properties": {
@@ -3941,6 +4018,10 @@
             "type": "integer",
             "description": "仅有权部分的有效人数；无法披露时省略",
             "format": "int64"
+          },
+          "selectionEditable": {
+            "type": "boolean",
+            "description": "当前操作者可以完整替换成员来源"
           }
         },
         "description": "返回用户组元数据和可见成员来源，实际权限由分配与委派引擎另行计算"
@@ -4440,6 +4521,27 @@
           }
         },
         "description": "暂停或恢复当前域成员资格，移出使用独立命令"
+      },
+      "MemberWorkbookExportInput": {
+        "required": [
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string",
+            "description": "组织版本"
+          },
+          "memberIds": {
+            "type": "array",
+            "description": "部分成员 ID；空或省略表示全部可见未移出成员",
+            "items": {
+              "type": "string",
+              "description": "部分成员 ID；空或省略表示全部可见未移出成员"
+            }
+          }
+        },
+        "description": "登记成员更新导出任务；空成员列表表示当前可见的全部未移出成员"
       },
       "MemberWorkbookFile": {
         "required": [
@@ -5112,6 +5214,35 @@
           }
         },
         "description": "在当前组织内原子转交所有者职责。确认必须与转交出现在同一次请求"
+      },
+      "PageResponseDownloadTask": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DownloadTask"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "PageResponseGroupEffectiveMemberRecord": {
         "required": [
@@ -6755,6 +6886,40 @@
           }
         }
       },
+      "RDownloadLink": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DownloadLink"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RDownloadTask": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DownloadTask"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RExportTask": {
         "type": "object",
         "properties": {
@@ -7054,6 +7219,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/OrganizationMemberPickerPage"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RPageResponseDownloadTask": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResponseDownloadTask"
           },
           "success": {
             "type": "boolean"
@@ -8148,6 +8330,23 @@
           }
         }
       },
+      "RTenantWorkbenchStatistics": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/TenantWorkbenchStatistics"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RVoid": {
         "type": "object",
         "properties": {
@@ -8910,6 +9109,7 @@
           "code": {
             "maxLength": 64,
             "minLength": 0,
+            "pattern": "[a-z0-9]+(?:-[a-z0-9]+)*",
             "type": "string",
             "description": "应用内资源编码"
           },
@@ -10851,6 +11051,10 @@
             "type": "string",
             "description": "组织通讯录邮箱，可空"
           },
+          "avatar": {
+            "type": "string",
+            "description": "可选头像上传凭证"
+          },
           "departments": {
             "type": "array",
             "description": "任职部门，可空且最多一个主部门",
@@ -10918,6 +11122,10 @@
           "email": {
             "type": "string",
             "description": "组织通讯录邮箱，可空"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "可选头像上传凭证"
           },
           "departments": {
             "type": "array",
@@ -11090,6 +11298,37 @@
           }
         },
         "description": "更新平台可见的组织实体，不返回或修改租户业务成员"
+      },
+      "TenantWorkbenchStatistics": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "tenantName": {
+            "type": "string"
+          },
+          "tenantAvatar": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "departmentCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "groupCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "applicationCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "当前租户工作台统计，指标沿用各自资源的读取范围"
       },
       "UpgradeChange": {
         "required": [

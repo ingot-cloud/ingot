@@ -51,7 +51,7 @@ class TenantInitializationServiceTest {
                                 com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalog(dataSource),
                                 com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalogs(dataSource))),
                 new TenantInitializer(new DataSourceTransactionManager(dataSource), identities,
-                        com.ingot.cloud.iam.persistence.IamMybatisTestAccess.tenantInit(dataSource),
+                        com.ingot.cloud.iam.persistence.IamMybatisTestAccess.tenantInit(dataSource), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.images(),
                         com.ingot.cloud.iam.persistence.IamMybatisTestAccess.audits(dataSource)),
                 new AtomicLong(800)::incrementAndGet);
         var user = InUser.stateless(1L, null, "web", "standard", UserTypeEnum.ADMIN.getValue(), "account",

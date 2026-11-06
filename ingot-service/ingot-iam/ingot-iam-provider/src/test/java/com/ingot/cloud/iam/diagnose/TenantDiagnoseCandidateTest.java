@@ -81,10 +81,11 @@ class TenantDiagnoseCandidateTest {
     }
 
     @Test
-    void memberCandidatesAreEmptyWithoutMemberRead() {
+    void memberCandidatesOnlyContainSelfWithoutMemberRead() {
         setup(List.of(), Map.of());
         var result = service.list(AuthorizationCandidateKind.MEMBER, null, null, null, null, 1, 20);
-        assertEquals(0, result.total());
+        assertEquals(1, result.total());
+        assertEquals(ACTOR.memberId(), result.items().getFirst().id());
         verify(members, never()).pageTenantCandidates(anyLong(), any(), any(), any(), anyInt(), anyInt());
     }
 
@@ -102,7 +103,7 @@ class TenantDiagnoseCandidateTest {
     @Test
     void objectCandidatesFollowOperatorActionObjects() {
         setup(List.of(GROUP_READ), Map.of(GROUP_READ, objects("42")));
-        when(live.actions(List.of(BigInteger.valueOf(70)))).thenReturn(List.of(action(GROUP_READ)));
+        openedAction(GROUP_READ);
         when(live.resource(BigInteger.TEN)).thenReturn(new TenantScopeCandidateMapper.ActionResource(BigInteger.TEN,
                 TenantAuthorizationConstants.CORE_APPLICATION, "group", "用户组"));
         service.list(AuthorizationCandidateKind.OBJECT, null, "70", "", List.of(), 1, 20);
@@ -114,7 +115,7 @@ class TenantDiagnoseCandidateTest {
     @Test
     void objectCandidatesAreEmptyWhenOperatorLacksTheAction() {
         setup(List.of(), Map.of());
-        when(live.actions(List.of(BigInteger.valueOf(70)))).thenReturn(List.of(action(GROUP_READ)));
+        openedAction(GROUP_READ);
         when(live.resource(BigInteger.TEN)).thenReturn(new TenantScopeCandidateMapper.ActionResource(BigInteger.TEN,
                 TenantAuthorizationConstants.CORE_APPLICATION, "group", "用户组"));
         var result = service.list(AuthorizationCandidateKind.OBJECT, null, "70", "", List.of(), 1, 20);
@@ -125,7 +126,7 @@ class TenantDiagnoseCandidateTest {
     @Test
     void businessResourceObjectsAreUnsupported() {
         setup(List.of(), Map.of());
-        when(live.actions(List.of(BigInteger.valueOf(70)))).thenReturn(List.of(action("crm:customer:read")));
+        openedAction("crm:customer:read");
         when(live.resource(BigInteger.TEN)).thenReturn(new TenantScopeCandidateMapper.ActionResource(BigInteger.TEN,
                 "crm", "customer", "客户"));
         var result = service.list(AuthorizationCandidateKind.OBJECT, null, "70", null, null, 1, 20);
@@ -140,9 +141,31 @@ class TenantDiagnoseCandidateTest {
         verify(live, never()).applications(isNull());
     }
 
+    @Test
+    void deniesWrongApplicationAndUnopenedActions() {
+        setup(List.of(GROUP_READ), Map.of(GROUP_READ, objects("42")));
+        openedAction(GROUP_READ);
+        assertThrows(BizException.class,
+                () -> service.list(AuthorizationCandidateKind.OBJECT, "2", "70", null, null, 1, 20));
+        when(live.catalog(BigInteger.valueOf(9), BigInteger.ONE, null, List.of(BigInteger.valueOf(70))))
+                .thenReturn(List.of());
+        assertThrows(BizException.class,
+                () -> service.list(AuthorizationCandidateKind.OBJECT, "1", "70", null, null, 1, 20));
+        verify(candidates, never()).page(any());
+    }
+
+    private void openedAction(String code) {
+        var rows = List.of(action(code));
+        when(live.actions(List.of(BigInteger.valueOf(70)))).thenReturn(rows);
+        when(live.catalog(BigInteger.valueOf(9), BigInteger.ONE, null, List.of(BigInteger.valueOf(70))))
+                .thenReturn(rows);
+    }
+
     private void setup(List<String> codes, Map<String, ResolvedActionScope> scopeMap) {
         when(access.require(AuthorizationDomain.TENANT, IamAction.TENANT_AUTHORIZATION_DIAGNOSE))
                 .thenReturn(new ActiveIdentity(ACTOR, "0", "0", null));
+        when(access.allows(AuthorizationDomain.TENANT, IamAction.TENANT_MEMBER_READ, false))
+                .thenReturn(codes.contains(IamAction.TENANT_MEMBER_READ.getCode()));
         when(evaluator.evaluate(ACTOR)).thenReturn(new AuthorizationEvaluator.AuthorizationView(codes, List.of(),
                 scopeMap, "1", Instant.now().plusSeconds(30)));
     }

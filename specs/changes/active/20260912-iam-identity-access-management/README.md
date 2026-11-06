@@ -150,6 +150,8 @@ SQL01–SQL05开发及自动化验证完成，增量validating；实际环境导
 
 ## 2026-10-06 目录默认布局与重复初始化（用户已批准）
 
+完整初始化的默认账号范围以 [新版目录与授权补齐](../20261106-iam-resource-catalog/DESIGN.md#编码路由和角色的切换) 为准。
+
 正式种子 DIRECTORY 的 `view_path` 统一为 `layout.main`。完整 `ingot_iam.sql` 在创建前删除manifest内的目标表，仅删除阶段关闭外键检查，建表/种子阶段开启并在完成后恢复原会话设置。重复执行清空目标表，不含账号或业务授权，不是存量升级；原无DROP决定被替代。决策、回退和独立人工项见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md#2026-10-06-目录布局与重复初始化已批准)。
 
 

@@ -5,6 +5,8 @@ dependencies {
 
     compileOnly(deps.jakarta_servlet_api)
     compileOnly(deps.spring.framework_spring_web)
+    compileOnly(deps.spring.framework_jdbc)
+    runtimeOnly("com.twelvemonkeys.imageio:imageio-webp:3.15.3")
 
     testImplementation(deps.spring.spring_boot.test)
     testImplementation(deps.jakarta_servlet_api)

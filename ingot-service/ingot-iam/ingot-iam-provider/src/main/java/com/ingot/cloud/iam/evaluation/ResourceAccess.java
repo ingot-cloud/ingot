@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.ingot.cloud.iam.organization.MemberMutationGuard;
+import com.ingot.cloud.iam.assignment.TenantScopeObjectResource;
+import com.ingot.cloud.iam.extension.BuiltinResourceProviders;
 import com.ingot.cloud.iam.persistence.DepartmentQueryRepository;
 import com.ingot.cloud.iam.persistence.MemberQueryRepository;
 import com.ingot.cloud.iam.persistence.ObjectScopeSql;
@@ -19,6 +21,8 @@ import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberDepartmentView;
 import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberStatus;
+import com.ingot.framework.commons.model.iam.MemberResources;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -61,6 +65,26 @@ public class ResourceAccess {
     }
 
     /**
+     * 在关联写入事务中重新编译读取资格，避免旧范围放大可选对象。
+     * @param actor 当前可信身份
+     * @param action 关联对象的读取操作
+     * @return 当前有效的成员范围
+     */
+    public ObjectScope memberReadForExecution(AuthorizationContext actor, IamAction action) {
+        return compiler.members(actor, executionScope(actor, action));
+    }
+
+    /**
+     * 在关联写入事务中重新编译部门范围。
+     * @param actor 当前可信租户身份
+     * @param action 部门读取操作
+     * @return 当前有效的部门范围
+     */
+    public ObjectScope departmentReadForExecution(AuthorizationContext actor, IamAction action) {
+        return compiler.departments(actor, executionScope(actor, action));
+    }
+
+    /**
      * 确认目标成员对读操作可见；详情不可见时按对象不存在处理。
      *
      * @param actor 当前身份
@@ -71,6 +95,18 @@ public class ResourceAccess {
         if (!members.visible(actor.domain(), tenantId(actor), memberId, memberRead(actor, action))) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
+    }
+
+    /**
+     * 在一次查询中投影已有关联中的可读成员。
+     * @param actor 当前可信身份
+     * @param scope 成员读取范围
+     * @param ids 已关联的成员标识
+     * @return 落入读取范围的成员
+     */
+    public Set<BigInteger> visibleMembers(AuthorizationContext actor, ObjectScope scope, Collection<BigInteger> ids) {
+        return actor.domain() == AuthorizationDomain.PLATFORM
+                ? members.visiblePlatformIds(ids, scope) : members.visibleTenantIds(tenantId(actor), ids, scope);
     }
 
     /**
@@ -97,9 +133,20 @@ public class ResourceAccess {
      * @param departmentId 目标部门
      */
     public void requireVisibleDepartment(AuthorizationContext actor, IamAction action, long departmentId) {
-        if (!departments.matches(tenantId(actor), departmentId, departmentRead(actor, action))) {
+        if (!departmentVisible(actor, departmentRead(actor, action), departmentId)) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
+    }
+
+    /**
+     * 以同一已编译范围核对真实部门及其组织归属。
+     * @param actor 当前身份
+     * @param scope 部门读取范围
+     * @param departmentId 目标部门
+     * @return 部门存在且可见
+     */
+    public boolean departmentVisible(AuthorizationContext actor, ObjectScope scope, long departmentId) {
+        return departments.matches(tenantId(actor), departmentId, scope);
     }
 
     /**
@@ -189,9 +236,15 @@ public class ResourceAccess {
      * @return 当次数据库事实编译的范围
      */
     public ObjectScope objectsForExecution(AuthorizationContext actor, IamAction action) {
+        return compiler.objects(actor, executionScope(actor, action));
+    }
+
+    private ResolvedActionScope executionScope(AuthorizationContext actor, IamAction action) {
         var view = evaluator.evaluateForExecution(actor, true);
-        if (!view.actionCodes().contains(action.getCode())) throw new BizException(IamReasonCode.ACTION_DENIED);
-        return compiler.objects(actor, view.scope(action.getCode()));
+        if (!view.actionCodes().contains(action.getCode())) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        return view.scope(action.getCode());
     }
 
     /**
@@ -282,18 +335,34 @@ public class ResourceAccess {
      */
     public boolean targetAllowed(AuthorizationContext actor, AuthorizationEvaluator.AuthorizationView view,
                                  String actionCode, String targetId) {
+        return targetAllowed(actor, view, null, actionCode, targetId);
+    }
+
+    /**
+     * 用真实资源身份区分内置成员、部门与通用指定对象范围。
+     * @param actor 当前身份
+     * @param view 同一请求的已求值授权
+     * @param resource 已验证资源键，通用对象范围可为空
+     * @param actionCode 精确操作码
+     * @param targetId 可选目标
+     * @return 目标落入该操作的范围
+     */
+    public boolean targetAllowed(AuthorizationContext actor, AuthorizationEvaluator.AuthorizationView view,
+                                 ResourceKey resource, String actionCode, String targetId) {
         if (view == null || actionCode == null || !view.actionCodes().contains(actionCode)) {
             return false;
         }
         if (targetId == null || targetId.isBlank()) {
             return true;
         }
-        String resource = resourceOf(actionCode);
-        if ("member".equals(resource)) {
+        if (BuiltinResourceProviders.PLATFORM_MEMBER_RESOURCE.equals(resource)
+                || BuiltinResourceProviders.TENANT_MEMBER_RESOURCE.equals(resource)) {
             return members.visible(actor.domain(), tenantId(actor), IamIds.require(targetId),
                     compiler.members(actor, view.scope(actionCode)));
         }
-        if ("department".equals(resource)) {
+        if (resource != null && resource.domain() == AuthorizationDomain.TENANT
+                && MemberResources.TENANT_APPLICATION.equals(resource.applicationCode())
+                && TenantScopeObjectResource.DEPARTMENT.getValue().equals(resource.resourceCode())) {
             return departments.matches(tenantId(actor), IamIds.require(targetId),
                     compiler.departments(actor, view.scope(actionCode)));
         }
@@ -404,15 +473,6 @@ public class ResourceAccess {
 
     private static boolean hasAction(AuthorizationEvaluator.AuthorizationView view, IamAction action) {
         return view != null && action != null && view.actionCodes().contains(action.getCode());
-    }
-
-    private static String resourceOf(String actionCode) {
-        int first = actionCode.indexOf(':');
-        int last = actionCode.lastIndexOf(':');
-        if (first < 0 || last <= first) {
-            return "";
-        }
-        return actionCode.substring(first + 1, last);
     }
 
     private Set<BigInteger> visibleTenantMembers(AuthorizationContext actor, ObjectScope scope,

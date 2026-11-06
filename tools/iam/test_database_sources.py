@@ -17,7 +17,7 @@ class DatabaseSourcesTest(unittest.TestCase):
 
     def test_manifest_excludes_patches_and_manual_credentials(self):
         self.assertEqual(5, len(schema_files()))
-        self.assertEqual(8, len(initialization_files()))
+        self.assertEqual(9, len(initialization_files()))
         self.assertEqual(sorted(schema_files()), schema_files())
         self.assertTrue(all('/migrations/' not in str(path) for path in initialization_files()))
         self.assertNotIn(ROOT / 'databases/iam/seed-manual-verification.sql', initialization_files())
@@ -32,7 +32,7 @@ class DatabaseSourcesTest(unittest.TestCase):
     def test_bundle_resets_each_manifest_table_before_creating_and_checks_seed_foreign_keys(self):
         bundle = render_bundle()
         tables = CREATE_TABLE.findall(bundle)
-        self.assertEqual(66, len(tables))
+        self.assertEqual(65, len(tables))
         self.assertEqual(len(tables), len(set(tables)))
         self.assertNotIn('iam_resource_field_policy', tables)
         self.assertIn('iam_field_policy', tables)
@@ -56,7 +56,9 @@ class DatabaseSourcesTest(unittest.TestCase):
             'SET SESSION FOREIGN_KEY_CHECKS = @iam_init_previous_foreign_key_checks;'))
         self.assertEqual(1, bundle.count('SET SESSION FOREIGN_KEY_CHECKS = 0;'))
         inserted = re.findall(r'(?mi)^INSERT INTO\s+`?([a-z_]+)', bundle)
-        self.assertTrue(set(inserted).isdisjoint({'iam_account', 'iam_tenant', 'iam_role_assignment',
+        self.assertEqual(['iam_account', 'iam_platform_member', 'iam_role_assignment'], inserted[-3:])
+        self.assertTrue(set(inserted[:-3]).isdisjoint(inserted[-3:]))
+        self.assertTrue(set(inserted).isdisjoint({'iam_tenant', 'iam_tenant_member',
                                                'iam_authorization_audit', 'security_event', 'password_history'}))
 
 

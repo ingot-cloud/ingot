@@ -198,7 +198,7 @@ class RoleWorkspaceMySqlHttpTest {
                 new ObjectCapabilities(fieldEvaluator, resources), projector,
                 mock(IamAuditWriter.class), IamMybatisTestAccess.memberQueries(source), mock(GroupRepository.class),
                 presenter, mock(com.ingot.cloud.iam.group.GroupService.class),
-                new DataSourceTransactionManager(source), roleFields, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), new com.ingot.framework.authorization.field.FieldWriteExecutor(
+                new DataSourceTransactionManager(source), roleFields, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), mock(com.ingot.cloud.iam.asset.IamImageBinding.class), new com.ingot.framework.authorization.field.FieldWriteExecutor(
                         new com.ingot.framework.authorization.field.ClientFieldPolicyProvider(
                                 new com.ingot.framework.authorization.AuthorizationAccess(localFields), fieldRegistry)));
         web.registerBean(com.ingot.cloud.iam.web.v1.platform.PlatformMemberCommandAPI.class,

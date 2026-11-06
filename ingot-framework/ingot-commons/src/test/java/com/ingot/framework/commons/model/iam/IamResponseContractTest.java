@@ -78,6 +78,19 @@ class IamResponseContractTest {
     }
 
     @Test
+    void uploadReferenceUsesTheAvatarFieldAuthorizationKey() throws Exception {
+        var edit = mapper.readValue("""
+                {"expectedVersion":"0","avatarUploadId":"asset-upload/fixture"}
+                """, PlatformMemberEditInput.class);
+        assertEquals("asset-upload/fixture", edit.avatar());
+        assertTrue(edit.profile().suppliedFields().contains(MemberFieldKey.VALUE_AVATAR));
+        assertFalse(edit.profile().suppliedFields().contains(AssetFieldNames.AVATAR_UPLOAD_ID));
+        assertThrows(com.fasterxml.jackson.core.JsonProcessingException.class, () -> mapper.readValue("""
+                {"expectedVersion":"0","avatar":"some/image.png","avatarUploadId":"asset-upload/fixture"}
+                """, PlatformMemberEditInput.class));
+    }
+
+    @Test
     void actualModuleKeepsCountsNumericWithoutChangingIdentifiers() throws Exception {
         var page = mapper.valueToTree(fixture("member-page", new TypeReference<PageResponse<ResourceDetail<MemberRecord>>>() {}));
         assertTrue(page.get("total").isIntegralNumber());
@@ -86,7 +99,7 @@ class IamResponseContractTest {
         assertTrue(mapper.valueToTree(new UsageSummary(1L, 2L, false)).get("assignments").isIntegralNumber());
         assertTrue(mapper.valueToTree(new ImpactSummary(1L, 2L, 3L, false)).get("affectedMembers").isIntegralNumber());
         assertTrue(mapper.valueToTree(new GroupRecord("g", "组", null,
-                new Selection(List.of(), List.of()), 1L)).get("visibleMemberCount").isIntegralNumber());
+                new Selection(List.of(), List.of()), 1L, null)).get("visibleMemberCount").isIntegralNumber());
     }
 
     @Test

@@ -82,7 +82,7 @@ class IamAuthorizationSecurityConfigurationTest {
             AuthorizationDomain.PLATFORM, null, Long.toString(USER_ID), "900002");
     private static final String RESOURCE_BODY = """
             {"resource":{"domain":"PLATFORM","applicationCode":"platform:security","resourceCode":"credential-policy"},
-             "actionCodes":["iam-platform:credential-policy:read"]}
+             "actionCodes":["platform-security:credential-policy:read"]}
             """;
 
     private AnnotationConfigWebApplicationContext context;
@@ -119,7 +119,7 @@ class IamAuthorizationSecurityConfigurationTest {
                     return new ActiveIdentity(ACTOR, "0", "0", "0");
                 });
         when(evaluator.evaluateForExecution(ACTOR, true)).thenReturn(new AuthorizationEvaluator.AuthorizationView(
-                List.of("iam-platform:credential-policy:read"), List.of(), Map.of(), "v1",
+                List.of("platform-security:credential-policy:read"), List.of(), Map.of(), "v1",
                 Instant.now().plusSeconds(30), List.of(), true));
         when(client.evaluate(any())).thenAnswer(invocation -> decision());
         when(client.preview(any())).thenAnswer(invocation -> decision());
@@ -149,11 +149,11 @@ class IamAuthorizationSecurityConfigurationTest {
 
     @Test void ordinaryActorCanLoadOwnSnapshotWithoutAdministratorAuthority() throws Exception {
         when(evaluator.evaluateForExecution(ACTOR, true)).thenReturn(new AuthorizationEvaluator.AuthorizationView(
-                List.of("iam-platform:credential-policy:read"), List.of(), Map.of(), "v1",
+                List.of("platform-security:credential-policy:read"), List.of(), Map.of(), "v1",
                 Instant.now().plusSeconds(30), List.of(), false));
         mvc.perform(internal(SNAPSHOT, "{}").header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN))
                 .andExpect(status().isOk()).andExpect(jsonPath("data.platformAdministrator").value(false))
-                .andExpect(jsonPath("data.permissionCodes[0]").value("iam-platform:credential-policy:read"));
+                .andExpect(jsonPath("data.permissionCodes[0]").value("platform-security:credential-policy:read"));
     }
 
     @Test void internalHeaderAndForgedUserIdCannotReplaceBearer() throws Exception {

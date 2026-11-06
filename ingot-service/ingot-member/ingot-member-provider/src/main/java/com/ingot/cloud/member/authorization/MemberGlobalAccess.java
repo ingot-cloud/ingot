@@ -5,6 +5,7 @@ import java.util.List;
 import com.ingot.framework.authorization.AuthorizationAccess;
 import com.ingot.framework.authorization.SdkAuthorizationException;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.extension.ResourceKey;
 import com.ingot.framework.commons.model.iam.extension.ScopeTarget;
@@ -25,10 +26,16 @@ public class MemberGlobalAccess {
 
     /** 使用 SDK 执行可信操作，写权限按请求实时求值。 */
     public void require(ResourceKey key, String action) {
+        requireContext(key, action);
+    }
+
+    /** 同时返回业务操作绑定的可信平台身份。 */
+    public AuthorizationContext requireContext(ResourceKey key, String action) {
         var decision = authorization.require(key, action);
         if (!key.equals(decision.resource()) || decision.context().domain() != AuthorizationDomain.PLATFORM) {
             throw new SdkAuthorizationException(IamReasonCode.ACTION_DENIED);
         }
         authorization.requireTarget(decision, action, GLOBAL_TARGET);
+        return decision.context();
     }
 }

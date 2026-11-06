@@ -15,6 +15,7 @@ import jakarta.validation.constraints.*;
  * @param name 组名称
  * @param description 说明，可空
  * @param selection 当前域内的直接成员及部门来源
+ * @param selectionEditable 允许完整替换成员来源，仅在用户组管理接口返回
  * @param visibleMemberCount 仅有权部分的有效人数；无法披露时省略
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -29,5 +30,6 @@ public record GroupRecord(
         @NotNull @Valid @Schema(description = "当前域内的直接成员及部门来源", requiredMode = Schema.RequiredMode.REQUIRED)
         Selection selection,
          @PositiveOrZero @JsonSerialize(using = IamCountSerializer.class) @Schema(description = "仅有权部分的有效人数；无法披露时省略")
-        Long visibleMemberCount) {
+        Long visibleMemberCount,
+        @Schema(description = "当前操作者可以完整替换成员来源") Boolean selectionEditable) {
 }

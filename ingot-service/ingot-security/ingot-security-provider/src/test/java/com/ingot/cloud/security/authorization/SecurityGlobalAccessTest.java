@@ -7,6 +7,10 @@ import com.ingot.framework.authorization.*;
 import com.ingot.framework.commons.model.iam.*;
 import com.ingot.framework.commons.model.iam.extension.*;
 import org.junit.jupiter.api.Test;
+import com.ingot.cloud.security.service.policy.SecurityPolicyAdminService;
+import com.ingot.cloud.security.service.session.SessionConcurrencyPolicyAdminService;
+import com.ingot.cloud.security.web.platform.security.SecurityPolicyAPI;
+import com.ingot.cloud.security.web.platform.security.SessionConcurrencyPolicyAPI;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -47,10 +51,26 @@ class SecurityGlobalAccessTest {
         assertThrows(SdkAuthorizationException.class,() -> new SecurityGlobalAccess(new AuthorizationAccess(client)).require(READ));
     }
 
-    @Test void registryHasSixAllResourcesAndSixteenExactActionsWithTrustedModes() {
+    @Test void policyEditingDoesNotPermitRefreshHistoryOrConcurrencyDeletion() {
+        var gate = mock(SecurityGlobalAccess.class);
+        var deny = new SdkAuthorizationException(IamReasonCode.ACTION_DENIED);
+        doThrow(deny).when(gate).require(IamAction.PLATFORM_SECURITY_POLICY_REFRESH);
+        doThrow(deny).when(gate).require(IamAction.PLATFORM_BLOCK_EVENT_READ);
+        doThrow(deny).when(gate).require(IamAction.PLATFORM_SESSION_POLICY_DELETE);
+        var policy = mock(SecurityPolicyAdminService.class);
+        var sessions = mock(SessionConcurrencyPolicyAdminService.class);
+        var policyApi = new SecurityPolicyAPI(gate, policy);
+        var sessionApi = new SessionConcurrencyPolicyAPI(gate, sessions);
+        assertThrows(SdkAuthorizationException.class, policyApi::broadcastInvalidationAll);
+        assertThrows(SdkAuthorizationException.class, () -> policyApi.listEvents(20));
+        assertThrows(SdkAuthorizationException.class, () -> sessionApi.delete(42L));
+        verifyNoInteractions(policy, sessions);
+    }
+
+    @Test void registryHasSevenAllResourcesAndTwentyExactActionsWithTrustedModes() {
         var descriptors=SecurityResources.descriptors();
-        assertEquals(6,descriptors.size());
-        assertEquals(16,descriptors.stream().mapToInt(d -> d.actions().size()).sum());
+        assertEquals(7,descriptors.size());
+        assertEquals(20,descriptors.stream().mapToInt(d -> d.actions().size()).sum());
         for (var resource:descriptors) {
             assertEquals(SecurityResources.APPLICATION,resource.key().applicationCode());
             assertEquals(List.of(ScopeKind.ALL),resource.scopeCapabilities());

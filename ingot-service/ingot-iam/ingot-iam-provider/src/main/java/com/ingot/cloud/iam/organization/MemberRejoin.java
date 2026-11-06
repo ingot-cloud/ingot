@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.organization;
 
+import com.ingot.cloud.iam.asset.IamImageBinding;
+import com.ingot.framework.commons.model.iam.ImageUploadPurpose;
 import java.math.BigInteger;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -77,6 +79,7 @@ public class MemberRejoin {
     private final IamAuditWriter audits;
     private final AuthorizationChangeNotifier changes;
     private final TransactionTemplate transaction;
+    private final IamImageBinding images;
 
     /**
      * 绑定身份、字段门禁、关系清理与同一数据源事务。
@@ -107,7 +110,7 @@ public class MemberRejoin {
             AssignmentRepository assignments, DelegationRepository delegations, GroupRepository groups,
             DepartmentLeaderRepository leaders, EntitlementRepository entitlements, PolicyWriteRepository policies,
             FieldProjectionEngine projection, FieldWriteExecutor fieldWrites, IamAuditWriter audits,
-            AuthorizationChangeNotifier changes, PlatformTransactionManager transactionManager) {
+            AuthorizationChangeNotifier changes, IamImageBinding images, PlatformTransactionManager transactionManager) {
         this.access = access;
         this.scopes = scopes;
         this.authorizationLocks = authorizationLocks;
@@ -125,6 +128,7 @@ public class MemberRejoin {
         this.audits = audits;
         this.changes = changes;
         this.transaction = new TransactionTemplate(transactionManager);
+        this.images = images;
     }
 
     /**
@@ -163,14 +167,15 @@ public class MemberRejoin {
             requireEnabledAccount(locked);
             scopes.requireCreate(actor.context(), IamAction.TENANT_MEMBER_CREATE, departmentIds);
             var resource = BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
-            var profile = new TenantMemberCreateInput(displayName, phone, email, input.departments());
-            var submitted = projection.submitted(profile, profile.suppliedFields(), resource)
+            var submitted = projection.submitted(input, input.suppliedFields(), resource)
                     .getOrDefault(resource, Map.of());
             fieldWrites.require(resource, IamAction.VALUE_TENANT_MEMBER_CREATE,
                     new ScopeTarget(IamIds.text(targetId), IamIds.text(targetId), actor.context().tenantId(),
                             List.copyOf(departmentIds)),
                     submitted);
-            return applyLocked(actor, locked, displayName, phone, email, departmentBindings);
+            String avatar = images.bind(actor.context(), ImageUploadPurpose.TENANT_MEMBER_REJOIN,
+                    IamIds.text(targetId), input.avatar(), null);
+            return applyLocked(actor, locked, displayName, phone, email, avatar, departmentBindings);
         });
     }
 
@@ -182,11 +187,12 @@ public class MemberRejoin {
      * @param displayName 新显示名
      * @param phone 组织通讯录手机号
      * @param email 组织通讯录邮箱，可空
+     * @param avatar 绑定后的头像路径
      * @param departments 目标任职
      * @return 复用后的成员结果
      */
     public TenantMemberCreated applyLocked(ActiveIdentity actor, IamTenantMemberEntity locked, String displayName,
-            String phone, String email, Map<String, Boolean> departments) {
+            String phone, String email, String avatar, Map<String, Boolean> departments) {
         long tenantId = locked.getTenantId().longValueExact();
         long memberId = locked.getId().longValueExact();
         Map<String, Integer> cleared = clearRelations(actor, tenantId, memberId);
@@ -196,7 +202,7 @@ public class MemberRejoin {
             }
         }
         members.replaceDepartments(tenantId, memberId, departments);
-        if (members.rejoinTenant(tenantId, memberId, displayName, phone, email, versionValue(locked)) != 1) {
+        if (members.rejoinTenant(tenantId, memberId, displayName, phone, email, avatar, versionValue(locked)) != 1) {
             throw new BizException(IamReasonCode.REVISION_CONFLICT);
         }
         String version = nextVersion(locked);

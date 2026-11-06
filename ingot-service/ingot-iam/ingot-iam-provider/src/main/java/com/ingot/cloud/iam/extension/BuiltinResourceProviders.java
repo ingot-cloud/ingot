@@ -23,6 +23,8 @@ import com.ingot.framework.commons.model.iam.FieldCapability;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
 import com.ingot.framework.commons.model.iam.MaskSpec;
 import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.model.iam.DeveloperResources;
+import com.ingot.framework.commons.model.iam.IamActionOperation;
 import com.ingot.framework.commons.model.iam.SecurityResources;
 import com.ingot.framework.commons.model.iam.MemberAdminResources;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
@@ -70,11 +72,8 @@ public final class BuiltinResourceProviders {
         List<ResourceObjectProvider> all = new ArrayList<>(extensions);
         Map<ResourceKey, List<ActionDescriptor>> actions = new LinkedHashMap<>();
         for (var action : IamAction.values()) {
-            if (SecurityResources.key(action) != null) continue;
-            String[] parts = action.getCode().split(":");
-            var domain = parts[0].equals(PLATFORM_APPLICATION) ? AuthorizationDomain.PLATFORM
-                    : AuthorizationDomain.TENANT;
-            var key = new ResourceKey(domain, parts[0], parts[1]);
+            var key = action.getResource();
+            if (SecurityResources.APPLICATION.equals(key.applicationCode())) continue;
             actions.computeIfAbsent(key, k -> new ArrayList<>())
                 .add(new ActionDescriptor(action.getCode(),
                         action.getOperation().isMutating() ? ExecutionMode.MUTATING : ExecutionMode.READ_ONLY));
@@ -82,6 +81,7 @@ public final class BuiltinResourceProviders {
         actions.forEach((key, operations) -> all.add(new BuiltinProvider(descriptor(key, operations),
                 key.domain() == AuthorizationDomain.PLATFORM ? objectResource(key.resourceCode()) : null)));
         SecurityResources.descriptors().forEach(d -> all.add(new BuiltinProvider(d, null)));
+        all.add(new BuiltinProvider(DeveloperResources.client(), null));
         MemberAdminResources.descriptors().forEach(d -> all.add(new BuiltinProvider(d, null)));
         return new ResourceRegistry(all);
     }
@@ -120,7 +120,10 @@ public final class BuiltinResourceProviders {
                 defaults.put(field, new FieldAccess(FieldVisibility.HIDDEN, false));
             });
         }
-        String read = object == null ? actions.getFirst().code() : object.getReadAction().getCode();
+        String read = object == null ? actions.stream()
+                .filter(action -> IamActionOperation.ofActionCode(action.code()) == IamActionOperation.READ)
+                .map(ActionDescriptor::code).findFirst().orElse(actions.getFirst().code())
+                : object.getReadAction().getCode();
         return new ResourceDescriptor(key, actions,
                 object == null ? List.of(ScopeKind.ALL)
                         : key.resourceCode().equals(PlatformScopeObjectResource.MEMBER.getValue())

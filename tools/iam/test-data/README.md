@@ -16,7 +16,7 @@ python3 tools/iam/test-data/iam_test_data.py reset   --config tools/iam/test-dat
 
 ## 导入前
 
-1. 目标必须是**已登记的独立测试库**。首次准备需空库；重新初始化优先导入 `databases/ingot_iam.sql`，该文件先删除全部56张清单表，清空旧测试身份、授权及数据，再创建正式目录。停止服务并确认库名/备份后执行，重建后重新导入测试身份。分片仅用于空库，顺序以 `databases/iam/manifest.json` 为准：001–005→框架CREATE→006；导出表和审计索引已在004，不再执行历史ALTER。框架源里的固定USE须去除，完整文件已完成该投影。详见 `databases/iam/README.md`。
+1. 目标必须是**已登记的独立测试库**。使用下文的 IAM 启动器创建测试治理账号时，从空库按 manifest 分片导入 001–005、框架 CREATE 和 006。分片与完整文件的区别见 [数据库初始化说明](../../../databases/iam/README.md)。
 2. **不要**再执行 `seed-manual-verification.sql`（那是历史 Bruno 的 `platform`/`owner` + `password`，与 `iam-test-*` 不是一套数据）。
 3. IAM 打开 `ingot.iam.bootstrap.enabled=true` 启动一次，用 WARN 日志中的初始口令登录 `platform`（不传 `org`），立刻改密。把改密后的口令放到环境变量 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR`。
 4. 复制 `config.example.json` 为未入库的 `config.local.json`：`registered`/`independent` 必须为 true；填独立库、Redis 命名空间和租户/平台两个管理入口 origin（`tenantAdmin`、`platformAdmin`）。登录页分别为这些 origin 下的 `/login/`，不再配置独立登录站。配置缺失会失败，不会猜测开发库。

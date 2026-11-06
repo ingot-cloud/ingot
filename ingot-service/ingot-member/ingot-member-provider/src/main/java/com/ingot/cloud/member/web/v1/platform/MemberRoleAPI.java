@@ -64,7 +64,16 @@ public class MemberRoleAPI implements RShortcuts {
     @Operation(summary = "更新角色", description = "更新角色信息")
     @PutMapping
     public R<Void> update(@Validated(Group.Update.class) @RequestBody MemberRole params) {
-        access.require(MemberAdminResources.ROLE, MemberAdminResources.ROLE_UPDATE);
+        if (params.getCreatedAt() != null || params.getUpdatedAt() != null || params.getDeletedAt() != null) {
+            throw new com.ingot.framework.commons.error.BizException(
+                    com.ingot.framework.commons.model.iam.IamReasonCode.INVALID_ARGUMENT);
+        }
+        if (params.getStatus() != null) {
+            access.require(MemberAdminResources.ROLE, MemberAdminResources.ROLE_CHANGE_STATUS);
+        }
+        if (params.getStatus() == null || params.getPid() != null || params.getName() != null || params.getCode() != null || params.getBuiltIn() != null) {
+            access.require(MemberAdminResources.ROLE, MemberAdminResources.ROLE_UPDATE);
+        }
         bizRoleService.update(params);
         return ok();
     }

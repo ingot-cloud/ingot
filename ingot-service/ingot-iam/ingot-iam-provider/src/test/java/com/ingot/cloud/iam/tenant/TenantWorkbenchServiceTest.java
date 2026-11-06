@@ -56,7 +56,7 @@ class TenantWorkbenchServiceTest {
 
     @Test
     void statisticsUsesTheSameReadScopesAsResourceLists() {
-        when(sessions.bootstrap()).thenReturn(bootstrap(ACTOR, List.of(IamAction.VALUE_TENANT_MEMBER_READ,
+        when(sessions.bootstrap()).thenReturn(bootstrap(ACTOR, List.of(IamAction.VALUE_TENANT_WORKBENCH_READ, IamAction.VALUE_TENANT_MEMBER_READ,
                 IamAction.VALUE_TENANT_DEPARTMENT_READ, IamAction.VALUE_TENANT_GROUP_READ), List.of()));
         tenant();
         var memberScope = ObjectScope.none();
@@ -65,7 +65,9 @@ class TenantWorkbenchServiceTest {
         when(scopes.departmentRead(ACTOR, IamAction.TENANT_DEPARTMENT_READ)).thenReturn(departmentScope);
         when(members.countTenant(10, memberScope)).thenReturn(0L);
         when(departments.countDepartments(10, departmentScope)).thenReturn(3L);
-        when(groups.countTenant(10)).thenReturn(2L);
+        var groupScope = ObjectScope.none();
+        when(scopes.objects(ACTOR, IamAction.TENANT_GROUP_READ)).thenReturn(groupScope);
+        when(groups.countTenant(10, groupScope)).thenReturn(2L);
 
         var result = service.statistics();
 
@@ -83,7 +85,7 @@ class TenantWorkbenchServiceTest {
     void omittedPermissionsSkipQueriesAndOnlyNavigableApplicationsAreCounted() {
         var hiddenDirectory = new MenuNode("directory", "b", "隐藏目录", MenuKind.DIRECTORY, null,
                 null, null, null, 0, List.of(menu("hidden-child", "b", false)), true, false, false);
-        when(sessions.bootstrap()).thenReturn(bootstrap(ACTOR, List.of(), List.of(
+        when(sessions.bootstrap()).thenReturn(bootstrap(ACTOR, List.of(IamAction.VALUE_TENANT_WORKBENCH_READ), List.of(
                 menu("one", "a", false), menu("two", "a", false), menu("hidden", "b", true),
                 hiddenDirectory, menu("unavailable-app", "not-opened", false))));
         tenant();
@@ -95,6 +97,13 @@ class TenantWorkbenchServiceTest {
         assertNull(result.groupCount());
         assertEquals(1L, result.applicationCount());
         verifyNoInteractions(members, departments, groups, scopes);
+    }
+
+    @Test
+    void applicationReadAloneDoesNotOpenWorkbench() {
+        when(sessions.bootstrap()).thenReturn(bootstrap(ACTOR, List.of(IamAction.VALUE_TENANT_APPLICATION_READ), List.of()));
+        assertThrows(BizException.class, service::statistics);
+        verifyNoInteractions(tenants, members, departments, groups, scopes);
     }
 
     @Test
@@ -114,9 +123,11 @@ class TenantWorkbenchServiceTest {
 
     @Test
     void countFailureDoesNotReturnZero() {
-        when(sessions.bootstrap()).thenReturn(bootstrap(ACTOR, List.of(IamAction.VALUE_TENANT_GROUP_READ), List.of()));
+        when(sessions.bootstrap()).thenReturn(bootstrap(ACTOR, List.of(IamAction.VALUE_TENANT_WORKBENCH_READ, IamAction.VALUE_TENANT_GROUP_READ), List.of()));
         tenant();
-        when(groups.countTenant(10)).thenThrow(new IllegalStateException("database unavailable"));
+        var groupScope = ObjectScope.none();
+        when(scopes.objects(ACTOR, IamAction.TENANT_GROUP_READ)).thenReturn(groupScope);
+        when(groups.countTenant(10, groupScope)).thenThrow(new IllegalStateException("database unavailable"));
         assertThrows(IllegalStateException.class, service::statistics);
     }
 

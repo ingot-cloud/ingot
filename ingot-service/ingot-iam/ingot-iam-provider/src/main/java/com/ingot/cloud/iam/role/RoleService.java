@@ -2,7 +2,6 @@ package com.ingot.cloud.iam.role;
 
 import java.util.stream.Collectors;
 import java.math.BigInteger;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -16,10 +15,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.iam.catalog.CatalogService;
-import com.ingot.cloud.iam.delegation.DelegationAdmission;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.RoleRepository;
-import com.ingot.cloud.iam.persistence.entity.IamRoleAssignmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleDefinitionEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleDeltaEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleGrantEntity;
@@ -42,7 +39,6 @@ import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.ConfigurationStatus;
 import com.ingot.framework.commons.model.iam.ConfigurationStatusInput;
 import com.ingot.framework.commons.model.iam.CreatedResource;
-import com.ingot.framework.commons.model.iam.GrantStatus;
 import com.ingot.framework.commons.model.iam.EffectiveRole;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
@@ -66,15 +62,8 @@ import com.ingot.framework.commons.model.iam.RoleRevisionRef;
 import com.ingot.framework.commons.model.iam.RoleRevisionSummary;
 import com.ingot.framework.commons.model.iam.RoleSummary;
 import com.ingot.framework.commons.model.iam.RoleUpdateInput;
-import com.ingot.framework.commons.model.iam.ScopeBinding;
-import com.ingot.framework.commons.model.iam.ScopeBindingKind;
 import com.ingot.framework.commons.model.iam.ScopeExpression;
 import com.ingot.framework.commons.model.iam.ScopeKind;
-import com.ingot.framework.commons.model.iam.SubjectRef;
-import com.ingot.framework.commons.model.iam.SubjectType;
-import com.ingot.framework.commons.model.iam.UpgradeInput;
-import com.ingot.framework.commons.model.iam.UpgradePreview;
-import com.ingot.framework.commons.model.iam.UpgradePreviewInput;
 import com.ingot.framework.commons.model.iam.UsageSummary;
 import com.ingot.framework.commons.model.iam.ValidationIssue;
 import org.springframework.dao.DuplicateKeyException;
@@ -99,9 +88,6 @@ public class RoleService {
     private static final TypeReference<RoleMetadataOverrides> METADATA = new TypeReference<>() {
     };
 
-    private static final TypeReference<Map<String, ScopeBinding>> BINDINGS = new TypeReference<>() {
-    };
-
     private static final String ROLE = "role";
 
     private final IamAccess access;
@@ -114,7 +100,6 @@ public class RoleService {
 
     private final RoleGrantValidator validator;
 
-    private final DelegationAdmission delegations;
 
     private final RoleRepository roles;
 
@@ -136,13 +121,12 @@ public class RoleService {
      * @param changes 授权热缓存失效
      * @param synthesis 角色合成派生缓存
      * @param validator 操作与范围能力校验
-     * @param delegations 委派派生授权准入
      * @param roles 角色持久化
      * @param catalog 操作目录解析
      * @param transactionManager 同一数据源事务
      */
     public RoleService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
-            RoleSynthesisCache synthesis, RoleGrantValidator validator, DelegationAdmission delegations,
+            RoleSynthesisCache synthesis, RoleGrantValidator validator,
             RoleRepository roles, CatalogService catalog,
             com.ingot.cloud.iam.extension.RoleFieldPermissionService roleFields,
             com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata,
@@ -154,7 +138,6 @@ public class RoleService {
         this.changes = changes;
         this.synthesis = synthesis;
         this.validator = validator;
-        this.delegations = delegations;
         this.roles = roles;
         this.catalog = catalog;
         this.transaction = new TransactionTemplate(transactionManager);
@@ -596,72 +579,6 @@ public class RoleService {
     }
 
     /**
-     * 预览共享基础升级，不写入引用。
-     * @param id 角色 ID
-     * @param input 目标基础
-     * @return 三方比较
-     */
-    public Preview<UpgradePreview> previewUpgrade(String id, UpgradePreviewInput input) {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_ROLE_UPGRADE);
-        long roleId = IamIds.require(id);
-        ResourceDetail<RoleSummary> role = loadSummary(AuthorizationDomain.TENANT, false, actor, roleId);
-        if (role.record().kind() != RoleKind.TENANT_CUSTOM) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        }
-        RevisionData current = latestRevision(roleId);
-        RevisionData oldBase = loadRevision(requireBased(current));
-        RevisionData newBase = loadRevision(IamIds.require(input.newBaseRevisionId()));
-        RoleSynthesis.UpgradePlan plan = RoleSynthesis.upgrade(oldBase.grants(), newBase.grants(), current.deltas(),
-                input.resolutions());
-        List<ValidationIssue> errors = plan.conflicts()
-            .stream()
-            .map(conflict -> new ValidationIssue(conflict.key(), conflict.reasonCode(), conflict.message()))
-            .toList();
-        UpgradePreview preview = new UpgradePreview(role.version(), current.baseRevisionId(), input.newBaseRevisionId(),
-                plan.changes(), plan.conflicts(), null, List.of(), new ImpactSummary(null, 0L, null, false));
-        return new Preview<>(role.version(), errors.isEmpty(), errors, List.of(), preview.impactSummary(), preview);
-    }
-
-    /**
-     * 提交共享基础升级；未解决冲突整次回滚。
-     * @param id 角色 ID
-     * @param input 处置与要改写的授权
-     * @return 新版本 ID
-     */
-    public CreatedResource upgrade(String id, UpgradeInput input) {
-        ActiveIdentity actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_ROLE_UPGRADE);
-        long roleId = IamIds.require(id);
-        return transaction.execute(status -> {
-            RoleRow current = lock(AuthorizationDomain.TENANT, false, actor, roleId);
-            if (current.kind() != RoleKind.TENANT_CUSTOM) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-            }
-            IamIds.requireVersion(input.expectedVersion(), version(current.version()));
-            RevisionData latest = latestRevision(roleId);
-            RevisionData oldBase = loadRevision(requireBased(latest));
-            RevisionData newBase = loadRevision(IamIds.require(input.newBaseRevisionId()));
-            RoleSynthesis.UpgradePlan plan = RoleSynthesis.upgrade(oldBase.grants(), newBase.grants(), latest.deltas(),
-                    input.resolutions());
-            if (!plan.conflicts().isEmpty()) {
-                throw new BizException(IamReasonCode.POLICY_CONFLICT);
-            }
-            long last = roles.maxRevision(roleId);
-            RoleDefinitionDraft definition = new RoleDefinitionDraft(List.of(), plan.nextDeltas(), latest.parameters(),
-                    latest.metadata());
-            long revisionId = publishRevision(roleId, RoleKind.TENANT_CUSTOM, last + 1, input.newBaseRevisionId(),
-                    definition, input.versionName(), input.remark());
-            moveAssignments(actor, roleId, revisionId, input.assignmentIds());
-            roles.incrementVersion(roleId, current.version());
-            audits.write(actor.context(), access.nextId(), ROLE, id, AuditChangeType.UPDATE,
-                    Map.of(AuditField.ROLE_REVISION, latest.id()),
-                    Map.of(AuditField.ROLE_REVISION, IamIds.text(revisionId)),
-                    Map.of(ROLE, nextVersion(current.version())));
-            changes.markAll();
-            return new CreatedResource(IamIds.text(revisionId), Long.toString(last + 1));
-        });
-    }
-
-    /**
      * 合成指定版本的有效授权，供求值引擎复用。
      * @param revisionId 版本 ID
      * @return 合成后的操作范围
@@ -748,80 +665,6 @@ public class RoleService {
         String base = currentBase(IamIds.require(role.id()));
         return based(base) ? RoleSynthesis.synthesize(baseGrants(base), input.deltas())
                 : RoleSynthesis.synthesize(input.grants(), List.of());
-    }
-
-    /**
-     * 把选中的授权改指到新版本。授权必须属于当前租户与被升级角色且仍然有效，逐条重验范围参数与来源委派，
-     * 按锁定版本条件更新并核对行数；任一条不成立整次升级回滚，不留部分更新。
-     */
-    private void moveAssignments(ActiveIdentity actor, long roleId, long revisionId, List<String> assignmentIds) {
-        if (assignmentIds == null || assignmentIds.isEmpty()) {
-            return;
-        }
-        long tenantId = IamIds.require(actor.context().tenantId());
-        List<ActionGrant> grants = synthesizedGrants(revisionId);
-        for (String text : assignmentIds.stream().distinct().toList()) {
-            long assignmentId = IamIds.require(text);
-            IamRoleAssignmentEntity row = roles.lockTenantAssignment(tenantId, assignmentId);
-            if (row == null || row.getStatus() != GrantStatus.ACTIVE) {
-                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-            }
-            if (!roles.revisionBelongsToRole(row.getRevisionId().longValue(), roleId)) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-            }
-            revalidate(row, revisionId, grants, tenantId);
-            if (roles.updateAssignmentRevision(assignmentId, revisionId, row.getVersion()) != 1) {
-                throw new BizException(IamReasonCode.POLICY_CONFLICT);
-            }
-        }
-    }
-
-    /**
-     * 升级不得放大既有授权：新版本引用的管理范围必须仍有绑定，委派派生的授权还要在新版本上重新满足委派全部约束。
-     */
-    private void revalidate(IamRoleAssignmentEntity row, long revisionId, List<ActionGrant> grants, long tenantId) {
-        Map<String, ScopeBinding> bindings = IamJson.read(row.getScopeBindings(), BINDINGS);
-        Map<String, ScopeBinding> bound = bindings == null ? Map.of() : bindings;
-        for (ActionGrant grant : grants) {
-            for (ScopeExpression scope : grant.scopes() == null ? List.<ScopeExpression>of() : grant.scopes()) {
-                if (requiredBinding(scope.kind()) != null
-                        && (scope.parameterKey() == null || !bound.containsKey(scope.parameterKey()))) {
-                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-                }
-            }
-        }
-        if (row.getDelegationGrantId() == null) {
-            return;
-        }
-        List<ValidationIssue> errors = delegations.check(new DelegationAdmission.Request(AuthorizationDomain.TENANT,
-                tenantId, row.getDelegationGrantId().longValue(), null, revisionId, grants, bound, subject(row),
-                instant(row.getValidFrom()), instant(row.getValidUntil())));
-        if (!errors.isEmpty()) {
-            throw new BizException(errors.getFirst().code());
-        }
-    }
-
-    private static SubjectRef subject(IamRoleAssignmentEntity row) {
-        BigInteger id = row.getSubjectType() == SubjectType.MEMBER ? row.getTenantMemberId() : row.getTenantGroupId();
-        return new SubjectRef(row.getSubjectType(), text(id));
-    }
-
-    private static ScopeBindingKind requiredBinding(ScopeKind kind) {
-        if (kind == ScopeKind.MANAGED_DEPARTMENTS) {
-            return ScopeBindingKind.DEPARTMENTS;
-        }
-        return kind == ScopeKind.OBJECT_SET ? ScopeBindingKind.OBJECTS : null;
-    }
-
-    private static long requireBased(RevisionData revision) {
-        if (!based(revision.baseRevisionId())) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        }
-        return IamIds.require(revision.baseRevisionId());
-    }
-
-    private static Instant instant(LocalDateTime value) {
-        return value == null ? null : value.toInstant(ZoneOffset.UTC);
     }
 
     /**

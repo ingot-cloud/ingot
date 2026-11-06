@@ -2,6 +2,7 @@ package com.ingot.cloud.iam.persistence;
 
 import java.math.BigInteger;
 import java.util.List;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
@@ -70,18 +71,33 @@ public class OrganizationMemberRepository {
      */
     public Page<IamTenantMemberEntity> pageEffective(long tenantId, ObjectScope scope, String keyword, long groupId,
             int page, int size) {
-        var query = Wrappers.<IamTenantMemberEntity>lambdaQuery()
+        var query = effectiveQuery(tenantId, scope, groupId)
                 .select(IamTenantMemberEntity::getId, IamTenantMemberEntity::getDisplayName,
                         IamTenantMemberEntity::getAvatar, IamTenantMemberEntity::getPhone,
-                        IamTenantMemberEntity::getEmail, IamTenantMemberEntity::getStatus)
-                .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId));
-        ObjectScopeSql.restrictTenantMembers(query, scope, BigInteger.valueOf(tenantId));
-        query.apply(IamMembershipSql.MEMBERSHIP_EXISTS, tenantId, groupId);
+                        IamTenantMemberEntity::getEmail, IamTenantMemberEntity::getStatus);
         if (keyword != null && !keyword.isBlank()) {
             String search = "%" + keyword.trim().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
             query.apply("display_name LIKE {0} ESCAPE '!'", search);
         }
         return members.selectPage(new Page<>(page, size), query.orderByAsc(IamTenantMemberEntity::getId));
+    }
+
+    /**
+     * 使用有效成员列表的关联条件和成员范围统计可见人数。
+     * @param tenantId 已授权租户 ID
+     * @param scope 成员读取范围
+     * @param groupId 组 ID
+     * @return 可见人数
+     */
+    public long countEffective(long tenantId, ObjectScope scope, long groupId) {
+        return members.selectCount(effectiveQuery(tenantId, scope, groupId));
+    }
+
+    private LambdaQueryWrapper<IamTenantMemberEntity> effectiveQuery(long tenantId, ObjectScope scope, long groupId) {
+        var query = Wrappers.<IamTenantMemberEntity>lambdaQuery()
+                .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId));
+        ObjectScopeSql.restrictTenantMembers(query, scope, BigInteger.valueOf(tenantId));
+        return query.apply(IamMembershipSql.MEMBERSHIP_EXISTS, tenantId, groupId);
     }
 
     /** 批量判断真实零任职，不使用过滤后的可见部门投影推断。 */

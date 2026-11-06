@@ -188,6 +188,8 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [IAM 功能目录与授权补齐](./changes/active/20261106-iam-resource-catalog/README.md)（validating，隔离库和自动化验收已执行）
+
 - [App 用户管理目标环境发布验收](./changes/active/20261106-member-platform-release-acceptance/README.md)（draft，跟踪真实会话、升级与回滚）
 
 

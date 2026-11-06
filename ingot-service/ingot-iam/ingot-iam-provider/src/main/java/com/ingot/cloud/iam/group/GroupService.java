@@ -1,9 +1,11 @@
 package com.ingot.cloud.iam.group;
 
+import java.util.EnumMap;
 import java.util.TreeMap;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,9 +13,13 @@ import java.util.Set;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.iam.evaluation.DepartmentClosure;
+import com.ingot.cloud.iam.evaluation.ObjectScope;
+import com.ingot.cloud.iam.evaluation.ResourceAccess;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.DelegationRecipientRepository;
 import com.ingot.cloud.iam.persistence.GroupRepository;
+import com.ingot.cloud.iam.persistence.ObjectScopeSql;
+import com.ingot.cloud.iam.persistence.OrganizationMemberRepository;
 import com.ingot.cloud.iam.persistence.entity.IamPlatformGroupEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleAssignmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantGroupEntity;
@@ -37,6 +43,7 @@ import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.ImpactSummary;
 import com.ingot.framework.commons.model.iam.PageResponse;
+import com.ingot.framework.commons.model.iam.ObjectCapability;
 import com.ingot.framework.commons.model.iam.Preview;
 import com.ingot.framework.commons.model.iam.ReferenceImpactPreview;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
@@ -62,6 +69,8 @@ public class GroupService {
     private final GroupRepository groups;
     private final DelegationRecipientRepository recipients;
     private final DepartmentClosure closure;
+    private final ResourceAccess scopes;
+    private final OrganizationMemberRepository memberQueries;
     private final TransactionTemplate transaction;
 
     /**
@@ -74,17 +83,22 @@ public class GroupService {
      * @param groups 组持久化
      * @param recipients 委派接收人判定
      * @param closure 部门树展开
+     * @param scopes 用户组对象与成员可见性
+     * @param memberQueries 组的有效成员范围查询
      * @param transactionManager 同一数据源事务
      */
     public GroupService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
                             GroupRepository groups, DelegationRecipientRepository recipients,
-                            DepartmentClosure closure, PlatformTransactionManager transactionManager) {
+                            DepartmentClosure closure, ResourceAccess scopes,
+                            OrganizationMemberRepository memberQueries, PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
         this.changes = changes;
         this.groups = groups;
         this.recipients = recipients;
         this.closure = closure;
+        this.scopes = scopes;
+        this.memberQueries = memberQueries;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -102,18 +116,20 @@ public class GroupService {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.READ));
         IamPages.require(page, pageSize);
         String keyword = IamFilters.containsName(name);
+        var scope = scopes.objects(actor.context(), action(domain, AccessKind.READ));
+        Visibility visibility = visibility(domain, actor);
         if (domain == AuthorizationDomain.PLATFORM) {
-            Page<IamPlatformGroupEntity> rows = groups.pagePlatform(page, pageSize, keyword);
+            Page<IamPlatformGroupEntity> rows = groups.pagePlatform(page, pageSize, keyword, scope);
             List<ResourceDetail<GroupRecord>> items = rows.getRecords().stream()
                     .map(row -> detail(domain, actor, row.getId().longValue(), row.getName(), row.getDescription(),
-                            version(row.getVersion())))
+                            version(row.getVersion()), visibility))
                     .toList();
             return IamPages.details(items, rows.getTotal(), page, pageSize);
         }
-        Page<IamTenantGroupEntity> rows = groups.pageTenant(tenantId(actor), page, pageSize, keyword);
+        Page<IamTenantGroupEntity> rows = groups.pageTenant(tenantId(actor), page, pageSize, keyword, scope);
         List<ResourceDetail<GroupRecord>> items = rows.getRecords().stream()
                 .map(row -> detail(domain, actor, row.getId().longValue(), row.getName(), row.getDescription(),
-                        version(row.getVersion())))
+                        version(row.getVersion()), visibility))
                 .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
@@ -136,11 +152,16 @@ public class GroupService {
         }
         transaction.execute(status -> {
             groups.lockAuthorization(AuthorizationDomain.PLATFORM);
+            ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_GROUP_UPDATE);
+            var scope = scopes.objectsForExecution(actor.context(), IamAction.PLATFORM_GROUP_UPDATE);
             if (!groups.existsActivePlatformMember(memberId)) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
             for (String groupId : unique) {
                 long id = IamIds.require(groupId);
+                if (!ObjectScopeSql.matches(scope, id)) {
+                    throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+                }
                 if (groups.findPlatform(id) == null) {
                     throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
                 }
@@ -169,7 +190,9 @@ public class GroupService {
      */
     public ResourceDetail<GroupRecord> get(AuthorizationDomain domain, String id) {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.READ));
-        return load(domain, actor, IamIds.require(id));
+        long groupId = IamIds.require(id);
+        scopes.requireVisibleObject(actor.context(), action(domain, AccessKind.READ), groupId);
+        return load(domain, actor, groupId);
     }
 
     /**
@@ -185,6 +208,10 @@ public class GroupService {
         return transaction.execute(status -> {
             groups.lockAuthorization(domain);
             access.require(domain, action(domain, AccessKind.CREATE));
+            if (!scopes.objectsForExecution(actor.context(), action(domain, AccessKind.CREATE)).coversAll()) {
+                throw new BizException(IamReasonCode.DATA_SCOPE_DENIED);
+            }
+            requireVisibleSelection(domain, actor, input.selection());
             long id = access.nextId();
             insertGroup(domain, actor, id, input);
             replaceSelection(domain, actor, id, input.selection());
@@ -205,19 +232,28 @@ public class GroupService {
      */
     public ResourceDetail<GroupRecord> replace(AuthorizationDomain domain, String id, GroupUpdateInput input) {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.UPDATE));
-        IamSelections.requireCompatible(domain, input.group().selection());
+        Selection next = input.group().selection();
+        if (next != null) {
+            IamSelections.requireCompatible(domain, next);
+        }
         long groupId = IamIds.require(id);
         return transaction.execute(status -> {
             groups.lockAuthorization(domain);
             access.require(domain, action(domain, AccessKind.UPDATE));
+            requireWriteScope(domain, actor, AccessKind.UPDATE, groupId);
             ResourceDetail<GroupRecord> current = lock(domain, actor, groupId);
             IamIds.requireVersion(input.expectedVersion(), current.version());
-            List<String> invalid = invalidDelegatedAssignments(domain, actor, groupId, input.group().selection());
-            if (!invalid.isEmpty()) {
-                throw new BizException(IamReasonCode.POLICY_CONFLICT);
+            if (next != null) {
+                requireVisibleSelection(domain, actor, selectionOf(domain, actor, groupId));
+                requireVisibleSelection(domain, actor, next);
+                if (!invalidDelegatedAssignments(domain, actor, groupId, next).isEmpty()) {
+                    throw new BizException(IamReasonCode.POLICY_CONFLICT);
+                }
             }
             updateGroup(domain, actor, groupId, input.group(), current.version());
-            replaceSelection(domain, actor, groupId, input.group().selection());
+            if (next != null) {
+                replaceSelection(domain, actor, groupId, next);
+            }
             String version = Long.toString(Long.parseLong(current.version()) + 1);
             audits.write(actor.context(), access.nextId(), GROUP, id, AuditChangeType.UPDATE,
                     Map.of(AuditField.NAME, current.record().name()),
@@ -240,6 +276,7 @@ public class GroupService {
         return transaction.execute(status -> {
             groups.lockAuthorization(domain);
             access.require(domain, action(domain, AccessKind.DELETE));
+            requireWriteScope(domain, actor, AccessKind.DELETE, groupId);
             ResourceDetail<GroupRecord> current = lock(domain, actor, groupId);
             if (referenced(domain, actor, groupId)) {
                 throw new BizException(IamReasonCode.OBJECT_IN_USE);
@@ -267,19 +304,25 @@ public class GroupService {
      */
     public Preview<ReferenceImpactPreview> preview(AuthorizationDomain domain, String id, GroupUpdateInput input) {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.PREVIEW));
-        IamSelections.requireCompatible(domain, input.group().selection());
-        ResourceDetail<GroupRecord> current = load(domain, actor, IamIds.require(id));
+        long groupId = IamIds.require(id);
+        scopes.requireVisibleObject(actor.context(), action(domain, AccessKind.PREVIEW), groupId);
+        ResourceDetail<GroupRecord> current = load(domain, actor, groupId);
+        Selection next = input.group().selection();
         List<ValidationIssue> errors = new ArrayList<>();
         try {
             IamIds.requireVersion(input.expectedVersion(), current.version());
         } catch (BizException exception) {
             errors.add(new ValidationIssue("expectedVersion", IamReasonCode.REVISION_CONFLICT, exception.getMessage()));
         }
-        List<String> invalid = invalidDelegatedAssignments(domain, actor, IamIds.require(id), input.group().selection());
-        if (!invalid.isEmpty()) {
-            errors.add(new ValidationIssue("selection", IamReasonCode.POLICY_CONFLICT, "组变更后委派派生授权不再成立"));
+        if (next != null) {
+            IamSelections.requireCompatible(domain, next);
+            requireVisibleSelection(domain, actor, selectionOf(domain, actor, groupId));
+            requireVisibleSelection(domain, actor, next);
+            if (!invalidDelegatedAssignments(domain, actor, groupId, next).isEmpty()) {
+                errors.add(new ValidationIssue("selection", IamReasonCode.POLICY_CONFLICT, "组变更后委派派生授权不再成立"));
+            }
         }
-        List<String> affected = assignmentIds(domain, actor, IamIds.require(id));
+        List<String> affected = assignmentIds(domain, actor, groupId);
         ReferenceImpactPreview result = new ReferenceImpactPreview(affected,
                 new ImpactSummary(null, (long) affected.size(), null, false));
         return new Preview<>(current.version(), errors.isEmpty(), errors, List.of(), result.impactSummary(), result);
@@ -321,12 +364,83 @@ public class GroupService {
 
     private ResourceDetail<GroupRecord> detail(AuthorizationDomain domain, ActiveIdentity actor, long id, String name,
                                                String description, String version) {
-        Selection selection = selectionOf(domain, actor, id);
-        // 租户组可按部门授予，人数必须与展开后的实际集合一致，不能只数显式成员。
-        long count = domain == AuthorizationDomain.PLATFORM
-                ? selection.members().size()
-                : groups.countTenantMembership(tenantId(actor), id);
-        return IamDetails.of(new GroupRecord(IamIds.text(id), name, description, selection, count), version);
+        return detail(domain, actor, id, name, description, version, visibility(domain, actor));
+    }
+
+    private Visibility visibility(AuthorizationDomain domain, ActiveIdentity actor) {
+        Map<IamAction, ObjectScope> writes = new EnumMap<>(IamAction.class);
+        for (AccessKind kind : List.of(AccessKind.UPDATE, AccessKind.DELETE, AccessKind.PREVIEW)) {
+            IamAction operation = action(domain, kind);
+            if (access.allows(domain, operation, false)) {
+                writes.put(operation, scopes.objects(actor.context(), operation));
+            }
+        }
+        IamAction memberRead = memberRead(domain);
+        ObjectScope memberScope = access.allows(domain, memberRead, false)
+                ? scopes.memberRead(actor.context(), memberRead) : null;
+        ObjectScope departmentScope = domain == AuthorizationDomain.TENANT
+                && access.allows(domain, IamAction.TENANT_DEPARTMENT_READ, false)
+                ? scopes.departmentRead(actor.context(), IamAction.TENANT_DEPARTMENT_READ) : null;
+        return new Visibility(writes, memberScope, departmentScope);
+    }
+
+    private ResourceDetail<GroupRecord> detail(AuthorizationDomain domain, ActiveIdentity actor, long id, String name,
+                                               String description, String version, Visibility visibility) {
+        Selection selection = new Selection(List.of(), List.of());
+        Map<String, ObjectCapability> capabilities = new LinkedHashMap<>();
+        for (AccessKind kind : List.of(AccessKind.UPDATE, AccessKind.DELETE, AccessKind.PREVIEW)) {
+            IamAction operation = action(domain, kind);
+            ObjectScope scope = visibility.writes().get(operation);
+            boolean allowed = scope != null && ObjectScopeSql.matches(scope, id);
+            var reason = allowed ? null : scope == null ? IamReasonCode.ACTION_DENIED : IamReasonCode.OBJECT_NOT_FOUND;
+            capabilities.put(operation.getCode(), new ObjectCapability(allowed, reason, null));
+        }
+        boolean selectionEditable = false;
+        Long count = null;
+        if (visibility.members() != null) {
+            Selection linked = selectionOf(domain, actor, id);
+            var linkedIds = linked.members().stream().map(BigInteger::new).toList();
+            var visibleIds = scopes.visibleMembers(actor.context(), visibility.members(), linkedIds);
+            List<DepartmentSelection> departments = visibility.departments() == null ? List.of()
+                    : linked.departments().stream()
+                        .filter(department -> scopes.departmentVisible(actor.context(), visibility.departments(),
+                                IamIds.require(department.id()))).toList();
+            selection = new Selection(texts(visibleIds.stream().sorted().toList()), departments);
+            selectionEditable = capabilities.get(action(domain, AccessKind.UPDATE).getCode()).allowed()
+                    && visibleIds.containsAll(linkedIds) && departments.size() == linked.departments().size();
+            count = domain == AuthorizationDomain.PLATFORM ? (long) visibleIds.size()
+                    : memberQueries.countEffective(tenantId(actor), visibility.members(), id);
+        }
+        return IamDetails.of(new GroupRecord(IamIds.text(id), name, description, selection, count, selectionEditable),
+                capabilities, version);
+    }
+
+    private void requireWriteScope(AuthorizationDomain domain, ActiveIdentity actor, AccessKind kind, long id) {
+        if (!ObjectScopeSql.matches(scopes.objectsForExecution(actor.context(), action(domain, kind)), id)) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+    }
+
+    private void requireVisibleSelection(AuthorizationDomain domain, ActiveIdentity actor, Selection selection) {
+        if (!selection.members().isEmpty()) {
+            IamAction read = memberRead(domain);
+            var ids = selection.members().stream().map(BigInteger::new).toList();
+            if (!scopes.visibleMembers(actor.context(), scopes.memberReadForExecution(actor.context(), read), ids).containsAll(ids)) {
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            }
+        }
+        if (!selection.departments().isEmpty()) {
+            var scope = scopes.departmentReadForExecution(actor.context(), IamAction.TENANT_DEPARTMENT_READ);
+            for (DepartmentSelection department : selection.departments()) {
+                if (!scopes.departmentVisible(actor.context(), scope, IamIds.require(department.id()))) {
+                    throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+                }
+            }
+        }
+    }
+
+    private static IamAction memberRead(AuthorizationDomain domain) {
+        return domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ;
     }
 
     private Selection selectionOf(AuthorizationDomain domain, ActiveIdentity actor, long id) {
@@ -504,6 +618,9 @@ public class GroupService {
     private static List<String> texts(List<BigInteger> ids) {
         return ids.stream().map(GroupService::text).toList();
     }
+
+    /** 同一请求复用的组操作和关联数据可见范围。 */
+    private record Visibility(Map<IamAction, ObjectScope> writes, ObjectScope members, ObjectScope departments) { }
 
     private enum AccessKind {
         READ, CREATE, UPDATE, DELETE, PREVIEW

@@ -1,5 +1,11 @@
 package com.ingot.cloud.iam.group;
 
+import com.ingot.cloud.iam.evaluation.ObjectScope;
+import com.ingot.cloud.iam.evaluation.ResourceAccess;
+import com.ingot.cloud.iam.persistence.OrganizationMemberRepository;
+import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
+import java.math.BigInteger;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,6 +26,8 @@ import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.DepartmentSelection;
 import com.ingot.framework.commons.model.iam.GroupDraft;
 import com.ingot.framework.commons.model.iam.GroupUpdateInput;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.Selection;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -34,6 +42,9 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,6 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class GroupServiceTest {
     private JdbcTemplate jdbc;
     private GroupService service;
+    private ResourceAccess scopes;
     private static final AuthorizationContext TENANT =
             new AuthorizationContext(AuthorizationDomain.TENANT, "10", "1", "101");
 
@@ -117,11 +129,23 @@ class GroupServiceTest {
         IamActionAuthorizer authorizer = (actor, action) -> new IamActionAuthorizer.Admission(true);
         var access = new IamAccess(new CurrentIdentityService(identities), authorizer,
                 new AtomicLong(9000)::incrementAndGet, org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
+        scopes = mock(ResourceAccess.class);
+        var all = ObjectScope.all();
+        when(scopes.objects(any(), any())).thenReturn(all);
+        when(scopes.objectsForExecution(any(), any())).thenReturn(all);
+        when(scopes.memberRead(any(), any())).thenReturn(all);
+        when(scopes.departmentRead(any(), any())).thenReturn(all);
+        when(scopes.memberReadForExecution(any(), any())).thenReturn(all);
+        when(scopes.departmentReadForExecution(any(), any())).thenReturn(all);
+        when(scopes.departmentVisible(any(), any(), org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
+        when(scopes.visibleMembers(any(), any(), any())).thenAnswer(invocation ->
+                java.util.Set.copyOf(invocation.<java.util.Collection<BigInteger>>getArgument(2)));
         service = new GroupService(access, IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> { }), IamMybatisTestAccess.groups(dataSource),
                 IamMybatisTestAccess.recipients(dataSource),
                 new DepartmentClosure(IamMybatisTestAccess.mapper(dataSource, IamDepartmentMapper.class)),
-                transactions);
+                scopes, new OrganizationMemberRepository(
+                        IamMybatisTestAccess.mapper(dataSource, IamTenantMemberMapper.class)), transactions);
         authenticate();
     }
 
@@ -141,6 +165,40 @@ class GroupServiceTest {
         assertEquals(0, miss.total());
         var blank = service.list(AuthorizationDomain.TENANT, 1, 20, "  ");
         assertEquals(2, blank.total());
+    }
+
+    @Test
+    void scopedGroupReadAndWriteCheckTheActualTarget() {
+        var selected = ObjectScope.of(List.of(new com.ingot.cloud.iam.evaluation.ObjectScopeClause(
+                java.util.Set.of(BigInteger.valueOf(502)), List.of())));
+        when(scopes.objects(TENANT, IamAction.TENANT_GROUP_READ)).thenReturn(selected);
+        when(scopes.objectsForExecution(TENANT, IamAction.TENANT_GROUP_UPDATE)).thenReturn(selected);
+
+        var page = service.list(AuthorizationDomain.TENANT, 1, 1, null);
+        assertEquals(1, page.total());
+        assertEquals("502", page.items().getFirst().record().id());
+        var input = new GroupUpdateInput("0", new GroupDraft("仅改资料", null, null));
+        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), assertThrows(BizException.class,
+                () -> service.replace(AuthorizationDomain.TENANT, "503", input)).getCode());
+        service.replace(AuthorizationDomain.TENANT, "502", input);
+        assertEquals(1, count("iam_tenant_group_department"));
+    }
+
+    @Test
+    void metadataEditPreservesHiddenMembersAndReplacementRejectsThem() {
+        jdbc.update("INSERT INTO iam_tenant_group_member(tenant_id, group_id, member_id) VALUES (10,503,102)");
+        var hidden = ObjectScope.none();
+        when(scopes.memberRead(TENANT, IamAction.TENANT_MEMBER_READ)).thenReturn(hidden);
+        when(scopes.memberReadForExecution(TENANT, IamAction.TENANT_MEMBER_READ)).thenReturn(hidden);
+        when(scopes.visibleMembers(TENANT, hidden, List.of(BigInteger.valueOf(102)))).thenReturn(java.util.Set.of());
+
+        var result = service.replace(AuthorizationDomain.TENANT, "503",
+                new GroupUpdateInput("0", new GroupDraft("资料更新", null, null)));
+        assertEquals(1, count("iam_tenant_group_member"));
+        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), assertThrows(BizException.class,
+                () -> service.replace(AuthorizationDomain.TENANT, "503",
+                        new GroupUpdateInput(result.version(), draft(List.of(), List.of())))).getCode());
+        assertEquals(1, count("iam_tenant_group_member"));
     }
 
     @Test

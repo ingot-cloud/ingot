@@ -363,7 +363,7 @@ public final class IamMybatisTestAccess {
         return new com.ingot.cloud.iam.catalog.CatalogService(access, audits(source),
                 new com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier(event -> {
                 }), catalogs(source), new com.ingot.cloud.iam.support.SensitiveConfirmationGuard(command -> {
-                }), fieldMetadata(source), transactions);
+                }), fieldMetadata(source), org.mockito.Mockito.mock(com.ingot.cloud.iam.asset.IamImageBinding.class), transactions);
     }
 
     /** 在当前夹具数据源上建立目录 Repository。 */
@@ -444,4 +444,11 @@ public final class IamMybatisTestAccess {
         }
     }
 
+
+    /** 独立业务单测隔离图片暂存边界，凭证安全由专用测试验证。 */
+    public static com.ingot.cloud.iam.asset.IamImageBinding images() {
+        return org.mockito.Mockito.mock(com.ingot.cloud.iam.asset.IamImageBinding.class,
+                invocation -> "bind".equals(invocation.getMethod().getName())
+                        ? invocation.getArgument(3) : org.mockito.Mockito.RETURNS_DEFAULTS.answer(invocation));
+    }
 }

@@ -61,8 +61,8 @@ class TenantWorkbenchCountTest {
         assertEquals(1L, members.countTenant(20, ObjectScope.all()));
         assertEquals(2L, departments.countDepartments(10, ObjectScope.all()));
         assertEquals(1L, departments.countDepartments(20, ObjectScope.all()));
-        assertEquals(2L, groups.countTenant(10));
-        assertEquals(1L, groups.countTenant(20));
+        assertEquals(2L, groups.countTenant(10, ObjectScope.all()));
+        assertEquals(1L, groups.countTenant(20, ObjectScope.all()));
     }
 
     @Test

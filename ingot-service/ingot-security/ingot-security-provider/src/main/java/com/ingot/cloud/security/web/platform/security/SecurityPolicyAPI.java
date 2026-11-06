@@ -173,9 +173,9 @@ public class SecurityPolicyAPI implements RShortcuts {
     /** 查询封禁审计；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @GetMapping("/events")
     @Operation(summary = "查询封禁审计")
-    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SECURITY_POLICY_READ})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_BLOCK_EVENT_READ})
     public R<List<GatewayBlacklistEvent>> listEvents(@RequestParam(defaultValue = "100") int limit) {
-        access.require(IamAction.PLATFORM_SECURITY_POLICY_READ);
+        access.require(IamAction.PLATFORM_BLOCK_EVENT_READ);
         return ok(policyService.listEvents(limit));
     }
 
@@ -246,9 +246,10 @@ public class SecurityPolicyAPI implements RShortcuts {
     /** 强制广播全量失效；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @PostMapping("/broadcast-invalidation")
     @Operation(summary = "强制广播全量失效")
-    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SECURITY_POLICY_UPDATE})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SECURITY_POLICY_REFRESH})
     public R<Void> broadcastInvalidationAll() {
-        access.require(IamAction.PLATFORM_SECURITY_POLICY_UPDATE);
+        access.require(IamAction.PLATFORM_SECURITY_POLICY_READ);
+        access.require(IamAction.PLATFORM_SECURITY_POLICY_REFRESH);
         policyService.broadcastInvalidationAll();
         return ok();
     }

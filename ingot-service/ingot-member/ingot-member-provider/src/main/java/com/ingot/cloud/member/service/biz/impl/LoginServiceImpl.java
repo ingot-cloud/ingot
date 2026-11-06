@@ -8,7 +8,9 @@ import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.biz.LoginService;
 import com.ingot.cloud.iam.api.model.dto.auth.MiniProgramRegisterDTO;
 import com.ingot.cloud.iam.api.model.dto.auth.SocialRegisterDTO;
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.identity.social.UserSocialService;
 import com.ingot.framework.social.wechat.core.WxMaServiceHelper;
@@ -36,13 +38,15 @@ public class LoginServiceImpl implements LoginService {
     public void register(SocialRegisterDTO params) {
         assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getPhone()), "LoginServiceImpl.PhoneCantBeNull");
         assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getCode()), "LoginServiceImpl.SocialCodeCantBeNull");
+        if (StrUtil.isNotBlank(params.getAvatar())) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "请登录后通过本人资料设置头像");
+        }
 
         Object user = switch (params.getType()) {
             case WECHAT_MINI_PROGRAM -> {
                 MemberUserCreateByPhoneDTO userCreateDTO = new MemberUserCreateByPhoneDTO();
                 userCreateDTO.setPhone(params.getPhone());
                 userCreateDTO.setNickname(params.getNickname());
-                userCreateDTO.setAvatar(params.getAvatar());
                 yield bizUserService.createIfPhoneNotUsed(userCreateDTO);
             }
             default -> throw new RuntimeException("暂未开放其它社交平台自主注册接口");

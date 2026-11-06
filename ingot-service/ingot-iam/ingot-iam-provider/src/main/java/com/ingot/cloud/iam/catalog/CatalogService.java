@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.catalog;
 
+import com.ingot.cloud.iam.asset.IamImageBinding;
+import com.ingot.framework.commons.model.iam.ImageUploadPurpose;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -125,6 +127,7 @@ public class CatalogService {
     private final SensitiveConfirmationGuard confirmations;
 
     private final TransactionTemplate transaction;
+    private final IamImageBinding images;
 
     private final com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata;
 
@@ -143,7 +146,7 @@ public class CatalogService {
     public CatalogService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
             CatalogRepository catalog, SensitiveConfirmationGuard confirmations,
             com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata,
-            PlatformTransactionManager transactionManager) {
+            IamImageBinding images, PlatformTransactionManager transactionManager) {
         this.fieldMetadata = fieldMetadata;
         this.access = access;
         this.audits = audits;
@@ -151,6 +154,7 @@ public class CatalogService {
         this.catalog = catalog;
         this.confirmations = confirmations;
         this.transaction = new TransactionTemplate(transactionManager);
+        this.images = images;
     }
 
     /**
@@ -227,7 +231,8 @@ public class CatalogService {
             entity.setDomain(input.domain());
             entity.setName(input.name());
             entity.setDescription(nullable(input.description()));
-            entity.setIcon(IamOssPaths.store(nullable(input.icon())));
+            access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_CREATE);
+            entity.setIcon(images.bind(actor.context(), ImageUploadPurpose.APPLICATION_CREATE, null, nullable(input.icon()), null));
             entity.setSortOrder(input.sortOrder());
             entity.setBaseline(input.baseline());
             entity.setEnabled(true);
@@ -265,7 +270,8 @@ public class CatalogService {
             entity.setDomain(application.domain());
             entity.setName(application.name());
             entity.setDescription(nullable(application.description()));
-            entity.setIcon(IamOssPaths.store(nullable(application.icon())));
+            access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_CREATE);
+            entity.setIcon(images.bind(actor.context(), ImageUploadPurpose.APPLICATION_CREATE, null, nullable(application.icon()), null));
             entity.setSortOrder(application.sortOrder());
             entity.setBaseline(application.baseline());
             entity.setEnabled(true);
@@ -299,8 +305,10 @@ public class CatalogService {
             if (current.getDomain() == AuthorizationDomain.PLATFORM && input.baseline()) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
+            access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_UPDATE);
             catalog.updateApplication(applicationId, input.name(), nullable(input.description()),
-                    IamOssPaths.store(nullable(input.icon())), input.sortOrder(), input.baseline(),
+                    images.bind(actor.context(), ImageUploadPurpose.APPLICATION_UPDATE, IamIds.text(applicationId),
+                            nullable(input.icon()), current.getIcon()), input.sortOrder(), input.baseline(),
                     current.getVersion());
             String next = nextVersion(current.getVersion());
             audits.write(actor.context(), access.nextId(), APPLICATION, id, AuditChangeType.UPDATE,

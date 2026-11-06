@@ -40,8 +40,11 @@ def controller_operations():
             continue
         class_match = CLASS_MAPPING.search(text)
         if class_match is None:
-            raise AssertionError(f'missing class RequestMapping: {path}')
-        prefix = class_match.group(1)
+            if '@RequestMapping(UploadForm.PATH)' not in text:
+                raise AssertionError(f'missing class RequestMapping: {path}')
+            prefix = '/v1/assets/uploads'
+        else:
+            prefix = class_match.group(1)
         for method, suffix in METHOD_MAPPING.findall(text):
             operations.add((normalize_path(join_path(prefix, suffix)), method.lower()))
     return operations
@@ -84,7 +87,8 @@ class ContractTest(unittest.TestCase):
                     self.assertEqual('TENANT', operation['x-iam-domain'])
                     action = operation['x-iam-action']
                     if action is None:
-                        self.assertIn(path, ('/v1/tenant/delegations/mine', '/v1/tenant/member-picker/browse'))
+                        self.assertTrue(path in ('/v1/tenant/delegations/mine', '/v1/tenant/member-picker/browse')
+                                        or path.startswith(('/v1/tenant/downloads', '/v1/tenant/members/workbook')))
                         if path == '/v1/tenant/member-picker/browse':
                             scene = next(parameter for parameter in operation['parameters'] if parameter['name'] == 'scene')
                             self.assertTrue(scene['required'])
@@ -93,10 +97,10 @@ class ContractTest(unittest.TestCase):
                         self.assertTrue(action.startswith('iam-tenant:'))
                 elif '/platform/' in path:
                     self.assertEqual('PLATFORM', operation['x-iam-domain'])
-                    self.assertTrue(operation['x-iam-action'].startswith('iam-platform:'))
+                    self.assertTrue(operation['x-iam-action'].startswith(('iam-platform:', 'platform-developer:')))
                 else:
                     self.assertEqual('CURRENT', operation['x-iam-domain'])
-                    self.assertTrue(path.startswith('/v1/me/'))
+                    self.assertTrue(path.startswith(('/v1/me/', '/v1/assets/')))
         self.assertEqual(sum(1 for flag in self.routes.values() if flag), implemented)
 
     def test_authorization_audit_filters_and_internal_error_are_explicit(self):
@@ -177,7 +181,7 @@ class ContractTest(unittest.TestCase):
         self.assertEqual(set(), controllers - published)
         self.assertFalse(any(path.startswith('/v1/oss') or path.startswith('/inner/')
                              for path, _ in published))
-        self.assertTrue(CONTROLLERS.joinpath('common/OSSCommonAPI.java').exists())
+        self.assertIn(('/v1/assets/uploads', 'post'), published)
 
 
 if __name__ == '__main__':

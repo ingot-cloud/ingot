@@ -23,7 +23,7 @@ public enum PlatformScopeObjectResource {
     GROUP("group", IamAction.PLATFORM_GROUP_READ),
     TENANT("tenant", IamAction.PLATFORM_TENANT_READ),
     ACCOUNT("account", IamAction.PLATFORM_ACCOUNT_READ),
-    ENTITLEMENT("entitlement", IamAction.PLATFORM_ENTITLEMENT_READ),
+    ENTITLEMENT("application-entitlement", IamAction.PLATFORM_ENTITLEMENT_READ),
     APPLICATION("application", IamAction.PLATFORM_APPLICATION_READ),
     RESOURCE("resource", IamAction.PLATFORM_RESOURCE_READ),
     ACTION("action", IamAction.PLATFORM_ACTION_READ),
@@ -31,7 +31,7 @@ public enum PlatformScopeObjectResource {
     ROLE("role", IamAction.PLATFORM_ROLE_READ),
     SHARED_ROLE("shared-role", IamAction.PLATFORM_SHARED_ROLE_READ),
     PLAN("plan", IamAction.PLATFORM_PLAN_READ),
-    ASSIGNMENT("assignment", IamAction.PLATFORM_ASSIGNMENT_READ),
+    ASSIGNMENT("role-assignment", IamAction.PLATFORM_ASSIGNMENT_READ),
     DELEGATION("delegation", IamAction.PLATFORM_DELEGATION_READ);
 
     /** JSON 与持久化使用的稳定资源编码。 */

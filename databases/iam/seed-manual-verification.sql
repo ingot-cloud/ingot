@@ -2,7 +2,8 @@
 SET time_zone = '+00:00';
 
 -- 人工认证夹具，不是生产数据，不进入迁移导入。
--- 先在选定的隔离空库导入 databases/ingot_iam.sql，再执行本文件一次。默认口令均为 password。
+-- 在选定的隔离空库按 manifest 导入结构及 006，再执行本文件一次。默认口令均为 password。
+-- 完整 databases/ingot_iam.sql 已包含另一套平台账号种子。历史夹具使用分片导入。
 -- Spring BCrypt 示例哈希对应明文 password。
 -- 目录、治理角色、默认策略与发号高水位一律来自 006_bootstrap.sql，本文件只补两个可登录账号。
 

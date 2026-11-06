@@ -45,7 +45,9 @@ public class TenantWorkbenchService {
     public TenantWorkbenchStatistics statistics() {
         var bootstrap = sessions.bootstrap();
         var actor = bootstrap.context();
-        if (actor.domain() != AuthorizationDomain.TENANT) {
+        Set<String> actions = Set.copyOf(bootstrap.actionCodes());
+        if (actor.domain() != AuthorizationDomain.TENANT
+                || !actions.contains(IamAction.VALUE_TENANT_WORKBENCH_READ)) {
             throw new BizException(IamReasonCode.ACTION_DENIED);
         }
         long tenantId = IamIds.require(actor.tenantId());
@@ -53,14 +55,13 @@ public class TenantWorkbenchService {
         if (tenant == null) {
             throw new BizException(IamReasonCode.IDENTITY_INVALID);
         }
-        Set<String> actions = Set.copyOf(bootstrap.actionCodes());
         Long memberCount = actions.contains(IamAction.VALUE_TENANT_MEMBER_READ)
                 ? members.countTenant(tenantId, scopes.memberRead(actor, IamAction.TENANT_MEMBER_READ)) : null;
         Long departmentCount = actions.contains(IamAction.VALUE_TENANT_DEPARTMENT_READ)
                 ? departments.countDepartments(tenantId,
                         scopes.departmentRead(actor, IamAction.TENANT_DEPARTMENT_READ)) : null;
         Long groupCount = actions.contains(IamAction.VALUE_TENANT_GROUP_READ)
-                ? groups.countTenant(tenantId) : null;
+                ? groups.countTenant(tenantId, scopes.objects(actor, IamAction.TENANT_GROUP_READ)) : null;
         Set<String> navigableApplications = new HashSet<>();
         collectApplications(bootstrap.menus(), navigableApplications);
         long applicationCount = bootstrap.applications().stream().map(app -> app.id()).distinct()
