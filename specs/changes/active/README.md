@@ -12,9 +12,9 @@
 
 当前变更：
 
+- [租户即时授权实际库发布验收](./20261106-iam-tenant-live-authorization-release/README.md)（draft；实际来源库预检、备份恢复、切换及回滚）
+- [授权审计游标分页与可读展示](./20261024-iam-authorization-audit-readable/README.md)（implementing）
 - [同源双入口目标环境发布验收](./20261031-security-same-origin-release-acceptance/README.md)（draft；原实现已本地验收归档，实际环境证据单列）
-- [租户角色工作区](./20261022-iam-tenant-role-workspace/README.md)（implementing）
-- [租户拥有者动态全权限与角色即时生效](./20261014-iam-tenant-live-authorization/README.md)（validating；2026-10-14 开发与隔离验证完成，待用户产品验收，2026-10-19已本地提交）
 - [IAM 多租户身份与访问管理重构](./20260912-iam-identity-access-management/README.md)（implementing；主变更状态以其 README 为准，旧 PMS 迁移已退出必需范围）
 - [DataScope SQL 谓词规模升级](./20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 

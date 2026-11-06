@@ -1,6 +1,6 @@
 # 租户组有效成员分页
 
-> 状态：implementing
+> 状态：completed
 
 ## 元数据
 
@@ -36,8 +36,7 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
-- 更新的 current capability：
-- 与原设计的差异：
-- 取消原因：
+- 完成日期：2026-11-06（用户确认产品验收通过并要求归档）。
+- 关联实现提交：cf7c5d2e。
+- 更新的 current：[iam/tenant-groups](../../../../current/iam/tenant-groups/README.md)。
+- 最终交付：有效成员独立分页，直接成员接口保留原口径。

@@ -1,6 +1,6 @@
 # 收掉租户普通通讯录
 
-> 状态：implementing
+> 状态：completed
 
 ## 元数据
 
@@ -38,8 +38,7 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
-- 更新的 current capability：
-- 与原设计的差异：
-- 取消原因：
+- 完成日期：2026-11-06（用户确认产品验收通过并要求归档）。
+- 关联实现提交：c43c2c3f。
+- 更新的 current：[iam/platform-capabilities](../../../../current/iam/platform-capabilities/README.md)、[iam/tenant-field-policy](../../../../current/iam/tenant-field-policy/README.md)、[iam/database-persistence](../../../../current/iam/database-persistence/README.md)。
+- 最终交付：普通通讯录与可见范围策略退出。原 MANAGEMENT 场景方案随后由按资源字段策略接管。

@@ -190,14 +190,25 @@ current/<domain>/<capability>/
 
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
 
-- [租户工作台统计接口](./changes/active/20261030-iam-tenant-workbench/README.md)（validating；功能与自动化验证完成，待用户自行联调验收）
+- [租户即时授权实际库发布验收](./changes/active/20261106-iam-tenant-live-authorization-release/README.md)（draft；实际来源库预检、备份恢复、切换及回滚）
 
 - [授权审计游标分页与可读展示](./changes/active/20261024-iam-authorization-audit-readable/README.md)（implementing；2026-10-24 用户确认开工）
-- [租户拥有者动态全权限与角色即时生效](./changes/active/20261014-iam-tenant-live-authorization/README.md)（validating；2026-10-14 开发与隔离验证完成，待用户产品验收，2026-10-19已本地提交）
 - [IAM 多租户身份与访问管理重构](./changes/active/20260912-iam-identity-access-management/README.md)（implementing；全新系统授权补齐、框架复用与平台登录契约，历史迁移退出范围）
 - [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
 已归档（2026）：
+
+### 2026-11-06 产品验收归档
+
+- [租户拥有者动态全权限与角色即时生效](./changes/archive/2026/20261014-iam-tenant-live-authorization/README.md) · [当前能力](./current/iam/tenant-live-authorization/README.md)
+- [租户组有效成员分页](./changes/archive/2026/20261021-iam-group-effective-members/README.md) · [当前能力](./current/iam/tenant-groups/README.md)
+- [所有者转交内嵌登录密码](./changes/archive/2026/20261021-tenant-owner-transfer-stepup/README.md) · [当前能力](./current/iam/tenant-settings/README.md)
+- [租户角色工作区](./changes/archive/2026/20261022-iam-tenant-role-workspace/README.md) · [当前能力](./current/iam/tenant-live-authorization/README.md)
+- [普通通讯录下线](./changes/archive/2026/20261024-iam-remove-directory-browse/README.md) · [当前能力](./current/iam/tenant-field-policy/README.md)
+- [按资源配置字段策略](./changes/archive/2026/20261027-iam-resource-field-policy/README.md) · [当前能力](./current/iam/tenant-field-policy/README.md)
+- [租户工作台统计](./changes/archive/2026/20261030-iam-tenant-workbench/README.md) · [当前能力](./current/iam/tenant-workbench/README.md)
+
+### 此前归档
 
 - [租户部门表格导入导出](./changes/archive/2026/20261021-iam-department-workbook/README.md)（completed，2026-10-21 用户确认测试通过）；[当前能力](./current/iam/tenant-departments/README.md)
 

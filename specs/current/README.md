@@ -33,3 +33,9 @@
 - [iam / role-version-application](./iam/role-version-application/README.md)：可读固定版本、历史来源发布、平台分配集合预检及持久批量应用。
 - [iam / tenant-departments](./iam/tenant-departments/README.md)：租户管理部门树、根部门成员总数、非根直属 ACTIVE 人数及组织「成员与部门」目录种子。
 - [iam / tenant-members](./iam/tenant-members/README.md)：租户按手机号添加成员、已移出重新加入，以及 xlsx 模板、下载中心导出和逐行导入。
+
+- [iam / tenant-settings](./iam/tenant-settings/README.md)：组织资料更新与所有者转交验密。
+- [iam / tenant-groups](./iam/tenant-groups/README.md)：用户组有效成员分页及来源。
+- [iam / tenant-live-authorization](./iam/tenant-live-authorization/README.md)：拥有者、当前角色、分配、委派与角色工作区。
+- [iam / tenant-field-policy](./iam/tenant-field-policy/README.md)：按资源配置及求值的组织字段策略。
+- [iam / tenant-workbench](./iam/tenant-workbench/README.md)：工作台统计与导航排序。

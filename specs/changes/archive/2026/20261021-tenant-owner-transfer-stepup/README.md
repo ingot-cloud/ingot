@@ -1,6 +1,6 @@
 # 所有者转交内嵌登录密码
 
-> 状态：implementing
+> 状态：completed
 
 ## 元数据
 
@@ -33,3 +33,10 @@
 - [设计](./DESIGN.md)
 - [接口](./API.md)
 - [任务](./TASKS.md)
+
+## 完成记录
+
+- 完成日期：2026-11-06（用户确认产品验收通过并要求归档）。
+- 关联实现提交：0ece086c。
+- 更新的 current：[iam/tenant-settings](../../../../current/iam/tenant-settings/README.md)。
+- 最终交付：同一请求按当前所有者身份验登录密码，目标为本人时同样先验密。

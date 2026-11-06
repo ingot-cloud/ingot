@@ -2,7 +2,7 @@
 
 ## 应用与正式入口
 
-字典归平台治理的系统设置；安全中心独立为 `PLATFORM / platform:security`。平台治理包含组织与租户、应用与配置、平台管理和系统设置；组织安全合规保留成员访问策略与组织审计。
+字典归平台治理的系统设置；安全中心独立为 `PLATFORM / platform:security`。平台治理包含组织与租户、应用与配置、平台管理和系统设置；组织安全与合规承载字段策略与组织授权审计。
 
 | 页面 | 浏览器 URL | canonical viewPath |
 |---|---|---|
@@ -13,9 +13,9 @@
 | 会话管理 | `/security/sessions` | `security.sessions` |
 | 平台授权审计 | `/platform/authorization-audit` | `platform.iam.authorization.audit` |
 | 组织授权审计 | `/org/authorization-audit` | `org.iam.authorization.audit` |
-| 成员访问策略 | `/org/member-policies` | `org.iam.member.policies` |
+| 字段策略 | `/org/field-policies` | `org.iam.field.policies` |
 
-正式 URL 显式配置，旧 URL 不作为功能入口。成员策略由 org 插件承载；两域审计包装页复用 admin-common 无路由组件，固定域并拒绝伪造域筛选。租户宿主不装配 security 插件。
+正式 URL 显式配置，旧 URL 不作为功能入口。字段策略由 org 插件承载；两域审计包装页复用 admin-common 无路由组件，固定域并拒绝伪造域筛选。租户宿主不装配 security 插件。
 
 ## 安全管理面与 SDK 执行
 
@@ -34,13 +34,13 @@
 
 访问防护和会话管理入口按各自两种 read 的 ANY 放行；只展示有读取资格的 Tab，默认首个可访问 Tab，仅请求当前激活且有权限的面板。会话客户端选择沿用独立的 `platform:develop:client:query`，页面权限不隐式增加目录读取资格。
 
-## 字典、审计与成员策略
+## 字典、审计与字段策略
 
 字典 `/v1/platform/dictionaries` 使用 `iam-platform:dictionary:read/create/update/delete`；启停与排序为 update，内置约束保持。租户与应用选择分别要求 `iam-platform:tenant:read`、`iam-platform:application:read`。
 
 平台与组织审计分别为 `/v1/platform/authorization/audits`、`/v1/tenant/authorization/audits`，使用 `iam-platform:audit:read`、`iam-tenant:audit:read`；查询限定可信当前域，筛选不能替代 domain/tenantId。公共审计组件仅接收固定域、精确 read 操作和数据适配器，不依赖插件。
 
-成员访问策略的通讯录和字段读取分别使用 `iam-tenant:directory-policy:read`、`iam-tenant:field-policy:read`，保存使用对应 update，预览使用 `iam-tenant:policy:preview`。入口按两类 read 的 ANY 开放，读取、保存、预览资格及激活 Tab 相互独立。IAM 网关前缀为 `/api/iam`，业务 URL、请求响应、数据范围与不可变角色契约保持不变。
+组织字段策略入口使用 `iam-tenant:field-policy:read`，保存使用 `iam-tenant:field-policy:update`，策略按资源读取和保存。普通通讯录浏览、通讯录可见范围及其预览接口已退出。IAM 网关前缀为 `/api/iam`。详见 [租户资源字段策略](../tenant-field-policy/SPEC.md)。
 
 ## 内部授权身份恢复
 
@@ -52,6 +52,6 @@ snapshot 返回实时改密状态，基础授权链不再次调用改密门禁�
 
 正式目录来自 `tools/iam/generate_database.py`，内置执行资源使用显式注册。已有库使用 `020_platform_capability_completion.sql` 幂等升级，可通过 `@iam_capability_dry_run=TRUE` 预演并在事务末尾回滚；脚本输出应用、资源、操作及页面清单，发布时由操作者显式执行。
 
-升级按自然键预检，保留原资源、操作、页面 ID，以及角色版本、授权分配、委派上限和审计引用。路径、注册键、routeName 和父目录定向迁移，菜单人工图标、排序、显隐、缓存、props、route_params 和 access_mode 保留；仅访问防护、会话管理、成员访问策略的 match_mode 按批准规则改为 ANY。跨应用自定义关联、路径或标识冲突导致整笔业务更新回滚，不关闭外键，不静默丢失人工配置。
+升级按自然键预检，保留原资源、操作、页面 ID，以及角色版本、授权分配、委派上限和审计引用。路径、注册键、routeName 和父目录定向迁移，菜单人工图标、排序、显隐、缓存、props、route_params 和 access_mode 保留；访问防护、会话管理按各自读取资格的 ANY 放行。旧库的通讯录和字段策略目录按适用条件执行 `033`、`034`。跨应用自定义关联、路径或标识冲突导致整笔业务更新回滚，不关闭外键，不静默丢失人工配置。
 
 普通角色不自动补权，继续通过既有发布与分配流程配置。发布顺序为备份停写、020 补丁、同批 IAM/Security/两管理台、授权及路由缓存失效、等待 SDK 热窗口并重新 bootstrap。回滚停止新版写入，按完整备份和输出 ID 恢复目录及关联并回退应用，不重建 IAM 库。

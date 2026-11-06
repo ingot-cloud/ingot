@@ -1,6 +1,6 @@
 # 租户拥有者动态全权限与角色即时生效
 
-> 状态：validating
+> 状态：completed
 > 2026-10-14 用户评审通过并授权实施：review → approved → implementing → validating。2026-10-19用户授权本地提交后开始逐条人工验收；平台既有功能继续回归。
 
 ## 元数据
@@ -10,7 +10,7 @@
 - 负责人：jy
 - 创建日期：2026-10-14（Asia/Shanghai）
 - 目标发布日期：评审、隔离验证及部署演练完成后确定，不预定生产切换时间。
-- 前端关联：[组织角色即时授权](../../../../../ingot-admin/specs/changes/active/20261014-org-tenant-live-authorization/README.md)。
+- 前端关联：[组织角色即时授权](../../../../../../ingot-admin/specs/changes/archive/2026/20261014-org-tenant-live-authorization/README.md)。
 
 ## 目标
 
@@ -43,19 +43,26 @@
 6. [验收](./ACCEPTANCE.md)：自动化、真实 HTTP、浏览器、性能和迁移演练矩阵。
 7. [实施与验收报告](./VALIDATION.md)：结果、证据、复跑命令及待人工验收项。
 8. [未上线环境一键准备](./DEV-TEST-PREPARATION.md)：021已执行、022失败后的单脚本测试入口。
-9. [人工验收操作清单](../../../../../ingot-admin/specs/changes/active/20261014-org-tenant-live-authorization/MANUAL-ACCEPTANCE.md)：页面操作、预期结果与测试记录。
+9. [人工验收操作清单](../../../../../../ingot-admin/specs/changes/archive/2026/20261014-org-tenant-live-authorization/MANUAL-ACCEPTANCE.md)：页面操作、预期结果与测试记录。
 
 ## 相关基线与变更归属
 
-- [IAM 主变更](../20260912-iam-identity-access-management/README.md)：保留其状态、历史任务和已完成证据。本变更批准后，接管租户 R01/R03/R04/R05 中与拥有者、固定版本、差异和委派相关的条款；其他 IAM 功能继续由主变更维护。
-- [角色版本基线](../../../current/iam/role-version-application/SPEC.md)：平台自有角色继续遵守；租户及共享角色的业务版本行为在本变更验收后调整基线，当前不得提前改写。
-- [平台读取基线](../../../current/iam/platform-read-performance/SPEC.md)：平台性能和只读请求复用必须回归。
-- [统一分层缓存](../../../current/framework/layered-cache/SPEC.md)：复用框架，不引入自建 L1/L2/LKG 放行。
-- [SQL 规模升级 draft](../20260912-mybatis-data-scope-predicate-scale/README.md)：不合并实施，保留后续重新评估责任。
+- [IAM 主变更](../../../active/20260912-iam-identity-access-management/README.md)：保留其状态、历史任务和已完成证据。本变更批准后，接管租户 R01/R03/R04/R05 中与拥有者、固定版本、差异和委派相关的条款；其他 IAM 功能继续由主变更维护。
+- [角色版本基线](../../../../current/iam/role-version-application/SPEC.md)：平台自有角色继续遵守；租户及共享角色的业务版本行为在本变更验收后调整基线，当前不得提前改写。
+- [平台读取基线](../../../../current/iam/platform-read-performance/SPEC.md)：平台性能和只读请求复用必须回归。
+- [统一分层缓存](../../../../current/framework/layered-cache/SPEC.md)：复用框架，不引入自建 L1/L2/LKG 放行。
+- [SQL 规模升级 draft](../../../active/20260912-mybatis-data-scope-predicate-scale/README.md)：不合并实施，保留后续重新评估责任。
 
 本变更是已有 IAM 数据的目标模型演进，不重新启用主变更已退出范围的旧 PMS 迁移工具。评审期间新旧规则的冲突只作记录；批准后本目录是本次实施的依据。
 
 ## 完成记录
+
+- 完成日期：2026-11-06（用户确认产品验收通过并要求归档）。
+- 关联实现提交：dfe4da45。
+- 更新的 current：[iam/tenant-live-authorization](../../../../current/iam/tenant-live-authorization/README.md)、[iam/role-version-application](../../../../current/iam/role-version-application/README.md)。
+- 最终交付：角色工作区、当前角色字段快照和组织字段策略以本次一并验收的后续增量为准。实际库发布和目标环境演练移交 [独立跟踪](../../../active/20261106-iam-tenant-live-authorization-release/README.md)。
+
+## 历史完成检查
 
 - 当前交付：两端代码、生成接口与SQL、可执行迁移回滚工具及手册、自动化与真实HTTP/浏览器/性能证据，见 [VALIDATION](./VALIDATION.md)。
 - 实施和隔离验证：完成；完整产品人工验收及实际数据库切换：待执行。
@@ -65,4 +72,4 @@
 - 与已确认业务模型的差异：无；候选类型、直接分配资格元数据及技术细节已同步API/DESIGN，平台自有行为保持。
 - 取消原因：不适用；若取消或被替代，记录原因后归档，不删除。
 
-2026-10-19提交前检查见 [PRECOMMIT-20261019](./PRECOMMIT-20261019.md)。当前仍为validating，等待用户逐条人工验收。
+2026-10-19 提交前检查见 [PRECOMMIT-20261019](./PRECOMMIT-20261019.md)。该记录保留归档前的验证状态。
