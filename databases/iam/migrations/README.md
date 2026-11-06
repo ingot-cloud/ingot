@@ -15,6 +15,7 @@
 | 033_remove_directory_browse.sql | 已有库仍有普通通讯录菜单、directory/directory-policy/policy 资源或 DIRECTORY 策略检查；按编码删除并收紧检查，可重复执行。新建库使用004/006，不执行本补丁。 | 004/006 |
 | 034_resource_field_policy.sql | 已有库的字段策略仍是一租户一行并带场景列；按租户成员回填资源、去掉场景，并把菜单改为字段策略。可重复执行。新建库使用002/004/006，不执行本补丁。 | 002/004/006 |
 | 035_tenant_workbench_first.sql | 租户工作台仍在一级导航末尾；仅将工作台根目录排序设为0并递增版本，可重复执行。完成后重新加载菜单；回退时恢复留存的原sort_order并递增当前version。 | 006 |
+| 036_member_platform_application.sql | 新增 App 用户管理应用、三资源、二十操作及菜单。停写备份并在执行脚本的连接中选中 IAM 库，见 [036 执行方式](#036-app-用户管理应用)。完成后同批发布 IAM、Member 和平台前端并刷新授权与路由缓存。回退执行对应 rollback SQL，保留授权引用。 | 006 |
 | 011_delegation_duration_mode.sql | 委派表仍是旧LIMITED结构、尚无assignment_duration_mode列；一次ALTER。 | 003 |
 | 015_menu_advanced_configuration.sql | iam_menu 尚无 hidden/is_cache/props/route_params 列；一次 ALTER，保留现有数据。 | 002 |
 | 014_platform_member_contacts.sql | 平台成员尚无phone/email列；停IAM写入后一次增加并从账号回填，后续不再同步。 | 001 |
@@ -33,6 +34,16 @@
 保留原补丁语义，不将不同库状态下的ALTER拼成统一升级。011发布顺序仍为DDL→全部IAM节点→前端，回退前处理UNLIMITED委派和长期分配。
 
 补目录/菜单可按最新006执行，但不会向已有固定治理版本追加新操作；新增治理操作通过显式发布、分配新版本获得。业务数据和授权配置不通过完整ingot_iam.sql重建。
+
+## 036 App 用户管理应用
+
+默认 IAM 库名为 `ingot_iam`。部署若自定义了 IAM 数据源库名，使用实际库名。停写备份后，从仓库根目录执行完整脚本。
+
+```sh
+mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migrations/036_member_platform_application.sql
+```
+
+使用图形客户端时，在执行文件的连接中选择 IAM 库，或在文件首行加入 `USE ingot_iam;`。用 `SELECT DATABASE();` 核对目标库，返回 `NULL` 时首个 `DROP PROCEDURE` 会报 1046。选中目标库后从头执行。预演在同一连接先执行 `SET @iam_member_dry_run=TRUE;`，同一连接正式重跑前设置为 `FALSE`。
 
 ## 平台字段模型直接替换
 

@@ -104,7 +104,7 @@ public class BizRoleServiceImpl implements BizRoleService {
 
     @Override
     public void setPermissions(SetDTO<Long, Long> params) {
-        if (CollUtil.isEmpty(params.getSetIds())) {
+        if (params.getSetIds() == null) {
             return;
         }
         rolePermissionService.roleSetPermissions(params);

@@ -7,7 +7,7 @@ import re
 from generate_bootstrap import (ACTION_BASE, MENU_BASE, DEVELOPER_ACTIONS, DEVELOPER_APPLICATION,
                                 NESTED_DIRECTORY_VIEW_PATH, ROOT, ROUTES, TENANT_MENUS, collect,
                                 collect_actions, menu_path, reserved_id, SECURITY_APPLICATION,
-                                SECURITY_RESOURCES, PAGE_PATHS)
+                                SECURITY_RESOURCES, MEMBER_APPLICATION, MEMBER_MENUS, PAGE_ICONS)
 
 
 class ReservedIdTest(unittest.TestCase):
@@ -52,10 +52,31 @@ class ReservedIdTest(unittest.TestCase):
         self.assertEqual(16, sum(len(codes) for codes in resources.values()))
         self.assertTrue(all(code.startswith('iam-platform:') for codes in resources.values() for code in codes))
         self.assertTrue(SECURITY_RESOURCES.isdisjoint(catalog['iam-platform']))
-        self.assertEqual(8, len(PAGE_PATHS))
         self.assertEqual('/security/credential-policies', menu_path('security.credential.policies'))
         self.assertEqual('/platform/settings/dictionaries', menu_path('platform.settings.dictionaries'))
         self.assertEqual('/org/iam/members/root', menu_path('org.iam.members.root'))
+
+    def test_member_catalog_and_controllers_use_the_same_exact_operations(self):
+        source = ROOT / 'ingot-framework/ingot-commons/src/main/java/com/ingot/framework/commons/model/iam/MemberAdminResources.java'
+        definitions = dict(re.findall(r'String (\w+) = APPLICATION \+ "([^"]+)";', source.read_text()))
+        catalog = collect(json.loads(ROUTES.read_text()))[MEMBER_APPLICATION]
+        self.assertEqual({'user', 'role', 'permission'}, set(catalog))
+        expected = set().union(*catalog.values())
+        self.assertEqual(20, len(expected))
+        self.assertEqual(expected, {MEMBER_APPLICATION + suffix for suffix in definitions.values()})
+        api = ROOT / 'ingot-service/ingot-member/ingot-member-provider/src/main/java/com/ingot/cloud/member/web/v1/platform'
+        for controller in api.glob('Member*API.java'):
+            checked = re.findall(r'access\.require\(MemberAdminResources\.(\w+), MemberAdminResources\.(\w+)\)', controller.read_text())
+            self.assertEqual(len(re.findall(r'@\w+Mapping\b', controller.read_text())) - 1, len(checked))
+            for resource, operation in checked:
+                self.assertIn(MEMBER_APPLICATION + definitions[operation], catalog[resource.lower()])
+        _, root, icon, pages = MEMBER_MENUS[0]
+        self.assertEqual(('/member', 'ep:iphone'), (menu_path(root), icon))
+        self.assertEqual(
+            [('/member/users', 'ep:user'), ('/member/roles', 'ep:avatar'),
+             ('/member/permissions', 'ep:key')],
+            [(menu_path(key), PAGE_ICONS[key]) for _, key, _ in pages],
+        )
 
     def test_tenant_members_directory_nests_member_and_department_pages(self):
         organization = TENANT_MENUS[0]

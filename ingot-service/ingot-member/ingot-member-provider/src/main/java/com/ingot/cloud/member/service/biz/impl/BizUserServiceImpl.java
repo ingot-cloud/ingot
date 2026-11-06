@@ -83,6 +83,13 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public void setUserRoles(long userId, List<Long> roleIds) {
+        if (roleIds == null) {
+            return;
+        }
+        if (roleIds.isEmpty()) {
+            roleUserService.setRoles(userId, List.of());
+            return;
+        }
         List<Long> filterIds = roleService.list(Wrappers.<MemberRole>lambdaQuery()
                         .in(MemberRole::getId, roleIds))
                 .stream().filter(role -> BooleanUtil.isFalse(role.getBuiltIn()))

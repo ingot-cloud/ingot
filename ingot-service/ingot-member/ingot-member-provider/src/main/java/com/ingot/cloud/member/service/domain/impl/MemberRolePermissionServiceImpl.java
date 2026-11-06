@@ -1,6 +1,7 @@
 package com.ingot.cloud.member.service.domain.impl;
 
 import java.util.List;
+import java.util.Objects;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -8,9 +9,11 @@ import com.ingot.cloud.member.api.model.domain.MemberRolePermission;
 import com.ingot.cloud.member.mapper.MemberRolePermissionMapper;
 import com.ingot.cloud.member.service.domain.MemberRolePermissionService;
 import com.ingot.framework.commons.constants.CacheConstants;
+import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -70,11 +73,13 @@ public class MemberRolePermissionServiceImpl extends BaseServiceImpl<MemberRoleP
     }
 
     private List<MemberRolePermission> getBindList(long roleId, List<Long> bindIds) {
+        Long tenantId = Objects.requireNonNullElse(TenantContextHolder.get(), IDConstants.DEFAULT_TENANT_ID);
         return CollUtil.emptyIfNull(bindIds).stream()
                 .map(permissionId -> {
                     MemberRolePermission bind = new MemberRolePermission();
                     bind.setRoleId(roleId);
                     bind.setPermissionId(permissionId);
+                    bind.setTenantId(tenantId);
                     return bind;
                 }).toList();
     }

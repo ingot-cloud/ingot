@@ -1,14 +1,17 @@
 package com.ingot.cloud.member.service.domain.impl;
 
 import java.util.List;
+import java.util.Objects;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.member.api.model.domain.MemberRoleUser;
 import com.ingot.cloud.member.mapper.MemberRoleUserMapper;
 import com.ingot.cloud.member.service.domain.MemberRoleUserService;
+import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,12 +65,14 @@ public class MemberRoleUserServiceImpl extends BaseServiceImpl<MemberRoleUserMap
                 .in(MemberRoleUser::getUserId, bindIds))
                 .stream().map(MemberRoleUser::getUserId).toList());
 
+        Long tenantId = Objects.requireNonNullElse(TenantContextHolder.get(), IDConstants.DEFAULT_TENANT_ID);
         List<MemberRoleUser> bindList = bindIds.stream()
                 .filter(userId -> !alreadyExistsUserIds.contains(userId))
                 .map(userId -> {
                     MemberRoleUser bind = new MemberRoleUser();
                     bind.setRoleId(roleId);
                     bind.setUserId(userId);
+                    bind.setTenantId(tenantId);
                     return bind;
                 }).toList();
         if (CollUtil.isNotEmpty(bindList)) {
@@ -84,10 +89,12 @@ public class MemberRoleUserServiceImpl extends BaseServiceImpl<MemberRoleUserMap
             return;
         }
 
+        Long tenantId = Objects.requireNonNullElse(TenantContextHolder.get(), IDConstants.DEFAULT_TENANT_ID);
         List<MemberRoleUser> roleUsers = roles.stream().map(item -> {
             MemberRoleUser roleUser = new MemberRoleUser();
             roleUser.setRoleId(item);
             roleUser.setUserId(userId);
+            roleUser.setTenantId(tenantId);
             return roleUser;
         }).toList();
 

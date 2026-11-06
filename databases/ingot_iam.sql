@@ -1274,6 +1274,10 @@ INSERT INTO iam_application (id, code, domain, name, icon, description, sort_ord
 SELECT COALESCE((SELECT 100004 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_application taken WHERE taken.id = 100004)), (SELECT COALESCE(MAX(taken.id), 100000) + 1 FROM iam_application taken WHERE taken.id >= 100000 AND taken.id < 110000)), 'platform:security', 'PLATFORM', '安全中心', 'ep:lock', '凭证、账号、访问防护及会话安全管理', 3, FALSE, TRUE FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM iam_application WHERE code = 'platform:security');
 
+INSERT INTO iam_application (id, code, domain, name, icon, description, sort_order, baseline, enabled)
+SELECT COALESCE((SELECT 100005 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_application taken WHERE taken.id = 100005)), (SELECT COALESCE(MAX(taken.id), 100000) + 1 FROM iam_application taken WHERE taken.id >= 100000 AND taken.id < 110000)), 'platform:member', 'PLATFORM', 'App 用户管理', 'ep:iphone', '管理 App 用户、角色及权限', 4, FALSE, TRUE FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM iam_application WHERE code = 'platform:member');
+
 -- 资源：声明合法范围与字段能力，供角色发布与字段策略校验取值。
 INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
 SELECT COALESCE((SELECT 110001 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110001)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'account', '全局账号', CAST('["ALL", "OBJECT_SET"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
@@ -1430,6 +1434,18 @@ WHERE app.code = 'platform:security' AND NOT EXISTS (SELECT 1 FROM iam_resource 
 INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
 SELECT COALESCE((SELECT 110039 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110039)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'session-policy', '会话并发策略', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
 WHERE app.code = 'platform:security' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'session-policy');
+
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110040 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110040)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'permission', 'App 权限', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
+WHERE app.code = 'platform:member' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'permission');
+
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110041 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110041)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'role', 'App 角色', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
+WHERE app.code = 'platform:member' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'role');
+
+INSERT INTO iam_resource (id, application_id, code, name, scope_capabilities, field_capabilities, field_policy, enabled)
+SELECT COALESCE((SELECT 110042 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_resource taken WHERE taken.id = 110042)), (SELECT COALESCE(MAX(taken.id), 110000) + 1 FROM iam_resource taken WHERE taken.id >= 110000 AND taken.id < 120000)), app.id, 'user', 'App 用户', CAST('["ALL"]' AS JSON), CAST('[]' AS JSON), FALSE, TRUE FROM iam_application app
+WHERE app.code = 'platform:member' AND NOT EXISTS (SELECT 1 FROM iam_resource WHERE application_id = app.id AND code = 'user');
 
 -- 操作：精确操作码全局唯一，禁止通配。
 INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
@@ -2040,6 +2056,86 @@ INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
 SELECT COALESCE((SELECT 120154 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120154)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'iam-platform:session-policy:update', '编辑会话并发策略', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
 WHERE app.code = 'platform:security' AND res.code = 'session-policy' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'iam-platform:session-policy:update');
 
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120153 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120153)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:permission:create', '新增权限', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'permission' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:permission:create');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120154 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120154)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:permission:delete', '删除权限', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'permission' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:permission:delete');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120155 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120155)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:permission:query', '查看权限', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'permission' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:permission:query');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120156 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120156)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:permission:update', '编辑或启停权限', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'permission' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:permission:update');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120157 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120157)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:role:create', '新增角色', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'role' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:role:create');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120158 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120158)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:role:delete', '删除角色', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'role' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:role:delete');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120159 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120159)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:role:permissions:query', '查看角色权限', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'role' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:role:permissions:query');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120160 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120160)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:role:permissions:set', '配置角色权限', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'role' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:role:permissions:set');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120161 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120161)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:role:query', '查看角色', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'role' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:role:query');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120162 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120162)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:role:update', '编辑或启停角色', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'role' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:role:update');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120163 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120163)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:role:user:assign', '分配角色用户', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'role' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:role:user:assign');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120164 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120164)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:create', '新增用户', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:create');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120165 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120165)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:delete', '删除用户', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:delete');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120166 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120166)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:detail', '查看用户详情', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:detail');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120167 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120167)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:lock', '锁定或解锁用户', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:lock');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120168 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120168)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:query', '查看用户列表', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:query');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120169 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120169)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:reset-pwd', '重置用户密码', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:reset-pwd');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120170 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120170)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:roles:query', '查看用户角色', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:roles:query');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120171 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120171)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:roles:set', '配置用户角色', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:roles:set');
+
+INSERT INTO iam_action (id, application_id, resource_id, code, name, enabled)
+SELECT COALESCE((SELECT 120172 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_action taken WHERE taken.id = 120172)), (SELECT COALESCE(MAX(taken.id), 120000) + 1 FROM iam_action taken WHERE taken.id >= 120000 AND taken.id < 130000)), res.application_id, res.id, 'platform:member:user:update', '编辑或启停用户', TRUE FROM iam_resource res JOIN iam_application app ON app.id = res.application_id
+WHERE app.code = 'platform:member' AND res.code = 'user' AND NOT EXISTS (SELECT 1 FROM iam_action WHERE code = 'platform:member:user:update');
+
 -- 菜单：目录携带子页操作并集，子页全部不可见时目录随之隐藏。
 INSERT INTO iam_menu (id, application_id, parent_id, name, path, view_path, route_name, icon, kind, match_mode, access_mode, sort_order, enabled)
 SELECT COALESCE((SELECT 130001 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130001)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), app.id, NULL, '组织与租户', '/platform/iam/tenant', 'layout.main', 'platform.iam.tenant', 'ep:office-building', 'DIRECTORY', 'ANY', 'ACTION', 1, TRUE FROM iam_application app
@@ -2188,6 +2284,22 @@ WHERE app.code = 'platform:security' AND parent.route_name = 'security.root' AND
 INSERT INTO iam_menu (id, application_id, parent_id, name, path, view_path, route_name, kind, match_mode, access_mode, sort_order, enabled)
 SELECT COALESCE((SELECT 130037 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130037)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), parent.application_id, parent.id, '会话管理', '/security/sessions', 'security.sessions', 'security.sessions', 'PAGE', 'ANY', 'ACTION', 4, TRUE FROM iam_menu parent JOIN iam_application app ON app.id = parent.application_id
 WHERE app.code = 'platform:security' AND parent.route_name = 'security.root' AND NOT EXISTS (SELECT 1 FROM iam_menu WHERE application_id = parent.application_id AND route_name = 'security.sessions');
+
+INSERT INTO iam_menu (id, application_id, parent_id, name, path, view_path, route_name, icon, kind, match_mode, access_mode, sort_order, enabled)
+SELECT COALESCE((SELECT 130038 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130038)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), app.id, NULL, 'App 用户管理', '/member', 'layout.main', 'member.root', 'ep:iphone', 'DIRECTORY', 'ANY', 'ACTION', 1, TRUE FROM iam_application app
+WHERE app.code = 'platform:member' AND NOT EXISTS (SELECT 1 FROM iam_menu WHERE application_id = app.id AND route_name = 'member.root');
+
+INSERT INTO iam_menu (id, application_id, parent_id, name, path, view_path, route_name, icon, kind, match_mode, access_mode, sort_order, enabled)
+SELECT COALESCE((SELECT 130039 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130039)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), parent.application_id, parent.id, '用户管理', '/member/users', 'member.user', 'member.user', 'ep:user', 'PAGE', 'ANY', 'ACTION', 1, TRUE FROM iam_menu parent JOIN iam_application app ON app.id = parent.application_id
+WHERE app.code = 'platform:member' AND parent.route_name = 'member.root' AND NOT EXISTS (SELECT 1 FROM iam_menu WHERE application_id = parent.application_id AND route_name = 'member.user');
+
+INSERT INTO iam_menu (id, application_id, parent_id, name, path, view_path, route_name, icon, kind, match_mode, access_mode, sort_order, enabled)
+SELECT COALESCE((SELECT 130040 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130040)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), parent.application_id, parent.id, '角色管理', '/member/roles', 'member.role', 'member.role', 'ep:avatar', 'PAGE', 'ANY', 'ACTION', 2, TRUE FROM iam_menu parent JOIN iam_application app ON app.id = parent.application_id
+WHERE app.code = 'platform:member' AND parent.route_name = 'member.root' AND NOT EXISTS (SELECT 1 FROM iam_menu WHERE application_id = parent.application_id AND route_name = 'member.role');
+
+INSERT INTO iam_menu (id, application_id, parent_id, name, path, view_path, route_name, icon, kind, match_mode, access_mode, sort_order, enabled)
+SELECT COALESCE((SELECT 130041 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_menu taken WHERE taken.id = 130041)), (SELECT COALESCE(MAX(taken.id), 130000) + 1 FROM iam_menu taken WHERE taken.id >= 130000 AND taken.id < 140000)), parent.application_id, parent.id, '权限管理', '/member/permissions', 'member.permission', 'member.permission', 'ep:key', 'PAGE', 'ANY', 'ACTION', 3, TRUE FROM iam_menu parent JOIN iam_application app ON app.id = parent.application_id
+WHERE app.code = 'platform:member' AND parent.route_name = 'member.root' AND NOT EXISTS (SELECT 1 FROM iam_menu WHERE application_id = parent.application_id AND route_name = 'member.permission');
 
 -- 菜单与操作关联：ACTION 访问模式下缺少关联的菜单一律不可见。
 INSERT INTO iam_menu_action (application_id, menu_id, action_id)
@@ -2453,6 +2565,30 @@ WHERE app.code = 'platform:security' AND menu.route_name = 'security.sessions' A
 INSERT INTO iam_menu_action (application_id, menu_id, action_id)
 SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
 WHERE app.code = 'platform:security' AND menu.route_name = 'security.sessions' AND action.code = 'iam-platform:session:read' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
+
+INSERT INTO iam_menu_action (application_id, menu_id, action_id)
+SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
+WHERE app.code = 'platform:member' AND menu.route_name = 'member.root' AND action.code = 'platform:member:permission:query' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
+
+INSERT INTO iam_menu_action (application_id, menu_id, action_id)
+SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
+WHERE app.code = 'platform:member' AND menu.route_name = 'member.root' AND action.code = 'platform:member:role:query' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
+
+INSERT INTO iam_menu_action (application_id, menu_id, action_id)
+SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
+WHERE app.code = 'platform:member' AND menu.route_name = 'member.root' AND action.code = 'platform:member:user:query' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
+
+INSERT INTO iam_menu_action (application_id, menu_id, action_id)
+SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
+WHERE app.code = 'platform:member' AND menu.route_name = 'member.user' AND action.code = 'platform:member:user:query' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
+
+INSERT INTO iam_menu_action (application_id, menu_id, action_id)
+SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
+WHERE app.code = 'platform:member' AND menu.route_name = 'member.role' AND action.code = 'platform:member:role:query' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
+
+INSERT INTO iam_menu_action (application_id, menu_id, action_id)
+SELECT menu.application_id, menu.id, action.id FROM iam_menu menu JOIN iam_application app ON app.id = menu.application_id JOIN iam_action action ON action.application_id = menu.application_id
+WHERE app.code = 'platform:member' AND menu.route_name = 'member.permission' AND action.code = 'platform:member:permission:query' AND NOT EXISTS (SELECT 1 FROM iam_menu_action WHERE application_id = menu.application_id AND menu_id = menu.id AND action_id = action.id);
 
 CREATE TEMPORARY TABLE IF NOT EXISTS iam_bootstrap_new_revision (domain VARCHAR(16) PRIMARY KEY);
 DELETE FROM iam_bootstrap_new_revision;
@@ -2907,6 +3043,86 @@ WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_adm
 INSERT INTO iam_role_grant (revision_id, action_id, scopes)
 SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
 WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:develop:qrcode' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:permission:create' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:permission:delete' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:permission:query' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:permission:update' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:role:create' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:role:delete' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:role:permissions:query' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:role:permissions:set' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:role:query' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:role:update' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:role:user:assign' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:create' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:delete' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:detail' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:lock' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:query' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:reset-pwd' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:roles:query' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:roles:set' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
+
+INSERT INTO iam_role_grant (revision_id, action_id, scopes)
+SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id
+WHERE role.domain = 'PLATFORM' AND role.tenant_key = 0 AND role.code = 'role_admin' AND revision.revision = 1 AND app.domain = role.domain AND action.code = 'platform:member:user:update' AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain) AND NOT EXISTS (SELECT 1 FROM iam_role_grant WHERE revision_id = revision.id AND action_id = action.id);
 
 INSERT INTO iam_role_grant (revision_id, action_id, scopes)
 SELECT revision.id, action.id, CAST('[{"kind": "ALL"}]' AS JSON) FROM iam_role_revision revision JOIN iam_role_definition role ON role.id = revision.role_id JOIN iam_action action JOIN iam_application app ON app.id = action.application_id

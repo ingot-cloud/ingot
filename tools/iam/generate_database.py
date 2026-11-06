@@ -6,6 +6,7 @@ import argparse
 from database_sources import render_bundle, sources
 from generate_bootstrap import build
 from generate_capability_migration import build as build_migration
+from generate_member_migration import build as build_member_migration
 from schema_comments import build as build_comments
 
 
@@ -15,6 +16,7 @@ def main():
     args = parser.parse_args()
     build(check=args.check)
     build_migration(check=args.check)
+    build_member_migration(check=args.check)
     build_comments(check=args.check)
     expected = render_bundle()
     target = sources('bundle')[0]

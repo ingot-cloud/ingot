@@ -36,6 +36,7 @@ DIRECTORY_VIEW_PATH = 'layout.main'
 NESTED_DIRECTORY_VIEW_PATH = 'layout.simple'
 DEVELOPER_APPLICATION = 'platform:develop'
 SECURITY_APPLICATION = 'platform:security'
+MEMBER_APPLICATION = 'platform:member'
 SECURITY_RESOURCES = {'credential-policy', 'lockout-policy', 'login-failure-policy', 'session', 'session-policy', 'security-policy'}
 DEVELOPER_PLATFORM_RESOURCES = {'id-allocation', 'social-config'}
 
@@ -48,6 +49,9 @@ APPLICATIONS = {
                             'description': '二维码、OAuth2客户端、社交配置与业务ID管理',
                             'sort_order': 2, 'baseline': False},
     SECURITY_APPLICATION: {'id': APPLICATION_BASE + 4, 'domain': 'PLATFORM', 'name': '安全中心', 'icon': 'ep:lock', 'description': '凭证、账号、访问防护及会话安全管理', 'sort_order': 3, 'baseline': False},
+    MEMBER_APPLICATION: {'id': APPLICATION_BASE + 5, 'domain': 'PLATFORM', 'name': 'App 用户管理',
+                         'icon': 'ep:iphone', 'description': '管理 App 用户、角色及权限',
+                         'sort_order': 4, 'baseline': False},
 }
 
 # 治理角色：每个域恰好一个启用的 SYSTEM 角色，组织初始化依赖这一唯一性。
@@ -167,6 +171,41 @@ VERBS = {
 
 STANDALONE_VERBS = {'owner-transfer', 'departments', 'leaders', 'diagnose', 'reset-password', 'revoke'}
 
+MEMBER_ACTIONS = {
+    'user': {
+        f'{MEMBER_APPLICATION}:user:query': '查看用户列表',
+        f'{MEMBER_APPLICATION}:user:detail': '查看用户详情',
+        f'{MEMBER_APPLICATION}:user:create': '新增用户',
+        f'{MEMBER_APPLICATION}:user:update': '编辑或启停用户',
+        f'{MEMBER_APPLICATION}:user:delete': '删除用户',
+        f'{MEMBER_APPLICATION}:user:reset-pwd': '重置用户密码',
+        f'{MEMBER_APPLICATION}:user:roles:query': '查看用户角色',
+        f'{MEMBER_APPLICATION}:user:roles:set': '配置用户角色',
+        f'{MEMBER_APPLICATION}:user:lock': '锁定或解锁用户',
+    },
+    'role': {
+        f'{MEMBER_APPLICATION}:role:query': '查看角色',
+        f'{MEMBER_APPLICATION}:role:create': '新增角色',
+        f'{MEMBER_APPLICATION}:role:update': '编辑或启停角色',
+        f'{MEMBER_APPLICATION}:role:delete': '删除角色',
+        f'{MEMBER_APPLICATION}:role:user:assign': '分配角色用户',
+        f'{MEMBER_APPLICATION}:role:permissions:query': '查看角色权限',
+        f'{MEMBER_APPLICATION}:role:permissions:set': '配置角色权限',
+    },
+    'permission': {
+        f'{MEMBER_APPLICATION}:permission:query': '查看权限',
+        f'{MEMBER_APPLICATION}:permission:create': '新增权限',
+        f'{MEMBER_APPLICATION}:permission:update': '编辑或启停权限',
+        f'{MEMBER_APPLICATION}:permission:delete': '删除权限',
+    },
+}
+
+MEMBER_RESOURCES = {
+    'user': ('App 用户', SINGLETON_SCOPES, []),
+    'role': ('App 角色', SINGLETON_SCOPES, []),
+    'permission': ('App 权限', SINGLETON_SCOPES, []),
+}
+
 # 菜单树按 change 的 FRONTEND.md 第 1 节：平台与组织各最多四个一级目录。
 # view_path 为前端 definePluginPages 生成的 canonical 键，path 为浏览器路由。
 # 目录节点携带其子页 ACTION 的并集并使用 ANY，子页全部不可见时目录随之隐藏。
@@ -232,13 +271,25 @@ SECURITY_MENUS = [('安全中心', 'security.root', 'ep:lock', [
     ('会话管理', 'security.sessions', ['iam-platform:session:read', 'iam-platform:session-policy:read']),
 ])]
 
+MEMBER_MENUS = [('App 用户管理', 'member.root', 'ep:iphone', [
+    ('用户管理', 'member.user', [f'{MEMBER_APPLICATION}:user:query']),
+    ('角色管理', 'member.role', [f'{MEMBER_APPLICATION}:role:query']),
+    ('权限管理', 'member.permission', [f'{MEMBER_APPLICATION}:permission:query']),
+])]
+
+PAGE_ICONS = {'member.user': 'ep:user', 'member.role': 'ep:avatar', 'member.permission': 'ep:key'}
+
 DIRECTORY_PATHS = {
+    'member.root': '/member',
     'security.root': '/security',
     'platform.settings': '/platform/settings',
     'org.iam.members.root': '/org/iam/members/root',
 }
 
 PAGE_PATHS = {
+    'member.user': '/member/users',
+    'member.role': '/member/roles',
+    'member.permission': '/member/permissions',
     'platform.settings.dictionaries': '/platform/settings/dictionaries',
     'security.credential.policies': '/security/credential-policies',
     'security.account.protection': '/security/account-protection',
@@ -250,7 +301,8 @@ PAGE_PATHS = {
 }
 
 MENUS = {'iam-platform': PLATFORM_MENUS, 'iam-tenant': TENANT_MENUS,
-         DEVELOPER_APPLICATION: DEVELOPER_MENUS, SECURITY_APPLICATION: SECURITY_MENUS}
+         DEVELOPER_APPLICATION: DEVELOPER_MENUS, SECURITY_APPLICATION: SECURITY_MENUS,
+         MEMBER_APPLICATION: MEMBER_MENUS}
 
 # 仅覆盖展示顺序，保留种子生成顺序及既有保留 ID。
 ROOT_MENU_SORT_ORDERS = {'org.iam.workspace': 0}
@@ -278,7 +330,7 @@ def route_name(view_key):
 
 def action_name(code):
     """由操作码合成展示名，例如 iam-tenant:member:read → 查看成员。"""
-    for actions in DEVELOPER_ACTIONS.values():
+    for actions in (*DEVELOPER_ACTIONS.values(), *MEMBER_ACTIONS.values()):
         if code in actions:
             return actions[code]
     _, resource, suffix = code.split(':', 2)
@@ -312,6 +364,8 @@ def collect(routes):
             catalog[SECURITY_APPLICATION].setdefault(resource, set()).add(code)
     for resource, actions in DEVELOPER_ACTIONS.items():
         catalog[DEVELOPER_APPLICATION].setdefault(resource, set()).update(actions)
+    for resource, actions in MEMBER_ACTIONS.items():
+        catalog[MEMBER_APPLICATION][resource] = set(actions)
     return catalog
 
 
@@ -402,7 +456,8 @@ def build(check=False):
     for application in APPLICATIONS:
         for resource in sorted(catalog[application]):
             resource_count += 1
-            name, scopes, fields = RESOURCES[resource]
+            resources = MEMBER_RESOURCES if application == MEMBER_APPLICATION else RESOURCES
+            name, scopes, fields = resources[resource]
             if resource == 'member': fields = PLATFORM_MEMBER_FIELDS if application == 'iam-platform' else TENANT_MEMBER_FIELDS
             if APPLICATIONS[application]['domain'] == 'PLATFORM':
                 scopes = [scope for scope in scopes if scope not in ('MEMBER_DEPARTMENTS', 'MANAGED_DEPARTMENTS')]
@@ -465,14 +520,16 @@ def build(check=False):
                 raise SystemExit(f'无法识别的菜单节点 {child!r}')
             page_name, view_key, codes = child
             menu_count += 1
+            icon_columns = ['icon'] if view_key in PAGE_ICONS else []
+            icon_values = [quote(PAGE_ICONS[view_key])] if icon_columns else []
             lines.append(insert(
                 'iam_menu',
                 ['id', 'application_id', 'parent_id', 'name', 'path', 'view_path', 'route_name',
-                 'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
+                 *icon_columns, 'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
                 [reserved_id('iam_menu', MENU_BASE + menu_count, MENU_BASE, ROLE_BASE),
                  'parent.application_id', 'parent.id',
                  quote(page_name), quote(menu_path(view_key)), quote(view_key), quote(view_key),
-                 quote('PAGE'), quote('ANY'), quote('ACTION'), str(child_order), 'TRUE'],
+                 *icon_values, quote('PAGE'), quote('ANY'), quote('ACTION'), str(child_order), 'TRUE'],
                 f"application_id = parent.application_id AND route_name = {quote(view_key)}",
                 source=parent_source, where=parent_where))
             menu_links.extend((application, view_key, code) for code in sorted(set(codes)))

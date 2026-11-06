@@ -129,6 +129,7 @@ class BootstrapSeedTest(unittest.TestCase):
             'iam-tenant\torg.iam.organization\tep:office-building\n'
             'iam-tenant\torg.iam.workspace\tep:grid\n'
             'platform:develop\tplatform.develop\tep:cpu\n'
+            'platform:member\tmember.root\tep:iphone\n'
             'platform:security\tsecurity.root\tep:lock',
             self.sql("""
                 SELECT app.code, menu.route_name, menu.icon FROM iam_menu menu
@@ -137,7 +138,35 @@ class BootstrapSeedTest(unittest.TestCase):
                 ORDER BY app.code, menu.route_name
             """))
         self.assertEqual('0', self.sql("SELECT COUNT(*) FROM iam_menu "
-                                       "WHERE parent_id IS NOT NULL AND icon IS NOT NULL AND TRIM(icon) <> ''"))
+                                       "WHERE parent_id IS NOT NULL AND icon IS NOT NULL AND TRIM(icon) <> '' "
+                                       "AND application_id <> (SELECT id FROM iam_application WHERE code='platform:member')"))
+
+    def test_member_catalog_upgrade_dry_run_repeat_conflict_and_rollback(self):
+        directory = SCHEMA_DIRECTORY / 'migrations'
+        migration = (directory / '036_member_platform_application.sql').read_text()
+        rollback = (directory / '036_member_platform_application.rollback.sql').read_text()
+        self.sql("INSERT INTO iam_application (id,code,domain,name) VALUES (200001,'existing','PLATFORM','已有应用')")
+        self.sql("INSERT INTO iam_menu (id,application_id,name,path,kind) "
+                 "VALUES (300001,200001,'已有页面','/member/users','PAGE')")
+        self.sql(migration, error=1644)
+        self.assertEqual(1, self.count('iam_application'))
+        self.sql('DELETE FROM iam_menu WHERE id = 300001')
+        self.sql('SET @iam_member_dry_run = TRUE;\n' + migration)
+        self.assertEqual(1, self.count('iam_application'))
+        report = self.sql(migration)
+        self.assertEqual(report, self.sql(migration))
+        self.assertEqual(20, self.count('iam_action'))
+        self.assertEqual(0, self.count('iam_role_grant'))
+        self.assertEqual(
+            '/member\tep:iphone\t3\n/member/users\tep:user\t1\n'
+            '/member/roles\tep:avatar\t1\n/member/permissions\tep:key\t1',
+            self.sql("""SELECT m.path,m.icon,COUNT(*) FROM iam_menu m
+                JOIN iam_menu_action a ON a.menu_id=m.id GROUP BY m.id ORDER BY m.parent_id,m.sort_order"""),
+        )
+        self.sql(rollback)
+        self.sql(rollback)
+        self.assertEqual(1, self.count('iam_application', "code = 'platform:member' AND NOT enabled AND version = 1"))
+        self.assertEqual(20, self.count('iam_action'))
 
     def test_root_menu_icon_patch_is_scoped_and_preserves_custom_icons(self):
         # Applications and menus can have IDs different from the seed's reserved IDs.
@@ -220,8 +249,8 @@ class BootstrapSeedTest(unittest.TestCase):
             self.assertEqual(definitions[table], self.sql(f'SHOW CREATE TABLE `{table}`'), table)
             self.assertEqual(counts[table], self.count(table), table)
         self.assertEqual(64, len(tables))
-        self.assertEqual(152, self.count('iam_action'))
-        self.assertEqual(37, self.count('iam_menu'))
+        self.assertEqual(172, self.count('iam_action'))
+        self.assertEqual(41, self.count('iam_menu'))
         for table in ['iam_account', 'iam_tenant', 'iam_role_assignment', 'iam_authorization_audit',
                       'account_lock_state', 'password_history', 'password_expiration', 'security_event']:
             self.assertEqual(0, self.count(table), table)
@@ -303,10 +332,10 @@ class BootstrapSeedTest(unittest.TestCase):
 
     def test_empty_database_gets_complete_catalog_without_credentials(self):
         self.bootstrap()
-        self.assertEqual(4, self.count("iam_application"))
-        self.assertEqual(39, self.count("iam_resource"))
-        self.assertEqual(152, self.count("iam_action"))
-        self.assertEqual(37, self.count("iam_menu"))
+        self.assertEqual(5, self.count("iam_application"))
+        self.assertEqual(42, self.count("iam_resource"))
+        self.assertEqual(172, self.count("iam_action"))
+        self.assertEqual(41, self.count("iam_menu"))
         self.assertEqual('FULL', self.sql("""
             SELECT JSON_UNQUOTE(JSON_EXTRACT(revision.resource_field_permissions,
                 CONCAT('$."',resource.id,'".visibility.phone')))
@@ -506,7 +535,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(12, self.count("iam_resource", "application_id = 500001"))
         self.assertEqual(44, self.count("iam_action", "application_id = 500001"))
         self.assertEqual(14, self.count("iam_menu", "application_id = 500001"))
-        self.assertEqual(152, self.count("iam_role_grant"))
+        self.assertEqual(172, self.count("iam_role_grant"))
 
     def test_manual_verification_seed_layers_on_the_cold_start_catalog(self):
         self.bootstrap()
@@ -515,7 +544,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(2, self.count("iam_account"))
         self.assertEqual(1, self.count("iam_platform_member"))
         self.assertEqual(2, self.count("iam_role_definition"))
-        self.assertEqual(152, self.count("iam_role_grant"))
+        self.assertEqual(172, self.count("iam_role_grant"))
         # The governance assignment resolves the platform revision from the seed, not a fixed id.
         self.assertEqual("1", self.sql("""
             SELECT COUNT(*) FROM iam_role_assignment assignment

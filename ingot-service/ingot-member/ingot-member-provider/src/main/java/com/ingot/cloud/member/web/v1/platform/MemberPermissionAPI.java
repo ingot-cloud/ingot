@@ -9,7 +9,8 @@ import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.cloud.member.authorization.MemberGlobalAccess;
+import com.ingot.framework.commons.model.iam.MemberAdminResources;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,37 +29,42 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = "/v1/platform/member/permission")
 @RequiredArgsConstructor
 public class MemberPermissionAPI implements RShortcuts {
+    private final MemberGlobalAccess access;
     private final BizPermissionService bizPermissionService;
 
+    /** 权限树，要求当前平台身份具备相应全局操作权限。 */
     @Operation(summary = "权限树", description = "获取权限树结构")
-    @AdminOrHasAnyAuthority({"platform:member:permission:query"})
     @GetMapping("/tree")
     public R<List<MemberPermissionTreeNodeVO>> tree(MemberPermission condition) {
+        access.require(MemberAdminResources.PERMISSION, MemberAdminResources.PERMISSION_QUERY);
         return ok(bizPermissionService.treeList(condition));
     }
 
+    /** 创建权限，要求当前平台身份具备相应全局操作权限。 */
     @Operation(summary = "创建权限", description = "创建新的权限")
-    @AdminOrHasAnyAuthority({"platform:member:permission:create"})
     @PostMapping
     public R<Void> create(@Validated(Group.Create.class) @RequestBody MemberPermission params) {
+        access.require(MemberAdminResources.PERMISSION, MemberAdminResources.PERMISSION_CREATE);
         params.setType(PermissionTypeEnum.API);
         bizPermissionService.createNonMenuPermission(params);
         return ok();
     }
 
+    /** 更新权限，要求当前平台身份具备相应全局操作权限。 */
     @Operation(summary = "更新权限", description = "更新权限信息")
-    @AdminOrHasAnyAuthority({"platform:member:permission:update"})
     @PutMapping
     public R<Void> update(@Validated(Group.Update.class) @RequestBody MemberPermission params) {
+        access.require(MemberAdminResources.PERMISSION, MemberAdminResources.PERMISSION_UPDATE);
         params.setType(null);
         bizPermissionService.updateNonMenuPermission(params);
         return ok();
     }
 
+    /** 删除权限，要求当前平台身份具备相应全局操作权限。 */
     @Operation(summary = "删除权限", description = "根据ID删除权限")
-    @AdminOrHasAnyAuthority({"platform:member:permission:delete"})
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
+        access.require(MemberAdminResources.PERMISSION, MemberAdminResources.PERMISSION_DELETE);
         bizPermissionService.deleteNonMenuPermission(id);
         return ok();
     }
