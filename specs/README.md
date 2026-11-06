@@ -283,3 +283,5 @@ current/<domain>/<capability>/
 - [角色详情加载优化](./changes/archive/2026/20261012-iam-role-detail-loading/README.md)（completed，2026-10-12 人工验收通过）；[当前能力](./current/iam/role-version-application/README.md)
 
 - [内部后台同源登录与双入口部署](./changes/archive/2026/20261031-security-same-origin-login/README.md)（completed，2026-10-31用户确认两端核心流程本地验收）；[当前能力](./current/security/same-origin-login/README.md)。
+
+- [IAM帮助内容方案（已取消）](./changes/archive/2026/20261103-iam-help-center/README.md)（cancelled；2026-11-03 用户改用前端静态帮助，保留历史）

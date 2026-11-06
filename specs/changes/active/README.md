@@ -28,3 +28,5 @@
 - [20261020-iam-schema-relations](../archive/2026/20261020-iam-schema-relations/README.md)（completed，2026-10-20）
 
 - [同源登录已验收实现](../archive/2026/20261031-security-same-origin-login/README.md)（completed，2026-10-31）。
+
+- [IAM帮助内容方案（已取消）](../archive/2026/20261103-iam-help-center/README.md)（cancelled；2026-11-03 用户改用前端静态帮助，保留历史）
