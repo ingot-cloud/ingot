@@ -188,6 +188,9 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [App 用户管理目标环境发布验收](./changes/active/20261106-member-platform-release-acceptance/README.md)（draft，跟踪真实会话、升级与回滚）
+
+
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
 
 - [租户即时授权实际库发布验收](./changes/active/20261106-iam-tenant-live-authorization-release/README.md)（draft；实际来源库预检、备份恢复、切换及回滚）
@@ -200,6 +203,7 @@ current/<domain>/<capability>/
 
 ### 2026-11-06 产品验收归档
 
+- [App 用户管理平台应用](./changes/archive/2026/20261106-member-platform-application/README.md) · [当前能力](./current/iam/platform-capabilities/README.md)
 - [租户拥有者动态全权限与角色即时生效](./changes/archive/2026/20261014-iam-tenant-live-authorization/README.md) · [当前能力](./current/iam/tenant-live-authorization/README.md)
 - [租户组有效成员分页](./changes/archive/2026/20261021-iam-group-effective-members/README.md) · [当前能力](./current/iam/tenant-groups/README.md)
 - [所有者转交内嵌登录密码](./changes/archive/2026/20261021-tenant-owner-transfer-stepup/README.md) · [当前能力](./current/iam/tenant-settings/README.md)

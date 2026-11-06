@@ -34,6 +34,22 @@
 
 访问防护和会话管理入口按各自两种 read 的 ANY 放行；只展示有读取资格的 Tab，默认首个可访问 Tab，仅请求当前激活且有权限的面板。会话客户端选择沿用独立的 `platform:develop:client:query`，页面权限不隐式增加目录读取资格。
 
+## App 用户管理
+
+`PLATFORM / platform:member` 是独立应用。根目录 `member.root` 使用 `layout.main`，对三个页面的读取权限按 ANY 判定。每个页面各自要求对应的操作。
+
+| 页面 | 浏览器 URL | viewPath | 读取权限 |
+|---|---|---|---|
+| 用户管理 | `/member/users` | `member.user` | `platform:member:user:query` |
+| 角色管理 | `/member/roles` | `member.role` | `platform:member:role:query` |
+| 权限管理 | `/member/permissions` | `member.permission` | `platform:member:permission:query` |
+
+Member 管理接口位于 `/api/member/v1/platform/member`。IAM 注册 `user`、`role`、`permission` 三个资源的 20 项精确操作，范围为 ALL。接口校验可信平台身份、资源键、精确操作和全局范围。读取遵循 SDK 热窗口，写入按请求实时求值。普通平台角色经 IAM 发布和分配获得操作权限，系统超级管理员适用现有动态授权。租户身份或无法取得有效授权的请求会被拒绝。
+
+用户角色和角色权限分别使用独立接口回显，更新时全量替换。显式传空数组清除可维护的绑定。平台会话中的新增关联行沿用 Member 关系表的历史默认租户存储值，授权仍根据可信平台身份判定。
+
+新库由 IAM 正式种子生成目录。已有库在选定的 IAM 库执行 036，支持预演和重复执行，冲突时回滚事务，保留已有角色版本和授权分配。回退通过禁用应用入口保留目录及授权引用。[036 执行说明](../../../../databases/iam/migrations/README.md#036-app-用户管理应用)
+
 ## 字典、审计与字段策略
 
 字典 `/v1/platform/dictionaries` 使用 `iam-platform:dictionary:read/create/update/delete`；启停与排序为 update，内置约束保持。租户与应用选择分别要求 `iam-platform:tenant:read`、`iam-platform:application:read`。
