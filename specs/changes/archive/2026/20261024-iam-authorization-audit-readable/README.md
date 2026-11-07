@@ -1,6 +1,6 @@
 # 授权审计游标分页与可读展示
 
-> 状态：implementing
+> 状态：completed
 > 批准记录：2026-10-24，用户确认设计并要求开工（approved → implementing）。
 
 ## 元数据
@@ -10,7 +10,7 @@
 - 负责人：jy
 - 创建日期：2026-10-24
 - 目标发布日期：TBD
-- 前端配套：`ingot-admin/specs/changes/active/20261024-base-authorization-audit-readable/`
+- [前端配套归档](../../../../../../ingot-admin/specs/changes/archive/2026/20261024-base-authorization-audit-readable/README.md)
 
 ## 目标
 
@@ -35,7 +35,7 @@
 
 ## 关联变更
 
-- 部分替代 [IAM 主变更 · 授权审计收敛](../20260912-iam-identity-access-management/AUTHORIZATION-AUDIT-REFINEMENT.md) 中的两项决策：“两条 GET 保留分页及响应结构”和“目标仅展示资源及 ID，不额外读取业务原值”。筛选参数、域边界、时间半开区间和字符串差异值契约继续沿用。
+- 部分替代 [IAM 主变更 · 授权审计收敛](../../../active/20260912-iam-identity-access-management/AUTHORIZATION-AUDIT-REFINEMENT.md) 的页码分页及仅展示对象 ID 的约定。筛选参数、域边界、时间半开区间和字符串差异值契约继续沿用。
 
 ## 工件
 
@@ -45,8 +45,7 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
-- 更新的 current capability：
-- 与原设计的差异：
-- 取消原因：
+- 2026-11-07 用户确认平台及组织端的浏览器人工验收通过。同日完成 15 万条合成数据的 MySQL 8.4 执行计划验证，详见 [TASKS](TASKS.md#验证任务)。
+- 实现提交为后端 `9719d178`、前端 `0776295`。
+- 更新[平台能力](../../../../current/iam/platform-capabilities/README.md)及[数据库持久化](../../../../current/iam/database-persistence/README.md)。
+- 游标查询和引用解析由独立 `AuthorizationAuditService` 编排。角色发布审计的 `ROLE_REVISION` 变更前值统一使用版本 ID，与变更后值一致。

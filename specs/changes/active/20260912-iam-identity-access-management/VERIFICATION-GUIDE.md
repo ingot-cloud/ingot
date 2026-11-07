@@ -70,7 +70,7 @@ mysql --database=iam_test < databases/ingot_iam.sql
 
 验证启动器或历史人工夹具时，从空库按 manifest 分片导入 001–005、框架 CREATE 和 006。具体顺序见 [数据库初始化说明](../../../../databases/iam/README.md)。
 
-应用、资源、操作和菜单见 [新版治理目录](../20261106-iam-resource-catalog/DESIGN.md)。单独重跑 006 不会给已发布的 SYSTEM 版本追加权限。
+应用、资源、操作和菜单见 [治理目录归档](../../archive/2026/20261106-iam-resource-catalog/DESIGN.md)。单独重跑 006 不会给已发布的 SYSTEM 版本追加权限。
 
 分片导入到 006 后，按场景选择一种身份初始化方式：
 

@@ -150,7 +150,7 @@ SQL01–SQL05开发及自动化验证完成，增量validating；实际环境导
 
 ## 2026-10-06 目录默认布局与重复初始化（用户已批准）
 
-完整初始化的默认账号范围以 [新版目录与授权补齐](../20261106-iam-resource-catalog/DESIGN.md#编码路由和角色的切换) 为准。
+完整初始化的默认账号范围见 [目录与授权补齐归档](../../archive/2026/20261106-iam-resource-catalog/DESIGN.md#编码路由和角色的切换)。
 
 正式种子 DIRECTORY 的 `view_path` 统一为 `layout.main`。完整 `ingot_iam.sql` 在创建前删除manifest内的目标表，仅删除阶段关闭外键检查，建表/种子阶段开启并在完成后恢复原会话设置。重复执行清空目标表，不含账号或业务授权，不是存量升级；原无DROP决定被替代。决策、回退和独立人工项见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md#2026-10-06-目录布局与重复初始化已批准)。
 
@@ -212,7 +212,7 @@ ACN01–ACN03 完成，增量 validating：公共模块 17 项测试、IAM/示�
 
 用户已批准并要求实施 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。固定当前域、统一审计文本格式、补齐服务端筛选与页面状态；保留平台/租户隔离及历史审计。主 change 保持 implementing。
 
-2026-10-11：授权审计 AU01–AU04 开发与限定自动化完成，本增量 validating；AU05 真实服务发布和两站验收待执行。主 change 保持 implementing，证据见 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。
+2026-10-11 授权审计 AU01–AU04 开发与限定自动化完成。2026-11-07 用户确认两端按[游标分页与可读展示](../../archive/2026/20261024-iam-authorization-audit-readable/README.md)的新版契约联调通过。
 
 
 ## 2026-10-12 角色详情加载优化（用户已批准）

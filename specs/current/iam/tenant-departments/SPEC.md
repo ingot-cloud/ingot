@@ -26,7 +26,7 @@
 |---|---|
 | 查看部门 | `iam-tenant:department:read` 与部门对象范围 |
 | 查看负责人资料 | 同时满足 `iam-tenant:member:read`、成员对象范围与成员管理字段策略 |
-| 维护负责人 | `iam-tenant:department:leaders` 与目标部门范围，并重验相关成员读取范围及资格 |
+| 维护负责人 | `iam-tenant:department:set-leaders` 与目标部门范围，并重验相关成员读取范围及资格 |
 | 修改部门基本信息 | `iam-tenant:department:update` 与部门对象范围 |
 
 ## 负责人读取与详情聚合

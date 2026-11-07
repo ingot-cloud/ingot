@@ -1,6 +1,6 @@
 # 授权审计收敛
 
-> 状态：validating
+> 状态：历史增量，分页和对象展示已由[授权审计游标分页与可读展示](../../archive/2026/20261024-iam-authorization-audit-readable/README.md)部分替代。2026-11-07 用户确认新版两站联调通过。
 > 实施：approved → implementing → validating；2026-10-11，开发及定向自动化完成，真实部署验收待执行。
 > 批准记录：2026-10-11，用户确认当前域授权审计方案并要求开始实施。沿用主 IAM active change，不创建重复 change。
 
@@ -59,4 +59,4 @@ AU01–AU04 开发和限定验证完成；主 IAM change 仍为 implementing，�
 - 前端 API/页面状态定向 Vitest：9 项通过；admin-common、security、admin-platform、admin 类型检查、限定只读 lint、分层边界检查，以及两管理台生产构建通过。
 - 真实管理台 + 完全拦截 API 夹具的 Chromium 浏览器检查：两站各 3 项，共 6 项通过；核对当前域请求、筛选透传、安全详情、无权限不发请求及错误/拒绝/空结果区别。截图检查 1440×1000 与 480×900；抽屉使用 min(680px, 100vw)，窄屏不超视口。证据位于 /private/tmp/ingot-audit-browser-results；这不代替 AU05 的真实 BFF/IAM 服务验收。
 
-发布顺序：先部署含兼容解码和查询筛选的 IAM provider，再发布平台/组织前端；既有数据库按需执行 databases/iam/migrations/018_authorization_audit_menu.sql，新库使用生成后的正式初始化脚本。实际服务和现有库尚未更新，AU05 保持待执行。
+2026-10-11 的方案先部署 IAM provider，再发布两端前端，既有库按需执行 018 菜单迁移。当时两站真实联调仍待执行。现行部署与验证见[新版审计归档](../../archive/2026/20261024-iam-authorization-audit-readable/README.md)。

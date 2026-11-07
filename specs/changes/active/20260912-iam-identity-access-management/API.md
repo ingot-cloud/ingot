@@ -94,7 +94,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/me/capabilities | GET 刷新当前操作、版本、expiresAt |
 | /v1/me/profile | GET/PATCH 当前认证账号联系资料；AUTHENTICATED_SELF，禁止提交其他账号 ID |
 | /v1/me/password | GET 最小改密状态；PUT 当前账号改密，`CurrentPasswordInput` 请求体加密；不臆造密码策略 |
-| /v1/platform/accounts | GET 列表（page/pageSize）；POST 创建，一次性返回 `AccountSecret`，`data` 走 HYBRID 信封加密，不得再被列表或详情读取 |
+| /v1/platform/accounts | GET 列表（page/pageSize），可用 `excludePlatformMembers=true` 查询添加平台成员的[候选分页](./PLATFORM-ACCOUNT-PICKER-PAGE.md)；POST 创建，一次性返回 `AccountSecret`，`data` 走 HYBRID 信封加密，不得再被列表或详情读取 |
 | /v1/platform/accounts/lookup | POST `AccountLookupInput`，必填 `purpose`：`MEMBER_CREATE` 返回 id、登录名与登录联系方式，`ACCOUNT_MANAGE` 仍不返回组织关系；未命中或不可见返回 `ObjectNotFound`，说明为「账号不存在」。可选 `domain`：`MEMBER_CREATE` 且 `domain=PLATFORM` 时，该账号已有平台成员资格（含暂停、已移出，因账号唯一）返回 `InvalidArgument`，说明为「该账号已是平台成员」；不传 `domain` 或用于组织创建时不检查成员资格，避免误伤租户向导 |
 | /v1/platform/accounts/{id} | GET/PATCH 资料；DELETE 仍有成员资格时 ObjectInUse |
 | /v1/platform/accounts/{id}/enable、disable、lock、unlock、reset-password | POST；锁定改密启停复用安全用例；创建与重置均一次性返回 `AccountSecret`，`data` 走 HYBRID 信封加密 |

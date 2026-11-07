@@ -5,3 +5,4 @@
 - [当前规格](./SPEC.md)
 - [工作台验收](../../../changes/archive/2026/20261030-iam-tenant-workbench/README.md)
 - [统计接口](../../../changes/archive/2026/20261030-iam-tenant-workbench/API.md)
+- [独立工作台授权验收](../../../changes/archive/2026/20261106-iam-resource-catalog/README.md)

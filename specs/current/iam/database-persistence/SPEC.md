@@ -2,7 +2,7 @@
 
 ## 权威定义与说明
 
-`databases/iam/manifest.json` 是完整初始化的来源清单，管理 64 张表、532 个字段。IAM 结构在001–005权威DDL维护；共库框架表在所属框架模块维护，生成时仅投影建表定义，不执行其固定USE或可选数据示例。
+`databases/iam/manifest.json` 是完整初始化的来源清单，管理 65 张表、540 个字段。IAM 结构在 001–005 权威 DDL 维护，共库框架表在所属框架模块维护，生成时仅投影建表定义。
 
 所有表和字段具备中文COMMENT，解释业务对象、引用与租户归属，以及适用的枚举、NULL、默认值、UTC时间、JSON、对象存储路径和版本语义。数据字典与完整初始化由`tools/iam/generate_database.py`生成，主键索引报告由`generate_database_review.py`生成；生成检查不得产生漂移。完整初始化会重建清单内表，不用于保留已有库数据。
 
@@ -37,6 +37,12 @@
 `password_history`保留原自增id主键、`UNIQUE(user_id,sequence_number)`及`idx_created_at`；不再维护与联合唯一键左前缀重叠的`idx_user_id`。按用户读取、槽位覆盖、历史检查和删除的服务行为不变，最近历史仍按created_at倒序及limit查询。
 
 框架权威DDL、IAM共库初始化和数据字典保持一致。密码过期表及其他框架表结构不随该索引精简改变。
+
+## 审计游标索引与上传暂存
+
+`iam_authorization_audit` 按租户、发生时间和 ID 排序。平台域使用 `tenant_id IS NULL`。操作者和具体对象查询分别使用 `(tenant_id, actor_member_id, occurred_at, id)`、`(tenant_id, target_type, target_id, occurred_at, id)` 索引。已有库通过 032 增量安装两条索引，支持重复执行及回滚。
+
+IAM 与 Member 在业务所属库的 `asset_upload` 记录短时图片凭证，业务绑定与凭证消费同事务提交。清理按到期索引定位超时记录，并在锁定后复核状态。
 
 ## 维护与兼容
 
