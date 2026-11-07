@@ -190,9 +190,6 @@ current/<domain>/<capability>/
 
 - [IAM 功能目录与授权补齐](./changes/active/20261106-iam-resource-catalog/README.md)（validating，隔离库和自动化验收已执行）
 
-- [App 用户管理目标环境发布验收](./changes/active/20261106-member-platform-release-acceptance/README.md)（draft，跟踪真实会话、升级与回滚）
-
-
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
 
 - [租户即时授权实际库发布验收](./changes/active/20261106-iam-tenant-live-authorization-release/README.md)（draft；实际来源库预检、备份恢复、切换及回滚）
@@ -202,6 +199,10 @@ current/<domain>/<capability>/
 - [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
 已归档（2026）：
+
+### 2026-11-07 归档
+
+- [App 用户管理目标环境发布验收](./changes/archive/2026/20261106-member-platform-release-acceptance/README.md)（cancelled，真实会话和目标库验收未完成）
 
 ### 2026-11-06 产品验收归档
 

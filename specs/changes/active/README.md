@@ -12,7 +12,6 @@
 
 当前变更：
 
-- [App 用户管理目标环境发布验收](./20261106-member-platform-release-acceptance/README.md)（draft，跟踪真实会话、升级与回滚）
 - [租户即时授权实际库发布验收](./20261106-iam-tenant-live-authorization-release/README.md)（draft；实际来源库预检、备份恢复、切换及回滚）
 - [授权审计游标分页与可读展示](./20261024-iam-authorization-audit-readable/README.md)（implementing）
 - [同源双入口目标环境发布验收](./20261031-security-same-origin-release-acceptance/README.md)（draft；原实现已本地验收归档，实际环境证据单列）

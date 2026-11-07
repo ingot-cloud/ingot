@@ -22,4 +22,4 @@
 - 系统基线更新见 [平台能力与页面归属](../../../../current/iam/platform-capabilities/README.md)。
 - 最终实现沿用批准的 IAM 目录和执行权限设计。联调补充了显式空集合清除绑定、旧关系表非空字段的存储兼容以及 036 的选库说明。
 - [前端配套归档](../../../../../../ingot-admin/specs/changes/archive/2026/20261106-member-platform-application/README.md)
-- 真实平台会话授权、撤权和目标库回滚的剩余证据交由 [目标环境发布验收](../../../active/20261106-member-platform-release-acceptance/README.md) 跟踪。
+- 真实平台会话授权、撤权和目标库回滚的剩余证据交由 [目标环境发布验收](../20261106-member-platform-release-acceptance/README.md) 跟踪。
