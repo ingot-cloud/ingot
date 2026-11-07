@@ -68,7 +68,7 @@ Catalog、平台角色/分配、租户分配/委派的方法主体按职责拆�
 
 1. admin-core完整542项单测中540通过、2项既有源码文本断言失败：visual-contract顶栏外边距、InTable背景定位。涉及的测试和生产源文件均与HEAD逐字节相同；前端关联change保留unchanged-ui-failures.json证据。本轮不修改无关UI行为或删除断言。
 2. 额外运行未修改的`test_service_naming.py`：4项通过、2项读取`.gitlab-ci.yml`错误。该文件在本轮开始的HEAD与工作区均不存在；本次不虚构CI配置或弱化此旧测试。构建/RPC/部署命名的其他4项通过。
-3. 真实登录与社交供应商、目标服务进程/Feign调用、外部OSS和Redis集群、性能/浏览器与用户验收仍归P7及原IAM主change验收。本轮隔离HTTP与SDK测试不替代这些证据。未发布、未提交代码、未更新current或归档。
+3. 真实登录与社交供应商、目标服务进程/Feign调用、外部OSS和Redis集群、性能/浏览器与用户验收仍归P7及原IAM主change验收。本轮隔离HTTP与SDK测试不替代这些证据。未发布、未更新current或归档；该轮验证时尚未提交代码，后续按用户要求的提交见README。
 
 ## P7 待验收清单
 
