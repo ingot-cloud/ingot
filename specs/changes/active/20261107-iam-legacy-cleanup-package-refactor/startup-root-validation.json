@@ -1,0 +1,18 @@
+{
+  "entry": "com.ingot.cloud.iam.InIamApplication",
+  "artifact": "ingot-service/ingot-iam/ingot-iam-provider/build/libs/ingot-iam-provider-0.1.0.jar",
+  "startClass": "com.ingot.cloud.iam.InIamApplication",
+  "startupClasses": [
+    "BOOT-INF/classes/com/ingot/cloud/iam/InIamApplication.class"
+  ],
+  "test": {
+    "name": "com.ingot.cloud.iam.InIamApplicationTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  "packageBoundaryTests": 7,
+  "packagePathMismatches": [],
+  "duplicatePackageRoots": []
+}

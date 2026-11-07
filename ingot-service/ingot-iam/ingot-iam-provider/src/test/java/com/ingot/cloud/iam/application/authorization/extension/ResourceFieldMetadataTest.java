@@ -1,0 +1,139 @@
+package com.ingot.cloud.iam.application.authorization.extension;
+
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Map;
+
+import com.ingot.cloud.iam.infrastructure.persistence.entity.IamApplicationEntity;
+import com.ingot.cloud.iam.infrastructure.persistence.entity.IamResourceEntity;
+import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamActionMapper;
+import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamApplicationMapper;
+import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamResourceMapper;
+import com.ingot.framework.authorization.ResourceObjectProvider;
+import com.ingot.framework.authorization.ResourceRegistry;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.FieldAccess;
+import com.ingot.framework.commons.model.iam.FieldCapability;
+import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.ScopeKind;
+import com.ingot.framework.commons.model.iam.extension.ActionDescriptor;
+import com.ingot.framework.commons.model.iam.extension.ExecutionMode;
+import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ * <p>
+ * 验证目录只能收紧注册能力，不能借不兼容默认值扩权。
+ * </p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+class ResourceFieldMetadataTest {
+
+    private static final String PHONE = "phone";
+
+    private static final String READ = "iam-ops:incident:read";
+
+    private static final ResourceKey KEY = new ResourceKey(AuthorizationDomain.PLATFORM, "iam-ops", "incident");
+
+    @Test
+    void pickerNameFilteringNeedsCatalogSupportAndActualHttpFilterManifest() {
+        var key = com.ingot.cloud.iam.domain.organization.MemberResources.TENANT_MEMBER;
+        var bindings = new com.ingot.framework.authorization.field.FieldBindingRegistry(new com.fasterxml.jackson.databind.ObjectMapper());
+        bindings.register(com.ingot.cloud.iam.application.organization.model.MemberRecord.class, key,
+                com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ, com.ingot.framework.commons.annotation.field.FieldUse.READ);
+        var manifests = mock(FieldManifestService.class);
+        when(manifests.require(key)).thenAnswer(ignored -> bindings.manifest(key));
+        var registry = new BuiltinResourceProviders(mock(com.ingot.cloud.iam.infrastructure.persistence.mapper.AuthorizationCandidateMapper.class)).registry(List.of());
+        var app = new IamApplicationEntity();app.setId(BigInteger.ONE);app.setDomain(AuthorizationDomain.TENANT);app.setCode(key.applicationCode());app.setEnabled(true);
+        var row = new IamResourceEntity();row.setId(BigInteger.TEN);row.setApplicationId(BigInteger.ONE);row.setCode(key.resourceCode());row.setEnabled(true);
+        row.setFieldCapabilities("[{\"key\":\"displayName\",\"label\":\"显示名\",\"visibilities\":[\"HIDDEN\",\"MASKED\",\"FULL\"],\"editable\":true,\"filterable\":true,\"mask\":{\"kind\":\"ALL\"}}]");
+        var apps = mock(IamApplicationMapper.class);when(apps.selectBatchIds(anyCollection())).thenReturn(List.of(app));
+        var service = new ResourceFieldMetadata(apps,mock(IamResourceMapper.class),mock(IamActionMapper.class),registry,manifests,com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache());
+        assertFalse(service.describe(List.of(row)).get("10").fields().stream().filter(field -> field.key().equals("displayName")).findFirst().orElseThrow().filterable());
+        int registrations = 0;
+        for (var controller : List.of(com.ingot.cloud.iam.interfaces.http.tenant.TenantMemberPickerAPI.class,
+                com.ingot.cloud.iam.interfaces.http.tenant.TenantMemberCommandAPI.class,com.ingot.cloud.iam.interfaces.http.tenant.TenantDepartmentAPI.class)) {
+            for (var method : controller.getDeclaredMethods())
+                for (var control : method.getAnnotationsByType(com.ingot.framework.commons.annotation.field.FieldControl.class))
+                    if (java.util.Set.of(com.ingot.cloud.iam.application.organization.model.OrganizationMemberNameFilter.class,
+                            com.ingot.cloud.iam.application.organization.model.OrganizationMemberBrowseFilter.class,
+                            com.ingot.cloud.iam.application.organization.model.OrganizationMemberPickerFilter.class,
+                            com.ingot.cloud.iam.application.organization.model.DepartmentLeaderCandidateFilter.class).contains(control.valueType())) {
+                        assertEquals(com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ,control.action());
+                        bindings.register(control.valueType(),key,control.action(),control.use());registrations++;
+                    }
+        }
+        assertEquals(4,registrations);
+        assertTrue(bindings.manifest(key).bindings().stream().anyMatch(binding -> binding.use()==com.ingot.framework.commons.annotation.field.FieldUse.FILTER
+                && binding.property().equals("keyword") && binding.fieldKey().equals("displayName")));
+        assertTrue(service.describe(List.of(row)).get("10").fields().stream().filter(field -> field.key().equals("displayName")).findFirst().orElseThrow().filterable());
+        row.setFieldCapabilities(row.getFieldCapabilities().replace("\"filterable\":true","\"filterable\":false"));
+        assertFalse(service.describe(List.of(row)).get("10").fields().stream().filter(field -> field.key().equals("displayName")).findFirst().orElseThrow().filterable());
+    }
+
+    @Test
+    void directoryRemovalAndFullOnlyConfigurationCannotPromoteMaskedDefault() {
+        var app = new IamApplicationEntity();
+        app.setId(BigInteger.ONE);
+        app.setDomain(AuthorizationDomain.PLATFORM);
+        app.setCode(KEY.applicationCode());
+        app.setEnabled(true);
+        var row = new IamResourceEntity();
+        row.setId(BigInteger.TEN);
+        row.setApplicationId(app.getId());
+        row.setCode(KEY.resourceCode());
+        row.setEnabled(true);
+        var provider = mock(ResourceObjectProvider.class);
+        when(provider.descriptor()).thenReturn(new ResourceDescriptor(KEY,
+                List.of(new ActionDescriptor(READ, ExecutionMode.READ_ONLY)), List.of(ScopeKind.ALL),
+                List.of(new FieldCapability(PHONE, "手机号", List.of(FieldVisibility.values()), true, true, com.ingot.framework.commons.model.iam.MaskSpec.PHONE)),
+                Map.of(PHONE, new FieldAccess(FieldVisibility.MASKED, false)), READ, false, false));
+        var apps = mock(IamApplicationMapper.class);
+        when(apps.selectBatchIds(anyCollection())).thenReturn(List.of(app));
+        var service = new ResourceFieldMetadata(apps, mock(IamResourceMapper.class), mock(IamActionMapper.class),
+                new ResourceRegistry(List.of(provider)), com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.manifests(), com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache());
+        row.setFieldCapabilities("[]");
+        assertEquals(FieldVisibility.HIDDEN,
+                service.describe(List.of(row)).get("10").defaults().get(PHONE).visibility());
+        row.setFieldCapabilities(
+                """
+                        [{"key":"phone","label":"手机号","visibilities":["FULL"],"editable":true,"filterable":true}]
+                        """);
+        var safe = service.describe(List.of(row)).get("10");
+        assertEquals(List.of(FieldVisibility.HIDDEN), safe.fields().getFirst().visibilities());
+        assertFalse(safe.fields().getFirst().editable());
+        row.setFieldCapabilities(
+                """
+                        [{"key":"phone","label":"手机号","visibilities":["HIDDEN","MASKED","FULL"],"editable":true,"filterable":false,"mask":{"kind":"PHONE"}}]
+                        """);
+        var supported = service.describe(List.of(row)).get("10");
+        assertEquals(FieldVisibility.MASKED, supported.defaults().get(PHONE).visibility());
+        assertTrue(supported.fields().getFirst().editable());
+        assertFalse(supported.fields().getFirst().filterable());
+        app.setEnabled(false);
+        assertTrue(service.describe(List.of(row)).isEmpty());
+    }
+
+    @Test
+    void onlyTheTenantMemberServerDeclaresFieldPolicyEligibility() {
+        var registry = new BuiltinResourceProviders(mock(
+                com.ingot.cloud.iam.infrastructure.persistence.mapper.AuthorizationCandidateMapper.class)).registry(List.of());
+        var service = new ResourceFieldMetadata(mock(IamApplicationMapper.class), mock(IamResourceMapper.class),
+                mock(IamActionMapper.class), registry, com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.manifests(),
+                com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache());
+        assertTrue(service.eligible(com.ingot.cloud.iam.domain.organization.MemberResources.TENANT_MEMBER));
+        assertFalse(service.eligible(com.ingot.cloud.iam.domain.organization.MemberResources.PLATFORM_MEMBER));
+        assertFalse(service.enrolled(com.ingot.cloud.iam.domain.organization.MemberResources.PLATFORM_MEMBER));
+    }
+
+}

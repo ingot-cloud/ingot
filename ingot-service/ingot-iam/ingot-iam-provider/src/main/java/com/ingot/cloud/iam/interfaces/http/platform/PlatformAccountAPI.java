@@ -1,0 +1,208 @@
+package com.ingot.cloud.iam.interfaces.http.platform;
+
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
+import com.ingot.cloud.iam.application.account.PlatformAccountService;
+import com.ingot.cloud.iam.application.shared.IamPages;
+import com.ingot.cloud.iam.application.account.model.AccountCreateInput;
+import com.ingot.cloud.iam.application.account.model.AccountLockInput;
+import com.ingot.cloud.iam.application.account.model.AccountLookupInput;
+import com.ingot.cloud.iam.application.account.model.AccountRecord;
+import com.ingot.cloud.iam.application.account.model.AccountSecret;
+import com.ingot.cloud.iam.application.account.model.AccountUpdateInput;
+import com.ingot.cloud.iam.application.shared.model.CreatedResource;
+import com.ingot.framework.commons.model.iam.PageResponse;
+import com.ingot.cloud.iam.application.catalog.model.ResourceDetail;
+import com.ingot.cloud.iam.domain.shared.VersionInput;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
+import com.ingot.framework.security.crypto.annotation.InEncrypt;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * <p>提供平台全局账号查询、创建、资料与安全命令，不返回组织关系。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+@RestController
+@Tag(name = "IAM 平台账号")
+@RequestMapping("/v1/platform/accounts")
+@RequiredArgsConstructor
+public class PlatformAccountAPI implements RShortcuts {
+    private final PlatformAccountService accounts;
+
+    /**
+     * 分页列出全局账号，可按平台成员创建用途排除已有资格的账号。
+     *
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param excludePlatformMembers 是否排除已有平台成员资格，缺省为 false
+     * @return 账号页与过滤后的总数
+     */
+    @Operation(summary = "全局账号列表")
+    @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_READ)
+    public R<PageResponse<ResourceDetail<AccountRecord>>> list(
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(defaultValue = "false") boolean excludePlatformMembers) {
+        return ok(accounts.list(page, pageSize, excludePlatformMembers));
+    }
+
+    /**
+     * 创建全局账号。
+     *
+     * @param input 登录名与可选联系方式
+     * @return 一次性初始密码，传输时信封加密
+     */
+    @Operation(summary = "创建全局账号")
+    @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_CREATE)
+    @InCryptoHybridContext
+    @InEncrypt
+    public R<AccountSecret> create(@Valid @RequestBody AccountCreateInput input) {
+        return ok(accounts.create(input));
+    }
+
+    /**
+     * 按用途精确查找全局账号。
+     *
+     * @param input 单一查找条件
+     * @return 受限投影
+     */
+    @Operation(summary = "精确查找全局账号")
+    @PostMapping("/lookup")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_LOOKUP)
+    public R<ResourceDetail<AccountRecord>> lookup(@Valid @RequestBody AccountLookupInput input) {
+        return ok(accounts.lookup(input));
+    }
+
+    /**
+     * 读取全局账号详情。
+     *
+     * @param id 账号 ID
+     * @return 安全投影
+     */
+    @Operation(summary = "全局账号详情")
+    @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_READ)
+    public R<ResourceDetail<AccountRecord>> get(@PathVariable String id) {
+        return ok(accounts.get(id));
+    }
+
+    /**
+     * 更新全局账号联系资料。
+     *
+     * @param id 账号 ID
+     * @param input 联系资料
+     * @return 更新后投影
+     */
+    @Operation(summary = "更新全局账号资料")
+    @PatchMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE)
+    public R<ResourceDetail<AccountRecord>> update(@PathVariable String id,
+                                                   @Valid @RequestBody AccountUpdateInput input) {
+        return ok(accounts.update(id, input));
+    }
+
+    /**
+     * 删除未被成员引用的全局账号。
+     *
+     * @param id 账号 ID
+     * @param input 期望版本
+     * @return 版本信封
+     */
+    @Operation(summary = "删除全局账号")
+    @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_DELETE)
+    public R<CreatedResource> delete(@PathVariable String id, @Valid @RequestBody VersionInput input) {
+        return ok(accounts.delete(id, input));
+    }
+
+    /**
+     * 启用全局账号。
+     *
+     * @param id 账号 ID
+     * @param input 期望版本
+     * @return 版本信封
+     */
+    @Operation(summary = "启用全局账号")
+    @PostMapping("/{id}/enable")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_ENABLE)
+    public R<CreatedResource> enable(@PathVariable String id, @Valid @RequestBody VersionInput input) {
+        return ok(accounts.enable(id, input));
+    }
+
+    /**
+     * 停用全局账号。
+     *
+     * @param id 账号 ID
+     * @param input 期望版本
+     * @return 版本信封
+     */
+    @Operation(summary = "停用全局账号")
+    @PostMapping("/{id}/disable")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_DISABLE)
+    public R<CreatedResource> disable(@PathVariable String id, @Valid @RequestBody VersionInput input) {
+        return ok(accounts.disable(id, input));
+    }
+
+    /**
+     * 锁定全局账号。
+     *
+     * @param id 账号 ID
+     * @param input 原因与期限
+     * @return 版本信封
+     */
+    @Operation(summary = "锁定全局账号")
+    @PostMapping("/{id}/lock")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_LOCK)
+    public R<CreatedResource> lock(@PathVariable String id, @Valid @RequestBody AccountLockInput input) {
+        return ok(accounts.lock(id, input));
+    }
+
+    /**
+     * 解锁全局账号。
+     *
+     * @param id 账号 ID
+     * @param input 期望版本
+     * @return 版本信封
+     */
+    @Operation(summary = "解锁全局账号")
+    @PostMapping("/{id}/unlock")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_UNLOCK)
+    public R<CreatedResource> unlock(@PathVariable String id, @Valid @RequestBody VersionInput input) {
+        return ok(accounts.unlock(id, input));
+    }
+
+    /**
+     * 重置全局账号密码。
+     *
+     * @param id 账号 ID
+     * @param input 期望版本
+     * @return 一次性初始密码，传输时信封加密
+     */
+    @Operation(summary = "重置全局账号密码")
+    @PostMapping("/{id}/reset-password")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_RESET_PASSWORD)
+    @InCryptoHybridContext
+    @InEncrypt
+    public R<AccountSecret> resetPassword(@PathVariable String id, @Valid @RequestBody VersionInput input) {
+        return ok(accounts.resetPassword(id, input));
+    }
+}

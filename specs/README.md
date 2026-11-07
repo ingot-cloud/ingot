@@ -188,6 +188,8 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [IAM 历史代码清理、职责分层与命名重构](./changes/active/20261107-iam-legacy-cleanup-package-refactor/README.md)（validating；P0–P6完成，目标环境/人工验收待办；历史表、数据及数据库升级脚本未改）
+
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
 
 - [租户即时授权实际库发布验收](./changes/active/20261106-iam-tenant-live-authorization-release/README.md)（draft；实际来源库预检、备份恢复、切换及回滚）

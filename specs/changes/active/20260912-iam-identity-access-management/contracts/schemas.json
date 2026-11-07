@@ -2673,11 +2673,11 @@
           "assignmentDurationMode": {
             "type": "string",
             "description": "单次期限模式，省略按 LIMITED",
-            "default": "LIMITED",
             "enum": [
               "LIMITED",
               "UNLIMITED"
-            ]
+            ],
+            "default": "LIMITED"
           }
         },
         "description": "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
@@ -5882,7 +5882,7 @@
           }
         }
       },
-      "PageResponseRoleApplicationItem": {
+      "PageResponseRoleVersionApplicationItem": {
         "required": [
           "items",
           "page",
@@ -5894,7 +5894,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RoleApplicationItem"
+              "$ref": "#/components/schemas/RoleVersionApplicationItem"
             }
           },
           "total": {
@@ -5911,7 +5911,7 @@
           }
         }
       },
-      "PageResponseRoleApplicationTask": {
+      "PageResponseRoleVersionApplicationTask": {
         "required": [
           "items",
           "page",
@@ -5923,7 +5923,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RoleApplicationTask"
+              "$ref": "#/components/schemas/RoleVersionApplicationTask"
             }
           },
           "total": {
@@ -7599,7 +7599,7 @@
           }
         }
       },
-      "RPageResponseRoleApplicationItem": {
+      "RPageResponseRoleVersionApplicationItem": {
         "type": "object",
         "properties": {
           "code": {
@@ -7609,14 +7609,14 @@
             "type": "string"
           },
           "data": {
-            "$ref": "#/components/schemas/PageResponseRoleApplicationItem"
+            "$ref": "#/components/schemas/PageResponseRoleVersionApplicationItem"
           },
           "success": {
             "type": "boolean"
           }
         }
       },
-      "RPageResponseRoleApplicationTask": {
+      "RPageResponseRoleVersionApplicationTask": {
         "type": "object",
         "properties": {
           "code": {
@@ -7626,7 +7626,7 @@
             "type": "string"
           },
           "data": {
-            "$ref": "#/components/schemas/PageResponseRoleApplicationTask"
+            "$ref": "#/components/schemas/PageResponseRoleVersionApplicationTask"
           },
           "success": {
             "type": "boolean"
@@ -8262,23 +8262,6 @@
           }
         }
       },
-      "RRoleApplicationTask": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/RoleApplicationTask"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        }
-      },
       "RRoleGrantList": {
         "type": "object",
         "properties": {
@@ -8307,6 +8290,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/RoleSubjectPage"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RRoleVersionApplicationTask": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RoleVersionApplicationTask"
           },
           "success": {
             "type": "boolean"
@@ -9442,191 +9442,6 @@
         },
         "description": "更新资源名称与能力声明，不能改写所属应用或编码"
       },
-      "RoleApplicationChangeInput": {
-        "required": [
-          "expectedVersion"
-        ],
-        "type": "object",
-        "properties": {
-          "expectedVersion": {
-            "type": "string"
-          },
-          "all": {
-            "type": "boolean"
-          },
-          "itemIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "scopeBindings": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ScopeBinding"
-            }
-          },
-          "excluded": {
-            "type": "boolean"
-          }
-        }
-      },
-      "RoleApplicationConfirmInput": {
-        "required": [
-          "expectedVersion",
-          "idempotencyKey"
-        ],
-        "type": "object",
-        "properties": {
-          "expectedVersion": {
-            "type": "string"
-          },
-          "idempotencyKey": {
-            "maxLength": 128,
-            "minLength": 0,
-            "type": "string"
-          }
-        }
-      },
-      "RoleApplicationItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "assignmentId": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "BLOCKED",
-              "SUCCEEDED",
-              "EXCLUDED",
-              "REVOKED",
-              "EXPIRED",
-              "ALREADY_TARGET"
-            ]
-          },
-          "original": {
-            "$ref": "#/components/schemas/AssignmentRecord"
-          },
-          "configuredBindings": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ScopeBinding"
-            }
-          },
-          "preview": {
-            "$ref": "#/components/schemas/AssignmentUpgradePreviewItem"
-          },
-          "failureReason": {
-            "type": "string"
-          }
-        }
-      },
-      "RoleApplicationPrepareInput": {
-        "required": [
-          "idempotencyKey",
-          "selection",
-          "targetRevisionId"
-        ],
-        "type": "object",
-        "properties": {
-          "targetRevisionId": {
-            "type": "string"
-          },
-          "selection": {
-            "type": "string",
-            "enum": [
-              "ALL",
-              "SOURCE_REVISIONS",
-              "ASSIGNMENTS"
-            ]
-          },
-          "sourceRevisionIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "assignmentIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "idempotencyKey": {
-            "maxLength": 128,
-            "minLength": 0,
-            "type": "string"
-          }
-        }
-      },
-      "RoleApplicationRefreshInput": {
-        "required": [
-          "expectedVersion"
-        ],
-        "type": "object",
-        "properties": {
-          "expectedVersion": {
-            "type": "string"
-          }
-        }
-      },
-      "RoleApplicationTask": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "roleId": {
-            "type": "string"
-          },
-          "targetRevisionId": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "PREPARING",
-              "READY",
-              "BLOCKED",
-              "RUNNING",
-              "PAUSED",
-              "SUCCEEDED"
-            ]
-          },
-          "version": {
-            "type": "string"
-          },
-          "counts": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          "failureReason": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "targetRevisionNumber": {
-            "type": "string"
-          },
-          "targetVersionName": {
-            "type": "string"
-          }
-        }
-      },
       "RoleCreateInput": {
         "required": [
           "code",
@@ -9942,44 +9757,6 @@
           }
         },
         "description": "声明角色版本中的命名范围参数及其绑定类型"
-      },
-      "RolePublishApplicationInput": {
-        "required": [
-          "idempotencyKey",
-          "publish",
-          "selection"
-        ],
-        "type": "object",
-        "properties": {
-          "publish": {
-            "$ref": "#/components/schemas/RolePublishInput"
-          },
-          "selection": {
-            "type": "string",
-            "enum": [
-              "ALL",
-              "SOURCE_REVISIONS",
-              "ASSIGNMENTS"
-            ]
-          },
-          "sourceRevisionIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "assignmentIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "idempotencyKey": {
-            "maxLength": 128,
-            "minLength": 0,
-            "type": "string"
-          }
-        }
       },
       "RolePublishInput": {
         "required": [
@@ -10366,6 +10143,229 @@
           }
         },
         "description": "更新角色名称、说明、分组与启停，不改编码和已发布版本"
+      },
+      "RoleVersionApplicationChangeInput": {
+        "required": [
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string"
+          },
+          "all": {
+            "type": "boolean"
+          },
+          "itemIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scopeBindings": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ScopeBinding"
+            }
+          },
+          "excluded": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RoleVersionApplicationConfirmInput": {
+        "required": [
+          "expectedVersion",
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "RoleVersionApplicationItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "assignmentId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "BLOCKED",
+              "SUCCEEDED",
+              "EXCLUDED",
+              "REVOKED",
+              "EXPIRED",
+              "ALREADY_TARGET"
+            ]
+          },
+          "original": {
+            "$ref": "#/components/schemas/AssignmentRecord"
+          },
+          "configuredBindings": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ScopeBinding"
+            }
+          },
+          "preview": {
+            "$ref": "#/components/schemas/AssignmentUpgradePreviewItem"
+          },
+          "failureReason": {
+            "type": "string"
+          }
+        }
+      },
+      "RoleVersionApplicationPrepareInput": {
+        "required": [
+          "idempotencyKey",
+          "selection",
+          "targetRevisionId"
+        ],
+        "type": "object",
+        "properties": {
+          "targetRevisionId": {
+            "type": "string"
+          },
+          "selection": {
+            "type": "string",
+            "enum": [
+              "ALL",
+              "SOURCE_REVISIONS",
+              "ASSIGNMENTS"
+            ]
+          },
+          "sourceRevisionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "idempotencyKey": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "RoleVersionApplicationPublishInput": {
+        "required": [
+          "idempotencyKey",
+          "publish",
+          "selection"
+        ],
+        "type": "object",
+        "properties": {
+          "publish": {
+            "$ref": "#/components/schemas/RolePublishInput"
+          },
+          "selection": {
+            "type": "string",
+            "enum": [
+              "ALL",
+              "SOURCE_REVISIONS",
+              "ASSIGNMENTS"
+            ]
+          },
+          "sourceRevisionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "idempotencyKey": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "RoleVersionApplicationRefreshInput": {
+        "required": [
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string"
+          }
+        }
+      },
+      "RoleVersionApplicationTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "targetRevisionId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PREPARING",
+              "READY",
+              "BLOCKED",
+              "RUNNING",
+              "PAUSED",
+              "SUCCEEDED"
+            ]
+          },
+          "version": {
+            "type": "string"
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "failureReason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "targetRevisionNumber": {
+            "type": "string"
+          },
+          "targetVersionName": {
+            "type": "string"
+          }
+        }
       },
       "ScopeBinding": {
         "required": [

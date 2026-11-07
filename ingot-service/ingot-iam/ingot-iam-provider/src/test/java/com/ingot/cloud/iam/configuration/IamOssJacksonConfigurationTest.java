@@ -1,0 +1,156 @@
+package com.ingot.cloud.iam.configuration;
+
+import java.util.List;
+
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.KeyDeserializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.cfg.HandlerInstantiator;
+import com.fasterxml.jackson.databind.cfg.MapperConfig;
+import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.jsontype.TypeIdResolver;
+import com.fasterxml.jackson.databind.jsontype.TypeResolverBuilder;
+import com.ingot.cloud.iam.application.catalog.model.ApplicationRecord;
+import com.ingot.cloud.iam.application.catalog.model.AudienceMemberView;
+import com.ingot.cloud.iam.domain.catalog.ApplicationSummary;
+import com.ingot.cloud.iam.application.catalog.model.EntitlementRecord;
+import com.ingot.cloud.iam.domain.catalog.EntitlementSource;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.cloud.iam.domain.shared.ConfigurationStatus;
+import com.ingot.cloud.iam.domain.organization.MemberCreateInput;
+import com.ingot.cloud.iam.application.organization.model.MemberProfileInput;
+import com.ingot.cloud.iam.application.organization.model.MemberRecord;
+import com.ingot.cloud.iam.domain.organization.MemberStatus;
+import com.ingot.cloud.iam.application.organization.model.DepartmentLeaderRecord;
+import com.ingot.cloud.iam.application.organization.model.OrganizationMemberPickerOption;
+import com.ingot.cloud.iam.application.tenant.model.TenantWorkbenchStatistics;
+import com.ingot.framework.commons.oss.OssService;
+import com.ingot.framework.oss.jackson.OssUrlSerializer;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class IamOssJacksonConfigurationTest {
+
+    @Test
+    void deserializeStripsPresignedUrl() throws Exception {
+        ObjectMapper mapper = mapper(null);
+        MemberCreateInput input = mapper.readValue("""
+                {"accountId":"1","avatar":"https://minio.local/ingot/user/avatar/a.png?X-Amz-Expires=3600","departments":[]}
+                """, MemberCreateInput.class);
+        assertEquals("ingot/user/avatar/a.png", input.avatar());
+        MemberProfileInput profile = mapper.readValue("""
+                {"expectedVersion":"1","avatar":"https://minio.local/ingot/user/avatar/a.png?X-Amz-Expires=3600","phone":null,"unknown":null}
+                """, MemberProfileInput.class);
+        assertEquals("ingot/user/avatar/a.png", profile.avatar());
+        assertTrue(profile.suppliedFields().contains("phone"));
+        assertTrue(profile.suppliedFields().contains("unknown"));
+    }
+
+    @Test
+    void serializeSignsStoredPath() throws Exception {
+        OssService oss = mock(OssService.class);
+        when(oss.getObjectURL("ingot/user/avatar/a.png")).thenReturn("https://signed.example/ingot/user/avatar/a.png");
+        ObjectMapper mapper = mapper(oss);
+        MemberRecord record = new MemberRecord("1", "成员", "ingot/user/avatar/a.png", null, null, "alice",
+                MemberStatus.ACTIVE, List.of());
+        String json = mapper.writeValueAsString(record);
+        assertTrue(json.contains("https://signed.example/ingot/user/avatar/a.png"));
+        var leader = new DepartmentLeaderRecord("1", "成员", MemberStatus.ACTIVE, true, true,
+                List.of(), "ingot/user/avatar/a.png");
+        var candidate = new OrganizationMemberPickerOption("1", "成员", MemberStatus.ACTIVE, true,
+                List.of(), null, "ingot/user/avatar/a.png");
+        assertTrue(mapper.writeValueAsString(leader).contains("https://signed.example/ingot/user/avatar/a.png"));
+        assertTrue(mapper.writeValueAsString(candidate).contains("https://signed.example/ingot/user/avatar/a.png"));
+        var audienceMember = new AudienceMemberView("50", "张三", "ingot/user/avatar/a.png");
+        assertTrue(mapper.writeValueAsString(audienceMember).contains("https://signed.example/ingot/user/avatar/a.png"));
+    }
+
+    @Test
+    void applicationIconPathIsSignedWhileIconifyNameStays() throws Exception {
+        OssService oss = mock(OssService.class);
+        when(oss.getObjectURL("ingot/app/icon/a.png")).thenReturn("https://signed.example/ingot/app/icon/a.png");
+        ObjectMapper mapper = mapper(oss);
+        ApplicationRecord record = new ApplicationRecord("1", "contacts", AuthorizationDomain.TENANT, "通讯录",
+                null, "ingot/app/icon/a.png", 0, false, ConfigurationStatus.ENABLED);
+        ApplicationSummary named = new ApplicationSummary("2", "iam-platform", "平台治理", "ep:menu", 0);
+        EntitlementRecord entitlement = new EntitlementRecord("3", "1", "通讯录", "ingot/app/icon/a.png",
+                ConfigurationStatus.ENABLED, EntitlementSource.INITIALIZATION, null, null, null);
+        EntitlementRecord namedEntitlement = new EntitlementRecord("4", "2", "平台治理", "ep:menu",
+                ConfigurationStatus.ENABLED, EntitlementSource.MANUAL, null, null, null);
+        assertTrue(mapper.writeValueAsString(record).contains("https://signed.example/ingot/app/icon/a.png"));
+        assertTrue(mapper.writeValueAsString(named).contains("ep:menu"));
+        assertTrue(mapper.writeValueAsString(entitlement).contains("https://signed.example/ingot/app/icon/a.png"));
+        assertTrue(mapper.writeValueAsString(namedEntitlement).contains("ep:menu"));
+    }
+
+    @Test
+    void workbenchAvatarIsSignedAndUnauthorizedCountsAreOmitted() throws Exception {
+        OssService oss = mock(OssService.class);
+        when(oss.getObjectURL("logos/org.png")).thenReturn("https://signed.example/logos/org.png");
+        ObjectMapper mapper = mapper(oss);
+        var statistics = new TenantWorkbenchStatistics("10", "组织", "logos/org.png", null, 0L, null, 1L);
+        var json = mapper.readTree(mapper.writeValueAsString(statistics));
+        assertEquals("https://signed.example/logos/org.png", json.path("tenantAvatar").asText());
+        assertEquals(0L, json.path("departmentCount").asLong());
+        assertTrue(!json.has("memberCount"));
+        assertTrue(!json.has("groupCount"));
+    }
+
+    private static ObjectMapper mapper(OssService oss) {
+        Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+        new IamOssJacksonConfiguration().iamOssAvatarMixins().customize(builder);
+        if (oss != null) {
+            builder.handlerInstantiator(new OssHandlerInstantiator(oss));
+        }
+        return builder.build();
+    }
+
+    private static final class OssHandlerInstantiator extends HandlerInstantiator {
+        private final OssService oss;
+
+        private OssHandlerInstantiator(OssService oss) {
+            this.oss = oss;
+        }
+
+        @Override
+        public JsonDeserializer<?> deserializerInstance(DeserializationConfig config, Annotated annotated,
+                                                        Class<?> deserClass) {
+            return null;
+        }
+
+        @Override
+        public KeyDeserializer keyDeserializerInstance(DeserializationConfig config, Annotated annotated,
+                                                       Class<?> keyDeserClass) {
+            return null;
+        }
+
+        @Override
+        public JsonSerializer<?> serializerInstance(SerializationConfig config, Annotated annotated,
+                                                    Class<?> serClass) {
+            if (serClass == OssUrlSerializer.class) {
+                return new OssUrlSerializer(oss);
+            }
+            return null;
+        }
+
+        @Override
+        public TypeResolverBuilder<?> typeResolverBuilderInstance(MapperConfig<?> config, Annotated annotated,
+                                                                  Class<?> builderClass) {
+            return null;
+        }
+
+        @Override
+        public TypeIdResolver typeIdResolverInstance(MapperConfig<?> config, Annotated annotated,
+                                                     Class<?> resolverClass) {
+            return null;
+        }
+    }
+}

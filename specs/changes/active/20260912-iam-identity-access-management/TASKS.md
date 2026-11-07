@@ -1,5 +1,7 @@
 # Tasks
 
+2026-11-07：T18中旧实现清理及关联包/命名重构由已批准的[独立清理change](../20261107-iam-legacy-cleanup-package-refactor/README.md)分阶段实施。原T18的A22/A23及其他产品验收继续保留，不因本次源码清理自动勾选。
+
 2026-10-06 已完成开发及相关自动化、进入validating的成员字段展示/对象编辑修正见 [增量任务](PLATFORM-MEMBER-FIELD-UI-REFINEMENT.md)。MF04人工验收独立保留。
 
 > 状态：implementing。2026-09-19 核对：下列 T 项为开发与验收合并的父任务；2026-09-15/16 的多数修正已落地，不能再按“全部未实施”理解。已开发子项见本文“开发完成标记”，验收证据见 IMPLEMENTATION/MANUAL-VERIFICATION。父任务未满足完整退出条件仍不勾选。

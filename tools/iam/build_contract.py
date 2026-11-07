@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / 'specs/changes/active/20260912-iam-identity-access-management/contracts'
-GENERATED = ROOT / 'ingot-framework/ingot-commons/build/iam-contract/schemas.json'
+GENERATED = ROOT / 'ingot-service/ingot-iam/ingot-iam-provider/build/iam-contract/schemas.json'
 REF_PREFIX = '#/components/schemas/'
 MEDIA_TYPE = 'application/json'
 

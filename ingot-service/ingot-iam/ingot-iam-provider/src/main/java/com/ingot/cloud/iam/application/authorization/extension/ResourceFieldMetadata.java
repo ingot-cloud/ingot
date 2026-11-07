@@ -1,0 +1,333 @@
+package com.ingot.cloud.iam.application.authorization.extension;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.iam.infrastructure.persistence.entity.IamActionEntity;
+import com.ingot.cloud.iam.infrastructure.persistence.entity.IamApplicationEntity;
+import com.ingot.cloud.iam.infrastructure.persistence.entity.IamResourceEntity;
+import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamActionMapper;
+import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamApplicationMapper;
+import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamResourceMapper;
+import com.ingot.cloud.iam.infrastructure.serialization.IamJsonCodec;
+import com.ingot.framework.authorization.ResourceRegistry;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.ActionGrant;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.annotation.field.FieldUse;
+import com.ingot.framework.commons.model.iam.FieldAccess;
+import com.ingot.framework.commons.model.iam.FieldCapability;
+import com.ingot.cloud.iam.application.policy.model.FieldPolicyAction;
+import com.ingot.cloud.iam.application.policy.model.FieldPolicyResource;
+import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+/**
+ * <p>
+ * 批量关联资源目录和可信注册能力，不依据操作编码推断资源。
+ * </p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+@Service
+@RequiredArgsConstructor
+public class ResourceFieldMetadata {
+
+    private static final TypeReference<List<FieldCapability>> FIELDS = new TypeReference<>() {
+    };
+
+    private final IamApplicationMapper applications;
+
+    private final IamResourceMapper resources;
+
+    private final IamActionMapper actions;
+
+    private final ResourceRegistry registry;
+    private final FieldManifestService manifests;
+    private final org.springframework.beans.factory.ObjectProvider<com.ingot.framework.cache.spi.LayeredCache<String, Entry>> cache;
+
+    /**
+     * 目录已打开接入、服务器具备运行能力且声明了字段。
+     *
+     * @param key 完整资源键
+     * @return 是否读取租户字段策略
+     */
+    public boolean enrolled(ResourceKey key) {
+        var provider = registry.find(key);
+        if (provider == null || !provider.descriptor().fieldPolicyEligible() || key.domain() != AuthorizationDomain.TENANT) {
+            return false;
+        }
+        var app = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
+                .eq(IamApplicationEntity::getDomain, key.domain())
+                .eq(IamApplicationEntity::getCode, key.applicationCode())
+                .eq(IamApplicationEntity::getEnabled, true));
+        if (app == null) {
+            return false;
+        }
+        var row = resources.selectOne(Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getApplicationId, app.getId())
+                .eq(IamResourceEntity::getCode, key.resourceCode())
+                .eq(IamResourceEntity::getEnabled, true));
+        if (row == null || !Boolean.TRUE.equals(row.getFieldPolicy())) {
+            return false;
+        }
+        var fields = IamJsonCodec.read(row.getFieldCapabilities(), FIELDS);
+        return fields != null && !fields.isEmpty();
+    }
+
+    /**
+     * 服务器是否声明该资源具备字段策略运行能力。
+     *
+     * @param key 完整资源键
+     * @return 目录能否打开接入开关
+     */
+    public boolean eligible(ResourceKey key) {
+        var provider = registry.find(key);
+        return provider != null && provider.descriptor().fieldPolicyEligible();
+    }
+
+    /**
+     * 列出目录已接入且服务器允许的租户资源。
+     *
+     * @return 字段策略可选资源
+     */
+    public List<FieldPolicyResource> fieldPolicyCatalog() {
+        List<FieldPolicyResource> result = new ArrayList<>();
+        for (var row : resources.selectList(Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getFieldPolicy, true).eq(IamResourceEntity::getEnabled, true)
+                .orderByAsc(IamResourceEntity::getId))) {
+            var app = applications.selectById(row.getApplicationId());
+            if (app == null || app.getDomain() != AuthorizationDomain.TENANT || !Boolean.TRUE.equals(app.getEnabled())) {
+                continue;
+            }
+            var key = new ResourceKey(app.getDomain(), app.getCode(), row.getCode());
+            if (!eligible(key)) {
+                continue;
+            }
+            var fields = IamJsonCodec.read(row.getFieldCapabilities(), FIELDS);
+            if (fields == null || fields.isEmpty()) {
+                continue;
+            }
+            var bound = bindings(key).bindings().stream()
+                    .filter(binding -> binding.use() == FieldUse.WRITE || binding.use() == FieldUse.FILTER)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::actionCode)
+                    .collect(java.util.stream.Collectors.toSet());
+            var actions = this.actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
+                    .eq(IamActionEntity::getResourceId, row.getId()).eq(IamActionEntity::getEnabled, true)
+                    .orderByAsc(IamActionEntity::getId)).stream().filter(action -> bound.contains(action.getCode()))
+                    .map(action -> new FieldPolicyAction(action.getCode(), action.getName())).toList();
+            result.add(new FieldPolicyResource(row.getId().toString(), key, row.getName(), fields, actions));
+        }
+        return List.copyOf(result);
+    }
+
+    /** 返回完整资源标识的实际绑定状态，不包含任何业务原值。 */
+    public com.ingot.framework.commons.model.iam.extension.FieldBindingManifest bindings(ResourceKey key) {
+        return manifests.require(key);
+    }
+
+    /**
+     * 批量返回角色操作实际所属的资源 ID。
+     * @param grants 完整授权集合
+     * @return 操作对应资源去重集合
+     */
+    public Set<BigInteger> resourceIds(List<ActionGrant> grants) {
+        if (grants.isEmpty())
+            return Set.of();
+        var ids = grants.stream().map(g -> new BigInteger(g.actionId())).distinct().toList();
+        var rows = actions.selectBatchIds(ids);
+        if (rows.size() != ids.size())
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        return rows.stream().map(IamActionEntity::getResourceId).collect(java.util.stream.Collectors.toSet());
+    }
+
+    /**
+     * 一次加载资源和应用，返回已注册平台执行描述；未接入资源不提供字段能力。
+     * @param ids 资源 ID
+     * @return 可信能力，以资源 ID 索引
+     */
+    public Map<String, ResourceDescriptor> load(Collection<BigInteger> ids) {
+        if (ids.isEmpty())
+            return Map.of();
+        return describe(resources.selectBatchIds(ids));
+    }
+
+    /**
+     * 已加载目录资源只批量关联应用，避免目录逐资源查询。
+     * @param rows 目录资源
+     * @return 可信能力
+     */
+    public Map<String, ResourceDescriptor> describe(List<IamResourceEntity> rows) {
+        if (rows.isEmpty())
+            return Map.of();
+        Map<BigInteger, IamApplicationEntity> apps = new HashMap<>();
+        applications.selectBatchIds(rows.stream().map(IamResourceEntity::getApplicationId).distinct().toList())
+            .forEach(a -> apps.put(a.getId(), a));
+        Map<String, ResourceDescriptor> result = new LinkedHashMap<>();
+        for (var row : rows) {
+            var app = apps.get(row.getApplicationId());
+            if (app == null || !Boolean.TRUE.equals(app.getEnabled())
+                    || !Boolean.TRUE.equals(row.getEnabled()))
+                continue;
+            var provider = registry.find(new ResourceKey(app.getDomain(), app.getCode(), row.getCode()));
+            if (provider == null)
+                continue;
+            var descriptor = provider.descriptor();
+            var manifest = manifests.require(descriptor.key());
+            var readable = manifest.bindings().stream().filter(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.READ)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            var writable = manifest.bindings().stream().filter(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.WRITE)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            var filterable = manifest.bindings().stream().filter(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.FILTER)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            Map<String, FieldCapability> catalog = new HashMap<>();
+            IamJsonCodec.read(row.getFieldCapabilities(), FIELDS).forEach(f -> catalog.put(f.key(), f));
+            Map<String, FieldCapability> supported = new LinkedHashMap<>();
+            descriptor.fields().forEach(field -> supported.put(field.key(), field));
+            for (var entry : catalog.entrySet()) {
+                if (supported.containsKey(entry.getKey()) || !readable.contains(entry.getKey())) continue;
+                boolean textual = manifest.bindings().stream().filter(binding -> binding.fieldKey().equals(entry.getKey()))
+                        .allMatch(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::textual);
+                supported.put(entry.getKey(), new FieldCapability(entry.getKey(), entry.getValue().label(),
+                        textual ? List.of(FieldVisibility.values()) : List.of(FieldVisibility.HIDDEN, FieldVisibility.FULL),
+                        writable.contains(entry.getKey()), filterable.contains(entry.getKey()), textual ? com.ingot.framework.commons.model.iam.MaskSpec.ALL : null));
+            }
+            var fields = supported.values().stream().map(f -> {
+                var upper = catalog.get(f.key());
+                if (upper == null || !readable.contains(f.key()))
+                    return new FieldCapability(f.key(), f.label(), List.of(FieldVisibility.HIDDEN), false, false,
+                            null);
+                var visible = f.visibilities().stream().filter(upper.visibilities()::contains).toList();
+                var baseline = descriptor.defaults().getOrDefault(f.key(), new FieldAccess(FieldVisibility.HIDDEN, false)).visibility();
+                if (visible.stream().noneMatch(value -> value.ordinal() <= baseline.ordinal()))
+                    return new FieldCapability(f.key(), upper.label(), List.of(FieldVisibility.HIDDEN), false, false,
+                            null);
+                return new FieldCapability(f.key(), upper.label(),
+                        visible.isEmpty() ? List.of(FieldVisibility.HIDDEN) : visible,
+                        f.editable() && upper.editable() && writable.contains(f.key()) && visible.stream().anyMatch(value -> value != FieldVisibility.HIDDEN),
+                        f.filterable() && upper.filterable() && filterable.contains(f.key()), visible.contains(FieldVisibility.MASKED) ? upper.mask() : null);
+            }).toList();
+            Map<String, FieldAccess> defaults = new LinkedHashMap<>();
+            for (var field : fields) {
+                var original = descriptor.defaults()
+                    .getOrDefault(field.key(), new FieldAccess(FieldVisibility.HIDDEN, false));
+                var visibility = field.visibilities().contains(original.visibility()) ? original.visibility()
+                        : field.visibilities()
+                            .stream()
+                            .min(Comparator.comparingInt(Enum::ordinal))
+                            .orElse(FieldVisibility.HIDDEN);
+                defaults.put(field.key(), new FieldAccess(visibility,
+                        visibility != FieldVisibility.HIDDEN && field.editable() && original.editable()));
+            }
+            result.put(row.getId().toString(),
+                    new ResourceDescriptor(descriptor.key(), descriptor.actions(), descriptor.scopeCapabilities(),
+                            fields, defaults, descriptor.readAction(), descriptor.hierarchical(),
+                            descriptor.fieldPolicyEligible()));
+        }
+        return Map.copyOf(result);
+    }
+
+    /**
+     * 用完整键定位唯一启用平台资源及经目录收紧的描述。
+     * @param key 注册资源键
+     * @return 资源与执行能力
+     */
+    public Entry require(ResourceKey key) { return require(key, false); }
+
+    /**
+     * 按可信系统超管事实取得注册业务字段能力；普通角色仍受目录收紧。
+     * @param key 完整资源键
+     * @param administrator 服务器求值产生的系统特权
+     * @return 启用且已注册的资源能力
+     */
+    public Entry require(ResourceKey key, boolean administrator) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            return requireFresh(key, administrator);
+        var configured = cache.getIfAvailable();
+        if (configured == null) return requireFresh(key, administrator);
+        var cacheKey = IamJsonCodec.object(new Lookup(key, administrator));
+        var value = configured.get(cacheKey);
+        if (value == null || !java.time.Instant.now().isBefore(value.expiresAt())) {
+            configured.evict(cacheKey);
+            value = configured.get(cacheKey);
+        }
+        if (value == null || !java.time.Instant.now().isBefore(value.expiresAt()))
+            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        return value;
+    }
+
+    /** 读取当前资源目录上限，写事务不接受预览缓存。 */
+    public Entry requireFresh(ResourceKey key, boolean administrator) {
+        var app = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
+            .eq(IamApplicationEntity::getDomain, key.domain())
+            .eq(IamApplicationEntity::getCode, key.applicationCode()));
+        if (app == null)
+            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        var row = resources.selectOne(Wrappers.<IamResourceEntity>lambdaQuery()
+            .eq(IamResourceEntity::getApplicationId, app.getId())
+            .eq(IamResourceEntity::getCode, key.resourceCode()));
+        var value = row == null ? null : describe(List.of(row)).get(row.getId().toString());
+        if (value == null)
+            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        if (administrator) {
+            var original = registry.require(key).descriptor();
+            var manifest = manifests.require(key);
+            var read = manifest.bindings().stream().filter(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.READ)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            Map<String, FieldCapability> fields = new LinkedHashMap<>();
+            original.fields().forEach(field -> fields.put(field.key(), read.contains(field.key()) ? field
+                    : new FieldCapability(field.key(), field.label(), List.of(FieldVisibility.HIDDEN), false, false, null)));
+            value.fields().forEach(field -> fields.putIfAbsent(field.key(), field));
+            Map<String, FieldAccess> defaults = new LinkedHashMap<>();
+            fields.forEach((field, capability) -> defaults.put(field, read.contains(field)
+                    ? original.defaults().getOrDefault(field, new FieldAccess(FieldVisibility.HIDDEN, false))
+                    : new FieldAccess(FieldVisibility.HIDDEN, false)));
+            value = new ResourceDescriptor(key, original.actions(), original.scopeCapabilities(), List.copyOf(fields.values()),
+                    defaults, original.readAction(), original.hierarchical(), original.fieldPolicyEligible());
+        }
+        return new Entry(row.getId().toString(), value);
+    }
+
+    /**
+     * <p>资源能力缓存键，管理员资格必须由服务器授权视图产生。</p>
+     * @param resource 完整资源
+     * @param administrator 当前可信系统资格
+     * @author jy
+     * @since 1.0.0
+     */
+    public record Lookup(ResourceKey resource, boolean administrator) { }
+
+    /**
+     * <p>
+     * 资源真实 ID 及有效执行能力。
+     * </p>
+     *
+     * @param id 资源 ID
+     * @param descriptor 执行描述
+     * @param expiresAt 来源目录绝对有效期
+     * @author jy
+     * @since 1.0.0
+     */
+    public record Entry(String id, ResourceDescriptor descriptor, java.time.Instant expiresAt) {
+        /** 从当前目录事实构造来源。 */
+        public Entry(String id, ResourceDescriptor descriptor) {
+            this(id, descriptor, com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime.deadline());
+        }
+        /** 缓存恢复时必须保留来源期限。 */
+        public Entry { java.util.Objects.requireNonNull(expiresAt); }
+    }
+
+}

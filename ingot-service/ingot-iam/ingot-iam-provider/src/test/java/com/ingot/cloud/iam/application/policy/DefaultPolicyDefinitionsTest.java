@@ -1,0 +1,57 @@
+package com.ingot.cloud.iam.application.policy;
+
+import java.util.Map;
+
+import java.util.List;
+
+import com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders;
+import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.cloud.iam.domain.policy.MemberFieldKey;
+import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * <p>验证空定义体回落到脱敏基线，以及平台上限缺省不额外收紧。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+class DefaultPolicyDefinitionsTest {
+    @Test
+    void emptyFieldDefinitionMasksPhoneAndLeavesCeilingOpen() {
+        var member = member();
+        var baseline = DefaultPolicyDefinitions.fieldAccess("{}", member);
+        assertEquals(FieldVisibility.MASKED, baseline.get(MemberFieldKey.VALUE_PHONE).visibility());
+        assertFalse(baseline.get(MemberFieldKey.VALUE_PHONE).editable());
+        assertEquals(FieldVisibility.FULL, baseline.get(MemberFieldKey.VALUE_DISPLAY_NAME).visibility());
+        var ceiling = DefaultPolicyDefinitions.fieldCeiling("{}", member);
+        assertEquals(FieldVisibility.FULL, ceiling.get(MemberFieldKey.VALUE_PHONE).visibility());
+        assertTrue(ceiling.get(MemberFieldKey.VALUE_PHONE).editable());
+        var capped = DefaultPolicyDefinitions.fieldCeiling(
+                "{\"ceiling\":{\"phone\":\"MASKED\"}}", member);
+        assertEquals(FieldVisibility.MASKED, capped.get(MemberFieldKey.VALUE_PHONE).visibility());
+        assertEquals(FieldVisibility.FULL, capped.get(MemberFieldKey.VALUE_DISPLAY_NAME).visibility());
+    }
+
+    @Test
+    void stricterPrefersHiddenThenMasked() {
+        var hidden = DefaultPolicyDefinitions.stricter(
+                new com.ingot.framework.commons.model.iam.FieldAccess(FieldVisibility.FULL, true),
+                new com.ingot.framework.commons.model.iam.FieldAccess(FieldVisibility.HIDDEN, false));
+        assertEquals(FieldVisibility.HIDDEN, hidden.visibility());
+        assertFalse(hidden.editable());
+        Map<String, com.ingot.framework.commons.model.iam.FieldAccess> parsed = DefaultPolicyDefinitions.fieldAccess(
+                "{\"fields\":{\"phone\":\"FULL\"}}", member());
+        assertEquals(FieldVisibility.FULL, parsed.get(MemberFieldKey.VALUE_PHONE).visibility());
+        assertTrue(parsed.get(MemberFieldKey.VALUE_PHONE).editable());
+    }
+
+    private static ResourceDescriptor member() {
+        return new BuiltinResourceProviders(null).registry(List.of())
+                .require(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE).descriptor();
+    }
+}

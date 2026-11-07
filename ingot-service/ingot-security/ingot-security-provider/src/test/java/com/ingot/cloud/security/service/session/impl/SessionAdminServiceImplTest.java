@@ -10,7 +10,7 @@ import com.ingot.cloud.auth.api.model.dto.InnerUserSessionRevokeDTO;
 import com.ingot.cloud.auth.api.model.vo.InnerSessionPageVO;
 import com.ingot.cloud.auth.api.model.vo.InnerSessionVO;
 import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
-import com.ingot.cloud.iam.api.model.domain.SysTenant;
+import com.ingot.cloud.iam.api.model.dto.tenant.TenantDetailsDTO;
 import com.ingot.cloud.iam.api.model.dto.user.InnerUserDTO;
 import com.ingot.cloud.iam.api.rpc.RemoteIamTenantDetailsService;
 import com.ingot.cloud.iam.api.rpc.RemoteIamUserDetailsService;
@@ -224,7 +224,7 @@ class SessionAdminServiceImplTest {
     }
 
     private void givenTenant(String name) {
-        SysTenant tenant = new SysTenant();
+        TenantDetailsDTO tenant = new TenantDetailsDTO();
         tenant.setId(TENANT_ID);
         tenant.setName(name);
         when(remoteIamTenantDetailsService.getTenantById(TENANT_ID)).thenReturn(R.ok(tenant));

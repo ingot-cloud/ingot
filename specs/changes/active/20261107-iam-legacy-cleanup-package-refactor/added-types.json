@@ -1,0 +1,252 @@
+[
+  {
+    "type": "com.ingot.cloud.iam.api.model.dto.social.SocialDetailsDTO",
+    "path": "ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/dto/social/SocialDetailsDTO.java",
+    "reason": "跨模块社交 RPC 字段契约，替代原持久化实体返回值"
+  },
+  {
+    "type": "com.ingot.cloud.iam.api.model.dto.tenant.TenantDetailsDTO",
+    "path": "ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/dto/tenant/TenantDetailsDTO.java",
+    "reason": "跨模块租户详情 RPC 字段契约，保持原字段与 OSS/时间语义"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.account.AccountDetailsQueryService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/account/AccountDetailsQueryService.java",
+    "reason": "在应用层承接内部账号详情查询，移除控制器对 Repository 的直接依赖"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.assignment.PlatformAssignmentCommandService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/PlatformAssignmentCommandService.java",
+    "reason": "承接原服务的新增、修改、撤销事务及提交后副作用"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.assignment.PlatformAssignmentOperations",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/PlatformAssignmentOperations.java",
+    "reason": "对应业务兄弟用例共享的持久化协作者和内部规则；保留必要初始化"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.assignment.PlatformAssignmentPreviewService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/PlatformAssignmentPreviewService.java",
+    "reason": "承接无写入预览，并复用与最终提交一致的校验"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.assignment.PlatformAssignmentQueryService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/PlatformAssignmentQueryService.java",
+    "reason": "承接原服务的可见范围查询、详情与候选，不编排写事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.assignment.PlatformAssignmentVersionService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/PlatformAssignmentVersionService.java",
+    "reason": "承接固定版本发布、切换或应用用例，与普通资料维护分离"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.assignment.TenantAssignmentCommandService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/TenantAssignmentCommandService.java",
+    "reason": "承接原服务的新增、修改、撤销事务及提交后副作用"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.assignment.TenantAssignmentOperations",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/TenantAssignmentOperations.java",
+    "reason": "对应业务兄弟用例共享的持久化协作者和内部规则；保留必要初始化"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.assignment.TenantAssignmentQueryService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/TenantAssignmentQueryService.java",
+    "reason": "承接原服务的可见范围查询、详情与候选，不编排写事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.authorization.candidate.PlatformScopeBindingValidator",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/authorization/candidate/PlatformScopeBindingValidator.java",
+    "reason": "执行平台分配提交及委派对象上限校验，与候选查询解耦"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.authorization.candidate.PlatformScopeObjectResolver",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/authorization/candidate/PlatformScopeObjectResolver.java",
+    "reason": "查询与提交共用实际应用/资源到对象提供者的解析规则"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.authorization.scope.TenantScopeBindingService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/authorization/scope/TenantScopeBindingService.java",
+    "reason": "租户分配与委派共用范围候选、绑定校验和持续上限"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.catalog.ActionCatalogService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/catalog/ActionCatalogService.java",
+    "reason": "按Action目录对象维护查询、写入及相应事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.catalog.ApplicationBundleService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/catalog/ApplicationBundleService.java",
+    "reason": "完整应用包创建的原子事务入口，保留应用/资源/操作/菜单写入顺序"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.catalog.ApplicationCatalogService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/catalog/ApplicationCatalogService.java",
+    "reason": "按Application目录对象维护查询、写入及相应事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.catalog.CatalogOperations",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/catalog/CatalogOperations.java",
+    "reason": "对应业务兄弟用例共享的持久化协作者和内部规则；保留必要初始化"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.catalog.MenuCatalogService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/catalog/MenuCatalogService.java",
+    "reason": "按Menu目录对象维护查询、写入及相应事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.catalog.PlanCatalogService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/catalog/PlanCatalogService.java",
+    "reason": "按Plan目录对象维护查询、写入及相应事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.catalog.ResourceCatalogService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/catalog/ResourceCatalogService.java",
+    "reason": "按Resource目录对象维护查询、写入及相应事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.delegation.TenantDelegationCommandService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/delegation/TenantDelegationCommandService.java",
+    "reason": "承接原服务的新增、修改、撤销事务及提交后副作用"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.delegation.TenantDelegationOperations",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/delegation/TenantDelegationOperations.java",
+    "reason": "对应业务兄弟用例共享的持久化协作者和内部规则；保留必要初始化"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.delegation.TenantDelegationQueryService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/delegation/TenantDelegationQueryService.java",
+    "reason": "承接原服务的可见范围查询、详情与候选，不编排写事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.dictionary.DictionaryNodeTransfer",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/dictionary/DictionaryNodeTransfer.java",
+    "reason": "辅助维护用例中的输入、持久化对象与响应转换"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.dictionary.model.DictionaryNodeInput",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/dictionary/model/DictionaryNodeInput.java",
+    "reason": "维护接口的独立输入，保留原字段/校验组，不携带 ORM 注解"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.dictionary.model.DictionaryNodeRecord",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/dictionary/model/DictionaryNodeRecord.java",
+    "reason": "维护接口的独立查询响应，保留原 JSON 字段与空值"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.id.IdAllocationService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/id/IdAllocationService.java",
+    "reason": "将原控制器中的授权、持久化编排和副作用移动到应用层"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.id.IdAllocationTransfer",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/id/IdAllocationTransfer.java",
+    "reason": "辅助维护用例中的输入、持久化对象与响应转换"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.id.model.IdAllocationInput",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/id/model/IdAllocationInput.java",
+    "reason": "维护接口的独立输入，保留原字段/校验组，不携带 ORM 注解"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.id.model.IdAllocationRecord",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/id/model/IdAllocationRecord.java",
+    "reason": "维护接口的独立查询响应，保留原 JSON 字段与空值"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.role.PlatformRoleCommandService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/role/PlatformRoleCommandService.java",
+    "reason": "承接原服务的新增、修改、撤销事务及提交后副作用"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.role.PlatformRoleOperations",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/role/PlatformRoleOperations.java",
+    "reason": "对应业务兄弟用例共享的持久化协作者和内部规则；保留必要初始化"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.role.PlatformRolePreviewService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/role/PlatformRolePreviewService.java",
+    "reason": "承接无写入预览，并复用与最终提交一致的校验"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.role.PlatformRoleQueryService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/role/PlatformRoleQueryService.java",
+    "reason": "承接原服务的可见范围查询、详情与候选，不编排写事务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.role.PlatformRoleRevisionService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/role/PlatformRoleRevisionService.java",
+    "reason": "承接固定版本发布、切换或应用用例，与普通资料维护分离"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.role.TenantRoleDefinitionResolver",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/role/TenantRoleDefinitionResolver.java",
+    "reason": "按有效开通与启用操作解析租户当前角色定义"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.role.TenantRoleLockService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/role/TenantRoleLockService.java",
+    "reason": "按稳定顺序锁定租户角色，分配和委派不再互相依赖写服务"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.social.SocialConfigService",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/social/SocialConfigService.java",
+    "reason": "将原控制器中的授权、持久化编排和副作用移动到应用层"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.social.SocialConfigTransfer",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/social/SocialConfigTransfer.java",
+    "reason": "辅助维护用例中的输入、持久化对象与响应转换"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.social.model.SocialConfigInput",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/social/model/SocialConfigInput.java",
+    "reason": "维护接口的独立输入，保留原字段/校验组，不携带 ORM 注解"
+  },
+  {
+    "type": "com.ingot.cloud.iam.application.social.model.SocialConfigRecord",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/social/model/SocialConfigRecord.java",
+    "reason": "维护接口的独立查询响应，保留原 JSON 字段与空值"
+  },
+  {
+    "type": "com.ingot.cloud.iam.domain.authorization.AuthorizationCacheNames",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/domain/authorization/AuthorizationCacheNames.java",
+    "reason": "独立保存跨层复用的稳定缓存 Bean 限定名"
+  },
+  {
+    "type": "com.ingot.cloud.iam.domain.authorization.AuthorizationView",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/domain/authorization/AuthorizationView.java",
+    "reason": "从求值器内部类型提取的独立缓存载荷，基础设施不依赖应用类"
+  },
+  {
+    "type": "com.ingot.cloud.iam.domain.authorization.RoleFieldSource",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/domain/authorization/RoleFieldSource.java",
+    "reason": "从求值器内部类型提取的独立字段贡献模型"
+  },
+  {
+    "type": "com.ingot.cloud.iam.domain.identity.AccountSocialPrincipal",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/domain/identity/AccountSocialPrincipal.java",
+    "reason": "社交解析仅返回真实全局账号标识，不再借用 SysUser"
+  },
+  {
+    "type": "com.ingot.cloud.iam.domain.organization.MemberDepartmentRules",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/domain/organization/MemberDepartmentRules.java",
+    "reason": "组织成员输入共用的纯任职形状校验"
+  },
+  {
+    "type": "com.ingot.cloud.iam.domain.policy.FieldPolicyCacheKeys",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/domain/policy/FieldPolicyCacheKeys.java",
+    "reason": "独立保存跨层复用的字段策略版本键规则"
+  },
+  {
+    "type": "com.ingot.cloud.iam.infrastructure.cache.RoleRevisionFingerprint",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/cache/RoleRevisionFingerprint.java",
+    "reason": "将序列化指纹从纯领域快照移到基础设施，算法保持"
+  },
+  {
+    "type": "com.ingot.cloud.iam.infrastructure.social.SocialDetailsAssembler",
+    "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/social/SocialDetailsAssembler.java",
+    "reason": "在服务内部显式转换持久化对象与社交 RPC DTO"
+  }
+]

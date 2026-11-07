@@ -1,0 +1,147 @@
+package com.ingot.cloud.iam.interfaces.http.platform;
+
+import com.ingot.cloud.iam.application.authorization.read.IamReadOnlyRequest;
+
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
+import com.ingot.cloud.iam.application.delegation.DelegationService;
+import com.ingot.cloud.iam.application.shared.IamPages;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.cloud.iam.application.shared.model.CreatedResource;
+import com.ingot.framework.commons.model.iam.DelegationInput;
+import com.ingot.cloud.iam.application.delegation.model.DelegationRecord;
+import com.ingot.cloud.iam.application.delegation.model.DelegationUpdateInput;
+import com.ingot.framework.commons.model.iam.PageResponse;
+import com.ingot.cloud.iam.application.shared.model.Preview;
+import com.ingot.cloud.iam.application.shared.model.ReferenceImpactPreview;
+import com.ingot.cloud.iam.application.catalog.model.ResourceDetail;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * <p>提供平台委派限制，人群不得引用部门。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+@RestController
+@Tag(name = "IAM 平台委派")
+@RequestMapping("/v1/platform/delegations")
+@RequiredArgsConstructor
+public class PlatformDelegationAPI implements RShortcuts {
+    private final DelegationService delegations;
+
+    /**
+     * 分页列出平台委派。
+     *
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param administratorName 管理员显示名称包含匹配，可空
+     * @return 委派页
+     */
+    @Operation(summary = "委派列表")
+    @IamReadOnlyRequest
+    @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_READ)
+    public R<PageResponse<ResourceDetail<DelegationRecord>>> list(
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String administratorName) {
+        return ok(delegations.list(AuthorizationDomain.PLATFORM, page, pageSize, administratorName));
+    }
+
+    /**
+     * 创建平台委派。
+     *
+     * @param input 委派限制
+     * @return 新委派 ID
+     */
+    @Operation(summary = "创建委派")
+    @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_CREATE)
+    public R<CreatedResource> create(@Valid @RequestBody DelegationInput input) {
+        return ok(delegations.create(AuthorizationDomain.PLATFORM, input));
+    }
+
+    /**
+     * 创建前校验委派草稿。
+     * @param input 委派定义
+     * @return 校验效果
+     */
+    @PostMapping("/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_CREATE)
+    @Operation(summary = "预览新委派")
+    public R<Preview<ReferenceImpactPreview>> previewCreate(@Valid @RequestBody DelegationInput input) {
+        return ok(delegations.previewCreate(AuthorizationDomain.PLATFORM, input));
+    }
+
+    /**
+     * 读取平台委派。
+     *
+     * @param id 委派 ID
+     * @return 委派详情
+     */
+    @Operation(summary = "委派详情")
+    @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_READ)
+    public R<ResourceDetail<DelegationRecord>> get(@PathVariable String id) {
+        return ok(delegations.get(AuthorizationDomain.PLATFORM, id));
+    }
+
+    /**
+     * 调整平台委派。
+     *
+     * @param id 委派 ID
+     * @param input 完整限制
+     * @return 更新后详情
+     */
+    @Operation(summary = "调整委派")
+    @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_UPDATE)
+    public R<ResourceDetail<DelegationRecord>> replace(@PathVariable String id,
+                                                       @Valid @RequestBody DelegationUpdateInput input) {
+        return ok(delegations.replace(AuthorizationDomain.PLATFORM, id, input));
+    }
+
+    /**
+     * 撤销平台委派。
+     *
+     * @param id 委派 ID
+     * @return 撤销前版本
+     */
+    @Operation(summary = "撤销委派")
+    @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_DELETE)
+    public R<CreatedResource> delete(@PathVariable String id) {
+        return ok(delegations.delete(AuthorizationDomain.PLATFORM, id));
+    }
+
+    /**
+     * 预览委派收缩影响，无写入。
+     *
+     * @param id 委派 ID
+     * @param input 待保存限制
+     * @return 引用影响
+     */
+    @Operation(summary = "预览委派收缩影响")
+    @PostMapping("/{id}/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_PREVIEW)
+    public R<Preview<ReferenceImpactPreview>> preview(@PathVariable String id,
+                                                      @Valid @RequestBody DelegationUpdateInput input) {
+        return ok(delegations.preview(AuthorizationDomain.PLATFORM, id, input));
+    }
+}

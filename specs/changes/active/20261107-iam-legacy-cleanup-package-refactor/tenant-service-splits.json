@@ -1,0 +1,43 @@
+[
+  {
+    "old": "com.ingot.cloud.iam.application.assignment.TenantAssignmentService",
+    "facade": "com.ingot.cloud.iam.application.assignment.TenantAssignmentFacade",
+    "operations": "TenantAssignmentOperations",
+    "services": [
+      "TenantAssignmentCommandService",
+      "TenantAssignmentQueryService"
+    ]
+  },
+  {
+    "old": "com.ingot.cloud.iam.application.delegation.TenantDelegationService",
+    "facade": "com.ingot.cloud.iam.application.delegation.TenantDelegationFacade",
+    "operations": "TenantDelegationOperations",
+    "services": [
+      "TenantDelegationCommandService",
+      "TenantDelegationQueryService"
+    ],
+    "methodOwners": {
+      "detail": "TenantDelegationOperations",
+      "tenant": "TenantDelegationOperations",
+      "require": "TenantDelegationOperations",
+      "applied": "TenantDelegationCommandService",
+      "row": "TenantDelegationCommandService",
+      "audit": "TenantDelegationCommandService",
+      "validate": "TenantDelegationOperations",
+      "lock": "TenantDelegationCommandService",
+      "save": "TenantDelegationCommandService",
+      "input": "TenantDelegationOperations",
+      "issues": "TenantDelegationOperations",
+      "instant": "TenantDelegationOperations",
+      "parameter": "TenantDelegationQueryService",
+      "invalid": "TenantDelegationOperations",
+      "missing": "TenantDelegationOperations",
+      "time": "TenantDelegationCommandService",
+      "safe": "TenantDelegationCommandService"
+    },
+    "dependencies": {
+      "TenantDelegationCommandService": [],
+      "TenantDelegationQueryService": []
+    }
+  }
+]

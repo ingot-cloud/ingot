@@ -623,16 +623,16 @@ def build():
     application_path = '/v1/platform/roles/{roleId}/version-applications'
     application_exec = '仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变'
     for suffix, method, operation, summary, request, response, query in [
-        ('', 'post', 'Prepare', '准备版本应用', 'RoleApplicationPrepareInput', 'RRoleApplicationTask', None),
-        ('/publish', 'post', 'Publish', '发布并准备应用', 'RolePublishApplicationInput', 'RRoleApplicationTask', None),
-        ('', 'get', 'List', '版本应用任务记录', None, 'RPageResponseRoleApplicationTask', PAGE),
+        ('', 'post', 'Prepare', '准备版本应用', 'RoleVersionApplicationPrepareInput', 'RRoleVersionApplicationTask', None),
+        ('/publish', 'post', 'Publish', '发布并准备应用', 'RoleVersionApplicationPublishInput', 'RRoleVersionApplicationTask', None),
+        ('', 'get', 'List', '版本应用任务记录', None, 'RPageResponseRoleVersionApplicationTask', PAGE),
         ('/candidates', 'get', 'Candidates', '角色关联分配候选', None, 'RPageResponseResourceDetailAssignmentRecord', PAGE),
         ('/distribution', 'get', 'Distribution', '分配版本分布', None, 'RListRoleRevisionDistribution', None),
-        ('/{id}', 'get', 'Get', '版本应用计划详情', None, 'RRoleApplicationTask', None),
-        ('/{id}/items', 'get', 'Items', '版本应用分配明细', None, 'RPageResponseRoleApplicationItem', PAGE),
-        ('/{id}/items', 'patch', 'Configure', '配置应用范围及排除集合', 'RoleApplicationChangeInput', 'RRoleApplicationTask', None),
-        ('/{id}/preflight', 'post', 'Preflight', '重新预检未完成项', 'RoleApplicationRefreshInput', 'RRoleApplicationTask', None),
-        ('/{id}/confirm', 'post', 'Confirm', '确认执行版本应用', 'RoleApplicationConfirmInput', 'RRoleApplicationTask', None),
+        ('/{id}', 'get', 'Get', '版本应用计划详情', None, 'RRoleVersionApplicationTask', None),
+        ('/{id}/items', 'get', 'Items', '版本应用分配明细', None, 'RPageResponseRoleVersionApplicationItem', PAGE),
+        ('/{id}/items', 'patch', 'Configure', '配置应用范围及排除集合', 'RoleVersionApplicationChangeInput', 'RRoleVersionApplicationTask', None),
+        ('/{id}/preflight', 'post', 'Preflight', '重新预检未完成项', 'RoleVersionApplicationRefreshInput', 'RRoleVersionApplicationTask', None),
+        ('/{id}/confirm', 'post', 'Confirm', '确认执行版本应用', 'RoleVersionApplicationConfirmInput', 'RRoleVersionApplicationTask', None),
     ]:
         routes.append(route(application_path + suffix, method, 'platformRoleApplication' + operation,
                             summary, 'PLATFORM', 'iam-platform:role-assignment:apply-version', request, response, application_exec, query=query))

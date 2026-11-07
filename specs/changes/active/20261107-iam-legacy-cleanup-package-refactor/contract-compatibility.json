@@ -1,0 +1,23 @@
+{
+  "baselineCommit": "5d0f3e5674f1e8941afb3fe9f6f69d7c8d9b1ac8",
+  "snapshots": {
+    "routes.json": {
+      "equivalentAfterSchemaTypeRenames": true
+    },
+    "schemas.json": {
+      "equivalentAfterSchemaTypeRenames": true
+    },
+    "openapi.json": {
+      "equivalentAfterSchemaTypeRenames": true
+    },
+    "internal-openapi.json": {
+      "equivalentAfterSchemaTypeRenames": true
+    }
+  },
+  "http": {
+    "paths": 175,
+    "operations": 246,
+    "pathMethodOperationIdsUnchanged": true
+  },
+  "routeGeneratorReproducible": true
+}

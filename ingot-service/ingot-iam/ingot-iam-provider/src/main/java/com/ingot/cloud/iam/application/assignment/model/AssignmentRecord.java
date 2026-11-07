@@ -1,0 +1,65 @@
+package com.ingot.cloud.iam.application.assignment.model;
+
+import com.ingot.cloud.iam.domain.assignment.AssignmentEffectiveStatus;
+import com.ingot.cloud.iam.domain.assignment.AssignmentSource;
+import com.ingot.cloud.iam.domain.assignment.GrantStatus;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+/**
+ * <p>返回可见授权记录，保留主体、固定版本、范围及来源链。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ * @param id 授权记录 ID
+ * @param assignment 有效分配定义
+ * @param status 生效或撤销状态；到期另按时间判断
+ * @param source 写入来源
+ * @param subjectName 接收对象名称
+ * @param roleName 角色名称
+ * @param revisionNumber 固定版本号
+ * @param delegationSummary 授权依据摘要
+ * @param createdAt UTC 授权时间
+ * @param grantedBy 创建审计授权人
+ * @param versionName 固定版本的可读名称
+ * @param effectiveStatus 计算状态
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(description = "返回可见授权记录，保留主体、固定版本、范围及来源链")
+public record AssignmentRecord(
+        @NotBlank @Schema(description = "授权记录 ID", requiredMode = Schema.RequiredMode.REQUIRED)
+        String id,
+        @NotNull @Valid @Schema(description = "有效分配定义", requiredMode = Schema.RequiredMode.REQUIRED)
+        AssignmentInput assignment,
+        @NotNull @Schema(description = "生效或撤销状态；到期另按时间判断", requiredMode = Schema.RequiredMode.REQUIRED)
+        GrantStatus status,
+        @NotNull @Schema(description = "写入来源", requiredMode = Schema.RequiredMode.REQUIRED)
+        AssignmentSource source,
+        @Schema(description = "接收对象名称") String subjectName,
+        @Schema(description = "角色名称") String roleName,
+        @Schema(description = "固定版本号") String revisionNumber,
+        @Schema(description = "授权依据摘要") String delegationSummary,
+        @Schema(description = "授权创建时间，ISO-8601 UTC", type = "string", format = "date-time", example = "2026-09-28T08:00:00Z")
+        java.time.Instant createdAt,
+        @Schema(description = "实际创建审计授权人") AssignmentAuthor grantedBy,
+        @Schema(description = "计算后的生效状态") AssignmentEffectiveStatus effectiveStatus, String versionName) {
+    /** 兼容既有分配显示投影。 */
+    public AssignmentRecord(String id, AssignmentInput assignment, GrantStatus status, AssignmentSource source,
+            String subjectName, String roleName, String revisionNumber, String delegationSummary,
+            java.time.Instant createdAt, AssignmentAuthor grantedBy, AssignmentEffectiveStatus effectiveStatus) {
+        this(id, assignment, status, source, subjectName, roleName, revisionNumber, delegationSummary, createdAt, grantedBy, effectiveStatus, null);
+    }
+    /**
+     * 保持租户与历史投影构造方式兼容。
+     * @param id 分配 ID
+     * @param assignment 定义
+     * @param status 持久化状态
+     * @param source 来源
+     */
+    public AssignmentRecord(String id, AssignmentInput assignment, GrantStatus status, AssignmentSource source) {
+        this(id, assignment, status, source, null, null, null, null, null, null, null);
+    }
+}

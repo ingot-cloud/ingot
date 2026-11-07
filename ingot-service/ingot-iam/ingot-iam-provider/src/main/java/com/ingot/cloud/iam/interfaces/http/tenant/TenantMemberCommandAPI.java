@@ -1,0 +1,356 @@
+package com.ingot.cloud.iam.interfaces.http.tenant;
+
+import com.ingot.framework.commons.annotation.field.FieldControl;
+import com.ingot.framework.commons.annotation.field.FieldUse;
+
+import com.ingot.framework.commons.annotation.field.*;
+import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.cloud.iam.domain.organization.MemberResources;
+import com.ingot.cloud.iam.application.organization.model.TenantMemberFilter;
+
+import com.ingot.cloud.iam.application.authorization.read.IamReadOnlyRequest;
+import com.ingot.cloud.iam.application.organization.MemberCommandService;
+import com.ingot.cloud.iam.application.organization.MemberExportService;
+import com.ingot.cloud.iam.application.organization.MemberQueryService;
+import com.ingot.cloud.iam.application.organization.MemberRejoin;
+import com.ingot.cloud.iam.application.organization.MemberWorkbookService;
+import com.ingot.cloud.iam.application.organization.TenantMemberOnboarding;
+import com.ingot.cloud.iam.application.shared.IamPages;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.cloud.iam.application.shared.model.CreatedResource;
+import com.ingot.cloud.iam.application.download.model.ExportTask;
+import com.ingot.cloud.iam.application.group.model.GroupRecord;
+import com.ingot.cloud.iam.domain.workbook.MemberWorkbookArtifact;
+import com.ingot.cloud.iam.application.workbook.model.MemberWorkbookExportInput;
+import com.ingot.cloud.iam.application.workbook.model.MemberWorkbookFile;
+import com.ingot.cloud.iam.application.workbook.model.MemberWorkbookHistoryItem;
+import com.ingot.cloud.iam.domain.workbook.MemberWorkbookMode;
+import com.ingot.cloud.iam.application.workbook.model.MemberWorkbookTask;
+import com.ingot.cloud.iam.domain.organization.TenantMemberCreateInput;
+import com.ingot.cloud.iam.application.organization.model.TenantMemberCreated;
+import com.ingot.cloud.iam.application.organization.model.TenantMemberRejoinInput;
+import com.ingot.cloud.iam.application.organization.model.MemberDepartmentInput;
+import com.ingot.cloud.iam.application.organization.model.MemberProfileInput;
+import com.ingot.cloud.iam.application.organization.model.MemberRecord;
+import com.ingot.cloud.iam.domain.organization.MemberStatusInput;
+import com.ingot.framework.commons.model.iam.PageResponse;
+import com.ingot.cloud.iam.application.catalog.model.ResourceDetail;
+import com.ingot.cloud.iam.domain.shared.VersionInput;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
+import com.ingot.framework.security.crypto.annotation.InEncrypt;
+
+/**
+ * <p>提供租户成员列表、创建、重新加入、资料、暂停、移出、任职替换与表格导入导出，跨租户引用由服务端拒绝。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+@RestController
+@Tag(name = "IAM 租户成员命令")
+@RequestMapping("/v1/tenant/members")
+@RequiredArgsConstructor
+public class TenantMemberCommandAPI implements RShortcuts {
+    private final MemberCommandService members;
+    private final MemberQueryService queries;
+    private final MemberExportService exports;
+    private final MemberWorkbookService workbooks;
+    private final TenantMemberOnboarding onboarding;
+    private final MemberRejoin rejoins;
+    private final com.ingot.cloud.iam.application.organization.OrganizationMemberQueryService picker;
+
+    /** 同范围的最小有效人员候选，供组织业务表单选择使用。 */
+    @IamReadOnlyRequest
+    @com.ingot.framework.commons.annotation.field.FieldControl(domain = com.ingot.framework.commons.model.iam.AuthorizationDomain.TENANT,
+            applicationCode = com.ingot.cloud.iam.domain.organization.MemberResources.TENANT_APPLICATION,
+            resourceCode = com.ingot.cloud.iam.domain.organization.MemberResources.MEMBER,
+            action = com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ,
+            use = com.ingot.framework.commons.annotation.field.FieldUse.FILTER,
+            valueType = com.ingot.cloud.iam.application.organization.model.OrganizationMemberPickerFilter.class)
+    @GetMapping("/picker")
+    @Operation(summary = "组织成员选择候选")
+    public R<PageResponse<MemberRecord>> picker(@RequestParam(required = false) String departmentId,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) java.util.List<String> ids,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(picker.page(departmentId, keyword, ids, page, pageSize));
+    }
+
+    /** 返回当前身份与完整查询范围的字段操作能力。 */
+    @IamReadOnlyRequest
+    @GetMapping("/context")
+    @Operation(summary = "字段能力上下文")
+    public R<com.ingot.framework.commons.model.iam.ResourceFieldContext> context() { return ok(queries.tenantContext()); }
+
+    /**
+     * 分页列出租户成员。
+     *
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param phone 手机号精确筛选，可空
+     * @param email 邮箱精确筛选，可空
+     * @param departmentId 直属任职部门，可空
+     * @param status 成员资格，可空；仅接受 ACTIVE、SUSPENDED、REMOVED
+     * @return 成员页
+     */
+    @Operation(summary = "成员列表")
+    @IamReadOnlyRequest
+    @GetMapping
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, valueType = MemberRecord.class)
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, use = FieldUse.FILTER, valueType = TenantMemberFilter.class)
+    public R<PageResponse<ResourceDetail<MemberRecord>>> list(
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String departmentId,
+            @RequestParam(required = false) String status) {
+        return ok(queries.list(AuthorizationDomain.TENANT, page, pageSize, phone, email, departmentId, status));
+    }
+
+    /**
+     * 按手机号加入当前组织；没有账号时先创建全局登录凭证。
+     *
+     * @param input 姓名、手机号、邮箱与任职
+     * @return 新成员及可选一次性密码
+     */
+    @Operation(summary = "添加成员")
+    @PostMapping
+    @InCryptoHybridContext
+    @InEncrypt
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_CREATE, use = FieldUse.WRITE, valueType = TenantMemberCreateInput.class)
+    public R<TenantMemberCreated> create(@Valid @RequestBody TenantMemberCreateInput input) {
+        return ok(onboarding.create(input));
+    }
+
+    /**
+     * 读取租户成员详情。
+     *
+     * @param id 租户成员 ID
+     * @return 安全投影
+     */
+    @Operation(summary = "成员详情")
+    @IamReadOnlyRequest
+    @GetMapping("/{id}")
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, valueType = MemberRecord.class)
+    public R<ResourceDetail<MemberRecord>> get(@PathVariable String id) {
+        return ok(queries.get(AuthorizationDomain.TENANT, id));
+    }
+
+    /**
+     * 分页列出租户成员所在用户组，含直接加入和部门来源。
+     *
+     * @param id 租户成员 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 组页
+     */
+    @Operation(summary = "成员所在用户组")
+    @IamReadOnlyRequest
+    @GetMapping("/{id}/groups")
+    public R<PageResponse<ResourceDetail<GroupRecord>>> groups(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(queries.listTenantGroups(id, page, pageSize));
+    }
+
+    /**
+     * 更新租户成员显示资料。
+     *
+     * @param id 租户成员 ID
+     * @param input 资料
+     * @return 更新后投影
+     */
+    @Operation(summary = "更新成员资料")
+    @PatchMapping("/{id}")
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_UPDATE, use = FieldUse.WRITE, valueType = MemberProfileInput.class)
+    public R<ResourceDetail<MemberRecord>> patch(@PathVariable String id, @Valid @RequestBody MemberProfileInput input) {
+        return ok(queries.patch(AuthorizationDomain.TENANT, id, input));
+    }
+
+    /**
+     * 暂停或恢复租户成员资格。
+     *
+     * @param id 租户成员 ID
+     * @param input 状态与预期版本
+     * @return 提交后的版本
+     */
+    @Operation(summary = "暂停或恢复成员")
+    @PatchMapping("/{id}/status")
+    public R<CreatedResource> changeStatus(@PathVariable String id, @Valid @RequestBody MemberStatusInput input) {
+        return ok(members.changeStatus(AuthorizationDomain.TENANT, id, input));
+    }
+
+    /**
+     * 移出租户成员。
+     *
+     * @param id 租户成员 ID
+     * @param input 预期版本
+     * @return 提交后的版本
+     */
+    @Operation(summary = "移出当前域")
+    @PostMapping("/{id}/remove")
+    public R<CreatedResource> remove(@PathVariable String id, @Valid @RequestBody VersionInput input) {
+        return ok(members.remove(AuthorizationDomain.TENANT, id, input));
+    }
+
+    /**
+     * 把已移出租户成员重新加入当前组织。
+     *
+     * @param id 租户成员 ID
+     * @param input 姓名、联系方式、任职与预期版本
+     * @return 复用后的成员结果
+     */
+    @Operation(summary = "重新加入已移出成员")
+    @PostMapping("/{id}/rejoin")
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_CREATE, use = FieldUse.WRITE, valueType = TenantMemberRejoinInput.class)
+    public R<TenantMemberCreated> rejoin(@PathVariable String id, @Valid @RequestBody TenantMemberRejoinInput input) {
+        return ok(rejoins.rejoin(id, input));
+    }
+
+    /**
+     * 整体替换任职关系。
+     *
+     * @param id 租户成员 ID
+     * @param input 目标部门
+     * @return 不含凭证原值的成员投影
+     */
+    @Operation(summary = "调整成员任职")
+    @PutMapping("/{id}/departments")
+    public R<ResourceDetail<MemberRecord>> replaceDepartments(@PathVariable String id,
+                                                              @Valid @RequestBody MemberDepartmentInput input) {
+        return ok(members.replaceDepartments(id, input));
+    }
+
+    /**
+     * 登记成员导出请求并重验组织版本。
+     *
+     * @param input 组织版本
+     * @return 导出任务 ID
+     */
+    @Operation(summary = "导出成员")
+    @PostMapping("/export")
+    public R<CreatedResource> export(@Valid @RequestBody VersionInput input) {
+        return ok(exports.create(input));
+    }
+
+    /**
+     * 读取导出任务状态，不返回成员快照。
+     *
+     * @param id 导出任务 ID
+     * @return 任务状态
+     */
+    @Operation(summary = "查询成员导出任务")
+    @IamReadOnlyRequest
+    @GetMapping("/export/{id}/status")
+    public R<ExportTask> exportStatus(@PathVariable String id) {
+        return ok(exports.status(id));
+    }
+
+    /**
+     * 再次校验导出操作、范围与字段策略后返回投影结果。
+     *
+     * @param id 导出任务 ID
+     * @return 投影后的成员页
+     */
+    @Operation(summary = "下载成员导出")
+    @IamReadOnlyRequest
+    @GetMapping("/export/{id}")
+    public R<PageResponse<ResourceDetail<MemberRecord>>> downloadExport(@PathVariable String id) {
+        return ok(exports.download(id));
+    }
+
+    /**
+     * 下载创建成员空白模板。
+     *
+     * @return 模板文件
+     */
+    @Operation(summary = "下载成员导入模板")
+    @IamReadOnlyRequest
+    @GetMapping("/workbook/template")
+    public R<MemberWorkbookFile> workbookTemplate() {
+        return ok(workbooks.template());
+    }
+
+    /**
+     * 登记更新导出任务。
+     *
+     * @param input 组织版本与可选成员范围
+     * @return 任务 ID
+     */
+    @Operation(summary = "导出成员表格")
+    @PostMapping("/workbook/export")
+    public R<CreatedResource> exportWorkbook(@Valid @RequestBody MemberWorkbookExportInput input) {
+        return ok(workbooks.export(input));
+    }
+
+    /**
+     * 登记导入任务。
+     *
+     * @param file xlsx
+     * @param mode 创建或更新
+     * @return 任务 ID
+     */
+    @Operation(summary = "导入成员表格")
+    @PostMapping("/workbook/import")
+    public R<CreatedResource> importWorkbook(@RequestParam("file") MultipartFile file,
+            @RequestParam("mode") MemberWorkbookMode mode) {
+        return ok(workbooks.importWorkbook(file, mode));
+    }
+
+    /**
+     * 返回当前操作者最近导入任务。
+     *
+     * @return 历史摘要
+     */
+    @Operation(summary = "成员导入历史")
+    @IamReadOnlyRequest
+    @GetMapping("/workbook/history")
+    public R<java.util.List<MemberWorkbookHistoryItem>> workbookHistory() {
+        return ok(workbooks.history());
+    }
+
+    /**
+     * 读取表格任务状态。
+     *
+     * @param id 任务 ID
+     * @return 任务状态
+     */
+    @Operation(summary = "查询成员表格任务")
+    @IamReadOnlyRequest
+    @GetMapping("/workbook/{id}/status")
+    public R<MemberWorkbookTask> workbookStatus(@PathVariable String id) {
+        return ok(workbooks.status(id));
+    }
+
+    /**
+     * 下载表格任务产物。
+     *
+     * @param id 任务 ID
+     * @param artifact 产物类型
+     * @return 文件
+     */
+    @Operation(summary = "下载成员表格产物")
+    @IamReadOnlyRequest
+    @GetMapping("/workbook/{id}/file")
+    public R<MemberWorkbookFile> workbookFile(@PathVariable String id,
+            @RequestParam("artifact") MemberWorkbookArtifact artifact) {
+        return ok(workbooks.file(id, artifact));
+    }
+}

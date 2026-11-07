@@ -16,7 +16,7 @@ import cn.binarywang.wx.miniapp.config.impl.WxMaDefaultConfigImpl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.thread.ThreadFactoryBuilder;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
+import com.ingot.cloud.iam.api.model.dto.social.SocialDetailsDTO;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.social.common.provider.SocialDetailsProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +89,7 @@ public class WxMaConfigManager {
         }
         
         try {
-            List<SysSocialDetails> details = socialDetailsProvider.getDetailsByType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
+            List<SocialDetailsDTO> details = socialDetailsProvider.getDetailsByType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
             
             if (CollUtil.isNotEmpty(details)) {
                 details.forEach(this::addOrUpdateConfig);
@@ -164,7 +164,7 @@ public class WxMaConfigManager {
         
         try {
             // 获取最新配置
-            List<SysSocialDetails> remoteConfigs = socialDetailsProvider.getDetailsByType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
+            List<SocialDetailsDTO> remoteConfigs = socialDetailsProvider.getDetailsByType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
 
             if (CollUtil.isEmpty(remoteConfigs)) {
                 log.warn("WxMaConfigManager - 配置为空，清除所有本地配置");
@@ -173,8 +173,8 @@ public class WxMaConfigManager {
             }
 
             // 获取配置的appId集合
-            Map<String, SysSocialDetails> remoteConfigMap = remoteConfigs.stream()
-                    .collect(Collectors.toMap(SysSocialDetails::getAppId, detail -> detail));
+            Map<String, SocialDetailsDTO> remoteConfigMap = remoteConfigs.stream()
+                    .collect(Collectors.toMap(SocialDetailsDTO::getAppId, detail -> detail));
 
             // 移除本地存在但远程不存在的配置
             configMap.keySet().removeIf(appId -> {
@@ -206,7 +206,7 @@ public class WxMaConfigManager {
      *
      * @param socialDetails 社交配置详情
      */
-    public synchronized void addOrUpdateConfig(SysSocialDetails socialDetails) {
+    public synchronized void addOrUpdateConfig(SocialDetailsDTO socialDetails) {
         if (socialDetails == null || StrUtil.isBlank(socialDetails.getAppId())) {
             log.warn("WxMaConfigManager - 配置信息无效，忽略");
             return;

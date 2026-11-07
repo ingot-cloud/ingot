@@ -7,7 +7,6 @@ import java.util.TimeZone;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.ingot.framework.commons.model.iam.EntitlementDraft;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +54,7 @@ class InApiTimeModuleTest {
             }
         }
         assertThrows(com.fasterxml.jackson.databind.JsonMappingException.class, () -> mapper.readValue(
-                "{\"applicationId\":\"4\",\"status\":\"ENABLED\",\"validFrom\":\"2026-10-08 09:00:00\"}", EntitlementDraft.class));
+                "{\"applicationId\":\"4\",\"status\":\"ENABLED\",\"validFrom\":\"2026-10-08 09:00:00\"}", ApiTimeInput.class));
     }
 
     @Test
@@ -71,4 +70,6 @@ class InApiTimeModuleTest {
         assertEquals(utc, storage.readValue(storage.writeValueAsString(utc), LocalDateTime.class));
         assertEquals("\"2026-10-08T01:00:00Z\"", mapper.writeValueAsString(utc));
     }
+    /** <p>用于严格时间解析的框架测试载荷，不依赖IAM用例。</p> */
+    private record ApiTimeInput(String applicationId, String status, Instant validFrom) { }
 }

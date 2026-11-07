@@ -1,0 +1,558 @@
+package com.ingot.cloud.iam.application.authorization.evaluation;
+
+import com.ingot.cloud.iam.domain.authorization.ObjectScope;
+import com.ingot.cloud.iam.domain.authorization.ResolvedActionScope;
+import com.ingot.cloud.iam.domain.authorization.ScopeClause;
+import com.ingot.cloud.iam.infrastructure.persistence.ObjectScopeCompiler;
+
+import com.ingot.cloud.iam.domain.authorization.AuthorizationView;
+
+import java.util.Collection;
+import java.math.BigInteger;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.ingot.cloud.iam.application.organization.MemberMutationGuard;
+import com.ingot.cloud.iam.domain.assignment.TenantScopeObjectResource;
+import com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders;
+import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.ObjectScopeSql;
+import com.ingot.cloud.iam.domain.shared.IamIds;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.cloud.iam.domain.organization.MemberDepartmentView;
+import com.ingot.cloud.iam.application.organization.model.MemberRecord;
+import com.ingot.cloud.iam.domain.organization.MemberStatus;
+import com.ingot.cloud.iam.domain.organization.MemberResources;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+/**
+ * <p>按已求值范围执行对象可见性与写两端覆盖检查，缺操作拒绝，有操作无对象则读空写拒绝。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+@Service
+@RequiredArgsConstructor
+public class ResourceScopeAccessService {
+    private final AuthorizationEvaluator evaluator;
+    private final ObjectScopeCompiler compiler;
+    private final MemberQueryRepository members;
+    private final DepartmentQueryRepository departments;
+
+    /**
+     * 编译当前身份对成员列表/详情的范围。
+     *
+     * @param actor 当前身份
+     * @param action 成员读操作
+     * @return 类型化范围
+     */
+    public ObjectScope memberRead(AuthorizationContext actor, IamAction action) {
+        evaluator.require(actor, action);
+        return compiler.members(actor, evaluator.evaluate(actor).scope(action.getCode()));
+    }
+
+    /**
+     * 编译当前身份对部门列表/详情的范围。
+     *
+     * @param actor 当前身份
+     * @param action 部门读操作
+     * @return 类型化范围
+     */
+    public ObjectScope departmentRead(AuthorizationContext actor, IamAction action) {
+        evaluator.require(actor, action);
+        return compiler.departments(actor, evaluator.evaluate(actor).scope(action.getCode()));
+    }
+
+    /**
+     * 在关联写入事务中重新编译读取资格，避免旧范围放大可选对象。
+     * @param actor 当前可信身份
+     * @param action 关联对象的读取操作
+     * @return 当前有效的成员范围
+     */
+    public ObjectScope memberReadForExecution(AuthorizationContext actor, IamAction action) {
+        return compiler.members(actor, executionScope(actor, action));
+    }
+
+    /**
+     * 在关联写入事务中重新编译部门范围。
+     * @param actor 当前可信租户身份
+     * @param action 部门读取操作
+     * @return 当前有效的部门范围
+     */
+    public ObjectScope departmentReadForExecution(AuthorizationContext actor, IamAction action) {
+        return compiler.departments(actor, executionScope(actor, action));
+    }
+
+    /**
+     * 确认目标成员对读操作可见；详情不可见时按对象不存在处理。
+     *
+     * @param actor 当前身份
+     * @param action 读操作
+     * @param memberId 目标成员
+     */
+    public void requireVisibleMember(AuthorizationContext actor, IamAction action, long memberId) {
+        if (!members.visible(actor.domain(), tenantId(actor), memberId, memberRead(actor, action))) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 在一次查询中投影已有关联中的可读成员。
+     * @param actor 当前可信身份
+     * @param scope 成员读取范围
+     * @param ids 已关联的成员标识
+     * @return 落入读取范围的成员
+     */
+    public Set<BigInteger> visibleMembers(AuthorizationContext actor, ObjectScope scope, Collection<BigInteger> ids) {
+        return actor.domain() == AuthorizationDomain.PLATFORM
+                ? members.visiblePlatformIds(ids, scope) : members.visibleTenantIds(tenantId(actor), ids, scope);
+    }
+
+    /**
+     * 以最新授权校验平台成员更新；可查看但越出编辑范围返回403，不披露不可查看对象。
+     * @param actor 当前可信平台身份
+     * @param memberId 已锁定的真实成员
+     */
+    public void requirePlatformMemberUpdate(AuthorizationContext actor, long memberId) {
+        if (actor.domain() != AuthorizationDomain.PLATFORM)
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        evaluator.require(actor, IamAction.PLATFORM_MEMBER_UPDATE);
+        var view = evaluator.evaluateForExecution(actor, true);
+        if (!memberVisible(actor, view, IamAction.PLATFORM_MEMBER_READ, memberId))
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        if (!memberVisible(actor, view, IamAction.PLATFORM_MEMBER_UPDATE, memberId))
+            throw new BizException(IamReasonCode.DATA_SCOPE_DENIED);
+    }
+
+    /**
+     * 确认目标部门对读操作可见。
+     *
+     * @param actor 当前身份
+     * @param action 读操作
+     * @param departmentId 目标部门
+     */
+    public void requireVisibleDepartment(AuthorizationContext actor, IamAction action, long departmentId) {
+        if (!departmentVisible(actor, departmentRead(actor, action), departmentId)) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 以同一已编译范围核对真实部门及其组织归属。
+     * @param actor 当前身份
+     * @param scope 部门读取范围
+     * @param departmentId 目标部门
+     * @return 部门存在且可见
+     */
+    public boolean departmentVisible(AuthorizationContext actor, ObjectScope scope, long departmentId) {
+        return departments.matches(tenantId(actor), departmentId, scope);
+    }
+
+    /**
+     * 成员写路径覆盖检查：状态/移出覆盖全部部门，调部门只检查受影响关系。
+     *
+     * @param actor 当前身份
+     * @param action 写操作
+     * @param memberId 目标成员
+     * @param operation 成员变更种类
+     * @param oldDepartments 旧部门
+     * @param newDepartments 新部门
+     */
+    public void requireMemberWrite(AuthorizationContext actor, IamAction action, String memberId,
+                                   MemberMutationGuard.Operation operation, Set<String> oldDepartments,
+                                   Set<String> newDepartments) {
+        evaluator.require(actor, action);
+        ResolvedActionScope scope = evaluator.evaluate(actor).scope(action.getCode());
+        if (scope.isEmpty()) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        Set<String> required = operation == MemberMutationGuard.Operation.CHANGE_DEPARTMENTS
+                ? union(oldDepartments, newDepartments) : oldDepartments;
+        if (!covers(actor, scope, memberId, required, operation)) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+    }
+
+    /**
+     * 创建成员时检查目标任职部门；无部门且非全域时拒绝。
+     *
+     * @param actor 当前身份
+     * @param action 创建操作
+     * @param departmentIds 新成员任职
+     */
+    public void requireCreate(AuthorizationContext actor, IamAction action, Set<String> departmentIds) {
+        evaluator.require(actor, action);
+        ResolvedActionScope scope = evaluator.evaluate(actor).scope(action.getCode());
+        if (scope.isEmpty()) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        if (scope.clauses().stream().anyMatch(ScopeClause::all)) {
+            return;
+        }
+        if (departmentIds == null || departmentIds.isEmpty()) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        ObjectScope departments = compiler.departments(actor, scope);
+        for (String departmentId : departmentIds) {
+            if (!this.departments.matches(tenantId(actor), Long.parseLong(departmentId), departments)) {
+                throw new BizException(IamReasonCode.ACTION_DENIED);
+            }
+        }
+    }
+
+    /**
+     * 部门写路径要求目标部门落入范围。
+     *
+     * @param actor 当前身份
+     * @param action 写操作
+     * @param departmentId 目标部门
+     */
+    public void requireDepartmentWrite(AuthorizationContext actor, IamAction action, long departmentId) {
+        evaluator.require(actor, action);
+        ResolvedActionScope scope = evaluator.evaluate(actor).scope(action.getCode());
+        if (scope.isEmpty() || !departments.matches(tenantId(actor), departmentId,
+                compiler.departments(actor, scope))) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+    }
+
+    /**
+     * 编译当前身份对全局对象的范围。
+     *
+     * @param actor 当前身份
+     * @param action 精确操作
+     * @return 类型化范围
+     */
+    public ObjectScope objects(AuthorizationContext actor, IamAction action) {
+        evaluator.require(actor, action);
+        return compiler.objects(actor, evaluator.evaluate(actor).scope(action.getCode()));
+    }
+
+    /**
+     * 编译写操作的实时对象范围，跳过最长三十秒的普通读取缓存。
+     * @param actor 恢复后的可信身份
+     * @param action 精确治理操作
+     * @return 当次数据库事实编译的范围
+     */
+    public ObjectScope objectsForExecution(AuthorizationContext actor, IamAction action) {
+        return compiler.objects(actor, executionScope(actor, action));
+    }
+
+    private ResolvedActionScope executionScope(AuthorizationContext actor, IamAction action) {
+        var view = evaluator.evaluateForExecution(actor, true);
+        if (!view.actionCodes().contains(action.getCode())) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        return view.scope(action.getCode());
+    }
+
+    /**
+     * 确认目标对象对操作可见；不可见时按对象不存在处理。
+     *
+     * @param actor 当前身份
+     * @param action 精确操作
+     * @param objectId 目标对象
+     */
+    public void requireVisibleObject(AuthorizationContext actor, IamAction action, long objectId) {
+        if (!ObjectScopeSql.matches(objects(actor, action), objectId)) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 判断已求值视图是否包含该操作且目标成员落入读范围。
+     *
+     * @param actor 当前身份
+     * @param view 同一请求复用的授权视图
+     * @param action 精确操作
+     * @param memberId 目标成员
+     * @return 有操作且对象可见时为 true
+     */
+    public boolean memberVisible(AuthorizationContext actor, AuthorizationView view,
+                                 IamAction action, long memberId) {
+        if (!hasAction(view, action)) {
+            return false;
+        }
+        return members.visible(actor.domain(), tenantId(actor), memberId,
+                compiler.members(actor, view.scope(action.getCode())));
+    }
+
+    /**
+     * 判断已求值视图是否包含该操作且目标部门落入写范围。
+     *
+     * @param actor 当前身份
+     * @param view 同一请求复用的授权视图
+     * @param action 精确操作
+     * @param departmentId 目标部门
+     * @return 有操作且对象可见时为 true
+     */
+    public boolean departmentAllowed(AuthorizationContext actor, AuthorizationView view,
+                                     IamAction action, long departmentId) {
+        if (!hasAction(view, action)) {
+            return false;
+        }
+        ResolvedActionScope scope = view.scope(action.getCode());
+        return !scope.isEmpty() && departments.matches(tenantId(actor), departmentId,
+                compiler.departments(actor, scope));
+    }
+
+    /**
+     * 判断已求值视图是否包含该写操作且覆盖目标成员任职。
+     *
+     * @param actor 当前身份
+     * @param view 同一请求复用的授权视图
+     * @param action 精确操作
+     * @param memberId 目标成员
+     * @param operation 成员变更种类
+     * @param oldDepartments 旧部门
+     * @param newDepartments 新部门
+     * @return 有操作且范围覆盖时为 true
+     */
+    public boolean memberWriteAllowed(AuthorizationContext actor, AuthorizationView view,
+                                      IamAction action, String memberId, MemberMutationGuard.Operation operation,
+                                      Set<String> oldDepartments, Set<String> newDepartments) {
+        if (!hasAction(view, action)) {
+            return false;
+        }
+        ResolvedActionScope scope = view.scope(action.getCode());
+        if (scope.isEmpty()) {
+            return false;
+        }
+        Set<String> required = operation == MemberMutationGuard.Operation.CHANGE_DEPARTMENTS
+                ? union(oldDepartments, newDepartments) : oldDepartments;
+        return covers(actor, scope, memberId, required, operation);
+    }
+
+    /**
+     * 判断已求值视图是否允许对可选目标执行该操作。
+     *
+     * @param actor 当前身份
+     * @param view 同一请求复用的授权视图
+     * @param actionCode 精确操作码
+     * @param targetId 可选目标对象
+     * @return 无目标时有操作即允许；有目标时还需落入对象范围
+     */
+    public boolean targetAllowed(AuthorizationContext actor, AuthorizationView view,
+                                 String actionCode, String targetId) {
+        return targetAllowed(actor, view, null, actionCode, targetId);
+    }
+
+    /**
+     * 用真实资源身份区分内置成员、部门与通用指定对象范围。
+     * @param actor 当前身份
+     * @param view 同一请求的已求值授权
+     * @param resource 已验证资源键，通用对象范围可为空
+     * @param actionCode 精确操作码
+     * @param targetId 可选目标
+     * @return 目标落入该操作的范围
+     */
+    public boolean targetAllowed(AuthorizationContext actor, AuthorizationView view,
+                                 ResourceKey resource, String actionCode, String targetId) {
+        if (view == null || actionCode == null || !view.actionCodes().contains(actionCode)) {
+            return false;
+        }
+        if (targetId == null || targetId.isBlank()) {
+            return true;
+        }
+        if (BuiltinResourceProviders.PLATFORM_MEMBER_RESOURCE.equals(resource)
+                || BuiltinResourceProviders.TENANT_MEMBER_RESOURCE.equals(resource)) {
+            return members.visible(actor.domain(), tenantId(actor), IamIds.require(targetId),
+                    compiler.members(actor, view.scope(actionCode)));
+        }
+        if (resource != null && resource.domain() == AuthorizationDomain.TENANT
+                && MemberResources.TENANT_APPLICATION.equals(resource.applicationCode())
+                && TenantScopeObjectResource.DEPARTMENT.getValue().equals(resource.resourceCode())) {
+            return departments.matches(tenantId(actor), IamIds.require(targetId),
+                    compiler.departments(actor, view.scope(actionCode)));
+        }
+        ResolvedActionScope scope = view.scope(actionCode);
+        if (scope.isEmpty()) {
+            return false;
+        }
+        for (ScopeClause clause : scope.clauses()) {
+            if (clause.all() || clause.objectIds().contains(targetId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 批量计算平台成员当前页的操作范围；使用与单对象检查相同的 SQL 谓词。
+     * @param actor 当前可信平台身份
+     * @param view 本次展示授权视图
+     * @param action 精确操作
+     * @param ids 当前页成员 ID
+     * @return 允许的未移出成员
+     */
+    /**
+     * 批量计算当前页租户成员是否允许该展示操作，谓词与逐条检查相同。
+     *
+     * @param actor 当前可信租户身份
+     * @param view 本次展示授权视图
+     * @param action 精确操作
+     * @param operation 成员变更种类；资料更新为空
+     * @param records 已加载的当前页成员，部门来源必须已经按租户存在性过滤
+     * @return 允许操作的成员 ID
+     */
+    public Set<String> tenantMemberIds(AuthorizationContext actor, AuthorizationView view,
+                                        IamAction action, MemberMutationGuard.Operation operation,
+                                        List<MemberRecord> records) {
+        if (actor.domain() != AuthorizationDomain.TENANT) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        if (records.isEmpty() || !hasAction(view, action)) {
+            return Set.of();
+        }
+        ResolvedActionScope resolved = view.scope(action.getCode());
+        if (resolved.isEmpty()) {
+            return Set.of();
+        }
+        boolean changeDepartments = operation == MemberMutationGuard.Operation.CHANGE_DEPARTMENTS;
+        boolean needsVisible = !changeDepartments || records.stream().anyMatch(record -> departmentIds(record).isEmpty());
+        boolean needsDepartments = operation != null && records.stream().anyMatch(record -> !departmentIds(record).isEmpty());
+        ObjectScope memberScope = compiler.members(actor, resolved);
+        Set<BigInteger> visible = needsVisible ? visibleTenantMembers(actor, memberScope, records) : Set.of();
+        Set<BigInteger> covered = needsDepartments
+                ? departments.matchingIds(tenantId(actor), departmentIds(records), compiler.departments(actor, resolved))
+                : Set.of();
+        LinkedHashSet<String> allowed = new LinkedHashSet<>();
+        for (MemberRecord record : records) {
+            Set<String> memberDepartments = departmentIds(record);
+            boolean memberVisible = visible.contains(new BigInteger(record.id()));
+            if (memberDepartments.isEmpty() || operation == null) {
+                if (memberVisible) {
+                    allowed.add(record.id());
+                }
+                continue;
+            }
+            boolean departmentCovered = memberDepartments.stream()
+                    .allMatch(id -> covered.contains(new BigInteger(id)));
+            if (changeDepartments ? departmentCovered : departmentCovered && memberVisible) {
+                allowed.add(record.id());
+            }
+        }
+        return Set.copyOf(allowed);
+    }
+
+    /**
+     * 批量计算已加载部门是否落入该操作范围。全域不再逐行查询。
+     *
+     * @param actor 当前可信租户身份
+     * @param view 本次展示授权视图
+     * @param action 精确操作
+     * @param departmentIds 当前租户已加载的部门 ID
+     * @return 允许操作的部门 ID
+     */
+    public Set<BigInteger> departmentIds(AuthorizationContext actor, AuthorizationView view,
+                                          IamAction action, Collection<BigInteger> departmentIds) {
+        if (actor.domain() != AuthorizationDomain.TENANT) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        if (departmentIds.isEmpty() || !hasAction(view, action)) {
+            return Set.of();
+        }
+        ResolvedActionScope resolved = view.scope(action.getCode());
+        if (resolved.isEmpty()) {
+            return Set.of();
+        }
+        if (resolved.clauses().stream().anyMatch(ScopeClause::all)) {
+            return Set.copyOf(new LinkedHashSet<>(departmentIds));
+        }
+        return departments.matchingIds(tenantId(actor), departmentIds, compiler.departments(actor, resolved));
+    }
+
+    public Set<BigInteger> platformMemberIds(AuthorizationContext actor,
+            AuthorizationView view, IamAction action,
+            Collection<BigInteger> ids) {
+        if (actor.domain() != AuthorizationDomain.PLATFORM) throw new BizException(IamReasonCode.ACTION_DENIED);
+        if (ids.isEmpty() || !hasAction(view, action) || view.scope(action.getCode()).isEmpty()) return Set.of();
+        return members.visiblePlatformIds(ids, compiler.members(actor, view.scope(action.getCode())));
+    }
+
+    private static boolean hasAction(AuthorizationView view, IamAction action) {
+        return view != null && action != null && view.actionCodes().contains(action.getCode());
+    }
+
+    private Set<BigInteger> visibleTenantMembers(AuthorizationContext actor, ObjectScope scope,
+                                                   List<MemberRecord> records) {
+        if (scope.coversNone()) {
+            return Set.of();
+        }
+        if (scope.coversAll()) {
+            LinkedHashSet<BigInteger> visible = new LinkedHashSet<>();
+            for (MemberRecord record : records) {
+                if (record.status() != MemberStatus.REMOVED) {
+                    visible.add(new BigInteger(record.id()));
+                }
+            }
+            return visible;
+        }
+        List<BigInteger> ids = records.stream().map(record -> new BigInteger(record.id())).toList();
+        return members.visibleTenantIds(tenantId(actor), ids, scope);
+    }
+
+    private static Set<BigInteger> departmentIds(List<MemberRecord> records) {
+        LinkedHashSet<BigInteger> ids = new LinkedHashSet<>();
+        for (MemberRecord record : records) {
+            for (String departmentId : departmentIds(record)) {
+                ids.add(new BigInteger(departmentId));
+            }
+        }
+        return ids;
+    }
+
+    private static Set<String> departmentIds(MemberRecord record) {
+        LinkedHashSet<String> ids = new LinkedHashSet<>();
+        if (record.departments() == null) {
+            return ids;
+        }
+        for (MemberDepartmentView department : record.departments()) {
+            ids.add(department.id());
+        }
+        return ids;
+    }
+
+    private boolean covers(AuthorizationContext actor, ResolvedActionScope scope, String memberId,
+                           Set<String> departments, MemberMutationGuard.Operation operation) {
+        ObjectScope members = compiler.members(actor, scope);
+        ObjectScope departmentScope = compiler.departments(actor, scope);
+        long id = Long.parseLong(memberId);
+        if (this.members.visible(actor.domain(), tenantId(actor), id, members)
+                && (departments == null || departments.isEmpty())) {
+            return true;
+        }
+        if (departments == null || departments.isEmpty()) {
+            return this.members.visible(actor.domain(), tenantId(actor), id, members);
+        }
+        boolean departmentCovered = departments.stream()
+                .allMatch(item -> this.departments.matches(tenantId(actor), Long.parseLong(item), departmentScope));
+        if (operation == MemberMutationGuard.Operation.CHANGE_DEPARTMENTS) {
+            return departmentCovered;
+        }
+        return departmentCovered && this.members.visible(actor.domain(), tenantId(actor), id, members);
+    }
+
+    private static Long tenantId(AuthorizationContext actor) {
+        return actor.tenantId() == null ? null : Long.parseLong(actor.tenantId());
+    }
+
+    private static Set<String> union(Set<String> left, Set<String> right) {
+        LinkedHashSet<String> values = new LinkedHashSet<>();
+        if (left != null) {
+            values.addAll(left);
+        }
+        if (right != null) {
+            values.addAll(right);
+        }
+        return values;
+    }
+}

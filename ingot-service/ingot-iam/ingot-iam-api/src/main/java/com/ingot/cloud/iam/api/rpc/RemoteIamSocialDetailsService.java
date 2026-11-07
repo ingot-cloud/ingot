@@ -2,7 +2,7 @@ package com.ingot.cloud.iam.api.rpc;
 
 import java.util.List;
 
-import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
+import com.ingot.cloud.iam.api.model.dto.social.SocialDetailsDTO;
 import com.ingot.framework.commons.constants.ServiceNameConstants;
 import com.ingot.framework.commons.model.support.R;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -24,7 +24,7 @@ public interface RemoteIamSocialDetailsService {
      * @return 内部配置列表
      */
     @GetMapping("/inner/social/detailList/{type}")
-    R<List<SysSocialDetails>> getSocialDetailsByType(@PathVariable String type);
+    R<List<SocialDetailsDTO>> getSocialDetailsByType(@PathVariable String type);
 
     /**
      * 按应用标识查询社交认证内部配置。
@@ -32,5 +32,5 @@ public interface RemoteIamSocialDetailsService {
      * @return 内部配置
      */
     @GetMapping("/inner/social/appId/{appId}")
-    R<SysSocialDetails> getDetailsByAppId(@PathVariable String appId);
+    R<SocialDetailsDTO> getDetailsByAppId(@PathVariable String appId);
 }

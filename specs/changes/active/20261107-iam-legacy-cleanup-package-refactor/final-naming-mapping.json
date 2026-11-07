@@ -1,0 +1,10 @@
+{
+  "com.ingot.cloud.iam.interfaces.http.platform.PlatformRoleApplicationAPI": "com.ingot.cloud.iam.interfaces.http.platform.PlatformRoleVersionApplicationAPI",
+  "com.ingot.cloud.iam.infrastructure.persistence.projection.RoleApplicationCount": "com.ingot.cloud.iam.infrastructure.persistence.projection.RoleVersionApplicationCount",
+  "com.ingot.cloud.iam.infrastructure.persistence.RoleApplicationRepository": "com.ingot.cloud.iam.infrastructure.persistence.RoleVersionApplicationRepository",
+  "com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleApplicationTaskMapper": "com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleVersionApplicationTaskMapper",
+  "com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleApplicationItemMapper": "com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleVersionApplicationItemMapper",
+  "com.ingot.cloud.iam.infrastructure.persistence.entity.IamRoleApplicationTaskEntity": "com.ingot.cloud.iam.infrastructure.persistence.entity.IamRoleVersionApplicationTaskEntity",
+  "com.ingot.cloud.iam.infrastructure.persistence.entity.IamRoleApplicationItemEntity": "com.ingot.cloud.iam.infrastructure.persistence.entity.IamRoleVersionApplicationItemEntity",
+  "com.ingot.cloud.iam.application.roleapplication.model.RolePublishApplicationInput": "com.ingot.cloud.iam.application.roleapplication.model.RoleVersionApplicationPublishInput"
+}

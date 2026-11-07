@@ -7,7 +7,7 @@ import unittest
 
 from build_contract import CONTRACT, ROOT, build, validate_references
 
-CONTROLLERS = ROOT / 'ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/web/v1'
+CONTROLLERS = ROOT / 'ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/interfaces/http'
 EXCLUDED_CONTROLLERS = {'OSSCommonAPI.java'}
 CLASS_MAPPING = re.compile(
     r'@RequestMapping\s*\(\s*(?:value\s*=\s*)?["\']([^"\']+)["\']')

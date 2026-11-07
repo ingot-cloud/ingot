@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
-import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
+import com.ingot.cloud.iam.api.model.dto.social.SocialDetailsDTO;
 import com.ingot.cloud.iam.api.rpc.RemoteIamSocialDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.support.R;
@@ -29,15 +29,15 @@ public class RemoteSocialDetailsProvider implements SocialDetailsProvider {
     private volatile boolean available = false;
 
     @Override
-    public List<SysSocialDetails> getDetailsByType(SocialTypeEnum socialType) {
+    public List<SocialDetailsDTO> getDetailsByType(SocialTypeEnum socialType) {
         try {
             log.debug("RemoteSocialDetailsProvider - 通过RPC获取社交详情: type={}", socialType);
 
-            R<List<SysSocialDetails>> result = remoteIamSocialDetailsService
+            R<List<SocialDetailsDTO>> result = remoteIamSocialDetailsService
                     .getSocialDetailsByType(socialType.getValue());
 
             if (result.isSuccess()) {
-                List<SysSocialDetails> details = result.getData();
+                List<SocialDetailsDTO> details = result.getData();
                 if (CollUtil.isNotEmpty(details)) {
                     available = true;
                     log.info("RemoteSocialDetailsProvider - 成功获取{}个配置", details.size());
@@ -62,14 +62,14 @@ public class RemoteSocialDetailsProvider implements SocialDetailsProvider {
     }
 
     @Override
-    public SysSocialDetails getDetailsByAppId(String appId) {
+    public SocialDetailsDTO getDetailsByAppId(String appId) {
         try {
             log.debug("RemoteSocialDetailsProvider - 通过RPC获取社交详情: appId={}", appId);
 
-            R<SysSocialDetails> result = remoteIamSocialDetailsService.getDetailsByAppId(appId);
+            R<SocialDetailsDTO> result = remoteIamSocialDetailsService.getDetailsByAppId(appId);
 
             if (result.isSuccess()) {
-                SysSocialDetails details = result.getData();
+                SocialDetailsDTO details = result.getData();
                 if (details != null) {
                     available = true;
                     log.debug("RemoteSocialDetailsProvider - 成功获取配置: appId={}", appId);

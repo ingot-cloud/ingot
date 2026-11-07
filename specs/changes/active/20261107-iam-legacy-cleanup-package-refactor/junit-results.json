@@ -1,0 +1,20 @@
+{
+  "provider": {
+    "tests": 691,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 29
+  },
+  "api": {
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "commons": {
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

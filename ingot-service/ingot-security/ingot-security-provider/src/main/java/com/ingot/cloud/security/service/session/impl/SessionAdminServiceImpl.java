@@ -19,7 +19,7 @@ import com.ingot.cloud.auth.api.model.dto.InnerUserSessionRevokeDTO;
 import com.ingot.cloud.auth.api.model.vo.InnerSessionPageVO;
 import com.ingot.cloud.auth.api.model.vo.InnerSessionVO;
 import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
-import com.ingot.cloud.iam.api.model.domain.SysTenant;
+import com.ingot.cloud.iam.api.model.dto.tenant.TenantDetailsDTO;
 import com.ingot.cloud.iam.api.model.dto.user.InnerUserDTO;
 import com.ingot.cloud.iam.api.rpc.RemoteIamTenantDetailsService;
 import com.ingot.cloud.iam.api.rpc.RemoteIamUserDetailsService;
@@ -236,7 +236,7 @@ public class SessionAdminServiceImpl implements SessionAdminService {
 
     private String queryTenantName(Long tenantId) {
         try {
-            R<SysTenant> response = remoteIamTenantDetailsService.getTenantById(tenantId);
+            R<TenantDetailsDTO> response = remoteIamTenantDetailsService.getTenantById(tenantId);
             if (response != null && response.isSuccess() && response.getData() != null) {
                 return response.getData().getName();
             }

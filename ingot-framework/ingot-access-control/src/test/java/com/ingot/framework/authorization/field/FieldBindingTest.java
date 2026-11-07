@@ -1,5 +1,10 @@
 package com.ingot.framework.authorization.field;
 
+import com.ingot.cloud.iam.application.organization.model.TenantMemberFilter;
+import com.ingot.cloud.iam.application.organization.model.TenantMemberRejoinInput;
+import com.ingot.cloud.iam.domain.organization.MemberResources;
+import com.ingot.cloud.iam.domain.policy.MemberFieldKey;
+
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -4372,8 +4372,8 @@
     "summary": "准备版本应用",
     "domain": "PLATFORM",
     "action": "iam-platform:role-assignment:apply-version",
-    "request": "RoleApplicationPrepareInput",
-    "response": "RRoleApplicationTask",
+    "request": "RoleVersionApplicationPrepareInput",
+    "response": "RRoleVersionApplicationTask",
     "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true
   },
@@ -4384,8 +4384,8 @@
     "summary": "发布并准备应用",
     "domain": "PLATFORM",
     "action": "iam-platform:role-assignment:apply-version",
-    "request": "RolePublishApplicationInput",
-    "response": "RRoleApplicationTask",
+    "request": "RoleVersionApplicationPublishInput",
+    "response": "RRoleVersionApplicationTask",
     "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true
   },
@@ -4397,7 +4397,7 @@
     "domain": "PLATFORM",
     "action": "iam-platform:role-assignment:apply-version",
     "request": null,
-    "response": "RPageResponseRoleApplicationTask",
+    "response": "RPageResponseRoleVersionApplicationTask",
     "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true,
     "query": [
@@ -4475,7 +4475,7 @@
     "domain": "PLATFORM",
     "action": "iam-platform:role-assignment:apply-version",
     "request": null,
-    "response": "RRoleApplicationTask",
+    "response": "RRoleVersionApplicationTask",
     "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true
   },
@@ -4487,7 +4487,7 @@
     "domain": "PLATFORM",
     "action": "iam-platform:role-assignment:apply-version",
     "request": null,
-    "response": "RPageResponseRoleApplicationItem",
+    "response": "RPageResponseRoleVersionApplicationItem",
     "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true,
     "query": [
@@ -4519,8 +4519,8 @@
     "summary": "配置应用范围及排除集合",
     "domain": "PLATFORM",
     "action": "iam-platform:role-assignment:apply-version",
-    "request": "RoleApplicationChangeInput",
-    "response": "RRoleApplicationTask",
+    "request": "RoleVersionApplicationChangeInput",
+    "response": "RRoleVersionApplicationTask",
     "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true
   },
@@ -4531,8 +4531,8 @@
     "summary": "重新预检未完成项",
     "domain": "PLATFORM",
     "action": "iam-platform:role-assignment:apply-version",
-    "request": "RoleApplicationRefreshInput",
-    "response": "RRoleApplicationTask",
+    "request": "RoleVersionApplicationRefreshInput",
+    "response": "RRoleVersionApplicationTask",
     "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true
   },
@@ -4543,8 +4543,8 @@
     "summary": "确认执行版本应用",
     "domain": "PLATFORM",
     "action": "iam-platform:role-assignment:apply-version",
-    "request": "RoleApplicationConfirmInput",
-    "response": "RRoleApplicationTask",
+    "request": "RoleVersionApplicationConfirmInput",
+    "response": "RRoleVersionApplicationTask",
     "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true
   },

@@ -1,7 +1,7 @@
 package com.ingot.cloud.member.service.biz;
 
-import com.ingot.cloud.iam.api.model.dto.auth.MiniProgramRegisterDTO;
-import com.ingot.cloud.iam.api.model.dto.auth.SocialRegisterDTO;
+import com.ingot.cloud.member.application.auth.model.MiniProgramRegisterDTO;
+import com.ingot.cloud.member.application.auth.model.SocialRegisterDTO;
 
 /**
  * <p>Description  : LoginService.</p>

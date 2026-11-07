@@ -2,7 +2,7 @@ package com.ingot.cloud.iam.api.rpc;
 
 import java.util.List;
 
-import com.ingot.cloud.iam.api.model.domain.SysTenant;
+import com.ingot.cloud.iam.api.model.dto.tenant.TenantDetailsDTO;
 import com.ingot.framework.commons.constants.ServiceNameConstants;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import com.ingot.framework.commons.model.support.R;
@@ -43,5 +43,5 @@ public interface RemoteIamTenantDetailsService {
      * @return 租户实体
      */
     @GetMapping("/inner/tenant/{id}")
-    R<SysTenant> getTenantById(@PathVariable Long id);
+    R<TenantDetailsDTO> getTenantById(@PathVariable Long id);
 }

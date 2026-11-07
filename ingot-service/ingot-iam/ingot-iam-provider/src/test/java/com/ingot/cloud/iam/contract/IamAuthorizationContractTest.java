@@ -1,0 +1,734 @@
+package com.ingot.cloud.iam.contract;
+
+import com.ingot.cloud.iam.application.account.model.AccountCreateInput;
+import com.ingot.cloud.iam.application.account.model.AccountLockInput;
+import com.ingot.cloud.iam.application.account.model.AccountLookupInput;
+import com.ingot.cloud.iam.application.account.model.AccountRecord;
+import com.ingot.cloud.iam.application.account.model.AccountSecret;
+import com.ingot.cloud.iam.application.account.model.AccountSelfProfile;
+import com.ingot.cloud.iam.application.account.model.AccountSelfProfileInput;
+import com.ingot.cloud.iam.application.account.model.AccountUpdateInput;
+import com.ingot.cloud.iam.application.account.model.CurrentPasswordInput;
+import com.ingot.cloud.iam.application.account.model.PasswordChangeState;
+import com.ingot.cloud.iam.application.assignment.model.AssignmentBatchInput;
+import com.ingot.cloud.iam.application.assignment.model.AssignmentContext;
+import com.ingot.cloud.iam.application.assignment.model.AssignmentInput;
+import com.ingot.cloud.iam.application.assignment.model.AssignmentPreviewResult;
+import com.ingot.cloud.iam.application.assignment.model.AssignmentRecord;
+import com.ingot.cloud.iam.application.assignment.model.AssignmentUpdateInput;
+import com.ingot.cloud.iam.application.assignment.model.SubjectRef;
+import com.ingot.cloud.iam.application.assignment.model.TenantAssignmentBatchInput;
+import com.ingot.cloud.iam.application.assignment.model.TenantAssignmentInput;
+import com.ingot.cloud.iam.application.assignment.model.TenantAssignmentOption;
+import com.ingot.cloud.iam.application.assignment.model.TenantAssignmentRecord;
+import com.ingot.cloud.iam.application.assignment.model.TenantAssignmentUpdateInput;
+import com.ingot.cloud.iam.application.audit.model.AuditCursorPage;
+import com.ingot.cloud.iam.application.audit.model.AuditEntry;
+import com.ingot.cloud.iam.application.audit.model.AuditReference;
+import com.ingot.cloud.iam.application.catalog.model.ActionCatalogView;
+import com.ingot.cloud.iam.application.catalog.model.ActionDraft;
+import com.ingot.cloud.iam.application.catalog.model.ActionLookupInput;
+import com.ingot.cloud.iam.application.catalog.model.ActionLookupRecord;
+import com.ingot.cloud.iam.application.catalog.model.ActionRecord;
+import com.ingot.cloud.iam.application.catalog.model.ActionUpdateInput;
+import com.ingot.cloud.iam.application.catalog.model.ApplicationBundleDraft;
+import com.ingot.cloud.iam.application.catalog.model.ApplicationDraft;
+import com.ingot.cloud.iam.application.catalog.model.ApplicationPurgeInput;
+import com.ingot.cloud.iam.application.catalog.model.ApplicationRecord;
+import com.ingot.cloud.iam.application.catalog.model.ApplicationUpdateInput;
+import com.ingot.cloud.iam.application.catalog.model.AudienceDraft;
+import com.ingot.cloud.iam.application.catalog.model.AudienceUpdateInput;
+import com.ingot.cloud.iam.application.catalog.model.AudienceView;
+import com.ingot.cloud.iam.application.catalog.model.EntitlementPreviewResult;
+import com.ingot.cloud.iam.application.catalog.model.EntitlementRecord;
+import com.ingot.cloud.iam.application.catalog.model.EntitlementReplaceInput;
+import com.ingot.cloud.iam.application.catalog.model.GrantCatalogResource;
+import com.ingot.cloud.iam.application.catalog.model.MenuActionRecord;
+import com.ingot.cloud.iam.application.catalog.model.MenuRecord;
+import com.ingot.cloud.iam.application.catalog.model.MenuUpdateInput;
+import com.ingot.cloud.iam.application.catalog.model.PlanApplication;
+import com.ingot.cloud.iam.application.catalog.model.PlanDraft;
+import com.ingot.cloud.iam.application.catalog.model.PlanRecord;
+import com.ingot.cloud.iam.application.catalog.model.PlanSummary;
+import com.ingot.cloud.iam.application.catalog.model.PlanUpdateInput;
+import com.ingot.cloud.iam.application.catalog.model.ResourceDetail;
+import com.ingot.cloud.iam.application.catalog.model.ResourceDraft;
+import com.ingot.cloud.iam.application.catalog.model.ResourceRecord;
+import com.ingot.cloud.iam.application.catalog.model.ResourceUpdateInput;
+import com.ingot.cloud.iam.application.delegation.model.DelegationRecord;
+import com.ingot.cloud.iam.application.delegation.model.DelegationUpdateInput;
+import com.ingot.cloud.iam.application.delegation.model.ResourceScopeCeiling;
+import com.ingot.cloud.iam.application.delegation.model.TenantDelegationInput;
+import com.ingot.cloud.iam.application.delegation.model.TenantDelegationMine;
+import com.ingot.cloud.iam.application.delegation.model.TenantDelegationRecord;
+import com.ingot.cloud.iam.application.delegation.model.TenantDelegationUpdateInput;
+import com.ingot.cloud.iam.application.diagnosis.model.Decision;
+import com.ingot.cloud.iam.application.diagnosis.model.DiagnoseInput;
+import com.ingot.cloud.iam.application.diagnosis.model.EffectiveRole;
+import com.ingot.cloud.iam.application.download.model.ExportTask;
+import com.ingot.cloud.iam.application.group.model.GroupDraft;
+import com.ingot.cloud.iam.application.group.model.GroupEffectiveMemberRecord;
+import com.ingot.cloud.iam.application.group.model.GroupRecord;
+import com.ingot.cloud.iam.application.group.model.GroupUpdateInput;
+import com.ingot.cloud.iam.application.organization.model.DepartmentDraft;
+import com.ingot.cloud.iam.application.organization.model.DepartmentEditInput;
+import com.ingot.cloud.iam.application.organization.model.DepartmentLeaderChanges;
+import com.ingot.cloud.iam.application.organization.model.DepartmentLeaderPage;
+import com.ingot.cloud.iam.application.organization.model.DepartmentLeaderRecord;
+import com.ingot.cloud.iam.application.organization.model.DepartmentLeaderSummary;
+import com.ingot.cloud.iam.application.organization.model.DepartmentLeaderUpdateInput;
+import com.ingot.cloud.iam.application.organization.model.DepartmentNavigationEntry;
+import com.ingot.cloud.iam.application.organization.model.DepartmentNavigationPage;
+import com.ingot.cloud.iam.application.organization.model.DepartmentRecord;
+import com.ingot.cloud.iam.application.organization.model.DepartmentTreeNode;
+import com.ingot.cloud.iam.application.organization.model.DepartmentUpdateInput;
+import com.ingot.cloud.iam.application.organization.model.MemberBoundRole;
+import com.ingot.cloud.iam.application.organization.model.MemberDepartmentInput;
+import com.ingot.cloud.iam.application.organization.model.MemberProfileInput;
+import com.ingot.cloud.iam.application.organization.model.MemberRecord;
+import com.ingot.cloud.iam.application.organization.model.MemberRoleReplaceInput;
+import com.ingot.cloud.iam.application.organization.model.MemberRoleView;
+import com.ingot.cloud.iam.application.organization.model.OrganizationMemberPickerOption;
+import com.ingot.cloud.iam.application.organization.model.OrganizationMemberPickerPage;
+import com.ingot.cloud.iam.application.organization.model.PlatformMemberContext;
+import com.ingot.cloud.iam.application.organization.model.PlatformMemberEditInput;
+import com.ingot.cloud.iam.application.organization.model.PlatformMemberEditPreview;
+import com.ingot.cloud.iam.application.organization.model.TenantMemberCreated;
+import com.ingot.cloud.iam.application.organization.model.TenantMemberRejoinInput;
+import com.ingot.cloud.iam.application.policy.model.FieldPolicyDraft;
+import com.ingot.cloud.iam.application.policy.model.FieldPolicyInput;
+import com.ingot.cloud.iam.application.policy.model.FieldPolicyResource;
+import com.ingot.cloud.iam.application.policy.model.FieldRule;
+import com.ingot.cloud.iam.application.role.model.CurrentRoleCatalogAction;
+import com.ingot.cloud.iam.application.role.model.CurrentRoleGrantList;
+import com.ingot.cloud.iam.application.role.model.CurrentRolePermissionInput;
+import com.ingot.cloud.iam.application.role.model.CurrentRolePermissionResult;
+import com.ingot.cloud.iam.application.role.model.CurrentRolePreviewResult;
+import com.ingot.cloud.iam.application.role.model.CurrentRoleProfileInput;
+import com.ingot.cloud.iam.application.role.model.CurrentRoleSummary;
+import com.ingot.cloud.iam.application.role.model.RoleCreateInput;
+import com.ingot.cloud.iam.application.role.model.RoleDefinitionDraft;
+import com.ingot.cloud.iam.application.role.model.RoleDisplayDelta;
+import com.ingot.cloud.iam.application.role.model.RoleGrantList;
+import com.ingot.cloud.iam.application.role.model.RoleGrantRecord;
+import com.ingot.cloud.iam.application.role.model.RolePublishInput;
+import com.ingot.cloud.iam.application.role.model.RoleRevision;
+import com.ingot.cloud.iam.application.role.model.RoleRevisionMetadataInput;
+import com.ingot.cloud.iam.application.role.model.RoleSubjectPage;
+import com.ingot.cloud.iam.application.role.model.RoleSubjectSummary;
+import com.ingot.cloud.iam.application.role.model.RoleSummary;
+import com.ingot.cloud.iam.application.role.model.RoleUpdateInput;
+import com.ingot.cloud.iam.application.role.model.ScopeIssue;
+import com.ingot.cloud.iam.application.role.model.UpgradeInput;
+import com.ingot.cloud.iam.application.role.model.UpgradePreview;
+import com.ingot.cloud.iam.application.role.model.UpgradePreviewInput;
+import com.ingot.cloud.iam.application.roleapplication.model.RoleVersionApplicationChangeInput;
+import com.ingot.cloud.iam.application.roleapplication.model.RoleVersionApplicationConfirmInput;
+import com.ingot.cloud.iam.application.roleapplication.model.RoleVersionApplicationItem;
+import com.ingot.cloud.iam.application.roleapplication.model.RoleVersionApplicationPrepareInput;
+import com.ingot.cloud.iam.application.roleapplication.model.RoleVersionApplicationRefreshInput;
+import com.ingot.cloud.iam.application.roleapplication.model.RoleVersionApplicationTask;
+import com.ingot.cloud.iam.application.roleapplication.model.RoleVersionApplicationPublishInput;
+import com.ingot.cloud.iam.application.session.model.Bootstrap;
+import com.ingot.cloud.iam.application.session.model.CurrentCapabilities;
+import com.ingot.cloud.iam.application.shared.model.AuthorizationRoleCandidatePage;
+import com.ingot.cloud.iam.application.shared.model.ConfigurationStatusInput;
+import com.ingot.cloud.iam.application.shared.model.CreatedResource;
+import com.ingot.cloud.iam.application.shared.model.ObjectCapability;
+import com.ingot.cloud.iam.application.shared.model.Preview;
+import com.ingot.cloud.iam.application.shared.model.ReferenceImpactPreview;
+import com.ingot.cloud.iam.application.tenant.model.OwnerTransferInput;
+import com.ingot.cloud.iam.application.tenant.model.TenantRecord;
+import com.ingot.cloud.iam.application.tenant.model.TenantSettingsInput;
+import com.ingot.cloud.iam.application.tenant.model.TenantUpdateInput;
+import com.ingot.cloud.iam.application.tenant.model.TenantWorkbenchStatistics;
+import com.ingot.cloud.iam.application.workbook.model.DepartmentWorkbookExportInput;
+import com.ingot.cloud.iam.application.workbook.model.MemberWorkbookExportInput;
+import com.ingot.cloud.iam.application.workbook.model.MemberWorkbookFile;
+import com.ingot.cloud.iam.application.workbook.model.MemberWorkbookHistoryItem;
+import com.ingot.cloud.iam.application.workbook.model.MemberWorkbookTask;
+import com.ingot.cloud.iam.domain.account.AccountLookupPurpose;
+import com.ingot.cloud.iam.domain.assignment.SubjectType;
+import com.ingot.cloud.iam.domain.catalog.ApplicationSummary;
+import com.ingot.cloud.iam.domain.catalog.CatalogRecordView;
+import com.ingot.cloud.iam.domain.catalog.EntitlementPreviewItem;
+import com.ingot.cloud.iam.domain.catalog.MenuDraft;
+import com.ingot.cloud.iam.domain.group.GroupMembership;
+import com.ingot.cloud.iam.domain.group.GroupMembershipDepartment;
+import com.ingot.cloud.iam.domain.organization.MemberCreateInput;
+import com.ingot.cloud.iam.domain.organization.MemberStatusInput;
+import com.ingot.cloud.iam.domain.organization.OrganizationMemberPickerScene;
+import com.ingot.cloud.iam.domain.organization.TenantMemberCreateInput;
+import com.ingot.cloud.iam.domain.policy.MemberFieldKey;
+import com.ingot.cloud.iam.domain.role.CurrentRoleCreateInput;
+import com.ingot.cloud.iam.domain.role.CurrentRoleDefinition;
+import com.ingot.cloud.iam.domain.role.CurrentRoleParameter;
+import com.ingot.cloud.iam.domain.role.RoleDelta;
+import com.ingot.cloud.iam.domain.role.RoleDeltaOperation;
+import com.ingot.cloud.iam.domain.role.RoleRevisionDistribution;
+import com.ingot.cloud.iam.domain.shared.SelectionPurpose;
+import com.ingot.cloud.iam.domain.shared.VersionInput;
+import com.ingot.cloud.iam.domain.tenant.TenantCreateInput;
+import com.ingot.cloud.iam.domain.tenant.TenantPreviewResult;
+import com.ingot.framework.commons.model.iam.AssignmentDurationMode;
+import com.ingot.framework.commons.model.iam.AuthorizationCandidatePage;
+import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.DelegationInput;
+import com.ingot.framework.commons.model.iam.FieldAccess;
+import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.PageResponse;
+import com.ingot.framework.commons.model.iam.ResourceFieldContext;
+import com.ingot.framework.commons.model.iam.RoleKind;
+import com.ingot.framework.commons.model.iam.RoleRevisionRef;
+import com.ingot.framework.commons.model.iam.ScopeExpression;
+import com.ingot.framework.commons.model.iam.ScopeKind;
+import com.ingot.framework.commons.model.iam.Selection;
+
+import com.ingot.cloud.iam.application.assignment.model.AssignmentUpgradeInput;
+import com.ingot.cloud.iam.application.assignment.model.AssignmentUpgradeResult;
+import com.ingot.framework.commons.model.iam.extension.AuthorizationDecision;
+import com.ingot.framework.commons.model.iam.extension.AuthorizationRequest;
+import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
+import com.ingot.framework.commons.model.iam.extension.ResourceObjectInvocation;
+import com.ingot.framework.commons.model.iam.extension.ResourceObjectResult;
+import com.ingot.framework.commons.model.iam.extension.SignedResourceObjectRequest;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import com.ingot.framework.commons.model.support.R;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.swagger.v3.core.converter.ModelConverters;
+import com.ingot.framework.commons.model.download.DownloadTask;
+import com.ingot.framework.commons.model.download.DownloadLink;
+import io.swagger.v3.core.util.Json;
+import io.swagger.v3.oas.models.media.Schema;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * <p>
+ * 验证角色、分配、委派及字段的可消费 JSON 契约，并输出真实类型生成的 schemas。
+ * </p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+class IamAuthorizationContractTest {
+
+    private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
+    private <T> T fixture(String name, Class<T> type) throws Exception {
+        try (InputStream input = getClass().getResourceAsStream("/iam/" + name + ".json")) {
+            assertNotNull(input);
+            return mapper.readValue(input, type);
+        }
+    }
+
+    @Test
+    void passwordStateFixtureContainsNoBusinessData() throws Exception {
+        var tree = mapper.readTree(getClass().getResourceAsStream("/iam/password-change-state.json")).path(R.DATA);
+        var state = mapper.treeToValue(tree, PasswordChangeState.class);
+        assertTrue(state.mustChangePassword());
+        assertEquals(AuthorizationDomain.PLATFORM, state.context().domain());
+        assertEquals(2, tree.size());
+        assertFalse(tree.has("profile"));
+        assertFalse(tree.has("actionCodes"));
+    }
+
+    @Test
+    void memberBoundRoleFixtureUsesVersionSummaryWithoutAssignmentStatus() throws Exception {
+        try (InputStream input = getClass().getResourceAsStream("/iam/member-bound-roles.json")) {
+            var tree = mapper.readTree(input).path(R.DATA).path("items").get(0);
+            var role = mapper.treeToValue(tree, MemberBoundRole.class);
+            assertEquals("31", role.roleRevisionRef().id());
+            assertEquals(List.of(SubjectType.MEMBER, SubjectType.GROUP), role.sourceTypes());
+            assertFalse(tree.has("status"));
+            assertFalse(tree.has("groupId"));
+        }
+    }
+
+    @Test
+    void platformMemberEditKeepsExplicitNullUnknownKeysAndTypedRoleDelta() throws Exception {
+        var input = mapper.readValue("{\"expectedVersion\":\"2\",\"phone\":null,\"unknown\":null,"
+                + "\"roleChanges\":{\"additions\":[],\"updates\":[{\"assignmentId\":\"81\",\"expectedVersion\":\"3\",\"scopeBindings\":{}}],\"removals\":[]}}",
+                PlatformMemberEditInput.class);
+        assertTrue(input.profile().suppliedFields().contains("phone"));
+        assertTrue(input.profile().suppliedFields().contains("unknown"));
+        assertFalse(input.profile().suppliedFields().contains("roleChanges"));
+        assertEquals("81", input.roleChanges().updates().getFirst().assignmentId());
+        assertFalse(mapper.valueToTree(input).has("suppliedFields"));
+    }
+
+    @Test
+    void examplesPassNestedBeanValidationAndRetainStringIds() throws Exception {
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            for (Object value : List.of(fixture("role-shared", RoleRevision.class),
+                    fixture("role-platform-fields", RoleRevision.class), fixture("role-delta", RoleRevision.class),
+                    fixture("assignment", AssignmentInput.class),
+                    fixture("assignment-multi-role", AssignmentBatchInput.class),
+                    fixture("assignment-selected-candidates", AuthorizationCandidatePage.class),
+                    fixture("assignment-upgrade", AssignmentUpgradeInput.class),
+                    fixture("authorization-v2-request", AuthorizationRequest.class),
+                    fixture("delegation", DelegationInput.class),
+                    fixture("delegation-unlimited", DelegationInput.class),
+                    fixture("role-subject-page", RoleSubjectPage.class), fixture("field-readonly", FieldRule.class))) {
+                assertTrue(factory.getValidator().validate(value).isEmpty(), value.getClass().getSimpleName());
+            }
+            RoleRevision role = fixture("role-shared", RoleRevision.class);
+            assertTrue(mapper.valueToTree(role).get("id").isTextual());
+            assertTrue(mapper.valueToTree(role).get("revision").isTextual());
+        }
+    }
+
+    @Test
+    void platformMemberContextEnvelopeKeepsFieldRulesWithoutOriginalValues() throws Exception {
+        try (InputStream input = getClass().getResourceAsStream("/iam/platform-member-context.json");
+                ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            assertNotNull(input);
+            var envelope = mapper.readTree(input);
+            PlatformMemberContext context = mapper.treeToValue(envelope.path(R.DATA), PlatformMemberContext.class);
+            R<PlatformMemberContext> response = R.ok(context);
+            assertEquals(response.getCode(), envelope.path(R.CODE).asText());
+            assertEquals(response.isSuccess(), envelope.path("success").asBoolean());
+            assertTrue(factory.getValidator().validate(context).isEmpty());
+            assertEquals(FieldVisibility.HIDDEN, context.listFieldVisibility().get(MemberFieldKey.VALUE_EMAIL));
+            assertFalse(context.createFieldAccess().get(MemberFieldKey.VALUE_DISPLAY_NAME).editable());
+            assertThrows(UnsupportedOperationException.class, () -> context.createFieldAccess().clear());
+            var tree = mapper.valueToTree(response).path("data");
+            assertTrue(tree.path("canSearchDisplayName").isBoolean());
+            assertFalse(tree.has(MemberFieldKey.VALUE_PHONE));
+            assertFalse(tree.has(MemberFieldKey.VALUE_EMAIL));
+        }
+    }
+
+    @Test
+    void multiRoleBatchKeepsSeparateBindingsAndStringIds() throws Exception {
+        AssignmentBatchInput input = fixture("assignment-multi-role", AssignmentBatchInput.class);
+        assertEquals(4, input.items().size());
+        assertEquals(List.of("31", "32", "31", "32"),
+                input.items().stream().map(item -> item.roleRevisionRef().id()).toList());
+        assertEquals(List.of("100", "101", "100", "101"),
+                input.items().stream().map(item -> item.scopeBindings().get("objects").ids().getFirst()).toList());
+        var tree = mapper.valueToTree(input);
+        assertTrue(tree.path("items").get(0).path("subject").path("id").isTextual());
+        assertTrue(tree.path("items").get(1).path("roleRevisionRef").path("id").isTextual());
+        var selected = mapper.valueToTree(fixture("assignment-selected-candidates", AuthorizationCandidatePage.class));
+        assertTrue(selected.path("items").get(0).path("id").isTextual());
+        assertEquals(1, selected.path("total").asInt());
+    }
+
+    @Test
+    void fixedFieldSnapshotRoundTripsAndProfileRetainsExplicitNullAndUnknownKeys() throws Exception {
+        var role = fixture("role-platform-fields", RoleRevision.class);
+        assertEquals(FieldVisibility.FULL, role.resourceFieldPermissions().get("10").visibility().get("phone"));
+        assertThrows(UnsupportedOperationException.class, () -> role.resourceFieldPermissions().get("10").visibility().clear());
+        var copy = mapper.readValue(mapper.writeValueAsBytes(role), RoleRevision.class);
+        assertEquals(role.resourceFieldPermissions(), copy.resourceFieldPermissions());
+        var profile = mapper.readValue("{\"expectedVersion\":\"1\",\"phone\":null,\"unknown\":null}",
+                MemberProfileInput.class);
+        assertTrue(profile.suppliedFields().contains("phone"));
+        assertTrue(profile.suppliedFields().contains("unknown"));
+        assertFalse(mapper.valueToTree(profile).has("suppliedFields"));
+        var create = mapper.readValue("{\"accountId\":\"1\",\"displayName\":null,\"departments\":[],\"unknown\":null}",
+                MemberCreateInput.class);
+        assertTrue(create.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME));
+        assertTrue(create.hasUnknownFields());
+        assertFalse(mapper.valueToTree(create).has("suppliedFields"));
+
+        assertEquals(List.of("iam-ops:incident:read", "iam-ops:incident:update"),
+                fixture("authorization-v2-request", AuthorizationRequest.class).actionCodes());
+
+    }
+
+    @Test
+    void rejectEmptyOrReverseAssignmentIntervals() throws Exception {
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            AssignmentInput input = fixture("assignment", AssignmentInput.class);
+            for (var until : List.of(input.validFrom(), input.validFrom().minusSeconds(1))) {
+                assertFalse(factory.getValidator()
+                    .validate(new AssignmentInput(input.subject(), input.roleRevisionRef(), input.scopeBindings(),
+                            input.validFrom(), until, input.delegationGrantId()))
+                    .isEmpty());
+            }
+        }
+    }
+
+    @Test
+    void delegationDurationIsIsoStringAndMustBePositive() throws Exception {
+        DelegationInput input = fixture("delegation", DelegationInput.class);
+        assertEquals("PT24H", mapper.valueToTree(input).get("maxAssignmentDuration").asText());
+        assertEquals("2026-09-13T00:00:00Z", mapper.valueToTree(input).get("validFrom").asText());
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            for (Duration duration : List.of(Duration.ZERO, Duration.ofSeconds(-1))) {
+                assertFalse(factory.getValidator()
+                    .validate(new DelegationInput(input.administratorMemberId(), input.allowedRoleRevisionRefs(),
+                            input.recipientSelection(), input.actionScopeCeilings(), input.validFrom(),
+                            input.validUntil(), duration))
+                    .isEmpty());
+            }
+        }
+    }
+
+    @Test
+    void workspaceExampleRetainsNumericVersionsAndVisibleCounts() throws Exception {
+        var data = mapper.valueToTree(fixture("role-subject-page", RoleSubjectPage.class));
+        assertTrue(data.path("total").isNumber());
+        assertTrue(data.path("items").get(0).path("revisionNumbers").get(0).isNumber());
+        assertTrue(data.path("items").get(0).path("sourceCount").isNumber());
+    }
+
+    @Test
+    void hiddenCannotBeEditableAndMaskedMayBeEditable() {
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            for (FieldVisibility visibility : List.of(FieldVisibility.HIDDEN)) {
+                assertFalse(factory.getValidator().validate(new FieldAccess(visibility, true)).isEmpty());
+            }
+            assertTrue(factory.getValidator().validate(new FieldAccess(FieldVisibility.FULL, false)).isEmpty());
+            assertTrue(factory.getValidator().validate(new FieldAccess(FieldVisibility.MASKED, true)).isEmpty());
+        }
+    }
+
+    @Test
+    void scopeAndDeltaRejectContradictoryShapes() {
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            for (Object value : List.of(new ScopeExpression(ScopeKind.ALL, "unexpected", null),
+                    new ScopeExpression(ScopeKind.OBJECT_SET, "objects", true),
+                    new ScopeExpression(ScopeKind.MANAGED_DEPARTMENTS, null, true),
+                    new RoleDelta("read", RoleDeltaOperation.ADD, null), new RoleDelta("read",
+                            RoleDeltaOperation.REMOVE, List.of(new ScopeExpression(ScopeKind.ALL, null, null))))) {
+                assertFalse(factory.getValidator().validate(value).isEmpty());
+            }
+        }
+    }
+
+    @Test
+    void customizedRevisionCannotPersistBaseGrantCopiesOrDuplicateDeltas() throws Exception {
+        RoleRevision input = fixture("role-delta", RoleRevision.class);
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            RoleRevision duplicate = new RoleRevision(input.id(), input.roleId(), input.revision(), input.kind(),
+                    input.baseRevisionId(), input.grants(),
+                    List.of(input.deltas().getFirst(), input.deltas().getFirst()), input.parameterDefinitions(),
+                    input.metadataOverrides(), input.displayDeltas());
+            assertFalse(factory.getValidator().validate(duplicate).isEmpty());
+            RoleRevision copied = new RoleRevision(input.id(), input.roleId(), input.revision(), input.kind(),
+                    input.baseRevisionId(), fixture("role-shared", RoleRevision.class).grants(), input.deltas(),
+                    input.parameterDefinitions(), input.metadataOverrides(), input.displayDeltas());
+            assertFalse(factory.getValidator().validate(copied).isEmpty());
+        }
+    }
+
+    @Test
+    void validationMethodsDoNotBecomeResponseProperties() throws Exception {
+        ObjectNode node = mapper.valueToTree(fixture("delegation", DelegationInput.class));
+        assertFalse(node.has("validPeriod"));
+        assertFalse(node.has("positiveDuration"));
+        assertEquals(8, node.size());
+        assertEquals("LIMITED", node.path("assignmentDurationMode").asText());
+    }
+
+    @Test
+    void reasonCodesKeepStableWireValuesAndUnavailableStatus() throws Exception {
+        for (IamReasonCode reason : IamReasonCode.values()) {
+            assertEquals(reason, mapper.readValue(mapper.writeValueAsString(reason), IamReasonCode.class));
+        }
+        assertEquals("\"ActionDenied\"", mapper.writeValueAsString(IamReasonCode.ACTION_DENIED));
+        assertEquals(503, IamReasonCode.AUTHORIZATION_UNAVAILABLE.getHttpStatus());
+        assertEquals(409, IamReasonCode.REVISION_CONFLICT.getHttpStatus());
+    }
+
+    @Test
+    void omittedDurationModeStaysLimitedAndUnlimitedCannotCarryDuration() throws Exception {
+        var limited = new DelegationInput("1", List.of(new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "2")),
+                new Selection(List.of("3"), List.of()), List.of(), null, null, Duration.ofDays(1));
+        assertEquals(AssignmentDurationMode.LIMITED, limited.assignmentDurationMode());
+        assertTrue(limited.isPositiveDuration());
+        var unlimited = new DelegationInput("1", limited.allowedRoleRevisionRefs(), limited.recipientSelection(),
+                List.of(), null, null, null, AssignmentDurationMode.UNLIMITED);
+        assertTrue(unlimited.isPositiveDuration());
+        assertFalse(new DelegationInput("1", limited.allowedRoleRevisionRefs(), limited.recipientSelection(), List.of(),
+                null, null, Duration.ofDays(1), AssignmentDurationMode.UNLIMITED)
+            .isPositiveDuration());
+    }
+
+    @Test
+    void exportSchemasFromPublicTypesAndCheckRequiredFields() throws Exception {
+        Map<String, Schema> schemas = new TreeMap<>();
+        for (Class<?> type : List.of(OrganizationMemberPickerScene.class, OrganizationMemberPickerOption.class, OrganizationMemberPickerPage.class, DepartmentEditInput.class, DepartmentLeaderChanges.class, DepartmentNavigationEntry.class, DepartmentNavigationPage.class, DepartmentLeaderRecord.class, DepartmentLeaderPage.class, DepartmentLeaderUpdateInput.class, DepartmentLeaderSummary.class, CurrentRoleCatalogAction.class,CurrentRoleCreateInput.class,CurrentRoleDefinition.class,CurrentRoleGrantList.class,CurrentRoleParameter.class,CurrentRolePermissionInput.class,CurrentRolePermissionResult.class,CurrentRolePreviewResult.class,CurrentRoleProfileInput.class,CurrentRoleSummary.class,ResourceScopeCeiling.class,ScopeIssue.class,TenantAssignmentBatchInput.class,TenantAssignmentInput.class,TenantAssignmentOption.class,TenantAssignmentRecord.class,TenantAssignmentUpdateInput.class,TenantDelegationInput.class,TenantDelegationMine.class,TenantDelegationRecord.class,TenantDelegationUpdateInput.class, ResourceDescriptor.class, AssignmentUpgradeInput.class,
+                ResourceFieldContext.class, com.ingot.framework.commons.model.iam.extension.FieldManifestInvocation.class, com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.class, AssignmentUpgradeResult.class, AuthorizationRequest.class, AuthorizationDecision.class,
+                ResourceObjectInvocation.class, SignedResourceObjectRequest.class, ResourceObjectResult.class,
+                AuthorizationContext.class, SubjectRef.class, Selection.class, RoleSubjectSummary.class,
+                RoleSubjectPage.class, RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class,
+                RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class, FieldAccess.class,
+                FieldRule.class, CreatedResource.class, ObjectCapability.class, Bootstrap.class,
+                CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class, DepartmentTreeNode.class,
+                GroupRecord.class, GroupEffectiveMemberRecord.class, GroupMembership.class, GroupMembershipDepartment.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
+                EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
+                DepartmentWorkbookExportInput.class, MemberWorkbookExportInput.class,
+                TenantWorkbenchStatistics.class, DownloadTask.class, DownloadLink.class,
+                DelegationRecord.class, PlanRecord.class, PlanApplication.class, EntitlementRecord.class,
+                FieldPolicyInput.class,
+                DiagnoseInput.class, ConfigurationStatusInput.class, MemberStatusInput.class, VersionInput.class,
+                GroupDraft.class, GroupUpdateInput.class, AudienceUpdateInput.class, AssignmentUpdateInput.class,
+                DelegationUpdateInput.class, AssignmentPreviewResult.class, OwnerTransferInput.class,
+                RoleCreateInput.class, RoleUpdateInput.class, RolePublishInput.class, RoleDefinitionDraft.class,
+                RoleRevisionMetadataInput.class, RoleVersionApplicationPrepareInput.class, RoleVersionApplicationPublishInput.class,
+                RoleVersionApplicationChangeInput.class, RoleVersionApplicationConfirmInput.class, RoleVersionApplicationRefreshInput.class,
+                RoleVersionApplicationTask.class, RoleVersionApplicationItem.class, RoleRevisionDistribution.class,
+                UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, TenantMemberCreateInput.class, TenantMemberRejoinInput.class, TenantMemberCreated.class, MemberProfileInput.class, PlatformMemberEditInput.class, PlatformMemberEditPreview.class, MemberBoundRole.class,
+                MemberRoleView.class, MemberRoleReplaceInput.class, MemberDepartmentInput.class,
+                TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class, DepartmentDraft.class,
+                DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class, ResourceDraft.class,
+                ResourceUpdateInput.class, ApplicationPurgeInput.class, ActionDraft.class, ActionUpdateInput.class,
+                MenuDraft.class, MenuUpdateInput.class, PlanDraft.class, PlanUpdateInput.class,
+                EntitlementReplaceInput.class, TenantPreviewResult.class, EntitlementPreviewResult.class,
+                EntitlementPreviewItem.class, PlanSummary.class, CatalogRecordView.class, ReferenceImpactPreview.class,
+                RoleSummary.class, ApplicationSummary.class, AccountCreateInput.class, AccountUpdateInput.class,
+                AccountLockInput.class, AccountLookupInput.class, AccountRecord.class, AccountSecret.class,
+                AccountSelfProfile.class, AccountSelfProfileInput.class, CurrentPasswordInput.class, PasswordChangeState.class,
+                ApplicationBundleDraft.class, ActionLookupInput.class, ExportTask.class, SelectionPurpose.class,
+                AccountLookupPurpose.class)) {
+            schemas.putAll(ModelConverters.getInstance().readAll(type));
+        }
+        for (java.lang.reflect.Type type : List
+            .of(new com.fasterxml.jackson.core.type.TypeReference<R<TenantWorkbenchStatistics>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<DownloadTask>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<DownloadTask>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<DownloadLink>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<CurrentRoleGrantList>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<CurrentRolePermissionResult>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<CurrentRolePreviewResult>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<CurrentRoleSummary>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<CurrentRoleSummary>>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantAssignmentRecord>>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<TenantAssignmentRecord>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantDelegationRecord>>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<TenantDelegationRecord>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<TenantDelegationMine>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<TenantAssignmentOption>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<CurrentRoleCatalogAction>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<RoleVersionApplicationTask>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<RoleVersionApplicationTask>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<RoleVersionApplicationItem>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<RoleRevisionDistribution>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleRevision>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<ResourceDetail<MemberRecord>>() {
+            }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<PageResponse<ResourceDetail<MemberRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<Preview<EffectiveRole>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PasswordChangeState>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Bootstrap>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<AssignmentPreviewResult>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<FieldPolicyDraft>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<FieldPolicyResource>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CreatedResource>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<OrganizationMemberPickerPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<DepartmentNavigationPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<MemberRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<GroupEffectiveMemberRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<DepartmentLeaderPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<TenantMemberCreated>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CurrentCapabilities>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Decision>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<MemberBoundRole>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<PlatformMemberEditPreview>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceFieldContext>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<com.ingot.framework.commons.model.iam.extension.FieldBindingManifest>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PlatformMemberContext>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<MemberRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<MemberRecord>>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<EffectiveRole>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<RoleDefinitionDraft>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<UpgradePreview>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<TenantPreviewResult>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<EntitlementPreviewResult>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<ReferenceImpactPreview>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<TenantRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<GroupRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DepartmentRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ApplicationRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ResourceRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ActionRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<MenuRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<PlanRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<EntitlementRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleSummary>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleRevision>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AssignmentRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<MemberRoleView>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<MenuActionRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionLookupRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ActionCatalogView>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<GrantCatalogResource>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AssignmentContext>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationCandidatePage>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationRoleCandidatePage>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DelegationRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AudienceDraft>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AudienceView>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<GroupRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DepartmentRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<DepartmentTreeNode>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ApplicationRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ResourceRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ActionRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<MenuRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<PlanRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<EntitlementRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleSummary>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleRevision>>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<RoleSubjectPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<RoleGrantList>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AssignmentRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DelegationRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<AuditCursorPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<MemberWorkbookFile>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<MemberWorkbookTask>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<MemberWorkbookHistoryItem>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ExportTask>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AccountSelfProfile>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AccountSecret>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AccountRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AccountRecord>>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDescriptor>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<AssignmentUpgradeResult>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AssignmentUpgradeResult>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationDecision>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceObjectResult>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Void>>() {
+                    }.getType())) {
+            schemas.putAll(ModelConverters.getInstance()
+                .resolveAsResolvedSchema(new io.swagger.v3.core.converter.AnnotatedType(type)).referencedSchemas);
+        }
+        Schema<?> page = schemas.get("PageResponseResourceDetailMemberRecord");
+        assertTrue(page.getRequired().containsAll(List.of("items", "total", "page", "pageSize")));
+        assertEquals("integer", ((Schema<?>) page.getProperties().get("total")).getType());
+        assertEquals("#/components/schemas/ResourceDetailMemberRecord",
+                ((Schema<?>) page.getProperties().get("items")).getItems().get$ref());
+        assertEquals("#/components/schemas/MemberRecord",
+                ((Schema<?>) schemas.get("ResourceDetailMemberRecord").getProperties().get("record")).get$ref());
+        Schema<?> department = schemas.get("DepartmentRecord");
+        assertNotNull(department.getProperties().get("memberCount"));
+        assertFalse(department.getRequired().contains("memberCount"));
+        Schema<?> departmentTree = schemas.get("DepartmentTreeNode");
+        assertNotNull(departmentTree.getProperties().get("children"));
+        assertTrue(departmentTree.getRequired().contains("children"));
+        Schema<?> member = schemas.get("MemberRecord");
+        Schema<?> effective = schemas.get("GroupEffectiveMemberRecord");
+        assertEquals("#/components/schemas/MemberRecord",
+                ((Schema<?>) effective.getProperties().get("member")).get$ref());
+        assertEquals("#/components/schemas/GroupMembership",
+                ((Schema<?>) effective.getProperties().get("membership")).get$ref());
+        assertNotNull(schemas.get("RPageResponseGroupEffectiveMemberRecord"));
+        assertNotNull(member.getProperties().get("loginPhone"));
+        assertFalse(member.getRequired().contains("loginPhone"));
+        Schema<?> created = schemas.get("TenantMemberCreated");
+        assertTrue(created.getRequired().containsAll(List.of("id", "version", "accountCreated", "rejoined")));
+        assertNotNull(schemas.get("TenantMemberRejoinInput"));
+        assertTrue(schemas.get("TenantMemberRejoinInput").getRequired()
+                .containsAll(List.of("expectedVersion", "displayName", "phone", "departments")));
+        for (var field : List.of("joinedAt", "lastLoginAt", "updatedAt")) {
+            Schema<?> time = (Schema<?>) member.getProperties().get(field);
+            assertEquals("string", time.getType());
+            assertEquals("date-time", time.getFormat());
+            assertEquals(Boolean.TRUE, time.getReadOnly());
+            assertFalse(member.getRequired().contains(field));
+        }
+        assertEquals("#/components/schemas/EffectiveRole",
+                ((Schema<?>) schemas.get("PreviewEffectiveRole").getProperties().get("effectiveResult")).get$ref());
+        assertFalse(schemas.get("PreviewEffectiveRole").getProperties().containsKey("consistent"));
+        Schema<?> assignment = schemas.get("AssignmentInput");
+        assertNotNull(assignment);
+        assertTrue(assignment.getRequired().containsAll(List.of("subject", "roleRevisionRef", "scopeBindings")));
+        assertFalse(schemas.get("DelegationInput").getProperties().containsKey("positiveDuration"));
+        Schema<?> duration = (Schema<?>) schemas.get("DelegationInput").getProperties().get("maxAssignmentDuration");
+        assertEquals("string", duration.getType());
+        assertEquals("duration", duration.getFormat());
+        assertTrue(schemas.get("RoleCreateInput")
+            .getRequired()
+            .containsAll(List.of("code", "name", "kind", "definition")));
+        assertTrue(schemas.get("UpgradeInput")
+            .getRequired()
+            .containsAll(List.of("expectedVersion", "newBaseRevisionId", "resolutions", "assignmentIds")));
+        assertTrue(schemas.get("TenantCreateInput").getRequired().containsAll(List.of("name", "ownerAccountId")));
+        assertFalse(schemas.get("RoleDefinitionDraft").getProperties().containsKey("customized"));
+        assertNotNull(schemas.get("RPreviewTenantPreviewResult"));
+        assertNotNull(schemas.get("RPreviewUpgradePreview"));
+        assertTrue(
+                schemas.get("ExportTask").getRequired().containsAll(List.of("id", "status", "version", "expiresAt")));
+        assertFalse(schemas.get("ExportTask").getRequired().contains("failureCode"));
+        assertTrue(schemas.get("AccountLookupInput").getRequired().contains("purpose"));
+        assertFalse(schemas.get("AccountLookupInput").getRequired().contains("domain"));
+        assertTrue(schemas.get("AccountLookupInput").getProperties().containsKey("domain"));
+        assertFalse(schemas.get("AccountLookupInput").getProperties().containsKey("exactlyOneCriterion"));
+        assertFalse(schemas.get("AccountLookupInput").getProperties().containsKey("isExactlyOneCriterion"));
+        Schema<?> auditPage = schemas.get("AuditCursorPage");
+        assertTrue(auditPage.getRequired().containsAll(List.of("items", "hasMore", "references")));
+        assertFalse(auditPage.getProperties().containsKey("total"));
+        assertEquals(List.of("VISIBLE", "HIDDEN", "DELETED"),
+                ((Schema<?>) schemas.get("AuditReference").getProperties().get("state")).getEnum());
+        assertNotNull(schemas.get("RAuditCursorPage"));
+        assertNotNull(schemas.get("RExportTask"));
+        assertNotNull(schemas.get("RAccountSelfProfile"));
+        assertNotNull(schemas.get("RAccountSecret"));
+        assertNotNull(schemas.get("RPageResponseResourceDetailAccountRecord"));
+        Schema<?> exportStatus = (Schema<?>) schemas.get("ExportTask").getProperties().get("status");
+        assertEquals(List.of("PENDING", "RUNNING", "SUCCEEDED", "FAILED", "EXPIRED"), exportStatus.getEnum());
+        Schema<?> lookupPurpose = (Schema<?>) schemas.get("AccountLookupInput").getProperties().get("purpose");
+        assertEquals(List.of("MEMBER_CREATE", "ACCOUNT_MANAGE"), lookupPurpose.getEnum());
+        for (var reference : Json.mapper().valueToTree(schemas).findValues("$ref")) {
+            String prefix = "#/components/schemas/";
+            assertTrue(reference.asText().startsWith(prefix));
+            assertTrue(schemas.containsKey(reference.asText().substring(prefix.length())), reference.asText());
+        }
+        Path output = Path.of("build", "iam-contract", "schemas.json");
+        Files.createDirectories(output.getParent());
+        Files.writeString(output, Json.pretty(Map.of("components", Map.of("schemas", schemas))));
+    }
+
+}

@@ -1,0 +1,66 @@
+package com.ingot.cloud.iam.infrastructure.persistence.entity;
+
+import com.ingot.framework.commons.model.iam.RoleKind;
+
+import java.math.BigInteger;
+import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.*;
+import com.ingot.framework.commons.model.iam.*;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * <p>
+ * 映射已发布角色版本的持久化字段，不写入数据库生成列。
+ * </p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+@Getter
+@Setter
+@TableName(value = "iam_role_revision", autoResultMap = true)
+public class IamRoleRevisionEntity {
+
+    /** 记录 ID。 */
+    @TableId(value = "id", type = IdType.INPUT)
+    private BigInteger id;
+
+    /** 角色定义 ID。 */
+    @TableField("role_id")
+    private BigInteger roleId;
+
+    /** 角色种类。 */
+    @TableField("kind")
+    private RoleKind kind;
+
+    /** 发布版本号。 */
+    @TableField("revision")
+    private BigInteger revision;
+
+    /** 继承的基础角色版本 ID。 */
+    @TableField("base_revision_id")
+    private BigInteger baseRevisionId;
+
+    /** 元数据覆盖 JSON 对象。 */
+    @TableField("metadata_overrides")
+    private String metadataOverrides;
+
+    /** 平台角色固定字段快照；非空 JSON 对象，未声明字段不授予权限。 */
+    @TableField("resource_field_permissions")
+    private String resourceFieldPermissions;
+
+    /** 可读版本名称；历史记录允许为空。 */
+    private String versionName;
+
+    /** 版本备注，不属于权限定义。 */
+    private String remark;
+
+    /** 独立元数据乐观锁，默认零。 */
+    private BigInteger metadataVersion;
+
+    /** 发布时间，使用 UTC。 */
+    @TableField("published_at")
+    private LocalDateTime publishedAt;
+
+}

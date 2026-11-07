@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.iam.api.model.domain.SysTenant;
+import com.ingot.cloud.iam.api.model.dto.tenant.TenantDetailsDTO;
 import com.ingot.cloud.iam.api.rpc.RemoteIamTenantDetailsService;
 import com.ingot.cloud.member.api.model.domain.MemberUserTenant;
 import com.ingot.cloud.member.mapper.MemberUserTenantMapper;
@@ -43,7 +43,7 @@ public class MemberUserTenantServiceImpl extends BaseServiceImpl<MemberUserTenan
             return;
         }
 
-        SysTenant tenant = remoteIamTenantDetailsService.getTenantById(tenantId)
+        TenantDetailsDTO tenant = remoteIamTenantDetailsService.getTenantById(tenantId)
                 .ifError(OAuth2ErrorUtils::checkResponse)
                 .getData();
         assertionChecker.checkOperation(tenant != null, "MemberUserTenantServiceImpl.TenantNonNull");
@@ -74,7 +74,7 @@ public class MemberUserTenantServiceImpl extends BaseServiceImpl<MemberUserTenan
 
     @Override
     public void updateBase(long tenantId) {
-        SysTenant tenant = remoteIamTenantDetailsService.getTenantById(tenantId)
+        TenantDetailsDTO tenant = remoteIamTenantDetailsService.getTenantById(tenantId)
                 .ifError(OAuth2ErrorUtils::checkResponse)
                 .getData();
         assertionChecker.checkOperation(tenant != null, "MemberUserTenantServiceImpl.TenantNonNull");

@@ -1,0 +1,81 @@
+package com.ingot.cloud.iam.application.authorization.evaluation;
+
+import com.ingot.cloud.iam.domain.authorization.AuthorizationView;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+
+import com.ingot.cloud.iam.application.organization.MemberMutationGuard;
+import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.cloud.iam.application.organization.model.MemberRecord;
+import com.ingot.cloud.iam.domain.organization.MemberStatus;
+import com.ingot.cloud.iam.application.shared.model.ObjectCapability;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ * <p>验证对象能力按操作有无与对象范围分别给出原因，空映射不再充当已实现。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+class ObjectCapabilitiesTest {
+    private static final AuthorizationContext ACTOR =
+            new AuthorizationContext(AuthorizationDomain.TENANT, "10", "1", "101");
+
+    @Test
+    void missingActionIsDeniedAndOutOfScopeUsesDataScope() {
+        AuthorizationEvaluator evaluator = mock(AuthorizationEvaluator.class);
+        ResourceScopeAccessService scopes = mock(ResourceScopeAccessService.class);
+        AuthorizationView view = new AuthorizationView(
+                List.of(IamAction.VALUE_TENANT_MEMBER_UPDATE, IamAction.VALUE_TENANT_MEMBER_STATUS), List.of(),
+                Map.of(), "31", Instant.now().plusSeconds(30));
+        when(evaluator.evaluate(ACTOR)).thenReturn(view);
+        when(scopes.memberVisible(eq(ACTOR), eq(view), eq(IamAction.TENANT_MEMBER_UPDATE), eq(102L)))
+                .thenReturn(true);
+        when(scopes.memberWriteAllowed(eq(ACTOR), eq(view), eq(IamAction.TENANT_MEMBER_STATUS), eq("102"),
+                eq(MemberMutationGuard.Operation.CHANGE_STATUS), any(), any())).thenReturn(false);
+        ObjectCapabilities capabilities = new ObjectCapabilities(evaluator, scopes);
+        ObjectCapabilities.Snapshot snapshot = capabilities.snapshot(ACTOR);
+        Map<String, ObjectCapability> result = capabilities.tenantMember(snapshot,
+                new MemberRecord("102", "成员", null, null, null, null, MemberStatus.ACTIVE, List.of()));
+        assertTrue(result.get(IamAction.VALUE_TENANT_MEMBER_UPDATE).allowed());
+        assertNull(result.get(IamAction.VALUE_TENANT_MEMBER_UPDATE).reasonCode());
+        assertFalse(result.get(IamAction.VALUE_TENANT_MEMBER_STATUS).allowed());
+        assertEquals(IamReasonCode.DATA_SCOPE_DENIED, result.get(IamAction.VALUE_TENANT_MEMBER_STATUS).reasonCode());
+        assertFalse(result.get(IamAction.VALUE_TENANT_MEMBER_REMOVE).allowed());
+        assertEquals(IamReasonCode.ACTION_DENIED, result.get(IamAction.VALUE_TENANT_MEMBER_REMOVE).reasonCode());
+        assertFalse(result.get(IamAction.VALUE_TENANT_MEMBER_DEPARTMENTS).allowed());
+        assertEquals(IamReasonCode.ACTION_DENIED, result.get(IamAction.VALUE_TENANT_MEMBER_DEPARTMENTS).reasonCode());
+    }
+
+    @Test
+    void platformAccountUsesSnapshotWithoutRequiringWriteActions() {
+        AuthorizationEvaluator evaluator = mock(AuthorizationEvaluator.class);
+        ResourceScopeAccessService scopes = mock(ResourceScopeAccessService.class);
+        AuthorizationView view = new AuthorizationView(
+                List.of(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE), List.of(), Map.of(), "1",
+                Instant.now().plusSeconds(30));
+        AuthorizationContext actor = new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1", "1001");
+        when(evaluator.evaluate(actor)).thenReturn(view);
+        when(scopes.targetAllowed(eq(actor), eq(view), eq(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE), eq("2")))
+                .thenReturn(true);
+        ObjectCapabilities capabilities = new ObjectCapabilities(evaluator, scopes);
+        Map<String, ObjectCapability> result = capabilities.platformAccount(capabilities.snapshot(actor), "2");
+        assertTrue(result.get(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE).allowed());
+        assertFalse(result.get(IamAction.VALUE_PLATFORM_ACCOUNT_DELETE).allowed());
+        assertEquals(IamReasonCode.ACTION_DENIED, result.get(IamAction.VALUE_PLATFORM_ACCOUNT_DELETE).reasonCode());
+    }
+}

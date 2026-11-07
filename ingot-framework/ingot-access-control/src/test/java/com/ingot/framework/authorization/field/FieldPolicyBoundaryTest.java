@@ -1,5 +1,7 @@
 package com.ingot.framework.authorization.field;
 
+import com.ingot.cloud.iam.domain.organization.MemberResources;
+
 import java.time.Instant;
 import java.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;

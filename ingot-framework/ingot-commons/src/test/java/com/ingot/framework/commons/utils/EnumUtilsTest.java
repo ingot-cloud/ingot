@@ -2,7 +2,6 @@ package com.ingot.framework.commons.utils;
 
 import java.util.Map;
 
-import com.ingot.framework.commons.model.iam.MemberStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,12 +18,17 @@ class EnumUtilsTest {
 
     @Test
     void indexesUniqueValuesAndLooksUp() {
-        Map<String, MemberStatus> index = EnumUtils.index(MemberStatus.values(), MemberStatus::getValue);
-        assertEquals(MemberStatus.ACTIVE, EnumUtils.get(index, "ACTIVE"));
+        Map<String, TestState> index = EnumUtils.index(TestState.values(), TestState::getValue);
+        assertEquals(TestState.ACTIVE, EnumUtils.get(index, "ACTIVE"));
         assertNull(EnumUtils.get(index, null));
         assertNull(EnumUtils.get(index, "MISSING"));
-        assertEquals(MemberStatus.SUSPENDED, EnumUtils.require(index, "SUSPENDED"));
+        assertEquals(TestState.SUSPENDED, EnumUtils.require(index, "SUSPENDED"));
         assertNull(EnumUtils.require(index, null));
         assertThrows(IllegalArgumentException.class, () -> EnumUtils.require(index, "MISSING"));
+    }
+    /** <p>用于索引工具验证的独立测试枚举。</p> */
+    private enum TestState {
+        ACTIVE, SUSPENDED;
+        private String getValue() { return name(); }
     }
 }

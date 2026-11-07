@@ -33,7 +33,6 @@ import com.ingot.framework.security.account.domain.port.inbound.LockAccountUseCa
 import com.ingot.framework.security.account.domain.port.inbound.ManageAccountStatusUseCase;
 import com.ingot.framework.security.account.domain.port.inbound.RegisterUserUseCase;
 import com.ingot.framework.security.account.domain.port.inbound.UnlockAccountUseCase;
-import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.credential.service.InitialPasswordService;
 import com.ingot.framework.tenant.TenantContextHolder;

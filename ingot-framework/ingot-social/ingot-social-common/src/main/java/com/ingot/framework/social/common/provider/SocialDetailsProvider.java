@@ -2,7 +2,7 @@ package com.ingot.framework.social.common.provider;
 
 import java.util.List;
 
-import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
+import com.ingot.cloud.iam.api.model.dto.social.SocialDetailsDTO;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 
 /**
@@ -19,7 +19,7 @@ public interface SocialDetailsProvider {
      * @param socialType 社交类型
      * @return 社交详情列表，如果获取失败返回空列表
      */
-    List<SysSocialDetails> getDetailsByType(SocialTypeEnum socialType);
+    List<SocialDetailsDTO> getDetailsByType(SocialTypeEnum socialType);
 
     /**
      * 根据AppId获取社交详情
@@ -27,7 +27,7 @@ public interface SocialDetailsProvider {
      * @param appId 应用ID
      * @return 社交详情，如果不存在返回null
      */
-    SysSocialDetails getDetailsByAppId(String appId);
+    SocialDetailsDTO getDetailsByAppId(String appId);
 
     /**
      * 检查提供者是否可用

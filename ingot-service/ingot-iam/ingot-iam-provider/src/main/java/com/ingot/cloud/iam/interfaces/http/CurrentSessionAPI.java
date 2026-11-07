@@ -1,0 +1,110 @@
+package com.ingot.cloud.iam.interfaces.http;
+
+import com.ingot.cloud.iam.application.account.CurrentAccountService;
+import com.ingot.cloud.iam.application.session.SessionService;
+import com.ingot.cloud.iam.application.account.model.AccountSelfProfile;
+import com.ingot.cloud.iam.application.account.model.AccountSelfProfileInput;
+import com.ingot.cloud.iam.application.session.model.Bootstrap;
+import com.ingot.cloud.iam.application.session.model.CurrentCapabilities;
+import com.ingot.cloud.iam.application.account.model.CurrentPasswordInput;
+import com.ingot.cloud.iam.application.account.model.PasswordChangeState;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
+import com.ingot.framework.security.crypto.annotation.InDecrypt;
+import com.ingot.framework.security.crypto.model.CryptoType;
+import com.ingot.framework.security.config.annotation.web.configuration.PasswordChangeAccess;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * <p>返回当前认证身份的一致授权视图、本人资料与改密入口。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+@RestController
+@Tag(name = "IAM 当前身份")
+@RequestMapping("/v1/me")
+@RequiredArgsConstructor
+public class CurrentSessionAPI implements RShortcuts {
+    private final SessionService sessions;
+    private final CurrentAccountService accounts;
+
+    /**
+     * 返回当前身份一致授权视图。
+     *
+     * @return bootstrap
+     */
+    @Operation(summary = "当前身份一致授权视图")
+    @GetMapping("/bootstrap")
+    public R<Bootstrap> bootstrap() {
+        return ok(sessions.bootstrap());
+    }
+
+    /**
+     * 返回当前身份操作能力。
+     *
+     * @return 精确操作集合
+     */
+    @Operation(summary = "当前身份操作能力")
+    @GetMapping("/capabilities")
+    public R<CurrentCapabilities> capabilities() {
+        return ok(sessions.capabilities());
+    }
+
+    /**
+     * 返回当前认证账号联系资料。
+     *
+     * @return 本人资料
+     */
+    @Operation(summary = "当前账号资料")
+    @GetMapping("/profile")
+    public R<AccountSelfProfile> profile() {
+        return ok(accounts.profile());
+    }
+
+    /**
+     * 更新当前认证账号联系资料。
+     *
+     * @param input 联系资料
+     * @return 更新后的本人资料
+     */
+    @Operation(summary = "更新当前账号资料")
+    @PatchMapping("/profile")
+    public R<AccountSelfProfile> updateProfile(@Valid @RequestBody AccountSelfProfileInput input) {
+        return ok(accounts.updateProfile(input));
+    }
+
+    /** @return 当前认证身份最小改密状态 */
+    @Operation(summary = "当前账号改密状态")
+    @GetMapping("/password")
+    @PasswordChangeAccess
+    public R<PasswordChangeState> passwordState() {
+        return ok(accounts.passwordState());
+    }
+
+    /**
+     * 修改当前认证账号密码。
+     *
+     * @param input HYBRID 整包解密并校验后的新旧密码
+     * @return 空成功
+     */
+    @Operation(summary = "当前账号改密")
+    @PutMapping("/password")
+    @PasswordChangeAccess
+    @InCryptoHybridContext
+    @InDecrypt(CryptoType.HYBRID)
+    public R<Void> updatePassword(@Valid @RequestBody CurrentPasswordInput input) {
+        accounts.updatePassword(input);
+        return ok();
+    }
+}
