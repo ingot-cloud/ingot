@@ -2998,7 +2998,7 @@
     "action": "iam-platform:account:read",
     "request": null,
     "response": "RPageResponseResourceDetailAccountRecord",
-    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例；excludePlatformMembers=true 需账号查找及平台成员创建权限，按读取和查找范围交集排除已有平台成员资格",
     "implemented": true,
     "query": [
       {
@@ -3018,6 +3018,13 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "excludePlatformMembers",
+        "schema": {
+          "type": "boolean",
+          "default": false
         }
       }
     ]

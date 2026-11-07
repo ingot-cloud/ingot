@@ -47,19 +47,21 @@ public class PlatformAccountAPI implements RShortcuts {
     private final AccountService accounts;
 
     /**
-     * 分页列出全局账号。
+     * 分页列出全局账号，可按平台成员创建用途排除已有资格的账号。
      *
      * @param page 页码
      * @param pageSize 页大小
-     * @return 账号页
+     * @param excludePlatformMembers 是否排除已有平台成员资格，缺省为 false
+     * @return 账号页与过滤后的总数
      */
     @Operation(summary = "全局账号列表")
     @GetMapping
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_READ)
     public R<PageResponse<ResourceDetail<AccountRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(accounts.list(page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(defaultValue = "false") boolean excludePlatformMembers) {
+        return ok(accounts.list(page, pageSize, excludePlatformMembers));
     }
 
     /**

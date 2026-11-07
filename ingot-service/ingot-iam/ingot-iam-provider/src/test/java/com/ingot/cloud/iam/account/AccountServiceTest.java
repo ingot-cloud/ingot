@@ -239,6 +239,54 @@ class AccountServiceTest {
     }
 
     @Test
+    void memberCandidatePageExcludesAllPlatformMembershipStatusesBeforeCountingAndPaging() {
+        jdbc.update("""
+                INSERT INTO iam_account(id,username,version) VALUES
+                  (3,'suspended',0),(4,'removed',0),(5,'new-account',0)
+                """);
+        jdbc.update("""
+                INSERT INTO iam_platform_member(id,account_id,status,version) VALUES
+                  (1003,3,'SUSPENDED',0),(1004,4,'REMOVED',0)
+                """);
+
+        var first = service.list(1, 1, true);
+        var second = service.list(2, 1, true);
+        assertEquals(2, first.total());
+        assertEquals(2, second.total());
+        assertEquals("2", first.items().getFirst().record().id());
+        assertEquals("5", second.items().getFirst().record().id());
+
+        var unfiltered = service.list(1, 1, false);
+        assertEquals(5, unfiltered.total());
+        assertEquals("1", unfiltered.items().getFirst().record().id());
+    }
+
+    @Test
+    void memberCandidatePageIntersectsReadAndLookupScopes() {
+        jdbc.update("INSERT INTO iam_account(id,username,version) VALUES (3,'read-only',0),(4,'lookup-only',0)");
+        when(scopes.objects(any(), eq(IamAction.PLATFORM_ACCOUNT_READ))).thenReturn(ObjectScope.of(
+                List.of(new ObjectScopeClause(Set.of(BigInteger.TWO, BigInteger.valueOf(3)), List.of()))));
+        when(scopes.objects(any(), eq(IamAction.PLATFORM_ACCOUNT_LOOKUP))).thenReturn(ObjectScope.of(
+                List.of(new ObjectScopeClause(Set.of(BigInteger.TWO, BigInteger.valueOf(4)), List.of()))));
+
+        var page = service.list(1, 20, true);
+        assertEquals(1, page.total());
+        assertEquals("2", page.items().getFirst().record().id());
+        verify(scopes).requireCreate(PLATFORM, IamAction.PLATFORM_MEMBER_CREATE, Set.of());
+    }
+
+    @Test
+    void accountReadAndLookupAloneCannotFilterByPlatformMembership() {
+        authorizer = (actor, action) -> {
+            if (action == IamAction.PLATFORM_MEMBER_CREATE) throw new BizException(IamReasonCode.ACTION_DENIED);
+            return new IamActionAuthorizer.Admission(true);
+        };
+        var failure = assertThrows(BizException.class, () -> service.list(1, 20, true));
+        assertEquals(IamReasonCode.ACTION_DENIED.getCode(), failure.getCode());
+        assertEquals(2, service.list(1, 20, false).total());
+    }
+
+    @Test
     void listReusesAuthorizationSnapshotForWriteCapabilities() {
         var page = service.list(1, 20);
         assertEquals(2, page.items().size());

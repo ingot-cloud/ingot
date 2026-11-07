@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
@@ -144,15 +146,40 @@ public class AccountService {
      * @return 账号页
      */
     public PageResponse<ResourceDetail<AccountRecord>> list(int page, int pageSize) {
+        return list(page, pageSize, false);
+    }
+
+    /**
+     * 分页读取账号，启用成员候选过滤时核对查找范围和创建资格。
+     *
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param excludePlatformMembers 是否排除所有已有平台成员资格的账号
+     * @return 当前账号页及同一查询条件下的总数
+     */
+    public PageResponse<ResourceDetail<AccountRecord>> list(int page, int pageSize, boolean excludePlatformMembers) {
         IamPages.require(page, pageSize);
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_READ);
         ObjectScope scope = scopes.objects(actor.context(), IamAction.PLATFORM_ACCOUNT_READ);
+        Page<IamAccountEntity> result;
+        if (excludePlatformMembers) {
+            access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_LOOKUP);
+            requirePlatformMemberCreation(actor);
+            ObjectScope lookupScope = scopes.objects(actor.context(), IamAction.PLATFORM_ACCOUNT_LOOKUP);
+            result = accounts.pageWithoutPlatformMembers(scope, lookupScope, page, pageSize);
+        } else {
+            result = accounts.page(scope, page, pageSize);
+        }
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
-        var result = accounts.page(scope, page, pageSize);
         List<ResourceDetail<AccountRecord>> items = result.getRecords().stream()
                 .map(row -> detail(caps, row))
                 .toList();
         return IamPages.details(items, result.getTotal(), page, pageSize);
+    }
+
+    private void requirePlatformMemberCreation(ActiveIdentity actor) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_CREATE);
+        scopes.requireCreate(actor.context(), IamAction.PLATFORM_MEMBER_CREATE, Set.of());
     }
 
     /**
@@ -206,8 +233,7 @@ public class AccountService {
         }
         if (input.purpose() == AccountLookupPurpose.MEMBER_CREATE) {
             if (input.domain() == AuthorizationDomain.PLATFORM) {
-                access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_CREATE);
-                scopes.requireCreate(actor.context(), IamAction.PLATFORM_MEMBER_CREATE, java.util.Set.of());
+                requirePlatformMemberCreation(actor);
                 var policy = memberFields.previewAll(BuiltinResourceProviders.PLATFORM_MEMBER_RESOURCE,
                         actor.context(), List.of(IamAction.PLATFORM_MEMBER_CREATE)).get(IamAction.PLATFORM_MEMBER_CREATE);
                 var fields = FieldPolicyProcessor.access(policy, new ScopeTarget(null, null, null, List.of()));

@@ -22,6 +22,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class AccountQueryRepository {
+    private static final String PLATFORM_MEMBERSHIP =
+            "SELECT 1 FROM iam_platform_member pm WHERE pm.account_id = iam_account.id";
     private final IamAccountMapper accounts;
 
     /**
@@ -33,11 +35,31 @@ public class AccountQueryRepository {
      * @return 账号页
      */
     public Page<IamAccountEntity> page(ObjectScope scope, int page, int size) {
+        return accounts.selectPage(new Page<>(page, size), pageQuery(scope));
+    }
+
+    /**
+     * 在读取与查找范围内分页查询可加入平台的账号。
+     *
+     * @param readScope 账号读取范围
+     * @param lookupScope 账号查找范围
+     * @param page 从 1 开始的页码
+     * @param size 页大小
+     * @return 排除所有已有平台成员资格后的账号页与总数
+     */
+    public Page<IamAccountEntity> pageWithoutPlatformMembers(ObjectScope readScope, ObjectScope lookupScope,
+                                                            int page, int size) {
+        LambdaQueryWrapper<IamAccountEntity> wrapper = pageQuery(readScope).notExists(PLATFORM_MEMBERSHIP);
+        ObjectScopeSql.restrictAccounts(wrapper, lookupScope);
+        return accounts.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    private LambdaQueryWrapper<IamAccountEntity> pageQuery(ObjectScope scope) {
         LambdaQueryWrapper<IamAccountEntity> wrapper = Wrappers.<IamAccountEntity>lambdaQuery()
                 .isNull(IamAccountEntity::getDeletedAt)
                 .orderByAsc(IamAccountEntity::getId);
         ObjectScopeSql.restrictAccounts(wrapper, scope);
-        return accounts.selectPage(new Page<>(page, size), wrapper);
+        return wrapper;
     }
 
     /**

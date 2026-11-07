@@ -469,7 +469,9 @@ def build():
     account_exec = '平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例'
     routes += [
         route('/v1/platform/accounts', 'get', 'platformListAccounts', '全局账号列表', 'PLATFORM',
-              'iam-platform:account:read', None, 'RPageResponseResourceDetailAccountRecord', account_exec, query=PAGE),
+              'iam-platform:account:read', None, 'RPageResponseResourceDetailAccountRecord',
+              account_exec + '；excludePlatformMembers=true 需账号查找及平台成员创建权限，按读取和查找范围交集排除已有平台成员资格',
+              query=PAGE + [{'name': 'excludePlatformMembers', 'schema': {'type': 'boolean', 'default': False}}]),
         route('/v1/platform/accounts', 'post', 'platformCreateAccount', '创建全局账号', 'PLATFORM',
               'iam-platform:account:create', 'AccountCreateInput', 'RCreatedResource', account_exec),
         route('/v1/platform/accounts/lookup', 'post', 'platformLookupAccount', '精确查找全局账号', 'PLATFORM',
