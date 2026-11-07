@@ -73,7 +73,7 @@ public interface TenantAdministrationMapper {
     @Select("""
         <script>SELECT COUNT(*) FROM iam_role_definition d WHERE
         """ + TenantAdministrationSql.ROLE_VISIBLE + """
-        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND 1=0</when><otherwise> AND d.id IN <foreach collection='visible' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
+        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND d.id IN (NULL)</when><otherwise> AND d.id IN <foreach collection='visible' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
         <if test="shared"> AND d.kind='SHARED'</if>
         <if test="kind != null"> AND d.kind=#{kind}</if>
         <if test="name != null"> AND d.name LIKE #{name}</if>
@@ -84,7 +84,7 @@ public interface TenantAdministrationMapper {
 
     /** 分页查询角色，不加载全部租户目录。 */
     @Select("<script>SELECT " + TenantAdministrationSql.ROLE_COLUMNS + " FROM iam_role_definition d WHERE " + TenantAdministrationSql.ROLE_VISIBLE + """
-        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND 1=0</when><otherwise> AND d.id IN <foreach collection='visible' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
+        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND d.id IN (NULL)</when><otherwise> AND d.id IN <foreach collection='visible' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
         <if test="shared"> AND d.kind='SHARED'</if>
         <if test="kind != null"> AND d.kind=#{kind}</if>
         <if test="name != null"> AND d.name LIKE #{name}</if>

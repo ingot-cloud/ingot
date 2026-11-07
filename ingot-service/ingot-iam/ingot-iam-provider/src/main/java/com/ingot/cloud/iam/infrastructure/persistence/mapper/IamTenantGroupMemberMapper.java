@@ -23,7 +23,7 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 @InterceptorIgnore(tenantLine = IamPersistence.EXPLICIT_BOUNDARY, dataPermission = IamPersistence.EXPLICIT_BOUNDARY)
 public interface IamTenantGroupMemberMapper extends BaseMapper<IamTenantGroupMemberEntity> {
-    /** 当前关联页和总数共享的组范围条件，以 AND 开头；null 表示全量。 */
+    /** 当前关联页和总数共享的组范围条件，以 AND 开头；null 表示全量，可由动态 where 标签省略。 */
     String GROUP_SCOPE = """
             <if test="groupIds != null">
               AND mg.id IN
@@ -59,7 +59,7 @@ public interface IamTenantGroupMemberMapper extends BaseMapper<IamTenantGroupMem
      * @return 去重后的组数
      */
     @Select("<script>" + IamMembershipSql.DEPARTMENT_REACH + IamMembershipSql.MEMBER_GROUPS
-            + " SELECT COUNT(*) FROM member_groups mg WHERE 1=1 " + GROUP_SCOPE + "</script>")
+            + " SELECT COUNT(*) FROM member_groups mg <where>" + GROUP_SCOPE + "</where></script>")
     long countGroupsOfMember(@Param("tenantId") BigInteger tenantId, @Param("memberId") BigInteger memberId,
                              @Param("groupIds") Set<BigInteger> groupIds);
 

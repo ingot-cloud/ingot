@@ -79,7 +79,7 @@ public final class AuthorizationCandidateSql {
     private static String roleSource(RoleQuery q) {
         String boundary = q.allowSystem() ? REVISION_BOUNDARY : CUSTOM_REVISION_BOUNDARY;
         String allowed = q.allowedRevisionIds() == null ? "" : q.allowedRevisionIds().isEmpty()
-                ? " AND 1=0" : " AND r.id IN <foreach collection='q.allowedRevisionIds' item='id' "
+                ? " AND r.id IN (NULL)" : " AND r.id IN <foreach collection='q.allowedRevisionIds' item='id' "
                 + "open='(' close=')' separator=','>#{id}</foreach>";
         String newer = q.minimumRevision() == null ? "" : " AND r.revision &gt; #{q.minimumRevision}";
         if (q.roleId() == null) {
@@ -131,7 +131,7 @@ public final class AuthorizationCandidateSql {
             sql += " AND x.id IN <foreach collection='q.ids' item='id' open='(' close=')' separator=','>#{id}</foreach>";
         }
         if (q.allowedIds() != null) {
-            sql += q.allowedIds().isEmpty() ? " AND 1=0" :
+            sql += q.allowedIds().isEmpty() ? " AND x.id IN (NULL)" :
                     " AND x.id IN <foreach collection='q.allowedIds' item='id' open='(' close=')' separator=','>#{id}</foreach>";
         }
         if (q.tree() && q.kind() == AuthorizationCandidateKind.OBJECT

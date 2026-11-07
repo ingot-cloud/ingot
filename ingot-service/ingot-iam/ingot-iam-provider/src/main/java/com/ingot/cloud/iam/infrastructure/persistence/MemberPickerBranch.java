@@ -19,7 +19,7 @@ public record MemberPickerBranch(BigInteger departmentId, boolean root, boolean 
     public static MemberPickerBranch department(long id, boolean root) { return new MemberPickerBranch(BigInteger.valueOf(id), root, false); }
     /** 使用内部固定列及绑定参数路径；部门关系判断先于分页与计数。 */
     public String sql(String member, String tenant, String departmentBinding) {
-        if (empty) return "1=0";
+        if (empty) return member + " IN (NULL)";
         if (departmentId == null) return "1=1";
         String relation = "SELECT 1 FROM iam_member_department picker_md WHERE picker_md.tenant_id=" + tenant
                 + " AND picker_md.member_id=" + member;

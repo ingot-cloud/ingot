@@ -52,7 +52,7 @@ public final class RoleWorkspaceSql {
         String base = " FROM iam_role_assignment ra JOIN iam_role_revision r ON r.id=ra.revision_id "
                 + "JOIN iam_role_definition definition ON definition.id=r.role_id AND definition.domain='PLATFORM' AND definition.tenant_id IS NULL "
                 + "LEFT JOIN iam_delegation_grant d ON d.id=ra.delegation_grant_id ";
-        String assignmentVisibility = q.visibleAssignmentIds() == null ? "" : q.visibleAssignmentIds().isEmpty() ? " AND 1=0 "
+        String assignmentVisibility = q.visibleAssignmentIds() == null ? "" : q.visibleAssignmentIds().isEmpty() ? " AND ra.id IN (NULL) "
                 : " AND ra.id IN <foreach collection='q.visibleAssignmentIds' item='id' open='(' close=')' separator=','>#{id}</foreach> ";
         String where = " WHERE r.role_id=#{q.roleId} AND definition.enabled=TRUE AND ra.domain='PLATFORM' AND ra.tenant_id IS NULL "
                 + "AND ra.status='ACTIVE' AND ra.valid_from&lt;=CURRENT_TIMESTAMP "
@@ -74,7 +74,7 @@ public final class RoleWorkspaceSql {
                 + "ON rm.delegation_id=d.id AND rm.platform_member_id=valid_gm.member_id WHERE valid_gm.group_id=ra.platform_group_id "
                 + "AND (rm.platform_member_id IS NULL OR valid_gm.member_id=d.platform_administrator_id)))))) ";
         String columns = ",r.revision AS revision_number,r.version_name,ra.subject_type,ra.id AS assignment_id";
-        String groupVisibility = q.visibleGroupIds() == null ? "" : q.visibleGroupIds().isEmpty() ? " AND 1=0 "
+        String groupVisibility = q.visibleGroupIds() == null ? "" : q.visibleGroupIds().isEmpty() ? " AND ra.platform_group_id IN (NULL) "
                 : " AND ra.platform_group_id IN <foreach collection='q.visibleGroupIds' item='id' open='(' close=')' separator=','>#{id}</foreach> ";
         if (q.subjectType() == SubjectType.GROUP) {
             return "SELECT g.id,g.name" + columns + base + "JOIN iam_platform_group g ON g.id=ra.platform_group_id "

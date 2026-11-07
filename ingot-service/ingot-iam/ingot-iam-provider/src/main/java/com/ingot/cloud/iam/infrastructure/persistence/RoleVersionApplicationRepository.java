@@ -192,7 +192,7 @@ public class RoleVersionApplicationRepository {
                 .eq(IamRoleVersionApplicationItemEntity::getTaskId, BigInteger.valueOf(taskId));
         if (!scope.coversAll()) {
             var ids = scope.clauses().stream().flatMap(c -> c.requiredIds().stream()).distinct().toList();
-            if (ids.isEmpty()) query.apply("1=0");
+            if (ids.isEmpty()) query.inSql(IamRoleVersionApplicationItemEntity::getAssignmentId, "NULL");
             else query.in(IamRoleVersionApplicationItemEntity::getAssignmentId, ids);
         }
         return query;

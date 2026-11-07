@@ -1,0 +1,23 @@
+[
+  {
+    "name": "com.ingot.cloud.iam.application.group.GroupServiceTest",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.ingot.cloud.iam.infrastructure.persistence.GroupRepositoryTest",
+    "tests": "8",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.ingot.cloud.iam.infrastructure.persistence.TenantMemberGroupSqlWallTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  }
+]

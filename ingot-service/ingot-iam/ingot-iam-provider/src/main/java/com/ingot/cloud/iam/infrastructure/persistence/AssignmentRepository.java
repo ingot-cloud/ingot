@@ -127,7 +127,7 @@ public class AssignmentRepository {
                 .apply("revision_id IN (SELECT id FROM iam_role_revision WHERE role_id={0})", BigInteger.valueOf(roleId));
         if (!scope.coversAll()) {
             var ids = scope.clauses().stream().flatMap(c -> c.requiredIds().stream()).distinct().toList();
-            if (ids.isEmpty()) query.apply("1=0"); else query.in(IamRoleAssignmentEntity::getId, ids);
+            if (ids.isEmpty()) query.inSql(IamRoleAssignmentEntity::getId, "NULL"); else query.in(IamRoleAssignmentEntity::getId, ids);
         }
         return assignments.selectPage(new Page<>(page, size), query.orderByAsc(IamRoleAssignmentEntity::getId));
     }

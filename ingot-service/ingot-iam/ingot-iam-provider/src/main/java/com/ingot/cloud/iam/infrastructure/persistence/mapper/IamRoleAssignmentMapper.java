@@ -376,7 +376,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
           <if test="!all">
             <choose><when test="ids.size()>0">
               AND a.id IN <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
-            </when><otherwise>AND 1=0</otherwise></choose>
+            </when><otherwise>AND a.id IN (NULL)</otherwise></choose>
           </if>
         GROUP BY r.id,r.revision,r.version_name ORDER BY r.revision DESC
         </script>

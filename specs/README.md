@@ -304,3 +304,5 @@ current/<domain>/<capability>/
 - [内部后台同源登录与双入口部署](./changes/archive/2026/20261031-security-same-origin-login/README.md)（completed，2026-10-31用户确认两端核心流程本地验收）；[当前能力](./current/security/same-origin-login/README.md)。
 
 - [IAM帮助内容方案（已取消）](./changes/archive/2026/20261103-iam-help-center/README.md)（cancelled；2026-11-03 用户改用前端静态帮助，保留历史）
+
+- [IAM SQL 防火墙兼容性检查与修复](./changes/active/20261107-iam-member-groups-wall-filter/README.md)（validating，187 条自定义 SQL 检查、完整回归及隔离 MySQL/HTTP 回归通过，待实际环境复测）

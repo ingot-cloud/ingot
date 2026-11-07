@@ -1,0 +1,16 @@
+[
+  {
+    "name": "com.ingot.cloud.iam.application.role.RoleWorkspaceMySqlHttpTest",
+    "tests": 23,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.ingot.cloud.iam.application.live.TenantLiveMySqlHttpTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  }
+]

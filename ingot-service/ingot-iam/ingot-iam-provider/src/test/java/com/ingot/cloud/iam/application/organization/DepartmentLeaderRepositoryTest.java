@@ -90,6 +90,26 @@ class DepartmentLeaderRepositoryTest {
     }
 
     @Test
+    void emptyClausesDepartmentsAndPickerBranchesKeepPagesAndSummariesClosed() {
+        var emptyClause = new ObjectScopeClause(Set.of(), List.of());
+        var emptyDepartments = new ObjectScopeClause(Set.of(), List.of(Set.of()));
+        for (var scope : List.of(ObjectScope.none(), ObjectScope.of(List.of(emptyClause)),
+                ObjectScope.of(List.of(emptyDepartments)))) {
+            assertEquals(0, repository.count(query(scope, false)));
+            assertTrue(repository.page(query(scope, false)).isEmpty());
+            assertTrue(repository.summaries(query(scope, false)).isEmpty());
+        }
+        var union = ObjectScope.of(List.of(emptyDepartments,
+                new ObjectScopeClause(Set.of(id(102)), List.of())));
+        assertEquals(1, repository.count(query(union, false)));
+        assertEquals(id(102), repository.page(query(union, false)).getFirst().getMemberId());
+        var hiddenBranch = new DepartmentLeaderSql.Query(id(10), id(11), List.of(id(11)), ObjectScope.all(),
+                null, 20, 0, true, null, com.ingot.cloud.iam.infrastructure.persistence.MemberPickerBranch.none());
+        assertEquals(0, repository.count(hiddenBranch));
+        assertTrue(repository.page(hiddenBranch).isEmpty());
+    }
+
+    @Test
     void summaryAndPaginationAreRestrictedBeforeCounting() {
         var scope = ObjectScope.of(List.of(new ObjectScopeClause(Set.of(id(102)), List.of())));
         var query = new DepartmentLeaderSql.Query(id(10), id(11), List.of(id(11), id(12)), scope, null, 1, 0, false);

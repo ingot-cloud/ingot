@@ -400,6 +400,7 @@ public final class IamMybatisTestAccess {
             factory.setGlobalConfig(global);
             factory.setTransactionFactory(new SpringManagedTransactionFactory());
             factory.setPlugins(
+                    new IamSqlWallTestInterceptor(),
                     new MybatisPlusConfig().mybatisPlusInterceptor(new TenantProperties(), new DataScopeProperties()),
                     new MPJInterceptor());
             factory.setMapperLocations(new ClassPathResource("mapper/IamIdentityMapper.xml"),

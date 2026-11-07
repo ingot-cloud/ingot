@@ -22,9 +22,9 @@ public final class TenantAdministrationSql {
     /** 当前分配可见范围和来源条件；空集合恒拒绝。 */
     public static final String ASSIGNMENT_FILTER = """
         WHERE ra.domain='TENANT' AND ra.tenant_id=#{tenantId}
-        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND 1=0</when><otherwise> AND ra.id IN
+        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND ra.id IN (NULL)</when><otherwise> AND ra.id IN
          <foreach collection='visible' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
-        <if test="sources != null"><choose><when test="sources.isEmpty()"> AND 1=0</when><otherwise> AND ra.delegation_grant_id IN
+        <if test="sources != null"><choose><when test="sources.isEmpty()"> AND ra.delegation_grant_id IN (NULL)</when><otherwise> AND ra.delegation_grant_id IN
          <foreach collection='sources' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
         <if test="type != null"> AND ra.subject_type=#{type}</if>
         <if test="keyword != null"> AND (m.display_name LIKE #{keyword} ESCAPE '!' OR g.name LIKE #{keyword} ESCAPE '!' OR d.name LIKE #{keyword} ESCAPE '!')</if>
@@ -32,7 +32,7 @@ public final class TenantAdministrationSql {
     /** 委派治理对象可见范围。 */
     public static final String DELEGATION_FILTER = """
         WHERE dl.domain='TENANT' AND dl.tenant_id=#{tenantId}
-        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND 1=0</when><otherwise> AND dl.id IN
+        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND dl.id IN (NULL)</when><otherwise> AND dl.id IN
          <foreach collection='visible' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
         <if test="keyword != null"> AND m.display_name LIKE #{keyword} ESCAPE '!'</if>
         """;

@@ -123,7 +123,7 @@ public final class TenantRoleWorkspaceSql {
 
     private static String idFilter(String field, String column) {
         return "<choose><when test='q." + field + " == null'></when>"
-                + "<when test='q." + field + ".isEmpty()'> AND 1=0 </when><otherwise> AND " + column
+                + "<when test='q." + field + ".isEmpty()'> AND " + column + " IN (NULL) </when><otherwise> AND " + column
                 + " IN <foreach collection='q." + field + "' item='id' open='(' close=')' separator=','>#{id}</foreach>"
                 + "</otherwise></choose>";
     }

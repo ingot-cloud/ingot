@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.infrastructure.persistence;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,14 +45,14 @@ public final class DepartmentLeaderSql {
                 + "MAX(CASE WHEN l.is_primary THEN " + AVAILABLE + " ELSE FALSE END) AS available"
                 + MEMBERS + RELATION + " WHERE m.tenant_id=#{q.tenantId} AND l.department_id IN "
                 + "<foreach collection='q.departmentIds' item='department' open='(' close=')' separator=','>#{department}</foreach>"
-                + " AND " + memberScope(q.scope()) + " GROUP BY l.department_id</script>";
+                + memberScope(q.scope()) + " GROUP BY l.department_id</script>";
     }
 
     private static String source(Query q) {
         String relation = "SELECT 1 FROM iam_department_leader bound WHERE bound.tenant_id=m.tenant_id "
                 + "AND bound.department_id=#{q.departmentId} AND bound.member_id=m.id";
         return MEMBERS + (q.candidates() ? "" : RELATION)
-                + " WHERE m.tenant_id=#{q.tenantId} AND " + memberScope(q.scope())
+                + " WHERE m.tenant_id=#{q.tenantId}" + memberScope(q.scope())
                 + (q.candidates() ? " AND " + AVAILABLE + " AND NOT EXISTS(" + relation + ")"
                     : " AND l.department_id=#{q.departmentId}")
                 + (q.browseDepartmentId() == null || q.keyword() != null ? "" : " AND EXISTS(SELECT 1 FROM iam_member_department md WHERE md.tenant_id=m.tenant_id AND md.member_id=m.id AND md.department_id=#{q.browseDepartmentId})")
@@ -60,30 +61,29 @@ public final class DepartmentLeaderSql {
     }
 
     private static String memberScope(ObjectScope scope) {
-        if (scope.coversAll()) return "1=1";
-        if (scope.coversNone()) return "1=0";
-        StringBuilder sql = new StringBuilder("(");
+        if (scope.coversAll()) return "";
+        if (scope.coversNone()) return " AND m.id IN (NULL)";
+        List<String> clauses = new ArrayList<>();
         for (int index = 0; index < scope.clauses().size(); index++) {
-            if (index > 0) sql.append(" OR ");
             var clause = scope.clauses().get(index);
             String path = "q.scope.clauses[" + index + "]";
-            sql.append("(1=1");
-            if (clause.requiredIds().isEmpty() && clause.departmentSets().isEmpty()) sql.append(" AND 1=0");
+            List<String> conditions = new ArrayList<>();
+            if (clause.requiredIds().isEmpty() && clause.departmentSets().isEmpty()) conditions.add("m.id IN (NULL)");
             if (!clause.requiredIds().isEmpty()) {
-                sql.append(" AND m.id IN ").append(ids(path + ".requiredIds"));
+                conditions.add("m.id IN " + ids(path + ".requiredIds"));
             }
             for (int set = 0; set < clause.departmentSets().size(); set++) {
                 if (clause.departmentSets().get(set).isEmpty()) {
-                    sql.append(" AND 1=0");
+                    conditions.add("m.id IN (NULL)");
                 } else {
-                    sql.append(" AND EXISTS(SELECT 1 FROM iam_member_department md WHERE md.tenant_id=m.tenant_id ")
-                            .append("AND md.member_id=m.id AND md.department_id IN ")
-                            .append(ids(path + ".departmentSets[" + set + "]")).append(')');
+                    conditions.add("EXISTS(SELECT 1 FROM iam_member_department md WHERE md.tenant_id=m.tenant_id "
+                            + "AND md.member_id=m.id AND md.department_id IN "
+                            + ids(path + ".departmentSets[" + set + "]") + ")");
                 }
             }
-            sql.append(')');
+            clauses.add("(" + String.join(" AND ", conditions) + ")");
         }
-        return sql.append(')').toString();
+        return " AND (" + String.join(" OR ", clauses) + ")";
     }
 
     private static String ids(String path) {

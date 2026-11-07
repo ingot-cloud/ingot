@@ -15,6 +15,7 @@ import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantMemberEnti
 
 /**
  * <p>把类型化对象范围落到 Wrapper 条件，不接受调用方传入的表列名或 SQL 片段。</p>
+ * <p>空范围使用 IN (NULL) 表示无可匹配值，保持拒绝所有行且兼容 SQL 防火墙。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -34,7 +35,7 @@ public final class ObjectScopeSql {
             return;
         }
         if (scope.coversNone()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamPlatformMemberEntity::getId, "NULL");
             return;
         }
         wrapper.and(or -> {
@@ -63,7 +64,7 @@ public final class ObjectScopeSql {
             return;
         }
         if (scope.coversNone()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamTenantMemberEntity::getId, "NULL");
             return;
         }
         wrapper.and(or -> {
@@ -90,7 +91,7 @@ public final class ObjectScopeSql {
             return;
         }
         if (scope.coversNone()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamAccountEntity::getId, "NULL");
             return;
         }
         wrapper.and(or -> {
@@ -143,7 +144,7 @@ public final class ObjectScopeSql {
         }
         Set<BigInteger> ids = objectIds(scope);
         if (ids.isEmpty()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(id, "NULL");
         } else {
             wrapper.in(id, ids);
         }
@@ -168,7 +169,7 @@ public final class ObjectScopeSql {
             return;
         }
         if (scope.coversNone()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamDepartmentEntity::getId, "NULL");
             return;
         }
         wrapper.and(or -> {
@@ -186,7 +187,7 @@ public final class ObjectScopeSql {
 
     private static void applyPlatform(LambdaQueryWrapper<IamPlatformMemberEntity> wrapper, ObjectScopeClause clause) {
         if (clause.requiredIds().isEmpty()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamPlatformMemberEntity::getId, "NULL");
             return;
         }
         wrapper.in(IamPlatformMemberEntity::getId, clause.requiredIds());
@@ -195,7 +196,7 @@ public final class ObjectScopeSql {
     private static void applyTenant(LambdaQueryWrapper<IamTenantMemberEntity> wrapper, ObjectScopeClause clause,
                                     BigInteger tenantId) {
         if (clause.requiredIds().isEmpty() && clause.departmentSets().isEmpty()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamTenantMemberEntity::getId, "NULL");
             return;
         }
         if (!clause.requiredIds().isEmpty()) {
@@ -208,7 +209,7 @@ public final class ObjectScopeSql {
 
     private static void applyDepartment(LambdaQueryWrapper<IamDepartmentEntity> wrapper, ObjectScopeClause clause) {
         if (clause.requiredIds().isEmpty()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamDepartmentEntity::getId, "NULL");
             return;
         }
         wrapper.in(IamDepartmentEntity::getId, clause.requiredIds());
@@ -216,7 +217,7 @@ public final class ObjectScopeSql {
 
     private static void applyAccount(LambdaQueryWrapper<IamAccountEntity> wrapper, ObjectScopeClause clause) {
         if (clause.requiredIds().isEmpty()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamAccountEntity::getId, "NULL");
             return;
         }
         wrapper.in(IamAccountEntity::getId, clause.requiredIds());
@@ -225,7 +226,7 @@ public final class ObjectScopeSql {
     private static void existsMembership(LambdaQueryWrapper<IamTenantMemberEntity> wrapper, BigInteger tenantId,
                                          Set<BigInteger> departments) {
         if (departments.isEmpty()) {
-            wrapper.apply("1 = 0");
+            wrapper.inSql(IamTenantMemberEntity::getId, "NULL");
             return;
         }
         List<BigInteger> ids = List.copyOf(departments);
