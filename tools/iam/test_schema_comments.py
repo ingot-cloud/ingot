@@ -4,15 +4,15 @@ import subprocess
 import unittest
 from pathlib import Path
 from schema_model import tables, comment, COMMENT, parts
-from schema_comments import build, normalized, preflight, SNAPSHOT, source_digest
+from schema_comments import build, normalized, preflight, SNAPSHOT, BASELINE, source_digest
 from database_sources import ROOT
 
 
 class SchemaCommentsTest(unittest.TestCase):
     def test_all_manifest_tables_and_columns_have_documentation(self):
         definitions = tables()
-        self.assertEqual(65, len(definitions))
-        self.assertEqual(525, sum(len(t.columns) for t in definitions))
+        self.assertEqual(59, len(definitions))
+        self.assertEqual(501, sum(len(t.columns) for t in definitions))
         for table in definitions:
             self.assertTrue(comment(table.options), table.name)
             for name, definition in table.columns.items():
@@ -33,7 +33,7 @@ class SchemaCommentsTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '未执行任何 ALTER'):
             preflight(query, snapshot)
         self.assertEqual(1, len(calls))
-        self.assertEqual(65,calls[0].count("SHOW CREATE"))
+        self.assertEqual(59,calls[0].count("SHOW CREATE"))
         self.assertTrue(all(sql.startswith('SHOW CREATE') for sql in calls))
         with self.assertRaisesRegex(ValueError, '快照'):
             preflight(query, {**snapshot, 'source_digest': 'outdated'})
@@ -59,6 +59,31 @@ class SchemaCommentsTest(unittest.TestCase):
         self.assertEqual(TARGET.read_text(),expected)
         for table in tables():
             self.assertIn('### '+table.name+' — ', expected)
+
+
+    def test_historical_preflight_checks_its_original_tables_not_the_new_project_set(self):
+        baseline = json.loads(BASELINE.read_text())
+        calls = []
+        def query(sql):
+            calls.append(sql)
+            return '\n'.join(name + '\t' + ddl for name, ddl in baseline['tables'].items())
+        preflight(query, baseline, check_source=False)
+        self.assertEqual(1, len(calls))
+        self.assertEqual(len(baseline['tables']), calls[0].count('SHOW CREATE'))
+        self.assertIn('SHOW CREATE TABLE `iam_migration_batch`', calls[0])
+        def missing_legacy(sql):
+            return '\n'.join(name + '\t' + ddl for name, ddl in baseline['tables'].items()
+                             if name != 'iam_migration_batch')
+        with self.assertRaisesRegex(ValueError, '未执行任何 ALTER'):
+            preflight(missing_legacy, baseline, check_source=False)
+        incomplete = {name: ddl for name, ddl in baseline['tables'].items() if name != 'iam_migration_batch'}
+        with self.assertRaisesRegex(ValueError, '全部.*历史升级目标'):
+            preflight(query, {**baseline, 'tables': incomplete}, check_source=False)
+
+    def test_workbook_blob_fields_are_documented_as_columns(self):
+        workbook = next(table for table in tables() if table.name == 'iam_member_workbook')
+        self.assertTrue({'workbook', 'error_report', 'password_file'} <= workbook.columns.keys())
+        self.assertTrue(all('MEDIUMBLOB' not in value for value in workbook.constraints))
 
 
 if __name__ == '__main__':

@@ -32,6 +32,11 @@ def schema_files():
     return sources('schemas')
 
 
+def legacy_schema_files():
+    """显式选择的历史元数据/记录结构，绝不进入默认建库或重建清单。"""
+    return sources('legacySchemas')
+
+
 def initialization_files(*, seed_platform_account=True):
     """结构、框架表、治理目录及平台账号的完整顺序。"""
     catalog = schema_files() + sources('frameworkSchemas') + sources('bootstrap')

@@ -54,7 +54,7 @@ public class MemberExportService {
     private static final Duration RETENTION = Duration.ofHours(24);
     private final IamAccess access;
     private final ResourceScopeAccessService scopes;
-    private final MemberQueryService members;
+    private final MemberFacade members;
     private final MemberExportRepository exports;
     private final AuthorizationAuditWriter audits;
     private final TenantRepository tenants;
@@ -76,7 +76,7 @@ public class MemberExportService {
      * @param executors 应用异步执行器；排除调度器，测试可空并同步执行
      */
     @Autowired
-    public MemberExportService(IamAccess access, ResourceScopeAccessService scopes, MemberQueryService members,
+    public MemberExportService(IamAccess access, ResourceScopeAccessService scopes, MemberFacade members,
                                MemberExportRepository exports, AuthorizationAuditWriter audits, TenantRepository tenants,
                                PlatformTransactionManager transactionManager,
                                ObjectProvider<TaskExecutor> executors) {
@@ -97,7 +97,7 @@ public class MemberExportService {
      * @param executor 任务执行器
      * @param snapshotPageSize 快照遍历页大小
      */
-    public MemberExportService(IamAccess access, ResourceScopeAccessService scopes, MemberQueryService members,
+    public MemberExportService(IamAccess access, ResourceScopeAccessService scopes, MemberFacade members,
                                MemberExportRepository exports, AuthorizationAuditWriter audits, TenantRepository tenants,
                                PlatformTransactionManager transactionManager, Executor executor,
                                int snapshotPageSize) {

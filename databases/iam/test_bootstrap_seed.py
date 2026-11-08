@@ -10,13 +10,14 @@ import time
 import unittest
 import uuid
 import sys
+import re
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'tools/iam'))
 from schema_comments import normalized
 from tools.iam.generate_bootstrap import ADMIN_ROLE_CODE
-from tools.iam.database_sources import read_source, schema_files, sources
+from tools.iam.database_sources import read_source, schema_files, sources, legacy_schema_files
 
 
 IMAGE = "mysql:8.4"
@@ -250,7 +251,7 @@ class BootstrapSeedTest(unittest.TestCase):
         for table in tables:
             self.assertEqual(definitions[table], self.sql(f'SHOW CREATE TABLE `{table}`'), table)
             self.assertEqual(counts[table], self.count(table), table)
-        self.assertEqual(65, len(tables))
+        self.assertEqual(59, len(tables))
         self.assertEqual(181, self.count('iam_action'))
         self.assertEqual(41, self.count('iam_menu'))
         for table in ['iam_tenant', 'iam_tenant_member', 'iam_authorization_audit',
@@ -354,6 +355,22 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(0, self.count("iam_account"))
         self.assertEqual(0, self.count("iam_platform_member"))
         self.assertEqual(0, self.count("iam_role_assignment"))
+
+    def test_runtime_rebuild_preserves_optional_legacy_tables_and_rows(self):
+        for source in legacy_schema_files():
+            self.sql(read_source(source))
+        self.sql("INSERT INTO iam_migration_batch(id,source_fingerprint,target_identifier,rules_version) "
+                 "VALUES('preserved',REPEAT('a',64),'isolated-fixture','1')")
+        self.sql("INSERT INTO sys_tenant_plan_record(id,tenant_id,plan_id,type,duration,unit,created_at) "
+                 "VALUES(1,10,1,'0',12,'1',UTC_TIMESTAMP())")
+        self.sql(sources('bundle')[0].read_text())
+        self.assertEqual('preserved', self.sql('SELECT id FROM iam_migration_batch'))
+        self.assertEqual('12', self.sql('SELECT duration FROM sys_tenant_plan_record WHERE id=1'))
+        self.assertEqual(1, self.count('iam_account'))
+        self.assertEqual(0, self.count('iam_tenant'))
+        for source in legacy_schema_files():
+            for table in re.findall(r'^CREATE TABLE\s+`?([a-z_]+)', read_source(source), re.M):
+                self.assertIn(table, self.sql('SHOW TABLES').splitlines())
 
     def test_full_initialization_creates_one_platform_admin_and_no_tenant(self):
         self.sql(sources('bundle')[0].read_text())

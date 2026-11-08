@@ -35,3 +35,21 @@ dependencies {
     implementation(deps.alibaba.easyexcel)
 }
 
+tasks.register('iamPackageBoundariesCheck', Exec) {
+    group = 'verification'
+    description = 'Verify IAM package responsibilities and dependency direction'
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'tools/iam/test_package_boundaries.py'
+}
+
+tasks.register('iamContractCheck', Exec) {
+    group = 'verification'
+    description = 'Verify the published IAM contract against the controllers'
+    workingDir rootProject.file('tools/iam')
+    commandLine 'python3', 'test_contract.py'
+}
+
+tasks.named('check') {
+    dependsOn 'iamPackageBoundariesCheck', 'iamContractCheck'
+}
+

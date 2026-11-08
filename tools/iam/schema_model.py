@@ -5,7 +5,7 @@ from database_sources import sources, read_source
 
 COMMENT = re.compile(r"\s+COMMENT\s*(?:=\s*)?'(?:''|\\.|[^'\\])*'", re.I)
 CREATE = re.compile(r'CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`?([a-z_]+)`?\s*\(', re.I)
-COLUMN = re.compile(r'^`?([a-z_][a-z_0-9]*)`?\s+(?:boolean|bigint|int|tinyint|smallint|varchar|char|datetime|timestamp|json|text|longtext|mediumtext|bit|decimal|blob|varbinary)\b', re.I)
+COLUMN = re.compile(r'^`?([a-z_][a-z_0-9]*)`?\s+(?:boolean|bigint|int|tinyint|smallint|varchar|char|datetime|timestamp|json|text|longtext|mediumtext|bit|decimal|blob|mediumblob|varbinary)\b', re.I)
 
 
 def closing(text, start):

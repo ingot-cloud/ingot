@@ -15,7 +15,7 @@ import com.ingot.cloud.iam.domain.authorization.ResolvedActionScope;
 import com.ingot.cloud.iam.domain.authorization.ScopeClause;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantAdministrationMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantScopeCandidateMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantScopeCandidateSql;
@@ -50,7 +50,7 @@ public class TenantDiagnoseCandidates {
     private final IamAccess access;
     private final AuthorizationEvaluator evaluator;
     private final ResourceScopeAccessService scopes;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final DepartmentQueryRepository departments;
     private final TenantAdministrationMapper live;
     private final TenantScopeCandidateMapper candidates;

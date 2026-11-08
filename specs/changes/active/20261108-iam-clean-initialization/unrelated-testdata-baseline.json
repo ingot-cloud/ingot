@@ -1,0 +1,13 @@
+{
+  "commit": "2d2dfa86d11ba2ea6fa1a1a8d9366bdb475a4bbe",
+  "filesUnchanged": {
+    "tools/iam/test-data/build.py": "ef68d6477107a998683f689d37b7b1e6fb9c09c696b561913f6d07d19e8c95bb",
+    "tools/iam/test-data/lib.py": "ae03f50b5451dd6dbb6f1e593afce48daa5caf008f87b089a878a235bc4ae076",
+    "tools/iam/test-data/test_iam_test_data.py": "85b6be4cdf0abddd3ffd8d91a59271f9609795a922ffd8b79da8afeb3c6e2bdd"
+  },
+  "total": 20,
+  "passed": 14,
+  "errors": 6,
+  "reason": "build fixture treats paged resource response as a list (KeyError: 0); same six errors reproduced from isolated HEAD archive",
+  "log": "/tmp/iam-init-testdata-head-baseline.log"
+}

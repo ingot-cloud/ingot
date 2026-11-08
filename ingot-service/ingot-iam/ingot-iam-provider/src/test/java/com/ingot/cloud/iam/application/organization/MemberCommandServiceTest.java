@@ -84,7 +84,7 @@ class MemberCommandServiceTest {
                         com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess.audits(dataSource),
                         new AuthorizationChangeNotifier(event -> { }), org.mockito.Mockito.mock(com.ingot.cloud.iam.application.authorization.PlatformAdministratorGuard.class)),
                 new GrantPresenceMemberGuard(authorizer),
-                new AtomicLong(9000)::incrementAndGet, org.mockito.Mockito.mock(MemberQueryService.class));
+                new AtomicLong(9000)::incrementAndGet, org.mockito.Mockito.mock(MemberFacade.class));
         authenticate();
     }
 

@@ -9,8 +9,8 @@
 | `001_identity.sql` | 账号、平台/租户成员、部门、两域用户组及关联；已包含套餐plan_id列。 |
 | `002_catalog_role.sql` | 应用、资源、操作、菜单、开通、人群、套餐、角色及固定版本。 |
 | `003_assignment_delegation.sql` | 分配、委派、人群及逐操作上限；已包含LIMITED/UNLIMITED模式。 |
-| `004_policy_audit_migration.sql` | 默认策略、租户通讯录/字段规则、导出任务、审计及迁移记录；已包含分配创建审计索引和原007导出建表内容。平台字段权限在角色版本中保存，不再建独立策略表。 |
-| `005_auxiliary.sql` | 字典、发号、社会化、历史安全事件、套餐辅助结构与用途绑定的图片暂存记录；不带开发数据。 |
+| `004_policy_audit_migration.sql` | 默认策略、租户资源字段规则、成员导出/工作簿、公共下载任务、授权审计及角色版本应用任务；已包含分配创建审计索引和原007导出建表内容。平台字段权限在角色版本中保存，不再建独立策略表。 |
+| `005_auxiliary.sql` | 字典、发号、社会化、安全事件与用途绑定的图片暂存记录；不带开发数据。 |
 | `006_bootstrap.sql` | 治理目录种子，包含 5 个应用、44 个资源、181 项操作、41 个菜单、80 条菜单关联、2 个治理角色及固定版本、默认策略与发号起点。 |
 | `007_initial_platform_account.sql` | 在空账号表中创建 `platform`、平台成员和平台系统管理员分配。 |
 
@@ -35,7 +35,7 @@ python3 tools/iam/generate_database.py --check
 mysql --database=ingot_iam_new < databases/ingot_iam.sql
 ```
 
-库须事先创建，连接/凭证按本机配置提供。完整SQL先按逆序对manifest内65张表执行 `DROP TABLE IF EXISTS`，然后建表并写入正式治理目录；不创建/删除数据库、不切换数据库、不删除清单外表。循环外键要求仅删除阶段临时关闭外键检查，建表与种子阶段开启，结束后恢复原会话设置。DDL无法整体回滚，导入失败后修正原因重新执行；需要恢复原数据时使用备份。
+库须事先创建，连接/凭证按本机配置提供。完整SQL先按逆序对manifest内59张运行保留表执行 `DROP TABLE IF EXISTS`，然后建表并写入正式治理目录；不创建/删除数据库、不切换数据库、不删除清单外表。循环外键要求仅删除阶段临时关闭外键检查，建表与种子阶段开启，结束后恢复原会话设置。DDL无法整体回滚，导入失败后修正原因重新执行；需要恢复原数据时使用备份。
 
 001–005 权威结构源本身不执行重置，仅完整文件负责删除编排。分片适用于空库，按 manifest 的 001–005、框架 CREATE、006、007 顺序导入。框架 SQL 只导入 CREATE 段，完整文件已经完成这一步。验证应用启动器或历史人工夹具时，分片导入到 006 即可。
 
@@ -58,7 +58,15 @@ python3 databases/iam/test_bootstrap_seed.py
 python3 tools/iam/test-data/test_iam_test_data.py
 ```
 
-MySQL回归比较完整文件与分片的所有表定义及种子行数，验证首次、部分初始化后及带循环外键数据的重复导入、目录默认布局、无关表保留和会话外键设置恢复；初始化结果不带账号或运行状态。单独执行006的种子幂等及权限版本不变检查继续保留。
+MySQL回归比较完整文件与分片的所有表定义及种子行数，验证首次、部分初始化后及带循环外键数据的重复导入、目录默认布局、无关表保留和会话外键设置恢复；初始化仅带platform管理员账号及其必须的成员/治理分配，不带测试租户、测试成员、业务运行状态或迁移元数据表。单独执行006的种子幂等及权限版本不变检查继续保留。
+
+## 可选历史结构（不进入新项目初始化）
+
+[legacy/README.md](./legacy/README.md) 列出显式选择的历史DDL：身份迁移批次/映射/问题3表、即时授权迁移批次/映射2表，以及没有当前运行消费者的旧套餐购买记录表。定义原样保留，manifest的legacySchemas仅供离线工具和历史验证主动读取；新项目ingot_iam.sql不创建或删除这6张表。
+
+已有库无需因新项目清单精简而删表。历史升级SQL、026固定基线和pre_021冻结夹具不变；历史迁移操作按对应手册显式选择目标和必要DDL。不能把legacy或migrations目录加入默认初始化循环。
+
+IAM单文件只初始化IAM及其共库框架表。启用Auth、Security或Member独立数据库时，仍需各模块自己的初始化，不能用ingot_iam.sql代替整个框架部署。
 
 ## 框架权威 DDL（不在本目录重复定义）
 
@@ -69,7 +77,7 @@ MySQL回归比较完整文件与分片的所有表定义及种子行数，验证
 | `account_lock_state` | `ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql` | `LockStatePort` / `DefaultLockStatePortAdapter` |
 | `password_history`、`password_expiration` | `ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql` | security-credential 既有用例 |
 
-建库顺序以manifest为准：重建清单表 → 001–005 → 上述框架表CREATE → 006 → 可选人工认证种子；导出表已合并在004。`security_event` 暂无框架 DDL 文件，结构继续由 `005_auxiliary.sql` 提供，写入仍由 security-event-store-mysql 负责。
+建库顺序以manifest为准：重建运行清单表 → 001–005 → 上述框架表CREATE → 006 → 007默认平台账号；导出表已合并在004。`security_event` 暂无框架 DDL 文件，结构继续由 `005_auxiliary.sql` 提供，写入仍由 security-event-store-mysql 负责。
 
 独立测试环境编排见 `tools/iam/test-data/`（测试数据 D01/D02）：`prepare` / `build` / `verify` / `reset`。只接受已登记的独立库，不猜测开发库；`reset` 必须 `--confirm-reset`，且不会对任意库执行 DROP。`build` 走真实 `/iam/v1` 接口，口令不进报告。联调逐步操作见 change 内 `VERIFICATION-GUIDE.md`。
 
@@ -100,7 +108,7 @@ MySQL回归比较完整文件与分片的所有表定义及种子行数，验证
 
 ## 字段字典与主键评估
 
-正式清单当前为63张表、495个字段（包含3张框架共库表）。字段说明只在权威DDL维护，完整初始化与[数据字典](../../docs/modules/iam/DATA-DICTIONARY.md)由`generate_database.py`同步生成；[逐表主键索引评估](../../docs/modules/iam/DATABASE-REVIEW.md)由`generate_database_review.py`生成。接收成员表新增Leaf显式主键；密码历史精简重复索引，公共API保持原样。已有库见[027/028升级说明](./migrations/README.md#027028-接收成员主键与密码历史索引)。
+正式运行清单当前为59张表、501个字段（包含3张框架共库表）。字段说明只在权威DDL维护，完整初始化与[数据字典](../../docs/modules/iam/DATA-DICTIONARY.md)由`generate_database.py`同步生成；[逐表主键索引评估](../../docs/modules/iam/DATABASE-REVIEW.md)由`generate_database_review.py`生成。接收成员表新增Leaf显式主键；密码历史精简重复索引，公共API保持原样。已有库见[027/028升级说明](./migrations/README.md#027028-接收成员主键与密码历史索引)。
 
 已有库只补注释时，先阅读[026升级说明](./migrations/README.md#026-字段说明升级)。不要导入完整初始化文件，也不要直接绕过预检导入026。注释工具不连接任何默认库，必须显式选择目标并提供mysql配置文件；默认仅只读核对全部表，`--apply`才修改注释。
 

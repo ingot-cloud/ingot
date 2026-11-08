@@ -1,4 +1,4 @@
-package com.ingot.cloud.iam.application.policy;
+package com.ingot.cloud.iam.infrastructure.persistence;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 @RequiredArgsConstructor
-public class PolicyWriteRepository {
+public class FieldPolicyRepository {
     private final IamFieldPolicyMapper fieldPolicies;
     private final IamFieldRuleMapper fieldRules;
     private final IamPolicySelectorMapper selectors;
@@ -260,7 +260,7 @@ public class PolicyWriteRepository {
             return result;
         }
         BigInteger tenant = id(tenantId);
-        List<BigInteger> ids = unique.stream().map(PolicyWriteRepository::id).toList();
+        List<BigInteger> ids = unique.stream().map(FieldPolicyRepository::id).toList();
         Map<Long, List<String>> members = new LinkedHashMap<>();
         for (IamPolicySelectorMemberEntity row : selectorMembers.selectList(
                 Wrappers.<IamPolicySelectorMemberEntity>lambdaQuery()

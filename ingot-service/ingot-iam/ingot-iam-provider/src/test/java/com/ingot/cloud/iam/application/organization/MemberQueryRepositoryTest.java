@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import com.ingot.cloud.iam.domain.authorization.ObjectScope;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamTenantMemberMapper;
 import com.ingot.cloud.iam.domain.organization.MemberDepartmentView;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @since 1.0.0
  */
 class MemberQueryRepositoryTest {
-    private MemberQueryRepository members;
+    private MemberRepository members;
     private JdbcTemplate jdbc;
     private QueryCountingDataSource counting;
 

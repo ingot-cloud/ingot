@@ -7,7 +7,7 @@ import com.ingot.cloud.iam.domain.shared.IamIds;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.GroupRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.MemberPickerBranch;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.OrganizationMemberRepository;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.IamAction;
@@ -48,7 +48,7 @@ public class OrganizationMemberQueryService {
     private final GroupRepository groups;
     private final DepartmentClosure closure;
     private final DepartmentQueryRepository departments;
-    private final MemberQueryRepository memberQueries;
+    private final MemberRepository memberQueries;
 
     /** 在同一权限过滤下搜索、分页及少量ID回显；不返回联系方式。 */
     public PageResponse<MemberRecord> page(String departmentId, String keyword, List<String> ids, int page, int size) {

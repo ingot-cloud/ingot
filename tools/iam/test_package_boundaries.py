@@ -49,6 +49,29 @@ class PackageBoundariesTest(unittest.TestCase):
             for target in REFERENCE.findall(code(path)):
                 self.assertIn(target, DEPENDENCIES[layer], str(path.relative_to(ROOT)))
 
+    def test_repository_beans_live_in_persistence(self):
+        for path in PROVIDER.rglob('*.java'):
+            if re.search(r'^@Repository\b', code(path), re.M):
+                self.assertIn(PROVIDER / 'infrastructure/persistence', path.parents, str(path.relative_to(ROOT)))
+
+    def test_member_query_types_expose_only_read_operations(self):
+        for relative in ['application/organization/MemberQueryService.java',
+                         'infrastructure/persistence/MemberQueryRepository.java']:
+            text = code(PROVIDER / relative)
+            self.assertNotRegex(text,
+                                r'\bpublic\s+[^;{}]+\b(?:create|patch|replace|insert|update|delete|remove|lock)\w*\s*\(',
+                                relative)
+            self.assertNotRegex(text, r'\.(?:insert|update|delete)\w*\s*\(', relative)
+            self.assertNotIn('TransactionTemplate', text, relative)
+
+    def test_aggregate_repositories_delegate_without_mapper_dependencies(self):
+        for relative in ['infrastructure/persistence/MemberRepository.java',
+                         'infrastructure/persistence/CatalogRepository.java']:
+            text = code(PROVIDER / relative)
+            self.assertNotIn('infrastructure.persistence.mapper.', text, relative)
+            self.assertNotIn('Wrappers', text, relative)
+            self.assertNotIn('TransactionTemplate', text, relative)
+
     def test_eager_constructor_collaborators_have_no_cycles(self):
         # ObjectProvider and framework-owned dependencies remain outside this static graph.
         # Existing lazy cache/evaluator wiring is verified by configuration tests separately.

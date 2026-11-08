@@ -37,3 +37,5 @@ python3.11 tools/iam/migration/import_tool.py dry-run \
   --output /tmp/ingot-iam-dry-run.json
 ```
 
+
+新项目完整初始化不再创建身份迁移元数据表。如历史导入流程需要批次、映射或问题记录，其独立建表定义见 `databases/iam/legacy/001_identity_migration.sql`；只在明确选择的历史迁移目标上使用，不加入新项目默认初始化。

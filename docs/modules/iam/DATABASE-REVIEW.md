@@ -2,7 +2,7 @@
 
 <!-- 生成：python3 tools/iam/generate_database_review.py；审查结论在生成源维护。 -->
 
-覆盖 manifest 中全部63张表。结构来自权威DDL及隔离MySQL 8.4的有效索引快照；没有连接实际业务数据库，没有测量业务容量、页分裂率、缓存命中率或延迟。
+覆盖 manifest 中全部59张表。结构来自权威DDL及隔离MySQL 8.4的有效索引快照；没有连接实际业务数据库，没有测量业务容量、页分裂率、缓存命中率或延迟。
 
 ## 评估口径
 
@@ -19,7 +19,7 @@
 
 成员部门、两域用户组关系、菜单操作、套餐应用已实施差量；负责人未变主标记不再清空重设。公共API、版本、审计及授权失效规则保留；后续独立结构变更见下文。
 
-接收成员表已新增Leaf显式主键；密码历史经隔离对照删除重叠索引，原主键保留。后续候选仍为宽字符串主键iam_migration_mapping，尚未调整；详见[验证记录](../../../specs/changes/archive/2026/20261020-iam-recipient-primary-key-password-index/VALIDATION.md)。
+接收成员表已新增Leaf显式主键；密码历史经隔离对照删除重叠索引，原主键保留。迁移元数据与旧套餐记录已移出新项目初始化，定义保留在databases/iam/legacy；历史索引变更详见[验证记录](../../../specs/changes/archive/2026/20261020-iam-recipient-primary-key-password-index/VALIDATION.md)。
 
 人群独立保存仍全量重写，整体开通替换会重建人群；两者需要统一并发和重置语义后另行设计。委派重建涉及派生授权重验，角色/策略新快照是首次写入，业务删除需要清关联；这些路径保留。
 
@@ -31,7 +31,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/identity/AccountCredentialRepository.java), [AccountQueryRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AccountQueryRepository.java), [AccountWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AccountWriteRepository.java)。
+- 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AccountCredentialRepository.java), [AccountQueryRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AccountQueryRepository.java), [AccountWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AccountWriteRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_account_email` (`email`)``；``KEY `idx_iam_account_phone` (`phone`)``；``UNIQUE KEY `uk_iam_account_username` (`username`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：``iam_platform_member(account_id) → (id)``；``iam_tenant_member(account_id) → (id)``。
@@ -45,7 +45,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java)。
+- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_platform_member_status` (`status`,`id`)``；``UNIQUE KEY `uk_iam_platform_member_account` (`account_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_platform_member_account` FOREIGN KEY (`account_id`) REFERENCES `iam_account` (`id`)``。
 - 被其他表引用：``iam_platform_group_member(member_id) → (id)``；``iam_delegation_grant(platform_administrator_id) → (id)``；``iam_delegation_recipient_member(platform_member_id) → (id)``；``iam_role_assignment(platform_member_id) → (id)``。
@@ -59,7 +59,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/identity/AccountCredentialRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [MemberLifecycleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/MemberLifecycleRepository.java)。
+- 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AccountCredentialRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/EntitlementRepository.java), [MemberLifecycleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/MemberLifecycleRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_tenant_owner` (`id`,`owner_member_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_tenant_owner` FOREIGN KEY (`id`, `owner_member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
 - 被其他表引用：``iam_tenant_member(tenant_id) → (id)``；``iam_department(tenant_id) → (id)``；``iam_tenant_group(tenant_id) → (id)``；``iam_tenant_app_entitlement(tenant_id) → (id)``；``iam_role_definition(tenant_id) → (id)``；``iam_policy_selector(tenant_id) → (id)``；``iam_field_policy(tenant_id) → (id)``。
@@ -73,7 +73,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/identity/AccountCredentialRepository.java), [AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java)。
+- 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AccountCredentialRepository.java), [AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_tenant_member_account` (`account_id`,`status`)``；``KEY `idx_iam_tenant_member_status` (`tenant_id`,`status`,`id`)``；``UNIQUE KEY `uk_iam_tenant_member_account` (`tenant_id`,`account_id`)``；``UNIQUE KEY `uk_iam_tenant_member_domain` (`tenant_id`,`id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_tenant_member_account` FOREIGN KEY (`account_id`) REFERENCES `iam_account` (`id`)``；``CONSTRAINT `fk_iam_tenant_member_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
 - 被其他表引用：``iam_tenant(id, owner_member_id) → (tenant_id, id)``；``iam_member_department(tenant_id, member_id) → (tenant_id, id)``；``iam_department_leader(tenant_id, member_id) → (tenant_id, id)``；``iam_tenant_group_member(tenant_id, member_id) → (tenant_id, id)``；``iam_audience_member(tenant_id, member_id) → (tenant_id, id)``；``iam_delegation_grant(tenant_id, tenant_administrator_id) → (tenant_id, id)``；``iam_delegation_recipient_member(tenant_id, tenant_member_id) → (tenant_id, id)``；``iam_role_assignment(tenant_id, tenant_member_id) → (tenant_id, id)``；``iam_policy_selector_member(tenant_id, member_id) → (tenant_id, id)``。
@@ -87,7 +87,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[DepartmentQueryRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DepartmentQueryRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java)。
+- 主要访问/写入：[DepartmentQueryRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DepartmentQueryRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/EntitlementRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_department_parent` (`tenant_id`,`parent_id`,`id`)``；``UNIQUE KEY `uk_iam_department_domain` (`tenant_id`,`id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_department_parent` FOREIGN KEY (`tenant_id`, `parent_id`) REFERENCES `iam_department` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_department_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
 - 被其他表引用：``iam_department(tenant_id, parent_id) → (tenant_id, id)``；``iam_member_department(tenant_id, department_id) → (tenant_id, id)``；``iam_department_leader(tenant_id, department_id) → (tenant_id, id)``；``iam_tenant_group_department(tenant_id, department_id) → (tenant_id, id)``；``iam_audience_department(tenant_id, department_id) → (tenant_id, id)``；``iam_delegation_recipient_department(tenant_id, department_id) → (tenant_id, id)``；``iam_policy_selector_department(tenant_id, department_id) → (tenant_id, id)``。
@@ -101,7 +101,7 @@
 
 - 主键：`tenant_id / member_id / department_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/identity/AccountCredentialRepository.java), [DepartmentQueryRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DepartmentQueryRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java)。
+- 主要访问/写入：[AccountCredentialRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AccountCredentialRepository.java), [DepartmentQueryRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DepartmentQueryRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_department_members` (`tenant_id`,`department_id`,`member_id`)``；``UNIQUE KEY `uk_iam_member_primary_department` (`tenant_id`,`primary_member_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_member_department_department` FOREIGN KEY (`tenant_id`, `department_id`) REFERENCES `iam_department` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_member_department_member` FOREIGN KEY (`tenant_id`, `member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -115,7 +115,7 @@
 
 - 主键：`tenant_id / department_id / member_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[DepartmentLeaderSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DepartmentLeaderSql.java), [IamDepartmentLeaderMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamDepartmentLeaderMapper.java)。
+- 主要访问/写入：[DepartmentLeaderSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DepartmentLeaderSql.java), [IamDepartmentLeaderMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamDepartmentLeaderMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_member_led_departments` (`tenant_id`,`member_id`,`department_id`)``；``UNIQUE KEY `uk_iam_department_primary_leader` (`tenant_id`,`primary_department_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_department_leader_department` FOREIGN KEY (`tenant_id`, `department_id`) REFERENCES `iam_department` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_department_leader_member` FOREIGN KEY (`tenant_id`, `member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -129,7 +129,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AssignmentRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java), [IamPlatformGroupEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamPlatformGroupEntity.java)。
+- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java), [IamPlatformGroupEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamPlatformGroupEntity.java)。
 - 有效二级索引/业务唯一键：无。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：``iam_platform_group_member(group_id) → (id)``；``iam_role_assignment(platform_group_id) → (id)``。
@@ -143,7 +143,7 @@
 
 - 主键：`group_id / member_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AssignmentRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/IamMembershipSql.java)。
+- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/IamMembershipSql.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_platform_member_groups` (`member_id`,`group_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_platform_group_entry_group` FOREIGN KEY (`group_id`) REFERENCES `iam_platform_group` (`id`)``；``CONSTRAINT `fk_iam_platform_group_entry_member` FOREIGN KEY (`member_id`) REFERENCES `iam_platform_member` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -157,7 +157,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AssignmentRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java)。
+- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/EntitlementRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java)。
 - 有效二级索引/业务唯一键：``UNIQUE KEY `uk_iam_tenant_group_domain` (`tenant_id`,`id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_tenant_group_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
 - 被其他表引用：``iam_tenant_group_member(tenant_id, group_id) → (tenant_id, id)``；``iam_tenant_group_department(tenant_id, group_id) → (tenant_id, id)``；``iam_audience_group(tenant_id, group_id) → (tenant_id, id)``；``iam_role_assignment(tenant_id, tenant_group_id) → (tenant_id, id)``。
@@ -171,7 +171,7 @@
 
 - 主键：`tenant_id / group_id / member_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/IamMembershipSql.java), [OrganizationMemberRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/OrganizationMemberRepository.java)。
+- 主要访问/写入：[GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/IamMembershipSql.java), [OrganizationMemberRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/OrganizationMemberRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_tenant_member_groups` (`tenant_id`,`member_id`,`group_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_tenant_group_entry_group` FOREIGN KEY (`tenant_id`, `group_id`) REFERENCES `iam_tenant_group` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_tenant_group_entry_member` FOREIGN KEY (`tenant_id`, `member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -185,7 +185,7 @@
 
 - 主键：`tenant_id / group_id / department_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/IamMembershipSql.java), [TenantLiveOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantLiveOptionSql.java)。
+- 主要访问/写入：[GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/IamMembershipSql.java), [TenantAuthorizationOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/TenantAuthorizationOptionSql.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_tenant_department_groups` (`tenant_id`,`department_id`,`group_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_tenant_group_dept_department` FOREIGN KEY (`tenant_id`, `department_id`) REFERENCES `iam_department` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_tenant_group_dept_group` FOREIGN KEY (`tenant_id`, `group_id`) REFERENCES `iam_tenant_group` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -199,7 +199,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/InitializationCatalogRepository.java), [SessionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/SessionRepository.java)。
+- 主要访问/写入：[CatalogApplicationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogApplicationRepository.java), [CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/InitializationCatalogRepository.java)。
 - 有效二级索引/业务唯一键：``UNIQUE KEY `uk_iam_application_code` (`code`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：``iam_resource(application_id) → (id)``；``iam_menu(application_id) → (id)``；``iam_tenant_app_entitlement(application_id) → (id)``；``iam_plan_application(application_id) → (id)``。
@@ -213,10 +213,10 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [TenantLiveOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantLiveOptionSql.java), [IamResourceEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamResourceEntity.java)。
+- 主要访问/写入：[CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogRepository.java), [CatalogResourceRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogResourceRepository.java)。
 - 有效二级索引/业务唯一键：``UNIQUE KEY `uk_iam_resource_application` (`application_id`,`id`)``；``UNIQUE KEY `uk_iam_resource_code` (`application_id`,`code`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_resource_application` FOREIGN KEY (`application_id`) REFERENCES `iam_application` (`id`)``。
-- 被其他表引用：``iam_action(application_id, resource_id) → (application_id, id)``；``iam_role_parameter(resource_id) → (id)``；``iam_delegation_resource_ceiling(resource_id) → (id)``。
+- 被其他表引用：``iam_action(application_id, resource_id) → (application_id, id)``；``iam_role_parameter(resource_id) → (id)``；``iam_delegation_resource_ceiling(resource_id) → (id)``；``iam_default_policy_revision(resource_id) → (id)``；``iam_field_policy(resource_id) → (id)``。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：按应用/code查询资源；(application_id,id)用于同应用操作外键，不能按逻辑冗余直接删除。
 - DDL证据：[002_catalog_role.sql](../../../databases/iam/002_catalog_role.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_resource)。
@@ -227,7 +227,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [SessionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/SessionRepository.java), [IamActionEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamActionEntity.java)。
+- 主要访问/写入：[CatalogActionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogActionRepository.java), [CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_action_resource` (`application_id`,`resource_id`,`id`)``；``UNIQUE KEY `uk_iam_action_application` (`application_id`,`id`)``；``UNIQUE KEY `uk_iam_action_code` (`code`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_action_resource` FOREIGN KEY (`application_id`, `resource_id`) REFERENCES `iam_resource` (`application_id`, `id`)``。
 - 被其他表引用：``iam_menu_action(application_id, action_id) → (application_id, id)``；``iam_role_grant(action_id) → (id)``；``iam_role_delta(action_id) → (id)``；``iam_delegation_action_ceiling(action_id) → (id)``。
@@ -241,7 +241,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [SessionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/SessionRepository.java), [IamMenuEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamMenuEntity.java)。
+- 主要访问/写入：[CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [CatalogMenuRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogMenuRepository.java), [CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_menu_parent` (`application_id`,`parent_id`,`sort_order`,`id`)``；``UNIQUE KEY `uk_iam_menu_application` (`application_id`,`id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_menu_application` FOREIGN KEY (`application_id`) REFERENCES `iam_application` (`id`)``；``CONSTRAINT `fk_iam_menu_parent` FOREIGN KEY (`application_id`, `parent_id`) REFERENCES `iam_menu` (`application_id`, `id`)``。
 - 被其他表引用：``iam_menu(application_id, parent_id) → (application_id, id)``；``iam_menu_action(application_id, menu_id) → (application_id, id)``。
@@ -255,7 +255,7 @@
 
 - 主键：`application_id / menu_id / action_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [SessionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/SessionRepository.java), [IamMenuActionEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamMenuActionEntity.java)。
+- 主要访问/写入：[CatalogActionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogActionRepository.java), [CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [CatalogMenuRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogMenuRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_action_menus` (`application_id`,`action_id`,`menu_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_menu_action_action` FOREIGN KEY (`application_id`, `action_id`) REFERENCES `iam_action` (`application_id`, `id`)``；``CONSTRAINT `fk_iam_menu_action_menu` FOREIGN KEY (`application_id`, `menu_id`) REFERENCES `iam_menu` (`application_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -269,7 +269,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [TenantInitializationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantInitializationRepository.java)。
+- 主要访问/写入：[CatalogApplicationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogApplicationRepository.java), [CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/EntitlementRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_entitlement_app` (`application_id`)``；``UNIQUE KEY `uk_iam_entitlement` (`tenant_id`,`application_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_entitlement_app` FOREIGN KEY (`application_id`) REFERENCES `iam_application` (`id`)``；``CONSTRAINT `fk_iam_entitlement_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
 - 被其他表引用：``iam_app_audience(tenant_id, application_id) → (tenant_id, application_id)``。
@@ -283,7 +283,7 @@
 
 - 主键：`tenant_id / application_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [TenantInitializationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantInitializationRepository.java)。
+- 主要访问/写入：[CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/EntitlementRepository.java), [TenantInitializationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/TenantInitializationRepository.java)。
 - 有效二级索引/业务唯一键：无。
 - 本表引用外键：``CONSTRAINT `fk_iam_audience_entitlement` FOREIGN KEY (`tenant_id`, `application_id`) REFERENCES `iam_tenant_app_entitlement` (`tenant_id`, `application_id`)``。
 - 被其他表引用：``iam_audience_member(tenant_id, application_id) → (tenant_id, application_id)``；``iam_audience_department(tenant_id, application_id) → (tenant_id, application_id)``；``iam_audience_group(tenant_id, application_id) → (tenant_id, application_id)``。
@@ -297,7 +297,7 @@
 
 - 主键：`tenant_id / application_id / member_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [IamAudienceMemberEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamAudienceMemberEntity.java)。
+- 主要访问/写入：[CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/EntitlementRepository.java), [IamAudienceMemberEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamAudienceMemberEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_audience_member` (`tenant_id`,`member_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_audience_member_config` FOREIGN KEY (`tenant_id`, `application_id`) REFERENCES `iam_app_audience` (`tenant_id`, `application_id`)``；``CONSTRAINT `fk_iam_audience_member` FOREIGN KEY (`tenant_id`, `member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -311,7 +311,7 @@
 
 - 主键：`tenant_id / application_id / department_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [IamAudienceDepartmentEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamAudienceDepartmentEntity.java)。
+- 主要访问/写入：[CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/EntitlementRepository.java), [IamAudienceDepartmentEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamAudienceDepartmentEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_audience_dept` (`tenant_id`,`department_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_audience_dept_config` FOREIGN KEY (`tenant_id`, `application_id`) REFERENCES `iam_app_audience` (`tenant_id`, `application_id`)``；``CONSTRAINT `fk_iam_audience_dept` FOREIGN KEY (`tenant_id`, `department_id`) REFERENCES `iam_department` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -325,7 +325,7 @@
 
 - 主键：`tenant_id / application_id / group_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/EntitlementRepository.java), [IamAudienceGroupEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamAudienceGroupEntity.java)。
+- 主要访问/写入：[CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [EntitlementRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/EntitlementRepository.java), [IamAudienceGroupEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamAudienceGroupEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_audience_group` (`tenant_id`,`group_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_audience_group_config` FOREIGN KEY (`tenant_id`, `application_id`) REFERENCES `iam_app_audience` (`tenant_id`, `application_id`)``；``CONSTRAINT `fk_iam_audience_group` FOREIGN KEY (`tenant_id`, `group_id`) REFERENCES `iam_tenant_group` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -339,7 +339,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/InitializationCatalogRepository.java), [IamPlanEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamPlanEntity.java)。
+- 主要访问/写入：[CatalogPlanRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogPlanRepository.java), [CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/InitializationCatalogRepository.java)。
 - 有效二级索引/业务唯一键：无。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：``iam_plan_application(plan_id) → (id)``。
@@ -353,7 +353,7 @@
 
 - 主键：`plan_id / application_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/InitializationCatalogRepository.java), [IamPlanApplicationEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamPlanApplicationEntity.java)。
+- 主要访问/写入：[CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [CatalogPlanRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogPlanRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/InitializationCatalogRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_plan_application_app` (`application_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_plan_application_app` FOREIGN KEY (`application_id`) REFERENCES `iam_application` (`id`)``；``CONSTRAINT `fk_iam_plan_application_plan` FOREIGN KEY (`plan_id`) REFERENCES `iam_plan` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -367,7 +367,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/InitializationCatalogRepository.java), [RoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/RoleRepository.java), [TenantCurrentRoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantCurrentRoleRepository.java)。
+- 主要访问/写入：[InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/InitializationCatalogRepository.java), [RoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/RoleRepository.java), [TenantRoleDefinitionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/TenantRoleDefinitionRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_role_current` (`current_revision_id`,`id`)``；``KEY `fk_iam_role_tenant` (`tenant_id`)``；``UNIQUE KEY `uk_iam_role_code` (`domain`,`tenant_key`,`code`)``；``UNIQUE KEY `uk_iam_role_kind` (`id`,`kind`)``；``UNIQUE KEY `uk_iam_role_owner` (`domain`,`tenant_key`,`id`,`kind`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_role_current` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `iam_role_revision` (`id`, `role_id`)``；``CONSTRAINT `fk_iam_role_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
 - 被其他表引用：``iam_role_revision(role_id, kind) → (id, kind)``；``iam_role_assignment(domain, role_tenant_key, role_id, role_kind) → (domain, tenant_key, id, kind)``；``iam_delegation_role(domain, role_tenant_key, role_id, role_kind) → (domain, tenant_key, id, kind)``；``iam_role_application_task(role_id) → (id)``。
@@ -381,7 +381,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AuthorizationEvaluationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/evaluation/AuthorizationEvaluationRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/InitializationCatalogRepository.java)。
+- 主要访问/写入：[AuthorizationEvaluationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AuthorizationEvaluationRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/InitializationCatalogRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_revision_base` (`base_revision_id`,`base_kind`)``；``KEY `fk_iam_revision_role` (`role_id`,`kind`)``；``UNIQUE KEY `uk_iam_revision_kind` (`id`,`kind`)``；``UNIQUE KEY `uk_iam_revision_number` (`role_id`,`revision`)``；``UNIQUE KEY `uk_iam_revision_owner` (`id`,`role_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_revision_base` FOREIGN KEY (`base_revision_id`, `base_kind`) REFERENCES `iam_role_revision` (`id`, `kind`)``；``CONSTRAINT `fk_iam_revision_role` FOREIGN KEY (`role_id`, `kind`) REFERENCES `iam_role_definition` (`id`, `kind`)``。
 - 被其他表引用：``iam_role_definition(current_revision_id, id) → (id, role_id)``；``iam_role_revision(base_revision_id, base_kind) → (id, kind)``；``iam_role_parameter(revision_id) → (id)``；``iam_role_grant(revision_id) → (id)``；``iam_role_delta(revision_id) → (id)``；``iam_delegation_role_revision(revision_id, revision_kind) → (id, kind)``；``iam_role_assignment(revision_id, revision_kind) → (id, kind)``；``iam_role_application_task(target_revision_id) → (id)``。
@@ -395,7 +395,7 @@
 
 - 主键：`revision_id / parameter_key`；宽度：520 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[RoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/RoleRepository.java), [TenantCurrentRoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantCurrentRoleRepository.java), [IamRoleParameterEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamRoleParameterEntity.java)。
+- 主要访问/写入：[RoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/RoleRepository.java), [TenantRoleDefinitionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/TenantRoleDefinitionRepository.java), [IamRoleParameterEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamRoleParameterEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_parameter_resource` (`resource_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_parameter_resource` FOREIGN KEY (`resource_id`) REFERENCES `iam_resource` (`id`)``；``CONSTRAINT `fk_iam_parameter_revision` FOREIGN KEY (`revision_id`) REFERENCES `iam_role_revision` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -411,7 +411,7 @@
 
 - 主键：`revision_id / action_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [RoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/RoleRepository.java), [TenantCurrentRoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantCurrentRoleRepository.java)。
+- 主要访问/写入：[CatalogActionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogActionRepository.java), [CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [RoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/RoleRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_grant_action` (`action_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_grant_action` FOREIGN KEY (`action_id`) REFERENCES `iam_action` (`id`)``；``CONSTRAINT `fk_iam_grant_revision` FOREIGN KEY (`revision_id`) REFERENCES `iam_role_revision` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -425,7 +425,7 @@
 
 - 主键：`revision_id / action_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[CatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/CatalogRepository.java), [RoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/RoleRepository.java), [TenantCurrentRoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantCurrentRoleRepository.java)。
+- 主要访问/写入：[CatalogActionRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogActionRepository.java), [CatalogCleanupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/CatalogCleanupRepository.java), [RoleRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/RoleRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_delta_action` (`action_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_delta_action` FOREIGN KEY (`action_id`) REFERENCES `iam_action` (`id`)``；``CONSTRAINT `fk_iam_delta_revision` FOREIGN KEY (`revision_id`) REFERENCES `iam_role_revision` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -439,7 +439,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AuthorizationEvaluationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/evaluation/AuthorizationEvaluationRepository.java), [AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java)。
+- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java), [AuthorizationEvaluationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AuthorizationEvaluationRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_delegation_platform_admin` (`platform_administrator_id`,`status`,`valid_until`)``；``KEY `idx_iam_delegation_tenant_admin` (`tenant_id`,`tenant_administrator_id`,`status`,`valid_until`)``；``UNIQUE KEY `uk_iam_delegation_domain` (`domain`,`tenant_key`,`id`)``；``UNIQUE KEY `uk_iam_delegation_tenant` (`tenant_id`,`id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_delegation_platform_admin` FOREIGN KEY (`platform_administrator_id`) REFERENCES `iam_platform_member` (`id`)``；``CONSTRAINT `fk_iam_delegation_tenant_admin` FOREIGN KEY (`tenant_id`, `tenant_administrator_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
 - 被其他表引用：``iam_delegation_role_revision(delegation_id) → (id)``；``iam_delegation_recipient_member(domain, tenant_key, delegation_id) → (domain, tenant_key, id)``；``iam_delegation_recipient_department(tenant_id, delegation_id) → (tenant_id, id)``；``iam_delegation_action_ceiling(delegation_id) → (id)``；``iam_role_assignment(domain, tenant_key, delegation_grant_id) → (domain, tenant_key, id)``；``iam_delegation_role(tenant_id, delegation_id) → (tenant_id, id)``；``iam_delegation_resource_ceiling(delegation_id) → (id)``。
@@ -453,7 +453,7 @@
 
 - 主键：`delegation_id / revision_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/IamMembershipSql.java)。
+- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/IamMembershipSql.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_delegation_role_revision` (`revision_id`,`revision_kind`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_delegation_role_revision` FOREIGN KEY (`revision_id`, `revision_kind`) REFERENCES `iam_role_revision` (`id`, `kind`)``；``CONSTRAINT `fk_iam_delegation_role_source` FOREIGN KEY (`delegation_id`) REFERENCES `iam_delegation_grant` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -467,7 +467,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：IAM Leaf号段发号，应用显式填入BigInteger/IdType.INPUT。
-- 主要访问/写入：[DelegationRecipientRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRecipientRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/IamMembershipSql.java)。
+- 主要访问/写入：[DelegationRecipientRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRecipientRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/IamMembershipSql.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_recipient_delegation` (`domain`,`tenant_key`,`delegation_id`)``；``KEY `fk_iam_recipient_platform` (`platform_member_id`)``；``KEY `fk_iam_recipient_tenant` (`tenant_id`,`tenant_member_id`)``；``UNIQUE KEY `uk_iam_delegation_recipient` (`delegation_id`,`member_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_recipient_delegation` FOREIGN KEY (`domain`, `tenant_key`, `delegation_id`) REFERENCES `iam_delegation_grant` (`domain`, `tenant_key`, `id`)``；``CONSTRAINT `fk_iam_recipient_platform` FOREIGN KEY (`platform_member_id`) REFERENCES `iam_platform_member` (`id`)``；``CONSTRAINT `fk_iam_recipient_tenant` FOREIGN KEY (`tenant_id`, `tenant_member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -481,7 +481,7 @@
 
 - 主键：`delegation_id / department_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/IamMembershipSql.java), [TenantLiveOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantLiveOptionSql.java)。
+- 主要访问/写入：[DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java), [IamMembershipSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/IamMembershipSql.java), [TenantAuthorizationOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/TenantAuthorizationOptionSql.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_recipient_dept_delegation` (`tenant_id`,`delegation_id`)``；``KEY `fk_iam_recipient_dept_department` (`tenant_id`,`department_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_recipient_dept_delegation` FOREIGN KEY (`tenant_id`, `delegation_id`) REFERENCES `iam_delegation_grant` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_recipient_dept_department` FOREIGN KEY (`tenant_id`, `department_id`) REFERENCES `iam_department` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -495,7 +495,7 @@
 
 - 主键：`delegation_id / action_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java), [IamDelegationActionCeilingEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDelegationActionCeilingEntity.java), [AuthorizationCandidateSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/AuthorizationCandidateSql.java)。
+- 主要访问/写入：[DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java), [IamDelegationActionCeilingEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamDelegationActionCeilingEntity.java), [AuthorizationCandidateSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/AuthorizationCandidateSql.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_ceiling_action` (`action_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_ceiling_action` FOREIGN KEY (`action_id`) REFERENCES `iam_action` (`id`)``；``CONSTRAINT `fk_iam_ceiling_delegation` FOREIGN KEY (`delegation_id`) REFERENCES `iam_delegation_grant` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -509,7 +509,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DelegationRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/GroupRepository.java)。
+- 主要访问/写入：[AssignmentRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java), [DelegationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DelegationRepository.java), [GroupRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/GroupRepository.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_assignment_current_role` (`domain`,`role_tenant_key`,`role_id`,`role_kind`)``；``KEY `fk_iam_assignment_delegation` (`domain`,`tenant_key`,`delegation_grant_id`)``；``KEY `fk_iam_assignment_revision` (`revision_id`,`revision_kind`)``；``KEY `idx_iam_assignment_current_role` (`role_id`,`status`)``；``KEY `idx_iam_assignment_delegation` (`delegation_grant_id`,`status`)``；``KEY `idx_iam_assignment_platform_group` (`platform_group_id`,`status`,`valid_until`)``；``KEY `idx_iam_assignment_platform_member` (`platform_member_id`,`status`,`valid_until`)``；``KEY `idx_iam_assignment_tenant_group` (`tenant_id`,`tenant_group_id`,`status`,`valid_until`)``；``KEY `idx_iam_assignment_tenant_member` (`tenant_id`,`tenant_member_id`,`status`,`valid_until`)``；``KEY `ix_iam_assignment_revision_status` (`revision_id`,`status`,`id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_assignment_current_role` FOREIGN KEY (`domain`, `role_tenant_key`, `role_id`, `role_kind`) REFERENCES `iam_role_definition` (`domain`, `tenant_key`, `id`, `kind`)``；``CONSTRAINT `fk_iam_assignment_delegation` FOREIGN KEY (`domain`, `tenant_key`, `delegation_grant_id`) REFERENCES `iam_delegation_grant` (`domain`, `tenant_key`, `id`)``；``CONSTRAINT `fk_iam_assignment_platform_group` FOREIGN KEY (`platform_group_id`) REFERENCES `iam_platform_group` (`id`)``；``CONSTRAINT `fk_iam_assignment_platform_member` FOREIGN KEY (`platform_member_id`) REFERENCES `iam_platform_member` (`id`)``；``CONSTRAINT `fk_iam_assignment_revision` FOREIGN KEY (`revision_id`, `revision_kind`) REFERENCES `iam_role_revision` (`id`, `kind`)``；``CONSTRAINT `fk_iam_assignment_tenant_group` FOREIGN KEY (`tenant_id`, `tenant_group_id`) REFERENCES `iam_tenant_group` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_assignment_tenant_member` FOREIGN KEY (`tenant_id`, `tenant_member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``。
 - 被其他表引用：``iam_role_application_item(assignment_id) → (id)``。
@@ -525,7 +525,7 @@
 
 - 主键：`delegation_id / role_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[TenantLiveOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantLiveOptionSql.java), [TenantLiveMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/TenantLiveMapper.java), [TenantRoleWorkspaceSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/TenantRoleWorkspaceSql.java)。
+- 主要访问/写入：[TenantAuthorizationOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/TenantAuthorizationOptionSql.java), [TenantAdministrationMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/TenantAdministrationMapper.java), [TenantRoleWorkspaceSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/TenantRoleWorkspaceSql.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_live_delegation_role` (`domain`,`role_tenant_key`,`role_id`,`role_kind`)``；``KEY `fk_iam_live_delegation` (`tenant_id`,`delegation_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_live_delegation_role` FOREIGN KEY (`domain`, `role_tenant_key`, `role_id`, `role_kind`) REFERENCES `iam_role_definition` (`domain`, `tenant_key`, `id`, `kind`)``；``CONSTRAINT `fk_iam_live_delegation` FOREIGN KEY (`tenant_id`, `delegation_id`) REFERENCES `iam_delegation_grant` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -539,7 +539,7 @@
 
 - 主键：`delegation_id / resource_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[TenantLiveOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantLiveOptionSql.java), [TenantLiveMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/TenantLiveMapper.java), [migrate.py](../../../tools/iam/tenant_live/migrate.py)。
+- 主要访问/写入：[TenantAuthorizationOptionSql.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/TenantAuthorizationOptionSql.java), [TenantAdministrationMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/TenantAdministrationMapper.java), [migrate.py](../../../tools/iam/tenant_live/migrate.py)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_live_resource` (`resource_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_live_resource_delegation` FOREIGN KEY (`delegation_id`) REFERENCES `iam_delegation_grant` (`id`)``；``CONSTRAINT `fk_iam_live_resource` FOREIGN KEY (`resource_id`) REFERENCES `iam_resource` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -553,10 +553,10 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/InitializationCatalogRepository.java), [PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamDefaultPolicyRevisionEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDefaultPolicyRevisionEntity.java)。
-- 有效二级索引/业务唯一键：``UNIQUE KEY `uk_iam_default_policy_kind` (`id`,`kind`)``；``UNIQUE KEY `uk_iam_default_policy_revision` (`kind`,`revision`)``。
-- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
-- 被其他表引用：``iam_field_policy(default_revision_id, default_kind) → (id, kind)``。
+- 主要访问/写入：[FieldPolicyRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/FieldPolicyRepository.java), [InitializationCatalogRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/InitializationCatalogRepository.java), [IamDefaultPolicyRevisionEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamDefaultPolicyRevisionEntity.java)。
+- 有效二级索引/业务唯一键：``UNIQUE KEY `uk_iam_default_policy_kind` (`id`,`kind`)``；``UNIQUE KEY `uk_iam_default_policy_resource` (`id`,`resource_id`)``；``UNIQUE KEY `uk_iam_default_policy_revision` (`resource_id`,`kind`,`revision`)``。
+- 本表引用外键：``CONSTRAINT `fk_iam_default_policy_resource` FOREIGN KEY (`resource_id`) REFERENCES `iam_resource` (`id`)``。
+- 被其他表引用：``iam_field_policy(default_revision_id, default_kind) → (id, kind)``；``iam_field_policy(default_revision_id, resource_id) → (id, resource_id)``。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：策略kind/revision唯一，引用固定默认版本；发布为新快照，和关系原地替换不同。
 - DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_default_policy_revision)。
@@ -567,7 +567,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamPolicySelectorEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamPolicySelectorEntity.java)。
+- 主要访问/写入：[FieldPolicyRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/FieldPolicyRepository.java), [IamPolicySelectorEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamPolicySelectorEntity.java)。
 - 有效二级索引/业务唯一键：``UNIQUE KEY `uk_iam_selector_tenant` (`tenant_id`,`id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_selector_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
 - 被其他表引用：``iam_policy_selector_member(tenant_id, selector_id) → (tenant_id, id)``；``iam_policy_selector_department(tenant_id, selector_id) → (tenant_id, id)``；``iam_field_rule(tenant_id, viewer_selector_id) → (tenant_id, id)``。
@@ -581,7 +581,7 @@
 
 - 主键：`tenant_id / selector_id / member_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamPolicySelectorMemberEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamPolicySelectorMemberEntity.java)。
+- 主要访问/写入：[FieldPolicyRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/FieldPolicyRepository.java), [IamPolicySelectorMemberEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamPolicySelectorMemberEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_selector_member_member` (`tenant_id`,`member_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_selector_member_member` FOREIGN KEY (`tenant_id`, `member_id`) REFERENCES `iam_tenant_member` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_selector_member_selector` FOREIGN KEY (`tenant_id`, `selector_id`) REFERENCES `iam_policy_selector` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -595,7 +595,7 @@
 
 - 主键：`tenant_id / selector_id / department_id`；宽度：24 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamPolicySelectorDepartmentEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamPolicySelectorDepartmentEntity.java)。
+- 主要访问/写入：[FieldPolicyRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/FieldPolicyRepository.java), [IamPolicySelectorDepartmentEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamPolicySelectorDepartmentEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_selector_dept_dept` (`tenant_id`,`department_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_selector_dept_dept` FOREIGN KEY (`tenant_id`, `department_id`) REFERENCES `iam_department` (`tenant_id`, `id`)``；``CONSTRAINT `fk_iam_selector_dept_selector` FOREIGN KEY (`tenant_id`, `selector_id`) REFERENCES `iam_policy_selector` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
@@ -607,25 +607,25 @@
 
 租户字段策略及操作规则
 
-- 主键：`tenant_id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
+- 主键：`tenant_id / resource_id`；宽度：16 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[TenantInitializationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/TenantInitializationRepository.java), [PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamFieldPolicyEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamFieldPolicyEntity.java)。
-- 有效二级索引/业务唯一键：``KEY `fk_iam_field_default` (`default_revision_id`,`default_kind`)``。
-- 本表引用外键：``CONSTRAINT `fk_iam_field_default` FOREIGN KEY (`default_revision_id`, `default_kind`) REFERENCES `iam_default_policy_revision` (`id`, `kind`)``；``CONSTRAINT `fk_iam_field_policy_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
-- 被其他表引用：``iam_field_rule(tenant_id) → (tenant_id)``。
+- 主要访问/写入：[FieldPolicyRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/FieldPolicyRepository.java), [TenantInitializationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/TenantInitializationRepository.java), [IamFieldPolicyEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamFieldPolicyEntity.java)。
+- 有效二级索引/业务唯一键：``KEY `fk_iam_field_default` (`default_revision_id`,`default_kind`)``；``KEY `fk_iam_field_policy_resource` (`resource_id`)``；``KEY `fk_iam_field_policy_revision` (`default_revision_id`,`resource_id`)``。
+- 本表引用外键：``CONSTRAINT `fk_iam_field_default` FOREIGN KEY (`default_revision_id`, `default_kind`) REFERENCES `iam_default_policy_revision` (`id`, `kind`)``；``CONSTRAINT `fk_iam_field_policy_resource` FOREIGN KEY (`resource_id`) REFERENCES `iam_resource` (`id`)``；``CONSTRAINT `fk_iam_field_policy_revision` FOREIGN KEY (`default_revision_id`, `resource_id`) REFERENCES `iam_default_policy_revision` (`id`, `resource_id`)``；``CONSTRAINT `fk_iam_field_policy_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `iam_tenant` (`id`)``。
+- 被其他表引用：``iam_field_rule(tenant_id, resource_id) → (tenant_id, resource_id)``。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：一租户一字段策略，tenant_id主键即业务身份；operation_rules为数组，本轮不改变默认及合并规则。
 - DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_field_policy)。
 
 ### iam_field_rule — 保留（P3）
 
-租户场景字段可见性规则
+租户资源字段可见性规则
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[PolicyWriteRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/policy/PolicyWriteRepository.java), [IamFieldRuleEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamFieldRuleEntity.java)。
-- 有效二级索引/业务唯一键：``KEY `fk_iam_field_rule_viewer` (`tenant_id`,`viewer_selector_id`)``；``KEY `idx_iam_field_rule_match` (`tenant_id`,`scenario`,`field_key`,`id`)``。
-- 本表引用外键：``CONSTRAINT `fk_iam_field_rule_policy` FOREIGN KEY (`tenant_id`) REFERENCES `iam_field_policy` (`tenant_id`)``；``CONSTRAINT `fk_iam_field_rule_viewer` FOREIGN KEY (`tenant_id`, `viewer_selector_id`) REFERENCES `iam_policy_selector` (`tenant_id`, `id`)``。
+- 主要访问/写入：[FieldPolicyRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/FieldPolicyRepository.java), [IamFieldRuleEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamFieldRuleEntity.java)。
+- 有效二级索引/业务唯一键：``KEY `fk_iam_field_rule_viewer` (`tenant_id`,`viewer_selector_id`)``；``KEY `idx_iam_field_rule_match` (`tenant_id`,`resource_id`,`field_key`,`id`)``。
+- 本表引用外键：``CONSTRAINT `fk_iam_field_rule_policy` FOREIGN KEY (`tenant_id`, `resource_id`) REFERENCES `iam_field_policy` (`tenant_id`, `resource_id`)``；``CONSTRAINT `fk_iam_field_rule_viewer` FOREIGN KEY (`tenant_id`, `viewer_selector_id`) REFERENCES `iam_policy_selector` (`tenant_id`, `id`)``。
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：按租户/场景/字段读取可见性规则；viewer_selector及target_scope是不同维度，不并入主键。
@@ -637,7 +637,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[MemberExportRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/MemberExportRepository.java), [IamMemberExportEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamMemberExportEntity.java), [IamMemberExportMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamMemberExportMapper.java)。
+- 主要访问/写入：[MemberExportRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/MemberExportRepository.java), [IamMemberExportEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamMemberExportEntity.java), [IamMemberExportMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamMemberExportMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_member_export_tenant_status` (`tenant_id`,`status`,`expires_at`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -653,7 +653,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[MemberWorkbookRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/MemberWorkbookRepository.java), [IamMemberWorkbookEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamMemberWorkbookEntity.java), [IamMemberWorkbookMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamMemberWorkbookMapper.java)。
+- 主要访问/写入：[MemberWorkbookRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/MemberWorkbookRepository.java), [IamMemberWorkbookEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamMemberWorkbookEntity.java), [IamMemberWorkbookMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamMemberWorkbookMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_member_workbook_actor` (`tenant_id`,`actor_member_id`,`created_at`)``；``KEY `idx_iam_member_workbook_status` (`tenant_id`,`status`,`expires_at`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -669,7 +669,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[DepartmentWorkbookRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/DepartmentWorkbookRepository.java), [IamDepartmentWorkbookEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDepartmentWorkbookEntity.java), [IamDepartmentWorkbookMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamDepartmentWorkbookMapper.java)。
+- 主要访问/写入：[DepartmentWorkbookRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DepartmentWorkbookRepository.java), [IamDepartmentWorkbookEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamDepartmentWorkbookEntity.java), [IamDepartmentWorkbookMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamDepartmentWorkbookMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_department_workbook_actor` (`tenant_id`,`actor_member_id`,`created_at`)``；``KEY `idx_iam_department_workbook_status` (`tenant_id`,`status`,`expires_at`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -685,7 +685,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[IamDownloadTaskEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamDownloadTaskEntity.java), [IamDownloadTaskMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamDownloadTaskMapper.java)。
+- 主要访问/写入：[IamDownloadTaskEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamDownloadTaskEntity.java), [IamDownloadTaskMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamDownloadTaskMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_download_task_owner` (`tenant_id`,`actor_member_id`,`created_at`)``；``KEY `idx_iam_download_task_status` (`status`,`expires_at`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -701,7 +701,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[IamAuthorizationAuditEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamAuthorizationAuditEntity.java), [IamRoleAssignmentMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamRoleAssignmentMapper.java)。
+- 主要访问/写入：[IamAuthorizationAuditEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamAuthorizationAuditEntity.java), [IamRoleAssignmentMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamRoleAssignmentMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_iam_audit_actor` (`actor_account_id`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_assignment_create` (`assignment_id`,`change_type`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_delivery` (`delivered_at`,`id`)``；``KEY `idx_iam_audit_tenant_actor_time` (`tenant_id`,`actor_member_id`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_tenant_target_time` (`tenant_id`,`target_type`,`target_id`,`occurred_at`,`id`)``；``KEY `idx_iam_audit_tenant_time` (`tenant_id`,`occurred_at`,`id`)``；``UNIQUE KEY `uk_iam_audit_event` (`event_id`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -711,57 +711,13 @@
 
 后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
 
-### iam_migration_batch — 保留（P3）
-
-历史身份迁移批次及验收状态
-
-- 主键：`id`；宽度：256 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：历史迁移工具显式指定字符串批次标识。
-- 主要访问/写入：受控迁移/建库工具，未发现在线业务写入入口。
-- 有效二级索引/业务唯一键：无。
-- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
-- 被其他表引用：``iam_migration_mapping(batch_id) → (id)``；``iam_migration_issue(batch_id) → (id)``。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：迁移工具显式指定字符串批次标识，不是在线高频写入表；状态与verified_at共同限制验收过程。
-- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_migration_batch)。
-
-### iam_migration_mapping — 候选优化（P2）
-
-历史标识到目标实体的人工处置映射
-
-- 主键：`batch_id / source_table / source_id / target_type / target_id`；宽度：1792 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：受控迁移/建库工具，未发现在线业务写入入口。
-- 有效二级索引/业务唯一键：无。
-- 本表引用外键：``CONSTRAINT `fk_iam_mapping_batch` FOREIGN KEY (`batch_id`) REFERENCES `iam_migration_batch` (`id`)``。
-- 被其他表引用：未声明入向外键。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：五个utf8mb4字符串构成宽自然主键，最大键值约1792字节（不含变长/页开销）；历史迁移已退出常规运行范围。若恢复大批导入，比较短代理键+原唯一键的总写入/空间，先采样再决定。
-- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_migration_mapping)。
-
-后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
-
-### iam_migration_issue — 保留（P3）
-
-历史迁移阻塞项及处置记录
-
-- 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：受控迁移/建库工具，未发现在线业务写入入口。
-- 有效二级索引/业务唯一键：``KEY `idx_iam_issue_unresolved` (`batch_id`,`disposition`,`id`)``。
-- 本表引用外键：``CONSTRAINT `fk_iam_issue_batch` FOREIGN KEY (`batch_id`) REFERENCES `iam_migration_batch` (`id`)``。
-- 被其他表引用：未声明入向外键。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：独立问题ID，batch_id/disposition/id定位未解决问题；处置说明保留，不能将删除问题记录视作优化。
-- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_migration_issue)。
-
 ### iam_role_application_task — 保留（P3）
 
 平台角色固定版本批量应用任务
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[RoleApplicationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/RoleApplicationRepository.java), [IamRoleApplicationTaskEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamRoleApplicationTaskEntity.java), [AuditReferenceMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/AuditReferenceMapper.java)。
+- 主要访问/写入：[RoleVersionApplicationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/RoleVersionApplicationRepository.java), [IamRoleVersionApplicationTaskEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamRoleVersionApplicationTaskEntity.java), [AuditReferenceMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/AuditReferenceMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_role_application_target` (`target_revision_id`)``；``KEY `ix_iam_role_application_claim` (`status`,`lease_until`,`id`)``；``KEY `ix_iam_role_application_role` (`role_id`,`id`)``；``UNIQUE KEY `uk_iam_role_application_prepare` (`role_id`,`prepare_key`)``；``UNIQUE KEY `uk_iam_role_application_running` (`running_role_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_role_application_role` FOREIGN KEY (`role_id`) REFERENCES `iam_role_definition` (`id`)``；``CONSTRAINT `fk_iam_role_application_target` FOREIGN KEY (`target_revision_id`) REFERENCES `iam_role_revision` (`id`)``。
 - 被其他表引用：``iam_role_application_item(task_id) → (id)``。
@@ -775,7 +731,7 @@
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[RoleApplicationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/RoleApplicationRepository.java), [IamRoleApplicationItemEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/entity/IamRoleApplicationItemEntity.java), [IamRoleApplicationItemMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamRoleApplicationItemMapper.java)。
+- 主要访问/写入：[RoleVersionApplicationRepository.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/RoleVersionApplicationRepository.java), [IamRoleVersionApplicationItemEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IamRoleVersionApplicationItemEntity.java), [IamRoleVersionApplicationItemMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamRoleVersionApplicationItemMapper.java)。
 - 有效二级索引/业务唯一键：``KEY `fk_iam_role_application_item_assignment` (`assignment_id`)``；``KEY `ix_iam_role_application_items` (`task_id`,`status`,`id`)``；``UNIQUE KEY `uk_iam_role_application_assignment` (`task_id`,`assignment_id`)``。
 - 本表引用外键：``CONSTRAINT `fk_iam_role_application_item_assignment` FOREIGN KEY (`assignment_id`) REFERENCES `iam_role_assignment` (`id`)``；``CONSTRAINT `fk_iam_role_application_item_task` FOREIGN KEY (`task_id`) REFERENCES `iam_role_application_task` (`id`)``。
 - 被其他表引用：未声明入向外键。
@@ -783,41 +739,13 @@
 - 判断：task_id/assignment_id唯一去重，task_id/status/id支持批执行；独立ID承载明细状态和配置，不能按纯关联表处理。
 - DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_role_application_item)。
 
-### iam_live_authorization_batch — 保留（P3）
-
-租户即时授权模型迁移批次
-
-- 主键：`batch_id`；宽度：64 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：即时授权迁移工具显式指定字符串批次标识。
-- 主要访问/写入：[migrate.py](../../../tools/iam/tenant_live/migrate.py)。
-- 有效二级索引/业务唯一键：无。
-- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
-- 被其他表引用：``iam_live_authorization_mapping(batch_id) → (batch_id)``。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：受控迁移工具显式批次标识与摘要，低频；正反迁移状态不等价于日常业务版本。
-- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_live_authorization_batch)。
-
-### iam_live_authorization_mapping — 保留（P3）
-
-租户即时授权迁移原行快照与目标映射
-
-- 主键：`batch_id / entity_type / entity_id`；宽度：104 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：组合关系/业务配置键，由绑定对象或受控工具提供。
-- 主要访问/写入：[migrate.py](../../../tools/iam/tenant_live/migrate.py)。
-- 有效二级索引/业务唯一键：无。
-- 本表引用外键：``CONSTRAINT `iam_live_authorization_mapping_ibfk_1` FOREIGN KEY (`batch_id`) REFERENCES `iam_live_authorization_batch` (`batch_id`)``。
-- 被其他表引用：未声明入向外键。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：批次/实体类型/实体ID自然唯一，保存回退原行；键宽约104字节，工作量取决于实际迁移规模，未恢复在线写路径。
-- DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_live_authorization_mapping)。
-
 ### biz_leaf_alloc — 保留（P3）
 
 Leaf业务号段分配高水位
 
 - 主键：`biz_tag`；宽度：512 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：配置的业务标签字符串，原行更新号段高水位。
-- 主要访问/写入：[BizLeafAlloc.java](../../../ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/domain/BizLeafAlloc.java), [IDAllocMapper.java](../../../ingot-framework/ingot-id/src/main/java/com/ingot/framework/id/leaf/segment/dao/IDAllocMapper.java)。
+- 主要访问/写入：[IdAllocationEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IdAllocationEntity.java), [IDAllocMapper.java](../../../ingot-framework/ingot-id/src/main/java/com/ingot/framework/id/leaf/segment/dao/IDAllocMapper.java)。
 - 有效二级索引/业务唯一键：无。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -831,7 +759,7 @@ Leaf业务号段分配高水位
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[PlatformDict.java](../../../ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/domain/PlatformDict.java)。
+- 主要访问/写入：[DictionaryEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/DictionaryEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_dict_code` (`code`) USING BTREE``；``KEY `idx_dict_pid` (`pid`) USING BTREE``；``KEY `idx_dict_scope` (`scope_type`,`tenant_id`,`app_id`) USING BTREE``；``KEY `idx_dict_type_status` (`type`,`status`) USING BTREE``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -861,7 +789,7 @@ Leaf业务号段分配高水位
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[SysSocialDetails.java](../../../ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/domain/SysSocialDetails.java)。
+- 主要访问/写入：[SocialConfigEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/SocialConfigEntity.java)。
 - 有效二级索引/业务唯一键：无。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -875,7 +803,7 @@ Leaf业务号段分配高水位
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[SysUserSocial.java](../../../ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/domain/SysUserSocial.java)。
+- 主要访问/写入：[AccountSocialBindingEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/AccountSocialBindingEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_unique_type_user` (`unique_id`,`type`,`user_id`) USING BTREE``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
@@ -885,19 +813,19 @@ Leaf业务号段分配高水位
 
 后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
 
-### sys_tenant_plan_record — 保留（P3）
+### asset_upload — 保留（P3）
 
-历史组织套餐购买记录
+业务图片暂存与一次性绑定凭证
 
-- 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
+- 主键：`id`；宽度：36 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[SysTenantPlanRecord.java](../../../ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/domain/SysTenantPlanRecord.java)。
-- 有效二级索引/业务唯一键：无。
+- 主要访问/写入：[StagedImageUploads.java](../../../ingot-framework/ingot-oss/ingot-oss-common/src/main/java/com/ingot/framework/oss/upload/StagedImageUploads.java)。
+- 有效二级索引/业务唯一键：``KEY `idx_asset_upload_expires` (`expires_at`,`id`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：历史购买记录是事实实体，保留稳定ID；INT plan_id与当前BIGINT套餐并非可直接迁移的外键，本轮仅说明。
-- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#sys_tenant_plan_record)。
+- 判断：一次性上传凭证按ID取得并在业务事务中消费；归属、用途、目标绑定与到期清理由上传框架维护，属于有效运行结构。
+- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#asset_upload)。
 
 ### account_lock_state — 保留（P3）
 
@@ -905,7 +833,7 @@ Leaf业务号段分配高水位
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：数据库AUTO_INCREMENT。
-- 主要访问/写入：[SysUser.java](../../../ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/domain/SysUser.java), [IamRoleAssignmentMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/persistence/mapper/IamRoleAssignmentMapper.java), [MemberUser.java](../../../ingot-service/ingot-member/ingot-member-api/src/main/java/com/ingot/cloud/member/api/model/domain/MemberUser.java)。
+- 主要访问/写入：[IamRoleAssignmentMapper.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamRoleAssignmentMapper.java), [MemberUser.java](../../../ingot-service/ingot-member/ingot-member-api/src/main/java/com/ingot/cloud/member/api/model/domain/MemberUser.java), [AccountLockStateEntity.java](../../../ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/java/com/ingot/framework/security/account/adapter/entity/AccountLockStateEntity.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_locked` (`locked`,`locked_until`) USING BTREE``；``UNIQUE KEY `uk_user_id_type` (`user_id`,`user_type`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。

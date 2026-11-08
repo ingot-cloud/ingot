@@ -6,7 +6,7 @@ import com.ingot.cloud.iam.application.identity.PlatformBootstrapService;
 import com.ingot.cloud.iam.domain.identity.InitializationIdAllocator;
 
 import com.ingot.cloud.iam.infrastructure.persistence.InitializationCatalogRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.PlatformBootstrapRepository;
 import com.ingot.framework.security.account.domain.port.inbound.RegisterUserUseCase;
 import com.ingot.framework.security.credential.service.InitialPasswordService;
@@ -47,7 +47,7 @@ public class IamBootstrapConfiguration {
     public PlatformBootstrapService platformBootstrapService(IamBootstrapProperties properties,
                                                             PlatformBootstrapRepository bootstrap,
                                                             InitializationCatalogRepository catalog,
-                                                            MemberQueryRepository members,
+                                                            MemberRepository members,
                                                             InitializationIdAllocator ids,
                                                             RegisterUserUseCase registerUser,
                                                             InitialPasswordService initialPassword) {

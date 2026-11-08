@@ -4,7 +4,7 @@ import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.commons.model.iam.IamAction;
 
 import com.ingot.cloud.iam.application.group.GroupService;
-import com.ingot.cloud.iam.application.organization.MemberQueryService;
+import com.ingot.cloud.iam.application.organization.MemberFacade;
 import com.ingot.cloud.iam.application.shared.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.cloud.iam.application.shared.model.CreatedResource;
@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PlatformGroupAPI implements RShortcuts {
     private final GroupService groups;
-    private final MemberQueryService members;
+    private final MemberFacade members;
 
     /**
      * 分页列出平台用户组。

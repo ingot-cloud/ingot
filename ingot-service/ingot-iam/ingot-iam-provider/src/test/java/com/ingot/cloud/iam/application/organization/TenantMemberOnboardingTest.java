@@ -10,7 +10,7 @@ import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAcc
 import com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.AccountQueryRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamAccountEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
@@ -67,7 +67,7 @@ class TenantMemberOnboardingTest {
 
     private IamAccess access;
     private AccountQueryRepository accounts;
-    private MemberQueryRepository members;
+    private MemberRepository members;
     private RegisterUserUseCase registerUser;
     private InitialPasswordService initialPasswords;
     private MemberRejoin rejoins;
@@ -78,7 +78,7 @@ class TenantMemberOnboardingTest {
         access = mock(IamAccess.class);
         ResourceScopeAccessService scopes = mock(ResourceScopeAccessService.class);
         PlatformAssignmentFacade assignments = mock(PlatformAssignmentFacade.class);
-        members = mock(MemberQueryRepository.class);
+        members = mock(MemberRepository.class);
         accounts = mock(AccountQueryRepository.class);
         FieldProjectionEngine projection = mock(FieldProjectionEngine.class);
         FieldWriteExecutor fieldWrites = mock(FieldWriteExecutor.class);

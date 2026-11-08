@@ -23,4 +23,6 @@ SQL 测试需要本地 mysql:8.4，创建和销毁隔离容器；不下载镜像
 python3 -m unittest discover -s tools/iam/tenant_live -p test_dev_prepare.py
 ```
 
-测试旧结构使用 `fixtures/pre_021/` 中冻结的002/003/004，不依赖提交前的HEAD；身份与辅助结构沿用当前manifest。开发准备夹具将目录显式置为旧publish码再验证按原ID切换，保证提交后和浅克隆中仍可复跑。
+测试旧结构使用 `fixtures/pre_021/` 中冻结的002/003/004及同源006种子，不依赖提交前的HEAD；身份与辅助结构沿用当前manifest，辅助夹具显式补入可选旧套餐记录表。开发准备夹具将目录显式置为旧publish码再验证按原ID切换，保证提交后和浅克隆中仍可复跑。冻结来源为5865e4cf；006的来源摘要记录在初始化精简change的legacy-bootstrap-fixture.json，不能换成当前种子导入旧结构。
+
+新项目默认初始化已排除迁移元数据。既有迁移源库仍保留原表；若新建隔离迁移演练库，应显式导入 `databases/iam/legacy/002_tenant_live_authorization.sql` 后再使用本工具。其他可选历史结构见 `databases/iam/legacy/README.md`，不能把它们重新加入默认建库循环。

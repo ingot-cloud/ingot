@@ -11,7 +11,7 @@ import com.ingot.cloud.iam.application.organization.model.TenantMemberFilter;
 import com.ingot.cloud.iam.application.authorization.read.IamReadOnlyRequest;
 import com.ingot.cloud.iam.application.organization.MemberCommandService;
 import com.ingot.cloud.iam.application.organization.MemberExportService;
-import com.ingot.cloud.iam.application.organization.MemberQueryService;
+import com.ingot.cloud.iam.application.organization.MemberFacade;
 import com.ingot.cloud.iam.application.organization.MemberRejoin;
 import com.ingot.cloud.iam.application.organization.MemberWorkbookService;
 import com.ingot.cloud.iam.application.organization.TenantMemberOnboarding;
@@ -67,7 +67,7 @@ import com.ingot.framework.security.crypto.annotation.InEncrypt;
 @RequiredArgsConstructor
 public class TenantMemberCommandAPI implements RShortcuts {
     private final MemberCommandService members;
-    private final MemberQueryService queries;
+    private final MemberFacade queries;
     private final MemberExportService exports;
     private final MemberWorkbookService workbooks;
     private final TenantMemberOnboarding onboarding;

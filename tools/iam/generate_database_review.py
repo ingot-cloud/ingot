@@ -11,6 +11,7 @@ TARGET = ROOT / 'docs/modules/iam/DATABASE-REVIEW.md'
 
 # 评估依据为当前生产入口；不使用行数、负载或碎片的虚构测量。
 NOTES = {
+'asset_upload': '一次性上传凭证按ID取得并在业务事务中消费；归属、用途、目标绑定与到期清理由上传框架维护，属于有效运行结构。',
 'iam_account': '全局账号按ID及登录名定位；手机号/邮箱索引服务匹配检索。账号、成员和外部用户标识不可混用。',
 'iam_platform_member': '按账号唯一定位平台资格；状态列表使用status/id。account_id唯一索引同时防止重复资格。',
 'iam_tenant': '组织ID是组织事务的锁定对象；(id,owner_member_id)支持所属组织拥有者复合引用，不因id已有主键就删除。',
@@ -59,25 +60,19 @@ NOTES = {
     'iam_department_workbook': '任务按ID定位，操作者与状态索引支持历史和过期清理；原始工作簿与错误报告存对象存储，24小时保留后删除对象。',
     'iam_download_task': '任务按ID定位，租户/成员/创建时间支持我的下载分页，状态/到期索引支持清理；文件在对象存储，7天删除对象、30天删除记录。',
 'iam_authorization_audit': '审计按租户时间、操作者、分配创建及待投递分别检索；event_id唯一承担幂等。需实际保留量、写入速率和执行计划才能判断索引增删。',
-'iam_migration_batch': '迁移工具显式指定字符串批次标识，不是在线高频写入表；状态与verified_at共同限制验收过程。',
-'iam_migration_mapping': '五个utf8mb4字符串构成宽自然主键，最大键值约1792字节（不含变长/页开销）；历史迁移已退出常规运行范围。若恢复大批导入，比较短代理键+原唯一键的总写入/空间，先采样再决定。',
-'iam_migration_issue': '独立问题ID，batch_id/disposition/id定位未解决问题；处置说明保留，不能将删除问题记录视作优化。',
 'iam_role_application_task': '按角色/准备键幂等；running_role_id唯一限制同角色一个RUNNING；状态/租约/id服务多实例领取。状态变化触发辅助索引维护是必要成本。',
 'iam_role_application_item': 'task_id/assignment_id唯一去重，task_id/status/id支持批执行；独立ID承载明细状态和配置，不能按纯关联表处理。',
-'iam_live_authorization_batch': '受控迁移工具显式批次标识与摘要，低频；正反迁移状态不等价于日常业务版本。',
-'iam_live_authorization_mapping': '批次/实体类型/实体ID自然唯一，保存回退原行；键宽约104字节，工作量取决于实际迁移规模，未恢复在线写路径。',
 'biz_leaf_alloc': '按业务标签锁定并领取号段，高水位增长不代表新增记录。biz_tag短字符串业务主键合适；禁止为改善顺序插入而重置高水位。',
 'platform_dict': '树父节点、编码、类型状态和作用域各有读取索引；code当前不是数据库唯一键，不能无业务确认直接加唯一约束。',
 'security_event': '数据库自增聚簇键，事件幂等、时间、用户、追踪索引分别服务入口；事件量和保留策略决定成本。event_id允许NULL，因此缺失幂等ID不互斥。',
 'sys_social_details': '按ID及渠道配置定位，第三方app_id为字符串客户端标识；旧列名不意味着当前IAM数字应用ID。',
 'sys_user_social': '独立绑定ID，unique_id/type/user_id反查渠道身份；是否需要其他方向查询和业务唯一约束需实际入口与历史重复数据共同验证。',
-'sys_tenant_plan_record': '历史购买记录是事实实体，保留稳定ID；INT plan_id与当前BIGINT套餐并非可直接迁移的外键，本轮仅说明。',
 'account_lock_state': '数据库自增ID，user_id/user_type业务唯一；locked/locked_until服务解锁扫描。框架持久化归属保留，不迁入IAM自有Mapper。',
 'password_history': '保留原自增主键及user_id/sequence_number业务唯一键；经隔离MySQL三态对照后删除重叠idx_user_id。实际PasswordHistoryServiceImpl按用户查询/覆盖槽位/删除；最近历史仍按created_at排序，本轮不改变环形历史行为。',
 'password_expiration': '自增ID，user_id唯一，expires_at和next_warning_at服务到期和提醒扫描；宽时效扫描成本需实际用户量及调度统计。',
 }
 RUNTIME = {'iam_role_parameter','iam_role_assignment','iam_member_export','iam_member_workbook','iam_department_workbook','iam_download_task','iam_authorization_audit','security_event','password_expiration','sys_user_social'}
-CANDIDATES = {'iam_migration_mapping'}
+CANDIDATES = set()
 REWRITES = {'iam_member_department':'已改为共享差量写入', 'iam_department_leader':'已为差量；本轮跳过不变主标记',
  'iam_platform_group_member':'已改为差量写入','iam_tenant_group_member':'已改为差量写入','iam_tenant_group_department':'已改为差量写入及属性UPDATE',
  'iam_menu_action':'已改为差量写入','iam_plan_application':'已改为差量写入'}
@@ -117,7 +112,7 @@ def render():
     java=[(p,p.read_text()) for base in ('ingot-service','ingot-framework','tools/iam')
           for p in sorted((ROOT/base).rglob('*')) if p.is_file() and ('src/main/' in str(p) and p.suffix in ('.java','.xml') or base=='tools/iam' and p.suffix=='.py' and not p.name.startswith(('test','generate','schema')))]
     lines=['# IAM 主键、索引与关系写入评估','', '<!-- 生成：python3 tools/iam/generate_database_review.py；审查结论在生成源维护。 -->','',
-           '覆盖 manifest 中全部63张表。结构来自权威DDL及隔离MySQL 8.4的有效索引快照；没有连接实际业务数据库，没有测量业务容量、页分裂率、缓存命中率或延迟。', '',
+           f'覆盖 manifest 中全部{len(model)}张表。结构来自权威DDL及隔离MySQL 8.4的有效索引快照；没有连接实际业务数据库，没有测量业务容量、页分裂率、缓存命中率或延迟。', '',
            '## 评估口径','',
            '- 结论分为保留、候选优化、需要运行数据验证。P1为模型明确性候选，P2为成本验证候选，P3为保留现状。',
            '- 联合主键按最左列依次排序；为已有成员/组添加关系可能写入旧页。局部性收益与页分裂成本应一并比较，不把非递增视为错误。',
@@ -128,7 +123,7 @@ def render():
            '依据：[InnoDB聚簇与二级索引](https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html)、[索引页结构](https://dev.mysql.com/doc/refman/8.0/en/innodb-physical-structure.html)。', '',
            '## 本轮处理与后续候选','',
            '成员部门、两域用户组关系、菜单操作、套餐应用已实施差量；负责人未变主标记不再清空重设。公共API、版本、审计及授权失效规则保留；后续独立结构变更见下文。', '',
-           '接收成员表已新增Leaf显式主键；密码历史经隔离对照删除重叠索引，原主键保留。后续候选仍为宽字符串主键iam_migration_mapping，尚未调整；详见[验证记录](../../../specs/changes/archive/2026/20261020-iam-recipient-primary-key-password-index/VALIDATION.md)。', '',
+           '接收成员表已新增Leaf显式主键；密码历史经隔离对照删除重叠索引，原主键保留。迁移元数据与旧套餐记录已移出新项目初始化，定义保留在databases/iam/legacy；历史索引变更详见[验证记录](../../../specs/changes/archive/2026/20261020-iam-recipient-primary-key-password-index/VALIDATION.md)。', '',
            '人群独立保存仍全量重写，整体开通替换会重建人群；两者需要统一并发和重置语义后另行设计。委派重建涉及派生授权重验，角色/策略新快照是首次写入，业务删除需要清关联；这些路径保留。', '',
            '## 逐表结论','']
     for t in model:
@@ -146,9 +141,7 @@ def render():
         links=', '.join(f'[{p.name}](../../../{p.relative_to(ROOT)})' for p in evidence) or '受控迁移/建库工具，未发现在线业务写入入口'
         pk=' / '.join(keys) if keys else '未声明；唯一键含可空生成列，使用InnoDB隐藏行标识'
         gen='数据库AUTO_INCREMENT' if any('AUTO_INCREMENT' in x.upper() for x in t.columns.values()) else '组合关系/业务配置键，由绑定对象或受控工具提供' if len(keys)!=1 or keys[0]!='id' else '服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号'
-        gen = {'iam_migration_batch': '历史迁移工具显式指定字符串批次标识',
-               'iam_live_authorization_batch': '即时授权迁移工具显式指定字符串批次标识',
-               'iam_delegation_recipient_member': 'IAM Leaf号段发号，应用显式填入BigInteger/IdType.INPUT',
+        gen = {'iam_delegation_recipient_member': 'IAM Leaf号段发号，应用显式填入BigInteger/IdType.INPUT',
                'biz_leaf_alloc': '配置的业务标签字符串，原行更新号段高水位'}.get(t.name,gen)
         foreign=[x for x in parts(definition[start+1:end]) if 'FOREIGN KEY' in x.upper()]
         lines += [f'### {t.name} — {decision}（{priority}）','',comment(t.options),'',

@@ -1,0 +1,209 @@
+{
+  "date": "2026-11-08",
+  "status": "validating",
+  "actualBusinessDatabaseAccessed": false,
+  "commitCreated": false,
+  "offline": [
+    {
+      "name": "database_sources",
+      "tests": 6,
+      "passed": 6,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.058,
+      "log": "/tmp/iam-clean-init-offline-sources.log"
+    },
+    {
+      "name": "schema_comments",
+      "tests": 9,
+      "passed": 9,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 4.551,
+      "log": "/tmp/iam-clean-init-offline-comments.log"
+    },
+    {
+      "name": "generate_bootstrap",
+      "tests": 7,
+      "passed": 7,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.005,
+      "log": "/tmp/iam-clean-init-offline-bootstrap.log"
+    },
+    {
+      "name": "identity_migration_preflight",
+      "tests": 13,
+      "passed": 13,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.169,
+      "log": "/tmp/iam-clean-init-offline-preflight.log"
+    },
+    {
+      "name": "identity_migration_import",
+      "tests": 3,
+      "passed": 3,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.26,
+      "log": "/tmp/iam-clean-init-offline-import.log"
+    },
+    {
+      "name": "tenant_live_migrate",
+      "tests": 9,
+      "passed": 9,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.002,
+      "log": "/tmp/iam-clean-init-offline-migrate.log"
+    },
+    {
+      "name": "package_boundaries",
+      "tests": 10,
+      "passed": 10,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.789,
+      "log": "/tmp/iam-clean-init-offline-boundaries.log"
+    },
+    {
+      "name": "release_contract",
+      "tests": 8,
+      "passed": 8,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.032,
+      "log": "/tmp/iam-clean-init-offline-contract.log"
+    }
+  ],
+  "isolatedMysql": [
+    {
+      "name": "bootstrap_and_rebuild",
+      "tests": 24,
+      "passed": 24,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 256.161,
+      "log": "/tmp/iam-clean-init-bootstrap-tests.log"
+    },
+    {
+      "name": "identity_schema",
+      "tests": 28,
+      "passed": 28,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 138.6,
+      "log": "/tmp/iam-clean-init-identity-tests.log"
+    },
+    {
+      "name": "historical_026_comments",
+      "tests": 3,
+      "passed": 3,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 20.792,
+      "log": "/tmp/iam-clean-init-history-comments-tests.log"
+    },
+    {
+      "name": "historical_027_028_keys",
+      "tests": 9,
+      "passed": 9,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 99.741,
+      "log": "/tmp/iam-clean-init-key-upgrade-tests.log"
+    },
+    {
+      "name": "historical_dev_prepare",
+      "tests": 3,
+      "passed": 3,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 45.813,
+      "log": "/tmp/iam-clean-init-dev-tests.log"
+    },
+    {
+      "name": "tenant_live_migration",
+      "tests": 5,
+      "passed": 5,
+      "failures": 0,
+      "errors": 0,
+      "evidence": "Four unchanged cases passed in the initial full run. Its stale whole-schema assertion was replaced by canonical migration-target and untouched-table preservation assertions; the corrected case passed separately.",
+      "initialRun": {
+        "tests": 5,
+        "passed": 4,
+        "failures": 1,
+        "log": "/tmp/iam-clean-init-migration-tests.log"
+      },
+      "correctedCase": {
+        "name": "historical_021_022_structure",
+        "tests": 1,
+        "passed": 1,
+        "failures": 0,
+        "errors": 0,
+        "seconds": 49.724,
+        "log": "/tmp/iam-clean-init-migration-targeted.log"
+      }
+    }
+  ],
+  "runtimeMysqlHttp": {
+    "tests": 28,
+    "passed": 26,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "suites": [
+      {
+        "name": "com.ingot.cloud.iam.application.live.TenantLiveMySqlHttpTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 2
+      },
+      {
+        "name": "com.ingot.cloud.iam.application.role.RoleWorkspaceMySqlHttpTest",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "log": "/tmp/iam-clean-init-runtime-http-tests.log"
+  },
+  "passedCaseEvidenceTotals": {
+    "offline": 65,
+    "isolatedMysql": 72,
+    "runtimeMysqlHttp": 26
+  },
+  "generationChecks": {
+    "database": true,
+    "databaseReview": true,
+    "log": "/tmp/iam-clean-init-generated-check.log"
+  },
+  "structure": {
+    "protectedHistoryFiles": 89,
+    "movedDefinitionsUnchanged": 6,
+    "retainedIamDefinitionsUnchanged": 56,
+    "runtimeTables": 59,
+    "runtimeColumnsInMysqlSnapshot": 501
+  },
+  "previousFullIamCodeRegression": "../20261108-iam-responsibility-cleanup/test-results.json",
+  "preExistingUnrelatedFailures": {
+    "commit": "2d2dfa86d11ba2ea6fa1a1a8d9366bdb475a4bbe",
+    "filesUnchanged": {
+      "tools/iam/test-data/build.py": "ef68d6477107a998683f689d37b7b1e6fb9c09c696b561913f6d07d19e8c95bb",
+      "tools/iam/test-data/lib.py": "ae03f50b5451dd6dbb6f1e593afce48daa5caf008f87b089a878a235bc4ae076",
+      "tools/iam/test-data/test_iam_test_data.py": "85b6be4cdf0abddd3ffd8d91a59271f9609795a922ffd8b79da8afeb3c6e2bdd"
+    },
+    "total": 20,
+    "passed": 14,
+    "errors": 6,
+    "reason": "build fixture treats paged resource response as a list (KeyError: 0); same six errors reproduced from isolated HEAD archive",
+    "log": "/tmp/iam-init-testdata-head-baseline.log"
+  },
+  "pending": [
+    "User acceptance in actual environment",
+    "Update current and archive after acceptance"
+  ]
+}

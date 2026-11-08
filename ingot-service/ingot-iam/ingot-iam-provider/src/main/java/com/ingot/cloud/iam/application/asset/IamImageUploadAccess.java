@@ -8,7 +8,7 @@ import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAcc
 import com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.CatalogRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.ObjectScopeSql;
 import com.ingot.cloud.iam.infrastructure.persistence.TenantRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantMemberEntity;
@@ -43,7 +43,7 @@ public class IamImageUploadAccess {
     private final ResourceScopeAccessService scopes;
     private final CatalogRepository catalog;
     private final TenantRepository tenants;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final IamTenantMemberMapper tenantMembers;
     private final FieldWriteExecutor fields;
 

@@ -1,13 +1,9 @@
 """本地无网络 MySQL：注释升级幂等、漂移阻断、数据保留及主关系并发约束。"""
 import json
 import os
-import subprocess
-import sys
 import threading
 import unittest
-from database_sources import sources, read_source
-from schema_model import COMMENT, tables
-from schema_comments import upgrade, normalized, SNAPSHOT, read_definitions
+from schema_comments import upgrade, normalized, BASELINE, read_definitions
 from isolated_mysql import IsolatedMysql
 
 
@@ -20,10 +16,10 @@ class SchemaCommentsMysqlTest(unittest.TestCase):
     def setUp(self):
         self.database = 'iam_comments'
         self.mysql.sql('DROP DATABASE IF EXISTS ' + self.database + '; CREATE DATABASE ' + self.database)
-        for source in sources('schemas') + sources('frameworkSchemas'):
-            self.mysql.sql(COMMENT.sub('', read_source(source)), self.database)
-        # 026已固定在027/028之前；不能用最新DDL冒充旧版注释迁移输入。
-        self.restore_026_structure(self.database)
+        self.baseline = json.loads(BASELINE.read_text())
+        # 026始终针对其发布时的结构和全部历史表，不受新项目表清单变化影响。
+        self.mysql.sql('SET FOREIGN_KEY_CHECKS=0;' + ';'.join(self.baseline['tables'].values())
+                       + ';SET FOREIGN_KEY_CHECKS=1;', self.database)
         self.mysql.sql("INSERT INTO iam_account(id,username,password_hash) VALUES(1,'fixture','fixture');"
                        "INSERT INTO iam_tenant(id,name) VALUES(10,'fixture');"
                        "INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name) VALUES(101,10,1,'fixture');"
@@ -33,27 +29,17 @@ class SchemaCommentsMysqlTest(unittest.TestCase):
     def query(self, sql):
         return self.mysql.sql(sql, self.database)
 
-    def restore_026_structure(self, database):
-        self.mysql.sql('ALTER TABLE iam_delegation_recipient_member DROP PRIMARY KEY,DROP COLUMN id;'
-                       'ALTER TABLE password_history ADD INDEX idx_user_id(user_id);', database)
-
-    def test_upgrade_matches_new_schema_preserves_rows_and_is_repeatable(self):
+    def test_historical_upgrade_preserves_original_schema_rows_and_is_repeatable(self):
         before = self.query('SELECT * FROM iam_member_department ORDER BY department_id')
         upgrade(self.query, apply=False)
         upgrade(self.query, apply=True)
-        first = read_definitions(self.query, [t.name for t in tables()])
+        first = read_definitions(self.query, list(self.baseline['tables']))
         self.assertEqual('fixture', self.query("SELECT display_name FROM iam_tenant_member WHERE id=101").strip())
         upgrade(self.query, apply=True)
-        self.assertEqual(first, read_definitions(self.query, [t.name for t in tables()]))
+        self.assertEqual(first, read_definitions(self.query, list(self.baseline['tables'])))
         self.assertEqual(before, self.query('SELECT * FROM iam_member_department ORDER BY department_id'))
-        reference = 'iam_new_comments'
-        self.mysql.sql('DROP DATABASE IF EXISTS ' + reference + ';CREATE DATABASE ' + reference)
-        for source in sources('schemas') + sources('frameworkSchemas'):
-            self.mysql.sql(read_source(source), reference)
-        self.restore_026_structure(reference)
-        reference_definitions = read_definitions(lambda sql: self.mysql.sql(sql,reference), [t.name for t in tables()])
-        for table in tables():
-            self.assertEqual(normalized(first[table.name]), normalized(reference_definitions[table.name]), table.name)
+        for name, definition in self.baseline['tables'].items():
+            self.assertEqual(normalized(first[name]), normalized(definition), name)
         self.assertEqual('0', self.query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND column_comment='' ").strip())
 
     def test_drift_or_missing_table_stops_before_any_alter(self):

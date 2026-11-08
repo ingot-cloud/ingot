@@ -1,0 +1,38 @@
+[
+  {
+    "table": "iam_migration_batch",
+    "source": "databases/iam/004_policy_audit_migration.sql",
+    "legacy": "databases/iam/legacy/001_identity_migration.sql",
+    "definitionSha256": "835bd3fee1bf35437951a462f251d220e6519f00b6d0ef96f88b3ef9d6915de8"
+  },
+  {
+    "table": "iam_migration_mapping",
+    "source": "databases/iam/004_policy_audit_migration.sql",
+    "legacy": "databases/iam/legacy/001_identity_migration.sql",
+    "definitionSha256": "23d80aa182be79205602ddf69155992a5749925a22e240f5f4968160c7350cb5"
+  },
+  {
+    "table": "iam_migration_issue",
+    "source": "databases/iam/004_policy_audit_migration.sql",
+    "legacy": "databases/iam/legacy/001_identity_migration.sql",
+    "definitionSha256": "b82dab9adc8cf38687154b3c76578bc2d4c855f26762515607436f3d300383f5"
+  },
+  {
+    "table": "iam_live_authorization_batch",
+    "source": "databases/iam/004_policy_audit_migration.sql",
+    "legacy": "databases/iam/legacy/002_tenant_live_authorization.sql",
+    "definitionSha256": "a312ea135b851396915305c6fde51b0a2a8ca90edaa8f0d4d393792f57e3e905"
+  },
+  {
+    "table": "iam_live_authorization_mapping",
+    "source": "databases/iam/004_policy_audit_migration.sql",
+    "legacy": "databases/iam/legacy/002_tenant_live_authorization.sql",
+    "definitionSha256": "9cde9b11b943f8855c0ddb392a5f87f654aa3e48390a8acff98e43ca98e557ea"
+  },
+  {
+    "table": "sys_tenant_plan_record",
+    "source": "databases/iam/005_auxiliary.sql",
+    "legacy": "databases/iam/legacy/003_tenant_plan_record.sql",
+    "definitionSha256": "6cce6e8024c81c88f8424e9205c0c9432e8cc92226e40f7835397217dfd34386"
+  }
+]

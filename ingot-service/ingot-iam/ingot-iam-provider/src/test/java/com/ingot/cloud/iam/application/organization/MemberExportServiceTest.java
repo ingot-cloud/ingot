@@ -60,7 +60,7 @@ class MemberExportServiceTest {
     private JdbcTemplate jdbc;
     private IamAccess access;
     private ResourceScopeAccessService scopes;
-    private MemberQueryService members;
+    private MemberFacade members;
     private TenantRepository tenants;
     private DataSourceTransactionManager transactions;
     private DriverManagerDataSource dataSource;
@@ -82,7 +82,7 @@ class MemberExportServiceTest {
                 """);
         access = mock(IamAccess.class);
         scopes = mock(ResourceScopeAccessService.class);
-        members = mock(MemberQueryService.class);
+        members = mock(MemberFacade.class);
         tenants = mock(TenantRepository.class);
         transactions = new DataSourceTransactionManager(dataSource);
         when(access.require(eq(AuthorizationDomain.TENANT), eq(IamAction.TENANT_MEMBER_EXPORT))).thenReturn(ACTOR);

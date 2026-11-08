@@ -6,7 +6,7 @@ import com.ingot.cloud.iam.application.authorization.extension.ResourceFieldMeta
 import com.ingot.cloud.iam.application.policy.FieldAccessEvaluator;
 import com.ingot.cloud.iam.application.policy.FieldDefaultReference;
 import com.ingot.cloud.iam.application.policy.FieldPolicySnapshot;
-import com.ingot.cloud.iam.application.policy.PolicyWriteRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.FieldPolicyRepository;
 import com.ingot.cloud.iam.configuration.FieldPolicyCacheConfiguration;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.FieldOperations;
@@ -47,7 +47,7 @@ class FieldCacheAndBatchTest {
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new Configuration(), "field-test"), IamMemberDepartmentEntity.class);
         var memberships = mock(IamMemberDepartmentMapper.class);
         when(memberships.selectList(any())).thenReturn(List.of());
-        var evaluator = new FieldAccessEvaluator(mock(PolicyWriteRepository.class), memberships, mock(DepartmentClosure.class),
+        var evaluator = com.ingot.cloud.iam.fixture.FieldAccessEvaluatorFixture.create(mock(FieldPolicyRepository.class), memberships, mock(DepartmentClosure.class),
                 FieldTestSupport.noCache(), FieldTestSupport.projection(), FieldTestSupport.metadata(), FieldTestSupport.noCache());
         var full = new FieldAccess(FieldVisibility.FULL, true);
         var snapshot = new FieldPolicySnapshot(10, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, Map.of("phone", full), Map.of("phone", full),

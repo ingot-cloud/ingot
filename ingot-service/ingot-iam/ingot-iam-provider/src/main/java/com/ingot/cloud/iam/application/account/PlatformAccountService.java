@@ -22,7 +22,7 @@ import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.AccountCredentialRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.AccountQueryRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.AccountWriteRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamAccountEntity;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
 import com.ingot.cloud.iam.application.audit.AuthorizationAuditWriter;
@@ -76,7 +76,7 @@ public class PlatformAccountService {
     private final AccountQueryRepository accounts;
     private final AccountWriteRepository writes;
     private final AccountCredentialRepository credentials;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final AuthorizationAuditWriter audits;
     private final RegisterUserUseCase registerUser;
     private final ManageAccountStatusUseCase statuses;
@@ -112,7 +112,7 @@ public class PlatformAccountService {
      */
     public PlatformAccountService(IamAccess access, ResourceScopeAccessService scopes, ObjectCapabilities capabilities,
                           AccountQueryRepository accounts, AccountWriteRepository writes,
-                          AccountCredentialRepository credentials, MemberQueryRepository members,
+                          AccountCredentialRepository credentials, MemberRepository members,
                           AuthorizationAuditWriter audits, RegisterUserUseCase registerUser,
                           ManageAccountStatusUseCase statuses, LockAccountUseCase locks,
                           UnlockAccountUseCase unlocks, ChangePasswordUseCase passwords,

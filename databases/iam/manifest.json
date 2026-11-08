@@ -12,5 +12,10 @@
   ],
   "bootstrap": "databases/iam/006_bootstrap.sql",
   "initialAccounts": "databases/iam/007_initial_platform_account.sql",
-  "bundle": "databases/ingot_iam.sql"
+  "bundle": "databases/ingot_iam.sql",
+  "legacySchemas": [
+    "databases/iam/legacy/001_identity_migration.sql",
+    "databases/iam/legacy/002_tenant_live_authorization.sql",
+    "databases/iam/legacy/003_tenant_plan_record.sql"
+  ]
 }

@@ -31,7 +31,7 @@ import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAcc
 import com.ingot.cloud.iam.application.authorization.extension.RoleFieldPermissionService;
 import com.ingot.cloud.iam.application.group.GroupService;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.GroupRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess;
 import com.ingot.cloud.iam.application.policy.FieldAccessEvaluator;
@@ -60,11 +60,11 @@ import static org.mockito.Mockito.*;
  */
 class PlatformMemberContactsTest {
     private JdbcTemplate jdbc;
-    private MemberQueryService service;
+    private MemberFacade service;
     private RoleFieldPermissionService policies;
     private AuthorizationAuditWriter audits;
     private PlatformAssignmentFacade assignments;
-    private MemberQueryRepository members;
+    private MemberRepository members;
     private ResourceScopeAccessService scopes;
 
     @BeforeEach
@@ -92,7 +92,7 @@ class PlatformMemberContactsTest {
         assignments = mock(PlatformAssignmentFacade.class);
         scopes = mock(ResourceScopeAccessService.class);
         members = spy(IamMybatisTestAccess.memberQueries(source));
-        service = new MemberQueryService(access, scopes, capabilities, fields, audits,
+        service = com.ingot.cloud.iam.fixture.MemberFacadeFixture.create(access, scopes, capabilities, fields, audits,
                 members, mock(GroupRepository.class), assignments,
                 mock(GroupService.class), new DataSourceTransactionManager(source), policies, com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.projection(), com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess.images(), new com.ingot.framework.authorization.field.FieldWriteExecutor(new com.ingot.framework.authorization.field.FieldPolicyProvider() {
                     public com.ingot.framework.commons.model.iam.extension.AuthorizationDecision read(

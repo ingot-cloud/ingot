@@ -20,12 +20,12 @@ import com.ingot.cloud.iam.infrastructure.persistence.DepartmentLeaderRepository
 import com.ingot.cloud.iam.infrastructure.persistence.EntitlementRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.GroupRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.MemberLifecycleRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamAccountEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamDelegationGrantEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamRoleAssignmentEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantMemberEntity;
-import com.ingot.cloud.iam.application.policy.PolicyWriteRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.FieldPolicyRepository;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
 import com.ingot.cloud.iam.application.audit.AuthorizationAuditWriter;
 import com.ingot.cloud.iam.domain.shared.IamIds;
@@ -64,7 +64,7 @@ public class MemberRejoin {
     private final IamAccess access;
     private final ResourceScopeAccessService scopes;
     private final PlatformAssignmentFacade authorizationLocks;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final MemberLifecycleRepository lifecycle;
     private final AccountQueryRepository accounts;
     private final AssignmentRepository assignments;
@@ -72,7 +72,7 @@ public class MemberRejoin {
     private final GroupRepository groups;
     private final DepartmentLeaderRepository leaders;
     private final EntitlementRepository entitlements;
-    private final PolicyWriteRepository policies;
+    private final FieldPolicyRepository policies;
     private final FieldProjectionEngine projection;
     private final FieldWriteExecutor fieldWrites;
     private final AuthorizationAuditWriter audits;
@@ -105,9 +105,9 @@ public class MemberRejoin {
      * @param transactionManager 同一数据源事务
      */
     public MemberRejoin(IamAccess access, ResourceScopeAccessService scopes, PlatformAssignmentFacade authorizationLocks,
-            MemberQueryRepository members, MemberLifecycleRepository lifecycle, AccountQueryRepository accounts,
+            MemberRepository members, MemberLifecycleRepository lifecycle, AccountQueryRepository accounts,
             AssignmentRepository assignments, DelegationRepository delegations, GroupRepository groups,
-            DepartmentLeaderRepository leaders, EntitlementRepository entitlements, PolicyWriteRepository policies,
+            DepartmentLeaderRepository leaders, EntitlementRepository entitlements, FieldPolicyRepository policies,
             FieldProjectionEngine projection, FieldWriteExecutor fieldWrites, AuthorizationAuditWriter audits,
             AuthorizationChangeNotifier changes, IamImageBinding images, PlatformTransactionManager transactionManager) {
         this.access = access;

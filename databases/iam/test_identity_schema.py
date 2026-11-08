@@ -14,7 +14,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from tools.iam.database_sources import schema_files
+from tools.iam.database_sources import schema_files, legacy_schema_files
 
 
 IMAGE = "mysql:8.4"
@@ -320,23 +320,25 @@ class IdentitySchemaTest(unittest.TestCase):
         self.sql("INSERT INTO iam_delegation_role(delegation_id,tenant_id,role_id,role_kind,role_tenant_key) VALUES(50,20,2,'TENANT_CUSTOM',10)", error=3819)
 
     def test_policy_default_and_selector_domains_are_enforced(self):
-        self.sql("INSERT INTO iam_default_policy_revision VALUES (1, 'DIRECTORY', 1, '{}')", error=3819)
-        self.sql("INSERT INTO iam_default_policy_revision VALUES (2, 'FIELD', 1, '{}')")
+        self.sql("INSERT INTO iam_default_policy_revision (id, resource_id, kind, revision, definition) VALUES (1, 2, 'DIRECTORY', 1, '{}')", error=3819)
+        self.sql("INSERT INTO iam_default_policy_revision (id, resource_id, kind, revision, definition) VALUES (2, 2, 'FIELD', 1, '{}')")
         self.sql("INSERT INTO iam_policy_selector VALUES (1, 10), (2, 20)")
         self.assertEqual('0', self.sql("""
             SELECT COUNT(*) FROM information_schema.tables
             WHERE table_schema = DATABASE() AND table_name IN ('iam_directory_policy', 'iam_directory_rule')
         """))
         self.sql("INSERT INTO iam_policy_selector_member VALUES (10, 1, 201)", error=1452)
-        self.sql("INSERT INTO iam_field_policy (tenant_id, default_revision_id) VALUES (10, 2)")
-        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 'DIRECTORY', 'phone', 1, '[]', '{}', 'MASKED')", error=3819)
-        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 'MANAGEMENT', 'phone', 1, '[]', '{}', 'MASKED')")
+        self.sql("INSERT INTO iam_field_policy (tenant_id, resource_id, default_revision_id) VALUES (10, 1, 2)", error=1452)
+        self.sql("INSERT INTO iam_field_policy (tenant_id, resource_id, default_revision_id) VALUES (10, 2, 2)")
+        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 1, 'phone', 1, '[]', '{}', 'MASKED')", error=1452)
+        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 2, 'phone', 2, '[]', '{}', 'MASKED')", error=1452)
+        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 2, 'phone', 1, '[]', '{}', 'MASKED')")
 
     def test_field_visibility_and_operations_are_independent(self):
-        self.sql("INSERT INTO iam_default_policy_revision VALUES (2, 'FIELD', 1, '{}')")
+        self.sql("INSERT INTO iam_default_policy_revision (id, resource_id, kind, revision, definition) VALUES (2, 2, 'FIELD', 1, '{}')")
         self.sql("INSERT INTO iam_policy_selector VALUES (1, 10)")
-        self.sql("INSERT INTO iam_field_policy (tenant_id, default_revision_id) VALUES (10, 2)")
-        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 'MANAGEMENT', 'phone', 1, '[]', '{}', 'MASKED')")
+        self.sql("INSERT INTO iam_field_policy (tenant_id, resource_id, default_revision_id) VALUES (10, 2, 2)")
+        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 2, 'phone', 1, '[]', '{}', 'MASKED')")
         self.assertEqual('MASKED', self.sql("SELECT visibility FROM iam_field_rule WHERE id=1"))
         self.assertEqual('0', self.sql("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='iam_field_rule' AND column_name='editable'"))
         self.sql("UPDATE iam_field_policy SET operation_rules='{}' WHERE tenant_id=10", error=3819)
@@ -366,6 +368,8 @@ class IdentitySchemaTest(unittest.TestCase):
             "SELECT phone,email FROM iam_platform_member WHERE id=1001"))
 
     def test_migration_batch_requires_verification_metadata_and_explicit_resolution(self):
+        for source in legacy_schema_files():
+            self.sql(source.read_text())
         self.sql("INSERT INTO iam_migration_batch (id, source_fingerprint, target_identifier, rules_version) VALUES ('batch', REPEAT('a', 64), 'isolated-fixture', '1')")
         self.sql("UPDATE iam_migration_batch SET status = 'VERIFIED' WHERE id = 'batch'", error=3819)
         self.sql("INSERT INTO iam_migration_mapping VALUES ('batch', 'sys_user', '1', 'Account', '1', 'KEEP_MAPPED', 'fixture', 'explicit mapping')")

@@ -10,7 +10,6 @@ SET time_zone = '+00:00';
 --   ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql
 -- 表可以部署在 IAM 库，但持久化职责仍归框架适配器，IAM 不得新增同表实体或 Mapper。
 
-
 CREATE TABLE `biz_leaf_alloc` (
   `biz_tag` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT 'Leaf业务号段名称，不同业务独立分配',
   `max_id` bigint NOT NULL DEFAULT '1' COMMENT '已分配号段的最大ID高水位，更新必须保持发号原子性',
@@ -110,17 +109,6 @@ CREATE TABLE `sys_user_social` (
   PRIMARY KEY (`id`),
   KEY `idx_unique_type_user` (`unique_id`,`type`,`user_id`) USING BTREE COMMENT '渠道用户索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='全局账号社交身份绑定';
-
-CREATE TABLE `sys_tenant_plan_record` (
-  `id` bigint NOT NULL COMMENT '历史组织套餐购买记录记录标识',
-  `tenant_id` bigint NOT NULL COMMENT '租户ID',
-  `plan_id` int NOT NULL COMMENT '历史套餐标识，保留INT库存类型；不自动关联当前套餐目录',
-  `type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '历史套餐类别：0长期、1短期',
-  `duration` int NOT NULL COMMENT '历史套餐购买时长数值，与unit共同表示有效时长',
-  `unit` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '历史套餐时长单位：1月、2年',
-  `created_at` datetime NOT NULL COMMENT '记录创建时间点，UTC',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='历史组织套餐购买记录';
 
 CREATE TABLE IF NOT EXISTS asset_upload (
     id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '一次性上传凭证 ID',

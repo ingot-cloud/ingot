@@ -5,7 +5,7 @@ import io
 import re
 import unittest
 
-from database_sources import CREATE_TABLE, ROOT, initialization_files, read_source, render_bundle, schema_files, sources
+from database_sources import CREATE_TABLE, ROOT, initialization_files, legacy_schema_files, read_source, render_bundle, schema_files, sources
 from generate_bootstrap import build
 
 
@@ -32,7 +32,7 @@ class DatabaseSourcesTest(unittest.TestCase):
     def test_bundle_resets_each_manifest_table_before_creating_and_checks_seed_foreign_keys(self):
         bundle = render_bundle()
         tables = CREATE_TABLE.findall(bundle)
-        self.assertEqual(65, len(tables))
+        self.assertEqual(59, len(tables))
         self.assertEqual(len(tables), len(set(tables)))
         self.assertNotIn('iam_resource_field_policy', tables)
         self.assertIn('iam_field_policy', tables)
@@ -60,6 +60,29 @@ class DatabaseSourcesTest(unittest.TestCase):
         self.assertTrue(set(inserted[:-3]).isdisjoint(inserted[-3:]))
         self.assertTrue(set(inserted).isdisjoint({'iam_tenant', 'iam_tenant_member',
                                                'iam_authorization_audit', 'security_event', 'password_history'}))
+
+
+    def test_legacy_tables_are_explicitly_opt_in_and_never_reset_by_the_bundle(self):
+        legacy = {table for path in legacy_schema_files() for table in CREATE_TABLE.findall(read_source(path))}
+        self.assertEqual({'iam_migration_batch', 'iam_migration_mapping', 'iam_migration_issue',
+                          'iam_live_authorization_batch', 'iam_live_authorization_mapping',
+                          'sys_tenant_plan_record'}, legacy)
+        self.assertTrue(set(initialization_files()).isdisjoint(legacy_schema_files()))
+        bundle = render_bundle()
+        self.assertTrue(legacy.isdisjoint(CREATE_TABLE.findall(bundle)))
+        drops = re.findall(r'DROP TABLE IF EXISTS `([a-z_]+)`', bundle)
+        self.assertTrue(legacy.isdisjoint(drops))
+        for path in legacy_schema_files():
+            self.assertNotRegex(read_source(path), r'(?mi)^\s*(?:USE|INSERT|DROP|ALTER|CREATE DATABASE)\b')
+
+    def test_runtime_foreign_keys_only_reference_runtime_tables(self):
+        from schema_model import tables
+        definitions = tables()
+        names = {table.name for table in definitions}
+        for table in definitions:
+            for constraint in table.constraints:
+                for target in re.findall(r'REFERENCES\s+`?([a-z_]+)', constraint, re.I):
+                    self.assertIn(target, names, table.name + ' -> ' + target)
 
 
 if __name__ == '__main__':

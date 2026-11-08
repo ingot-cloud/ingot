@@ -8,7 +8,7 @@ import com.ingot.cloud.iam.domain.authorization.ObjectScope;
 import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAccessService;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.GroupRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.TenantRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantEntity;
 import com.ingot.cloud.iam.application.session.SessionService;
@@ -44,7 +44,7 @@ class TenantWorkbenchServiceTest {
     private final SessionService sessions = mock(SessionService.class);
     private final ResourceScopeAccessService scopes = mock(ResourceScopeAccessService.class);
     private final TenantRepository tenants = mock(TenantRepository.class);
-    private final MemberQueryRepository members = mock(MemberQueryRepository.class);
+    private final MemberRepository members = mock(MemberRepository.class);
     private final DepartmentQueryRepository departments = mock(DepartmentQueryRepository.class);
     private final GroupRepository groups = mock(GroupRepository.class);
     private TenantWorkbenchService service;

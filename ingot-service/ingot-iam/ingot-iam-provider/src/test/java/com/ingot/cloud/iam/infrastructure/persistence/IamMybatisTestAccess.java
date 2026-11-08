@@ -133,11 +133,9 @@ public final class IamMybatisTestAccess {
     }
 
     /** 在当前夹具数据源上建立成员查询与写入 Repository。 */
-    public static MemberQueryRepository memberQueries(DataSource source) {
-        return new MemberQueryRepository(mapper(source, IamAccountMapper.class),
-                mapper(source, IamPlatformMemberMapper.class), mapper(source, IamTenantMemberMapper.class),
-                mapper(source, IamDepartmentMapper.class), mapper(source, IamMemberDepartmentMapper.class),
-                new MemberDepartmentWriteRepository(mapper(source, IamMemberDepartmentMapper.class)));
+    public static MemberRepository memberQueries(DataSource source) {
+        var queries = new MemberQueryRepository(mapper(source, IamAccountMapper.class), mapper(source, IamPlatformMemberMapper.class), mapper(source, IamTenantMemberMapper.class), mapper(source, IamDepartmentMapper.class), mapper(source, IamMemberDepartmentMapper.class));
+        return new MemberRepository(queries, new MemberWriteRepository(mapper(source, IamPlatformMemberMapper.class), mapper(source, IamTenantMemberMapper.class), mapper(source, IamDepartmentMapper.class), new MemberDepartmentWriteRepository(mapper(source, IamMemberDepartmentMapper.class)), queries));
     }
 
     /** 在当前夹具数据源上建立冷启动平台身份 Repository。 */
@@ -254,13 +252,13 @@ public final class IamMybatisTestAccess {
 
     /** 在当前夹具数据源上建立字段策略求值器。 */
     public static FieldAccessEvaluator fields(DataSource source) {
-        return new FieldAccessEvaluator(policies(source), mapper(source, IamMemberDepartmentMapper.class),
+        return com.ingot.cloud.iam.fixture.FieldAccessEvaluatorFixture.create(policies(source), mapper(source, IamMemberDepartmentMapper.class),
                 new DepartmentClosure(mapper(source, IamDepartmentMapper.class)), com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache(), com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.projection(), com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.metadata(), com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache());
     }
 
     /** 在当前夹具数据源上建立字段策略 Repository。 */
-    public static com.ingot.cloud.iam.application.policy.PolicyWriteRepository policies(DataSource source) {
-        return new com.ingot.cloud.iam.application.policy.PolicyWriteRepository(mapper(source, IamFieldPolicyMapper.class),
+    public static com.ingot.cloud.iam.infrastructure.persistence.FieldPolicyRepository policies(DataSource source) {
+        return new com.ingot.cloud.iam.infrastructure.persistence.FieldPolicyRepository(mapper(source, IamFieldPolicyMapper.class),
                 mapper(source, IamFieldRuleMapper.class), mapper(source, IamPolicySelectorMapper.class),
                 mapper(source, IamPolicySelectorMemberMapper.class),
                 mapper(source, IamPolicySelectorDepartmentMapper.class), mapper(source, IamTenantMemberMapper.class),
@@ -365,14 +363,13 @@ public final class IamMybatisTestAccess {
 
     /** 在当前夹具数据源上建立目录 Repository。 */
     public static CatalogRepository catalogs(DataSource source) {
-        return new CatalogRepository(mapper(source, IamApplicationMapper.class),
-                mapper(source, IamResourceMapper.class), mapper(source, IamActionMapper.class),
-                mapper(source, IamMenuMapper.class), mapper(source, IamMenuActionMapper.class),
-                mapper(source, IamPlanMapper.class), mapper(source, IamPlanApplicationMapper.class),
-                mapper(source, IamTenantAppEntitlementMapper.class), mapper(source, IamRoleGrantMapper.class),
-                mapper(source, IamRoleDeltaMapper.class), mapper(source, IamAppAudienceMapper.class),
-                mapper(source, IamAudienceMemberMapper.class), mapper(source, IamAudienceGroupMapper.class),
-                mapper(source, IamAudienceDepartmentMapper.class));
+        return new CatalogRepository(
+                new CatalogApplicationRepository(mapper(source, IamApplicationMapper.class), mapper(source, IamTenantAppEntitlementMapper.class)),
+                new CatalogResourceRepository(mapper(source, IamResourceMapper.class)),
+                new CatalogActionRepository(mapper(source, IamActionMapper.class), mapper(source, IamMenuActionMapper.class), mapper(source, IamRoleGrantMapper.class), mapper(source, IamRoleDeltaMapper.class)),
+                new CatalogMenuRepository(mapper(source, IamMenuMapper.class), mapper(source, IamMenuActionMapper.class)),
+                new CatalogPlanRepository(mapper(source, IamPlanMapper.class), mapper(source, IamPlanApplicationMapper.class)),
+                new CatalogCleanupRepository(mapper(source, IamApplicationMapper.class), mapper(source, IamResourceMapper.class), mapper(source, IamActionMapper.class), mapper(source, IamMenuMapper.class), mapper(source, IamMenuActionMapper.class), mapper(source, IamPlanApplicationMapper.class), mapper(source, IamTenantAppEntitlementMapper.class), mapper(source, IamRoleGrantMapper.class), mapper(source, IamRoleDeltaMapper.class), mapper(source, IamAppAudienceMapper.class), mapper(source, IamAudienceMemberMapper.class), mapper(source, IamAudienceGroupMapper.class), mapper(source, IamAudienceDepartmentMapper.class)));
     }
 
     /** 取得夹具的真实 Mapper；不接受任意 SQL。 */

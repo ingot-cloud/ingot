@@ -258,7 +258,7 @@ class RoleWorkspaceMySqlHttpTest {
         var localFields = new com.ingot.cloud.iam.application.authorization.extension.LocalResourceAuthorizationClient(currentIdentity,
                 fieldEvaluator, fieldRegistry, fieldCompiler, roleFields, candidates, mock(com.ingot.cloud.iam.application.policy.FieldAccessEvaluator.class),
                 mock(com.ingot.cloud.iam.application.authorization.extension.ResourceFieldMetadata.class), mock(com.ingot.cloud.iam.infrastructure.persistence.ObjectScopeCompiler.class));
-        var memberQueries = new com.ingot.cloud.iam.application.organization.MemberQueryService(access, resources,
+        var memberQueries = com.ingot.cloud.iam.fixture.MemberFacadeFixture.create(access, resources,
                 new ObjectCapabilities(fieldEvaluator, resources), projector,
                 mock(AuthorizationAuditWriter.class), IamMybatisTestAccess.memberQueries(source), mock(GroupRepository.class),
                 presenter, mock(com.ingot.cloud.iam.application.group.GroupService.class),

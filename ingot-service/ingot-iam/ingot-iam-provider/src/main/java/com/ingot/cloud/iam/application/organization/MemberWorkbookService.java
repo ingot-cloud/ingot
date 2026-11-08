@@ -93,7 +93,7 @@ public class MemberWorkbookService {
     };
     private final IamAccess access;
     private final ResourceScopeAccessService scopes;
-    private final MemberQueryService members;
+    private final MemberFacade members;
     private final MemberCommandService commands;
     private final TenantMemberOnboarding onboarding;
     private final MemberWorkbookRepository workbooks;
@@ -124,7 +124,7 @@ public class MemberWorkbookService {
      * @param executors 应用异步执行器
      */
     @Autowired
-    public MemberWorkbookService(IamAccess access, ResourceScopeAccessService scopes, MemberQueryService members,
+    public MemberWorkbookService(IamAccess access, ResourceScopeAccessService scopes, MemberFacade members,
             MemberCommandService commands, TenantMemberOnboarding onboarding, MemberWorkbookRepository workbooks,
             DepartmentQueryRepository departments, TenantRepository tenants, AuthorizationAuditWriter audits,
             DownloadCenter downloads, PlatformTransactionManager transactionManager,
@@ -150,7 +150,7 @@ public class MemberWorkbookService {
      * @param executor 导入任务执行器
      * @param snapshotPageSize 快照遍历页大小
      */
-    public MemberWorkbookService(IamAccess access, ResourceScopeAccessService scopes, MemberQueryService members,
+    public MemberWorkbookService(IamAccess access, ResourceScopeAccessService scopes, MemberFacade members,
             MemberCommandService commands, TenantMemberOnboarding onboarding, MemberWorkbookRepository workbooks,
             DepartmentQueryRepository departments, TenantRepository tenants, AuthorizationAuditWriter audits,
             DownloadCenter downloads, PlatformTransactionManager transactionManager, Executor executor,

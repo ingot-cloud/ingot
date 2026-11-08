@@ -99,8 +99,11 @@ def preflight(query, snapshot, check_source=True):
     """只读核对所有目标表；调用方不得在核对完成前执行任何 ALTER。"""
     if check_source and snapshot['source_digest'] != source_digest():
         raise ValueError('权威结构与预检快照不一致')
-    if set(snapshot['tables']) != {table.name for table in tables()}:
-        raise ValueError('预检快照未覆盖全部 manifest 表')
+    # 最新结构覆盖当前清单；历史升级必须覆盖固定SQL的全部ALTER目标，不能漏表。
+    expected_tables = ({table.name for table in tables()} if check_source else
+                       set(re.findall(r'(?mi)^ALTER TABLE\s+`?([a-z_]+)', MIGRATION.read_text())))
+    if not expected_tables or set(snapshot['tables']) != expected_tables:
+        raise ValueError('预检快照未覆盖全部 ' + ('manifest 表' if check_source else '固定历史升级目标'))
     try:
         actual = read_definitions(query, snapshot['tables'])
     except (subprocess.CalledProcessError, RuntimeError) as error:

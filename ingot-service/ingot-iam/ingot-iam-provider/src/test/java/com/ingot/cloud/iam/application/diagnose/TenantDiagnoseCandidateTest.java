@@ -15,7 +15,7 @@ import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAcc
 import com.ingot.cloud.iam.domain.authorization.ScopeClause;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantAdministrationMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantScopeCandidateMapper;
@@ -57,7 +57,7 @@ class TenantDiagnoseCandidateTest {
     private final IamAccess access = mock(IamAccess.class);
     private final AuthorizationEvaluator evaluator = mock(AuthorizationEvaluator.class);
     private final ResourceScopeAccessService scopes = mock(ResourceScopeAccessService.class);
-    private final MemberQueryRepository members = mock(MemberQueryRepository.class);
+    private final MemberRepository members = mock(MemberRepository.class);
     private final DepartmentQueryRepository departments = mock(DepartmentQueryRepository.class);
     private final TenantAdministrationMapper live = mock(TenantAdministrationMapper.class);
     private final TenantScopeCandidateMapper candidates = mock(TenantScopeCandidateMapper.class);

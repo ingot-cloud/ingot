@@ -9,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(ROOT))
 sys.path.insert(0,str(Path(__file__).parent))
 from databases.iam import test_identity_schema as schema
+from tools.iam.database_sources import legacy_schema_files
 from migrate import preflight,forward,reverse,digest,verify
 from export import export
 from tools.iam.tenant_live.legacy_fixture import read_legacy_schema
@@ -20,6 +21,8 @@ class MigrationSqlTest(unittest.TestCase):
     def stop_container(cls):schema.IdentitySchemaTest.stop_container.__func__(cls)
     def setUp(self):
         schema.IdentitySchemaTest.setUp(self)
+        for source in legacy_schema_files():
+            self.sql(source.read_text())
         self.sql("UPDATE iam_resource SET scope_capabilities='[\"ALL\",\"SELF\"]'")
     sql=schema.IdentitySchemaTest.sql
     def source(self):return export(['docker','exec','--interactive',self.container,'mysql','--user=root'],self.database)
@@ -83,20 +86,37 @@ class MigrationSqlTest(unittest.TestCase):
         self.sql(forward(report),error=1644)
         self.assertEqual('0',self.sql("SELECT COUNT(*) FROM iam_live_authorization_batch WHERE batch_id='stale'"))
 
-    def test_incremental_structure_matches_new_database(self):
+    def test_incremental_structure_matches_canonical_targets_and_preserves_other_tables(self):
+        # 021/022只负责这些目标；后续字段策略、工作簿和接收者主键不属于这次历史升级。
+        modified = {'iam_role_definition', 'iam_role_revision', 'iam_role_parameter', 'iam_role_assignment'}
+        created = {'iam_delegation_role', 'iam_delegation_resource_ceiling',
+                   'iam_live_authorization_batch', 'iam_live_authorization_mapping'}
+        targets = modified | created
+        target_filter = ','.join("'" + name + "'" for name in sorted(targets))
+        columns = ("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>'),"
+                   "extra,COALESCE(collation_name,'') FROM information_schema.columns "
+                   f"WHERE table_schema=DATABASE() AND table_name IN ({target_filter}) ORDER BY table_name,column_name")
+        indexes = ("SELECT table_name,index_name,non_unique,seq_in_index,column_name FROM information_schema.statistics "
+                   f"WHERE table_schema=DATABASE() AND table_name IN ({target_filter}) ORDER BY table_name,index_name,seq_in_index")
         canonical=self.database
-        original=self.sql("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>'),extra,COALESCE(collation_name,'') FROM information_schema.columns WHERE table_schema=DATABASE() ORDER BY table_name,column_name")
+        expected_columns, expected_indexes = self.sql(columns), self.sql(indexes)
         self.database='iam_incremental_'+canonical.removeprefix('iam_case_')
         self.sql(f"CREATE DATABASE `{self.database}`",database=False)
         for path in schema.schema_files():
             source=read_legacy_schema(path)
             self.sql(source)
+        before_tables = set(self.sql('SHOW TABLES').splitlines())
+        self.assertTrue(modified <= before_tables)
+        self.assertTrue(created.isdisjoint(before_tables))
+        untouched = {table: self.sql(f'SHOW CREATE TABLE `{table}`')
+                     for table in sorted(before_tables - modified)}
         self.sql((ROOT/'databases/iam/migrations/021_tenant_live_authorization.sql').read_text())
         self.sql((ROOT/'databases/iam/migrations/022_tenant_live_authorization_constraints.sql').read_text())
-        actual=self.sql("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>'),extra,COALESCE(collation_name,'') FROM information_schema.columns WHERE table_schema=DATABASE() ORDER BY table_name,column_name")
-        self.assertEqual(original,actual)
-        query="SELECT table_name,index_name,non_unique,seq_in_index,column_name FROM information_schema.statistics WHERE table_schema=DATABASE() ORDER BY table_name,index_name,seq_in_index"
-        actual=self.sql(query);self.database=canonical;self.assertEqual(self.sql(query),actual)
+        self.assertEqual(before_tables | created, set(self.sql('SHOW TABLES').splitlines()))
+        self.assertEqual(expected_columns, self.sql(columns))
+        self.assertEqual(expected_indexes, self.sql(indexes))
+        for table, definition in untouched.items():
+            self.assertEqual(definition, self.sql(f'SHOW CREATE TABLE `{table}`'), table)
     def test_reverse_rejects_writes_since_export_and_can_resume(self):
         self.sql("ALTER TABLE iam_role_assignment DROP CHECK ck_iam_assignment_current_role")
         self.sql("INSERT INTO iam_role_definition(id,domain,kind,code,name) VALUES(99,'TENANT','SYSTEM','tenant-governance','旧治理');INSERT INTO iam_role_revision(id,role_id,kind,revision,metadata_overrides) VALUES(99,99,'SYSTEM',1,'{}')")

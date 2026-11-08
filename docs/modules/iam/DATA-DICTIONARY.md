@@ -2,7 +2,7 @@
 
 <!-- 自动生成：python3 tools/iam/generate_database.py；说明在权威 DDL 维护。 -->
 
-manifest 管理 65 张表、540 个字段。
+manifest 管理 59 张表、501 个字段。
 
 ## 阅读约定
 
@@ -1228,6 +1228,9 @@ CONSTRAINT ck_iam_member_export_ids CHECK (member_ids IS NULL OR JSON_TYPE(membe
 | `tenant_version` | ``tenant_version VARCHAR(32) COLLATE utf8mb4_bin NOT NULL`` | 登记任务时的组织版本，取iam_tenant.version |
 | `member_ids` | ``member_ids JSON NULL`` | 导出范围成员ID的JSON数组；导入或尚未快照时可空 |
 | `result` | ``result JSON NULL`` | 成功失败计数与逐行原因，不含初始密码明文 |
+| `workbook` | ``workbook MEDIUMBLOB NULL`` | 导出或上传校验后的xlsx工作簿 |
+| `error_report` | ``error_report MEDIUMBLOB NULL`` | 逐行失败报告xlsx；无失败时为空 |
+| `password_file` | ``password_file MEDIUMBLOB NULL`` | 新账号一次性初始密码xlsx；下载后清除 |
 | `password_downloaded` | ``password_downloaded TINYINT(1) NOT NULL DEFAULT 0`` | 初始密码是否已一次性下载 |
 | `failure_reason` | ``failure_reason VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL`` | 整份任务失败的安全原因，不包含凭证及敏感原值 |
 | `created_at` | ``created_at DATETIME(6) NOT NULL`` | 记录创建时间点，UTC |
@@ -1237,9 +1240,6 @@ CONSTRAINT ck_iam_member_export_ids CHECK (member_ids IS NULL OR JSON_TYPE(membe
 约束与索引：
 
 ```sql
-workbook MEDIUMBLOB NULL COMMENT '导出或上传校验后的xlsx工作簿'
-error_report MEDIUMBLOB NULL COMMENT '逐行失败报告xlsx；无失败时为空'
-password_file MEDIUMBLOB NULL COMMENT '新账号一次性初始密码xlsx；下载后清除'
 PRIMARY KEY (id)
 KEY idx_iam_member_workbook_actor (tenant_id, actor_member_id, created_at)
 KEY idx_iam_member_workbook_status (tenant_id, status, expires_at)
@@ -1362,85 +1362,6 @@ KEY idx_iam_audit_delivery (delivered_at, id)
 CONSTRAINT ck_iam_audit_context CHECK ((domain = 'PLATFORM' AND tenant_id IS NULL) OR (domain = 'TENANT' AND tenant_id IS NOT NULL))
 ```
 
-## iam_migration_batch
-
-历史身份迁移批次及验收状态
-
-权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
-
-| 字段 | 定义 | 说明 |
-|---|---|---|
-| `id` | ``id VARCHAR(64) COLLATE utf8mb4_bin NOT NULL`` | 历史身份迁移批次及验收状态记录标识 |
-| `source_fingerprint` | ``source_fingerprint CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 源数据结构或内容指纹，用于识别迁移输入 |
-| `target_identifier` | ``target_identifier VARCHAR(128) COLLATE utf8mb4_bin NOT NULL`` | 明确选择的迁移目标标识，防止误用目标 |
-| `rules_version` | ``rules_version VARCHAR(64) COLLATE utf8mb4_bin NOT NULL`` | 本批次采用的迁移规则版本 |
-| `status` | ``status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'NEW'`` | 当前业务记录状态，合法值由本表CHECK及对应业务枚举限定；取值NEW,PREFLIGHTED,IMPORTED,VERIFIED,FAILED |
-| `created_at` | ``created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)`` | 记录创建时间点，UTC |
-| `verified_at` | ``verified_at DATETIME(6) NULL`` | 人工验收完成时间点，UTC；仅VERIFIED状态必填 |
-
-约束与索引：
-
-```sql
-PRIMARY KEY (id)
-CONSTRAINT ck_iam_batch_status CHECK (status IN ('NEW', 'PREFLIGHTED', 'IMPORTED', 'VERIFIED', 'FAILED'))
-CONSTRAINT ck_iam_batch_verified CHECK ((status = 'VERIFIED' AND verified_at IS NOT NULL) OR (status <> 'VERIFIED' AND verified_at IS NULL))
-```
-
-## iam_migration_mapping
-
-历史标识到目标实体的人工处置映射
-
-权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
-
-| 字段 | 定义 | 说明 |
-|---|---|---|
-| `batch_id` | ``batch_id VARCHAR(64) COLLATE utf8mb4_bin NOT NULL`` | 迁移批次标识；引用归属由本表外键及业务事务共同校验 |
-| `source_table` | ``source_table VARCHAR(64) COLLATE utf8mb4_bin NOT NULL`` | 原始来源表名 |
-| `source_id` | ``source_id VARCHAR(128) COLLATE utf8mb4_bin NOT NULL`` | 原始记录标识 |
-| `target_type` | ``target_type VARCHAR(64) COLLATE utf8mb4_bin NOT NULL`` | 审计或迁移目标的业务类型 |
-| `target_id` | ``target_id VARCHAR(128) COLLATE utf8mb4_bin NOT NULL`` | 目标业务标识，具体类型由target_type或entity_type解释 |
-| `disposition` | ``disposition VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 人工迁移处置：KEEP_MAPPED/NARROW/RECONFIGURE/ARCHIVE/SKIP；取值KEEP_MAPPED,NARROW,RECONFIGURE,ARCHIVE,SKIP |
-| `actor` | ``actor VARCHAR(128) NOT NULL`` | 作出处置的操作者标识 |
-| `reason` | ``reason VARCHAR(1024) NOT NULL`` | 明确的人工处置依据 |
-
-约束与索引：
-
-```sql
-PRIMARY KEY (batch_id, source_table, source_id, target_type, target_id)
-CONSTRAINT fk_iam_mapping_batch FOREIGN KEY (batch_id) REFERENCES iam_migration_batch (id)
-CONSTRAINT ck_iam_mapping_disposition CHECK (disposition IN ('KEEP_MAPPED', 'NARROW', 'RECONFIGURE', 'ARCHIVE', 'SKIP'))
-```
-
-## iam_migration_issue
-
-历史迁移阻塞项及处置记录
-
-权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
-
-| 字段 | 定义 | 说明 |
-|---|---|---|
-| `id` | ``id BIGINT UNSIGNED NOT NULL`` | 历史迁移阻塞项及处置记录记录标识 |
-| `batch_id` | ``batch_id VARCHAR(64) COLLATE utf8mb4_bin NOT NULL`` | 迁移批次标识；引用归属由本表外键及业务事务共同校验 |
-| `issue_code` | ``issue_code VARCHAR(64) COLLATE utf8mb4_bin NOT NULL`` | 迁移问题稳定代码 |
-| `source_table` | ``source_table VARCHAR(64) COLLATE utf8mb4_bin NULL`` | 原始来源表名 |
-| `source_id` | ``source_id VARCHAR(128) COLLATE utf8mb4_bin NULL`` | 原始记录标识 |
-| `safe_description` | ``safe_description VARCHAR(1024) NOT NULL`` | 迁移问题的脱敏说明 |
-| `disposition` | ``disposition VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NULL`` | 人工迁移处置：KEEP_MAPPED/NARROW/RECONFIGURE/ARCHIVE/SKIP；取值KEEP_MAPPED,NARROW,RECONFIGURE,ARCHIVE,SKIP |
-| `resolved_by` | ``resolved_by VARCHAR(128) NULL`` | 问题处置人；未处置时为空 |
-| `resolution_reason` | ``resolution_reason VARCHAR(1024) NULL`` | 问题处置依据；未处置时为空 |
-
-约束与索引：
-
-```sql
-PRIMARY KEY (id)
-KEY idx_iam_issue_unresolved (batch_id, disposition, id)
-CONSTRAINT fk_iam_issue_batch FOREIGN KEY (batch_id) REFERENCES iam_migration_batch (id)
-CONSTRAINT ck_iam_issue_disposition CHECK (disposition IS NULL OR disposition IN ('KEEP_MAPPED', 'NARROW', 'RECONFIGURE', 'ARCHIVE', 'SKIP'))
-CONSTRAINT ck_iam_issue_resolution CHECK (
-        (disposition IS NULL AND resolved_by IS NULL AND resolution_reason IS NULL) OR
-        (disposition IS NOT NULL AND resolved_by IS NOT NULL AND resolution_reason IS NOT NULL))
-```
-
 ## iam_role_application_task
 
 平台角色固定版本批量应用任务
@@ -1507,48 +1428,6 @@ KEY ix_iam_role_application_items(task_id,status,id)
 CONSTRAINT fk_iam_role_application_item_task FOREIGN KEY(task_id) REFERENCES iam_role_application_task(id)
 CONSTRAINT fk_iam_role_application_item_assignment FOREIGN KEY(assignment_id) REFERENCES iam_role_assignment(id)
 CONSTRAINT ck_iam_role_application_item_status CHECK(status IN ('PENDING','BLOCKED','SUCCEEDED','EXCLUDED','REVOKED','EXPIRED','ALREADY_TARGET'))
-```
-
-## iam_live_authorization_batch
-
-租户即时授权模型迁移批次
-
-权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
-
-| 字段 | 定义 | 说明 |
-|---|---|---|
-| `batch_id` | ``batch_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY`` | 迁移批次标识；引用归属由本表外键及业务事务共同校验 |
-| `source_digest` | ``source_digest CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 即时授权迁移前的源内容摘要 |
-| `reverse_digest` | ``reverse_digest CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL`` | 反向迁移核验摘要；尚未生成时为空 |
-| `state` | ``state VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 迁移方向状态：FORWARD正向、REVERSE反向；取值FORWARD,REVERSE |
-| `decisions` | ``decisions JSON NOT NULL DEFAULT (JSON_ARRAY())`` | 已确认迁移处置决策JSON数组 |
-| `applied_at` | ``applied_at DATETIME(6) NULL`` | 迁移应用时间点，UTC；尚未应用时为空 |
-
-约束与索引：
-
-```sql
-CONSTRAINT ck_iam_live_batch_state CHECK(state IN ('FORWARD','REVERSE'))
-```
-
-## iam_live_authorization_mapping
-
-租户即时授权迁移原行快照与目标映射
-
-权威来源：[databases/iam/004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)
-
-| 字段 | 定义 | 说明 |
-|---|---|---|
-| `batch_id` | ``batch_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 迁移批次标识；引用归属由本表外键及业务事务共同校验 |
-| `entity_type` | ``entity_type VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`` | 迁移记录对应的实体类型 |
-| `entity_id` | ``entity_id BIGINT UNSIGNED NOT NULL`` | 迁移记录对应的实体标识 |
-| `source_row` | ``source_row JSON NOT NULL`` | 迁移前原行JSON快照，仅供受控迁移与回退使用 |
-| `target_id` | ``target_id BIGINT UNSIGNED NULL`` | 目标业务标识，具体类型由target_type或entity_type解释 |
-
-约束与索引：
-
-```sql
-PRIMARY KEY(batch_id,entity_type,entity_id)
-FOREIGN KEY(batch_id) REFERENCES iam_live_authorization_batch(batch_id)
 ```
 
 ## biz_leaf_alloc
@@ -1704,28 +1583,6 @@ PRIMARY KEY (`id`) USING BTREE
 ```sql
 PRIMARY KEY (`id`)
 KEY `idx_unique_type_user` (`unique_id`,`type`,`user_id`) USING BTREE COMMENT '渠道用户索引'
-```
-
-## sys_tenant_plan_record
-
-历史组织套餐购买记录
-
-权威来源：[databases/iam/005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)
-
-| 字段 | 定义 | 说明 |
-|---|---|---|
-| `id` | ```id` bigint NOT NULL`` | 历史组织套餐购买记录记录标识 |
-| `tenant_id` | ```tenant_id` bigint NOT NULL`` | 租户ID |
-| `plan_id` | ```plan_id` int NOT NULL`` | 历史套餐标识，保留INT库存类型；不自动关联当前套餐目录 |
-| `type` | ```type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL`` | 历史套餐类别：0长期、1短期 |
-| `duration` | ```duration` int NOT NULL`` | 历史套餐购买时长数值，与unit共同表示有效时长 |
-| `unit` | ```unit` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL`` | 历史套餐时长单位：1月、2年 |
-| `created_at` | ```created_at` datetime NOT NULL`` | 记录创建时间点，UTC |
-
-约束与索引：
-
-```sql
-PRIMARY KEY (`id`)
 ```
 
 ## asset_upload

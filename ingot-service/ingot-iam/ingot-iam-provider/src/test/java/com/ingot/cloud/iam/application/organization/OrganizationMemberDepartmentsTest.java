@@ -4,7 +4,7 @@ import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAcc
 import com.ingot.cloud.iam.domain.authorization.ObjectScope;
 import com.ingot.cloud.iam.domain.authorization.ObjectScopeClause;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.IamAction;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 class OrganizationMemberDepartmentsTest {
     private final IamAccess access = mock(IamAccess.class);
     private final ResourceScopeAccessService scopes = mock(ResourceScopeAccessService.class);
-    private final MemberQueryRepository members = mock(MemberQueryRepository.class);
+    private final MemberRepository members = mock(MemberRepository.class);
     private final DepartmentQueryRepository departments = mock(DepartmentQueryRepository.class);
     private final OrganizationMemberDepartments service = new OrganizationMemberDepartments(access, scopes, members, departments);
     private final ActiveIdentity actor = new ActiveIdentity(new AuthorizationContext(AuthorizationDomain.TENANT,"10","1","101"),"0","0","0");

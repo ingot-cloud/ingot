@@ -1,0 +1,7 @@
+{
+  "fixture": "tools/iam/tenant_live/fixtures/pre_021/006_bootstrap.sql",
+  "sourceCommit": "5865e4cfc2f458a6b258bbcd13d51883e5569845",
+  "sourcePath": "databases/iam/006_bootstrap.sql",
+  "sha256": "54e0f8f869f4877d4d830c71de6c4d80b29f5a1876345f2bc8769f9f902c2fe0",
+  "reason": "Keep the historical pre_021 test schema paired with its original bootstrap; no runtime SQL changes."
+}

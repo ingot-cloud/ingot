@@ -25,7 +25,7 @@ import com.ingot.cloud.iam.application.authorization.extension.RoleFieldPermissi
 import com.ingot.cloud.iam.application.group.GroupService;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.GroupRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.application.policy.FieldAccessEvaluator;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
 import com.ingot.cloud.iam.application.audit.AuthorizationAuditWriter;
@@ -49,17 +49,17 @@ class PlatformMemberFieldContextTest {
     private final IamAccess access = mock(IamAccess.class);
     private final ObjectCapabilities capabilities = mock(ObjectCapabilities.class);
     private final RoleFieldPermissionService fields = mock(RoleFieldPermissionService.class);
-    private final MemberQueryRepository members = mock(MemberQueryRepository.class);
+    private final MemberRepository members = mock(MemberRepository.class);
     private final AuthorizationContext actor = new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1", "1001");
     private final FieldAccess hidden = new FieldAccess(FieldVisibility.HIDDEN, false);
     private final FieldAccess full = new FieldAccess(FieldVisibility.FULL, true);
-    private MemberQueryService service;
+    private MemberFacade service;
 
     @BeforeEach
     void setup() {
         when(access.requireCurrent()).thenReturn(new ActiveIdentity(actor, "0", "0", null));
         authorize(List.of(IamAction.VALUE_PLATFORM_MEMBER_READ, IamAction.VALUE_PLATFORM_MEMBER_CREATE));
-        service = new MemberQueryService(access, mock(ResourceScopeAccessService.class), capabilities,
+        service = com.ingot.cloud.iam.fixture.MemberFacadeFixture.create(access, mock(ResourceScopeAccessService.class), capabilities,
                 mock(FieldAccessEvaluator.class), mock(AuthorizationAuditWriter.class), members, mock(GroupRepository.class),
                 mock(PlatformAssignmentFacade.class), mock(GroupService.class), mock(PlatformTransactionManager.class), fields, com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.projection(), com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess.images(), mock(com.ingot.framework.authorization.field.FieldWriteExecutor.class));
     }

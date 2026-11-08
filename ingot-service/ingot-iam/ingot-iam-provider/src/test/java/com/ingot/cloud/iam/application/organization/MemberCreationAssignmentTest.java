@@ -17,7 +17,7 @@ import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAcc
 import com.ingot.cloud.iam.application.group.GroupService;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.GroupRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.application.policy.FieldAccessEvaluator;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
 import com.ingot.cloud.iam.application.audit.AuthorizationAuditWriter;
@@ -56,7 +56,7 @@ class MemberCreationAssignmentTest {
                 "0", null);
         when(access.require(eq(AuthorizationDomain.PLATFORM), any())).thenReturn(actor);
         when(access.nextId()).thenReturn(1002L);
-        var members = mock(MemberQueryRepository.class);
+        var members = mock(MemberRepository.class);
         when(members.activeAccount(2L)).thenReturn(true);
         doAnswer(invocation -> {
             jdbc.update("INSERT INTO member(id,account_id) VALUES (?,?)", (Object) invocation.getArgument(0),
@@ -77,7 +77,7 @@ class MemberCreationAssignmentTest {
                                     new com.ingot.framework.commons.model.iam.FieldAccess(
                                             com.ingot.framework.commons.model.iam.FieldVisibility.FULL, true)),
                             List.of()));
-        var service = new MemberQueryService(access, mock(ResourceScopeAccessService.class), mock(ObjectCapabilities.class),
+        var service = com.ingot.cloud.iam.fixture.MemberFacadeFixture.create(access, mock(ResourceScopeAccessService.class), mock(ObjectCapabilities.class),
                 mock(FieldAccessEvaluator.class), mock(AuthorizationAuditWriter.class), members, mock(GroupRepository.class),
                 assignments, mock(GroupService.class), new DataSourceTransactionManager(source), platformFields, com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.projection(), com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess.images(), mock(com.ingot.framework.authorization.field.FieldWriteExecutor.class));
         var role = new MemberRoleAssignmentDraft("7", new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "8"), Map.of(),

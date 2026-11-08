@@ -17,7 +17,7 @@ import com.ingot.cloud.iam.application.organization.MemberMutationGuard;
 import com.ingot.cloud.iam.domain.assignment.TenantScopeObjectResource;
 import com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.ObjectScopeSql;
 import com.ingot.cloud.iam.domain.shared.IamIds;
 import com.ingot.framework.commons.error.BizException;
@@ -44,7 +44,7 @@ import org.springframework.stereotype.Service;
 public class ResourceScopeAccessService {
     private final AuthorizationEvaluator evaluator;
     private final ObjectScopeCompiler compiler;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final DepartmentQueryRepository departments;
 
     /**

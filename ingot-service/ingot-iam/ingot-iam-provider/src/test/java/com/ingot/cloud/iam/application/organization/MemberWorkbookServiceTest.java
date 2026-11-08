@@ -84,7 +84,7 @@ class MemberWorkbookServiceTest {
     private JdbcTemplate jdbc;
     private IamAccess access;
     private ResourceScopeAccessService scopes;
-    private MemberQueryService members;
+    private MemberFacade members;
     private MemberCommandService commands;
     private TenantMemberOnboarding onboarding;
     private DepartmentQueryRepository departments;
@@ -120,7 +120,7 @@ class MemberWorkbookServiceTest {
                 """);
         access = mock(IamAccess.class);
         scopes = mock(ResourceScopeAccessService.class);
-        members = mock(MemberQueryService.class);
+        members = mock(MemberFacade.class);
         commands = mock(MemberCommandService.class);
         onboarding = mock(TenantMemberOnboarding.class);
         departments = mock(DepartmentQueryRepository.class);

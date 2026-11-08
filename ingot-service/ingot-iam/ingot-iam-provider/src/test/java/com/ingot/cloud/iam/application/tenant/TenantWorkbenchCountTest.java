@@ -10,7 +10,7 @@ import com.ingot.cloud.iam.domain.authorization.ObjectScopeClause;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.GroupRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.QueryCountingDataSource;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamMemberDepartmentMapper;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @since 1.0.0
  */
 class TenantWorkbenchCountTest {
-    private MemberQueryRepository members;
+    private MemberRepository members;
     private DepartmentQueryRepository departments;
     private GroupRepository groups;
     private QueryCountingDataSource counting;

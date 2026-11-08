@@ -29,7 +29,7 @@ class DevPrepareSqlTest(unittest.TestCase):
         self.sql(f'CREATE DATABASE `{self.database}`', database=False)
         for path in schema.schema_files():
             self.sql(read_legacy_schema(path))
-        self.sql((ROOT / 'databases/iam/006_bootstrap.sql').read_text())
+        self.sql(read_legacy_schema(ROOT / 'databases/iam/006_bootstrap.sql'))
         # Reproduce the old catalog without depending on the mutable repository HEAD.
         self.sql("UPDATE iam_action SET code='iam-tenant:role:publish' WHERE code='iam-tenant:role:update';"
                  "UPDATE iam_action SET code='iam-platform:shared-role:publish' WHERE code='iam-platform:shared-role:update';"

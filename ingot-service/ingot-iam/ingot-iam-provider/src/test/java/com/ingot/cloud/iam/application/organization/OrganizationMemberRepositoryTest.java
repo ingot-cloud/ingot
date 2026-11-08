@@ -5,7 +5,7 @@ import com.ingot.cloud.iam.domain.authorization.ObjectScopeClause;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess;
 import com.ingot.cloud.iam.infrastructure.persistence.MemberPickerBranch;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.OrganizationMemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.TenantAuthorizationOptionSql;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamDepartmentMapper;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class OrganizationMemberRepositoryTest {
     private OrganizationMemberRepository members;
     private DepartmentQueryRepository departments;
-    private MemberQueryRepository memberQueries;
+    private MemberRepository memberQueries;
     private JdbcTemplate jdbc;
     private TenantAdministrationMapper live;
     @BeforeEach

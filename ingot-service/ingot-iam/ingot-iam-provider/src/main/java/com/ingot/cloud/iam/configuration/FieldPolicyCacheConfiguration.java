@@ -3,7 +3,7 @@ package com.ingot.cloud.iam.configuration;
 import com.ingot.cloud.iam.application.policy.FieldAccessEvaluator;
 import com.ingot.cloud.iam.application.policy.FieldDefaultReference;
 import com.ingot.cloud.iam.application.policy.FieldPolicySnapshot;
-import com.ingot.cloud.iam.application.policy.PolicyWriteRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.FieldPolicyRepository;
 import com.ingot.framework.cache.config.LayeredCacheBuilder;
 import com.ingot.framework.cache.config.LayeredCacheSettings;
 
@@ -79,7 +79,7 @@ public class FieldPolicyCacheConfiguration {
     /** 默认策略当前版本与不可变版本引用缓存，写路径始终直接读取持久化。 */
     @Bean
     public LayeredCache<String, FieldDefaultReference> iamFieldDefaultCache(
-            IamAuthorizationCacheProperties properties, PolicyWriteRepository policies, ObjectMapper mapper,
+            IamAuthorizationCacheProperties properties, FieldPolicyRepository policies, ObjectMapper mapper,
             ObjectProvider<StringRedisTemplate> redis, ObjectProvider<LayeredCacheRegistry> registries) {
         return LayeredCacheBuilder.<String, FieldDefaultReference>named("iam-field-default")
                 .settings(LayeredCacheSettings.builder().l1Enabled(properties.isL1Enabled()).l1Ttl(properties.boundedL1Ttl())

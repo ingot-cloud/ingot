@@ -32,7 +32,7 @@ public class MemberCommandService {
     private final MemberLifecycleService lifecycle;
     private final MemberMutationGuard guard;
     private final InitializationIdAllocator ids;
-    private final MemberQueryService queries;
+    private final MemberFacade queries;
 
     /**
      * 暂停或恢复指定管理域中的成员资格。

@@ -1,5 +1,6 @@
 package com.ingot.cloud.iam.application.policy;
 
+import com.ingot.cloud.iam.infrastructure.persistence.FieldPolicyRepository;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -59,7 +60,7 @@ public class PolicyService {
     private final AuthorizationAuditWriter audits;
     private final FieldAccessEvaluator fields;
     private final ResourceFieldMetadata fieldMetadata;
-    private final PolicyWriteRepository policies;
+    private final FieldPolicyRepository policies;
     private final TransactionTemplate transaction;
 
     /**
@@ -74,7 +75,7 @@ public class PolicyService {
      * @param fieldMetadata 资源字段目录
      */
     public PolicyService(IamAccess access, AuthorizationAuditWriter audits, FieldAccessEvaluator fields,
-                         PolicyWriteRepository policies, PlatformTransactionManager transactionManager,
+                         FieldPolicyRepository policies, PlatformTransactionManager transactionManager,
                          com.ingot.cloud.iam.application.authorization.extension.ResourceFieldMetadata fieldMetadata) {
         this.fieldMetadata = fieldMetadata;
         this.access = access;

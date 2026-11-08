@@ -7,7 +7,7 @@ import java.util.Set;
 import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAccessService;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.GroupRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.TenantRepository;
 import com.ingot.cloud.iam.application.session.SessionService;
 import com.ingot.cloud.iam.domain.shared.IamIds;
@@ -33,7 +33,7 @@ public class TenantWorkbenchService {
     private final SessionService sessions;
     private final ResourceScopeAccessService scopes;
     private final TenantRepository tenants;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final DepartmentQueryRepository departments;
     private final GroupRepository groups;
 

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.ingot.cloud.iam.infrastructure.persistence.InitializationCatalogRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.PlatformBootstrapRepository;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -39,7 +39,7 @@ public class PlatformBootstrapService {
     private final IamBootstrapProperties properties;
     private final PlatformBootstrapRepository bootstrap;
     private final InitializationCatalogRepository catalog;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final InitializationIdAllocator ids;
     private final RegisterUserUseCase registerUser;
     private final InitialPasswordService initialPassword;

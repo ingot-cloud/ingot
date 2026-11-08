@@ -13,7 +13,7 @@ import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAcc
 import com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.AccountQueryRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamAccountEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
@@ -65,7 +65,7 @@ public class TenantMemberOnboarding {
     private final IamAccess access;
     private final ResourceScopeAccessService scopes;
     private final PlatformAssignmentFacade assignments;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final AccountQueryRepository accounts;
     private final FieldProjectionEngine projection;
     private final FieldWriteExecutor fieldWrites;
@@ -96,7 +96,7 @@ public class TenantMemberOnboarding {
      * @param transactionManager 同一数据源事务
      */
     public TenantMemberOnboarding(IamAccess access, ResourceScopeAccessService scopes, PlatformAssignmentFacade assignments,
-            MemberQueryRepository members, AccountQueryRepository accounts, FieldProjectionEngine projection,
+            MemberRepository members, AccountQueryRepository accounts, FieldProjectionEngine projection,
             FieldWriteExecutor fieldWrites, AuthorizationAuditWriter audits, RegisterUserUseCase registerUser,
             InitialPasswordService initialPasswords, MemberRejoin rejoins,
             IamImageBinding images, PlatformTransactionManager transactionManager) {

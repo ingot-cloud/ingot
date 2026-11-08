@@ -6,7 +6,7 @@ import com.ingot.cloud.iam.application.organization.DepartmentNavigationService;
 import com.ingot.cloud.iam.application.organization.DepartmentService;
 import com.ingot.cloud.iam.application.organization.MemberCommandService;
 import com.ingot.cloud.iam.application.organization.MemberExportService;
-import com.ingot.cloud.iam.application.organization.MemberQueryService;
+import com.ingot.cloud.iam.application.organization.MemberFacade;
 import com.ingot.cloud.iam.application.organization.MemberRejoin;
 import com.ingot.cloud.iam.application.organization.MemberWorkbookService;
 import com.ingot.cloud.iam.application.organization.OrganizationMemberPickerQueryService;
@@ -68,7 +68,7 @@ class TenantMemberPickerAPITest {
     @BeforeEach
     void setUp() {
         var controllers = List.of(new TenantMemberPickerAPI(browse),
-                new TenantMemberCommandAPI(mock(MemberCommandService.class), mock(MemberQueryService.class),
+                new TenantMemberCommandAPI(mock(MemberCommandService.class), mock(MemberFacade.class),
                         mock(MemberExportService.class), mock(MemberWorkbookService.class),
                         mock(TenantMemberOnboarding.class),
                         mock(com.ingot.cloud.iam.application.organization.MemberRejoin.class), members),

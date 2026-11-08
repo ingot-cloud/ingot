@@ -18,7 +18,7 @@ import java.util.UUID;
 
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamMemberDepartmentMapper;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.*;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
 class PlatformMemberUpdateAccessTest {
     private final AuthorizationContext actor = new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1", "1001");
     private final AuthorizationEvaluator evaluator = mock(AuthorizationEvaluator.class);
-    private static MemberQueryRepository members;
+    private static MemberRepository members;
     private ResourceScopeAccessService access;
 
     @BeforeAll

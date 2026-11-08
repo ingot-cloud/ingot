@@ -188,6 +188,10 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [IAM 新项目初始化精简](./changes/active/20261108-iam-clean-initialization/README.md)（validating；默认59表与可选历史DDL已分离，隔离回归及验收记录见change）
+
+- [IAM 职责与命名收尾](./changes/active/20261108-iam-responsibility-cleanup/README.md)（validating；内部职责拆分和完整回归通过，新项目初始化精简单独跟踪）
+
 - [IAM 历史代码清理、职责分层与命名重构](./changes/active/20261107-iam-legacy-cleanup-package-refactor/README.md)（validating；P0–P6完成，目标环境/人工验收待办；历史表、数据及数据库升级脚本未改）
 
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）

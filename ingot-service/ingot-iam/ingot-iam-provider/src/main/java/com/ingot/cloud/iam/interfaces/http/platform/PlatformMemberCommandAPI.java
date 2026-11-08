@@ -16,7 +16,7 @@ import java.util.List;
 
 import com.ingot.cloud.iam.application.organization.MemberCommandService;
 import com.ingot.cloud.iam.application.assignment.PlatformAssignmentFacade;
-import com.ingot.cloud.iam.application.organization.MemberQueryService;
+import com.ingot.cloud.iam.application.organization.MemberFacade;
 import com.ingot.cloud.iam.application.shared.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.cloud.iam.application.assignment.model.AssignmentRecord;
@@ -64,7 +64,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PlatformMemberCommandAPI implements RShortcuts {
     private final MemberCommandService members;
-    private final MemberQueryService queries;
+    private final MemberFacade queries;
     private final PlatformAssignmentFacade assignments;
 
     /**

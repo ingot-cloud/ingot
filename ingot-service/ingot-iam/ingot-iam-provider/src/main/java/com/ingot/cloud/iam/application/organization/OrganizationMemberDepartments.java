@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAccessService;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
 import com.ingot.cloud.iam.domain.shared.IamIds;
 import com.ingot.framework.commons.model.iam.*;
@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
 public class OrganizationMemberDepartments {
     private final IamAccess access;
     private final ResourceScopeAccessService scopes;
-    private final MemberQueryRepository members;
+    private final MemberRepository members;
     private final DepartmentQueryRepository departments;
 
     /** 同时具备成员和部门读取资格才附带任职，缺少资格时返回空投影。 */
