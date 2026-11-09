@@ -1,13 +1,13 @@
 package com.ingot.framework.security.account.adapter.port;
 
+import java.util.List;
+
 import com.ingot.framework.security.account.adapter.support.AccountSecurityEventRecordMapper;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.recording.config.SecurityEventProperties;
 import com.ingot.framework.security.recording.model.SecurityEventRecord;
 import com.ingot.framework.security.recording.spi.SecurityEventPublisher;
-
-import java.util.List;
 
 /**
  * <p>账号域 {@link SecurityEventPort}：经统一 Publisher 写入 canonical {@code fw_security_event}。</p>
