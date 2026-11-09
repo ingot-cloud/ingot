@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * <p>canonical {@code security_event} retention 定时任务，委托 {@link SecurityEventRetentionHandler}。</p>
+ * <p>canonical {@code fw_security_event} retention 定时任务，委托 {@link SecurityEventRetentionHandler}。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -21,12 +21,12 @@ public class SecurityEventRetentionScheduledTask {
 
     @ScheduledTask(
             name = "PurgeCanonicalSecurityEventTask",
-            description = "清理过期 canonical security_event 记录",
+            description = "清理过期 canonical fw_security_event 记录",
             cron = "0 30 3 * * ?",
             group = "SecurityEvent")
     public TaskResult purgeExpired(TaskContext context) {
-        log.info("[SecurityEventRetention] start canonical security_event purge");
+        log.info("[SecurityEventRetention] start canonical fw_security_event purge");
         int count = retentionHandler.runRetentionRound();
-        return TaskResult.success("purged canonical security_event rows=" + count);
+        return TaskResult.success("purged canonical fw_security_event rows=" + count);
     }
 }

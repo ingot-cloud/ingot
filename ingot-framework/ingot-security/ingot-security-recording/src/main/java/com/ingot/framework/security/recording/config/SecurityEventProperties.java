@@ -41,7 +41,7 @@ public class SecurityEventProperties {
     /**
      * 主投递目标。
      * <ul>
-     *     <li>{@link RecordingTarget#LOCAL}：写入本服务库 canonical {@code security_event}（须配 {@link #primaryStore}）</li>
+     *     <li>{@link RecordingTarget#LOCAL}：写入本服务库 canonical {@code fw_security_event}（须配 {@link #primaryStore}）</li>
      *     <li>{@link RecordingTarget#CENTER}：经 Feign/Transport 上报 ingot-security 中心 admission</li>
      * </ul>
      * <p>YAML 写 {@code local} / {@code center}；历史值 {@code remote} 由
@@ -62,7 +62,7 @@ public class SecurityEventProperties {
     private List<RecordingTarget> shadowTargets = new ArrayList<>();
 
     /**
-     * 上报方模块标识，写入 {@code security_event.source_module}。
+     * 上报方模块标识，写入 {@code fw_security_event.source_module}。
      * <p>示例：{@code IAM}、{@code MEMBER}、{@code GATEWAY}、{@code SECURITY}。</p>
      */
     private String sourceModule = "unknown";
@@ -76,7 +76,7 @@ public class SecurityEventProperties {
     /** MySQL Store 写入并发与事务参数。 */
     private Mysql mysql = new Mysql();
 
-    /** canonical {@code security_event} 过期物理删除策略。 */
+    /** canonical {@code fw_security_event} 过期物理删除策略。 */
     private Retention retention = new Retention();
 
     /**
@@ -115,7 +115,7 @@ public class SecurityEventProperties {
     }
 
     /**
-     * 安全事件大类上报开关，对应 {@code security_event.event_category}。
+     * 安全事件大类上报开关，对应 {@code fw_security_event.event_category}。
      */
     @Data
     public static class Categories {

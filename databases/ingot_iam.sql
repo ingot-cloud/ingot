@@ -1,74 +1,20 @@
--- IAM 完整初始化（可重复执行；每次清空并重建清单内全部表，不是已有库升级脚本）。
+-- IAM 首次部署完整初始化：直接执行本文件即可建库、建表并写入默认数据。
+-- 每次执行都会删除并重建 ingot_iam 库，该库已有表及数据全部清空。
 -- 自动生成：python3 tools/iam/generate_database.py；不要手工编辑。
 -- 来源顺序：databases/iam/manifest.json；框架DDL仍由原模块维护。
--- 在调用者选定的数据库执行；先备份并停止服务，无CREATE/DROP DATABASE或固定USE。
--- 写入正式治理目录和唯一的平台管理员账号；业务组织由管理员手动创建。
+-- 固定作用于 ingot_iam，不需要预先建库或选择数据库；执行前停止使用该库的服务。
+-- 包含应用、资源、权限操作、菜单、角色及关联；不导入测试租户或运行记录。
+-- 默认平台账号 platform，初始密码 11111111，首次登录必须修改密码。
 -- MySQL 8.0.16+；仅删除阶段关闭外键，建表/种子阶段开启，最后恢复原设置；数据时间按UTC写入。
 SET NAMES utf8mb4;
 SET SESSION time_zone = '+00:00';
 
--- 重建：组织与所有者等循环外键要求先删除全部目标表，再开始建表。
+-- 整库重建同时移除历史迁移表和其他遗留表；不处理其他数据库。
 SET @iam_init_previous_foreign_key_checks = @@SESSION.FOREIGN_KEY_CHECKS;
 SET SESSION FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS `password_expiration`;
-DROP TABLE IF EXISTS `password_history`;
-DROP TABLE IF EXISTS `account_lock_state`;
-DROP TABLE IF EXISTS `asset_upload`;
-DROP TABLE IF EXISTS `sys_user_social`;
-DROP TABLE IF EXISTS `sys_social_details`;
-DROP TABLE IF EXISTS `security_event`;
-DROP TABLE IF EXISTS `platform_dict`;
-DROP TABLE IF EXISTS `biz_leaf_alloc`;
-DROP TABLE IF EXISTS `iam_role_application_item`;
-DROP TABLE IF EXISTS `iam_role_application_task`;
-DROP TABLE IF EXISTS `iam_authorization_audit`;
-DROP TABLE IF EXISTS `iam_download_task`;
-DROP TABLE IF EXISTS `iam_department_workbook`;
-DROP TABLE IF EXISTS `iam_member_workbook`;
-DROP TABLE IF EXISTS `iam_member_export`;
-DROP TABLE IF EXISTS `iam_field_rule`;
-DROP TABLE IF EXISTS `iam_field_policy`;
-DROP TABLE IF EXISTS `iam_policy_selector_department`;
-DROP TABLE IF EXISTS `iam_policy_selector_member`;
-DROP TABLE IF EXISTS `iam_policy_selector`;
-DROP TABLE IF EXISTS `iam_default_policy_revision`;
-DROP TABLE IF EXISTS `iam_delegation_resource_ceiling`;
-DROP TABLE IF EXISTS `iam_delegation_role`;
-DROP TABLE IF EXISTS `iam_role_assignment`;
-DROP TABLE IF EXISTS `iam_delegation_action_ceiling`;
-DROP TABLE IF EXISTS `iam_delegation_recipient_department`;
-DROP TABLE IF EXISTS `iam_delegation_recipient_member`;
-DROP TABLE IF EXISTS `iam_delegation_role_revision`;
-DROP TABLE IF EXISTS `iam_delegation_grant`;
-DROP TABLE IF EXISTS `iam_role_delta`;
-DROP TABLE IF EXISTS `iam_role_grant`;
-DROP TABLE IF EXISTS `iam_role_parameter`;
-DROP TABLE IF EXISTS `iam_role_revision`;
-DROP TABLE IF EXISTS `iam_role_definition`;
-DROP TABLE IF EXISTS `iam_plan_application`;
-DROP TABLE IF EXISTS `iam_plan`;
-DROP TABLE IF EXISTS `iam_audience_group`;
-DROP TABLE IF EXISTS `iam_audience_department`;
-DROP TABLE IF EXISTS `iam_audience_member`;
-DROP TABLE IF EXISTS `iam_app_audience`;
-DROP TABLE IF EXISTS `iam_tenant_app_entitlement`;
-DROP TABLE IF EXISTS `iam_menu_action`;
-DROP TABLE IF EXISTS `iam_menu`;
-DROP TABLE IF EXISTS `iam_action`;
-DROP TABLE IF EXISTS `iam_resource`;
-DROP TABLE IF EXISTS `iam_application`;
-DROP TABLE IF EXISTS `iam_tenant_group_department`;
-DROP TABLE IF EXISTS `iam_tenant_group_member`;
-DROP TABLE IF EXISTS `iam_tenant_group`;
-DROP TABLE IF EXISTS `iam_platform_group_member`;
-DROP TABLE IF EXISTS `iam_platform_group`;
-DROP TABLE IF EXISTS `iam_department_leader`;
-DROP TABLE IF EXISTS `iam_member_department`;
-DROP TABLE IF EXISTS `iam_department`;
-DROP TABLE IF EXISTS `iam_tenant_member`;
-DROP TABLE IF EXISTS `iam_tenant`;
-DROP TABLE IF EXISTS `iam_platform_member`;
-DROP TABLE IF EXISTS `iam_account`;
+DROP DATABASE IF EXISTS `ingot_iam`;
+CREATE DATABASE `ingot_iam` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `ingot_iam`;
 SET SESSION FOREIGN_KEY_CHECKS = 1;
 
 -- ====================================================================
@@ -982,25 +928,11 @@ CREATE TABLE IF NOT EXISTS iam_role_application_item (
 -- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
 SET time_zone = '+00:00';
 
--- IAM 独立目标库：保留辅助领域结构，仅提取源结构定义，不包含数据、DROP 或 USE。
--- 这些旧列名继续表示新 Account/Tenant/Application/Plan 的映射 ID；真实映射在迁移阶段验证。
---
--- 归属说明：account_lock_state、password_history、password_expiration 的权威 DDL 由安全框架自带，
--- 不在本文件重复定义。部署 IAM 数据库时另行执行：
---   ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql
---   ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql
--- 表可以部署在 IAM 库，但持久化职责仍归框架适配器，IAM 不得新增同表实体或 Mapper。
+-- IAM 自有辅助结构：多作用域字典、社交渠道配置和账号社交绑定。
+-- 6张共享框架表由所属library的sql/schema.sql维护，manifest统一投影到完整初始化。
+-- 完整部署只执行databases/ingot_iam.sql；依赖与脚本对应关系见databases/README.md。
 
-CREATE TABLE `biz_leaf_alloc` (
-  `biz_tag` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT 'Leaf业务号段名称，不同业务独立分配',
-  `max_id` bigint NOT NULL DEFAULT '1' COMMENT '已分配号段的最大ID高水位，更新必须保持发号原子性',
-  `step` int NOT NULL COMMENT '每次申请的号段长度',
-  `description` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '业务说明，可空',
-  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '号段高水位最近更新时间点，UTC',
-  PRIMARY KEY (`biz_tag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Leaf业务号段分配高水位';
-
-CREATE TABLE `platform_dict` (
+CREATE TABLE `iam_dictionary` (
   `id` bigint NOT NULL COMMENT '多作用域字典及字典项记录标识',
   `pid` bigint NOT NULL DEFAULT '0' COMMENT '父ID',
   `code` varchar(64) NOT NULL COMMENT '编码',
@@ -1029,7 +961,103 @@ CREATE TABLE `platform_dict` (
   KEY `idx_dict_scope` (`scope_type`,`tenant_id`,`app_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='多作用域字典及字典项';
 
-CREATE TABLE `security_event` (
+CREATE TABLE `iam_social_config` (
+  `id` bigint unsigned NOT NULL COMMENT '社交登录渠道配置记录标识',
+  `tenant_id` bigint unsigned NOT NULL COMMENT '租户ID',
+  `app_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '第三方平台分配的客户端App ID，不是IAM应用目录数字ID',
+  `app_secret` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '第三方应用密钥，可空；禁止在审计及字典示例中泄露',
+  `redirect_url` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '重定向地址',
+  `name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '社交名称',
+  `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '第三方登录渠道类型，对应社交登录渠道配置',
+  `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT '0' COMMENT '状态, 0:正常，9:禁用',
+  `created_at` datetime DEFAULT NULL COMMENT '记录创建时间点，UTC',
+  `updated_at` datetime DEFAULT NULL COMMENT '记录最后更新时间点，UTC',
+  `deleted_at` datetime DEFAULT NULL COMMENT '软删除时间点，UTC；NULL表示未删除',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='社交登录渠道配置';
+
+CREATE TABLE `iam_account_social_binding` (
+  `id` bigint NOT NULL COMMENT '全局账号社交身份绑定记录标识',
+  `tenant_id` bigint NOT NULL COMMENT '组织ID',
+  `user_id` bigint NOT NULL COMMENT '被绑定的全局Account标识，旧列名保留；不表示租户成员ID',
+  `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '渠道类型',
+  `unique_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '渠道唯一ID',
+  `bind_at` datetime NOT NULL COMMENT '社交身份绑定时间点，UTC',
+  PRIMARY KEY (`id`),
+  KEY `idx_unique_type_user` (`unique_id`,`type`,`user_id`) USING BTREE COMMENT '渠道用户索引'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='全局账号社交身份绑定';
+
+-- ====================================================================
+-- Source: ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/ingot-security-account-adapter/schema.sql
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS fw_security_account_lock_state (
+  id              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '安全框架账号锁定状态记录标识；数据库自增',
+  user_id         BIGINT       NOT NULL COMMENT '被锁定的安全用户ID，与user_type共同唯一标识用户',
+  user_type       VARCHAR(20)  NOT NULL DEFAULT '0' COMMENT '安全用户类型，对应UserTypeEnum：0系统账号、1会员账号',
+
+  -- 锁定状态
+  locked          TINYINT(1)   NOT NULL DEFAULT 0     COMMENT '是否锁定（0-否 1-是）',
+  lock_type       VARCHAR(20)  DEFAULT NULL            COMMENT '锁定类型（MANUAL-手动 AUTO-自动）',
+  lock_reason_code   VARCHAR(50)  DEFAULT NULL         COMMENT '锁定原因代码',
+  lock_reason_detail VARCHAR(500) DEFAULT NULL         COMMENT '锁定原因详情',
+
+  -- 锁定时间信息
+  locked_at       DATETIME     DEFAULT NULL COMMENT '锁定时间；时间点按UTC保存',
+  locked_until    DATETIME     DEFAULT NULL COMMENT '锁定到期时间（NULL=永久锁定）；时间点按UTC保存',
+
+  -- 操作信息（手动锁定时填写）
+  operator_id     BIGINT       DEFAULT NULL            COMMENT '操作人ID',
+  operator_name   VARCHAR(64)  DEFAULT NULL            COMMENT '操作人姓名',
+
+  -- 登录失败计数
+  failed_login_count INT        NOT NULL DEFAULT 0    COMMENT '连续登录失败次数',
+  last_failed_at  DATETIME     DEFAULT NULL COMMENT '最后一次失败时间；时间点按UTC保存',
+
+  -- 时间戳
+  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间点，UTC',
+  updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录最后更新时间点，UTC',
+
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_user_id_type (user_id, user_type)       COMMENT '用户ID + 用户类型联合唯一',
+  KEY idx_locked (locked, locked_until) USING BTREE     COMMENT '锁定状态 + 到期时间索引（自动解锁任务使用）'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号锁定状态表；所属模块：ingot-security-account-adapter';
+
+-- ====================================================================
+-- Source: ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/ingot-security-credential-data/schema.sql
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS `fw_security_password_history` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '安全框架密码历史环形缓冲记录标识；数据库自增',
+  `user_id` BIGINT NOT NULL COMMENT '安全框架全局用户ID；同用户按sequence_number维护环形历史',
+  `password_hash` VARCHAR(255) NOT NULL COMMENT '不可逆密码哈希，禁止作为响应明文返回',
+  `sequence_number` INT NOT NULL COMMENT '序号（用于环形缓冲，从1开始）',
+  `version` bigint NOT NULL DEFAULT '1' COMMENT '记录乐观锁版本；变更时按所属业务事务递增',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间点，UTC',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录最后更新时间点，UTC',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_sequence` (`user_id`, `sequence_number`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='密码历史记录（环形缓冲）；所属模块：ingot-security-credential-data';
+
+CREATE TABLE IF NOT EXISTS `fw_security_password_expiration` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '安全框架密码过期状态记录标识；数据库自增',
+  `user_id` BIGINT NOT NULL COMMENT '安全框架全局用户ID，唯一对应一份密码过期状态',
+  `last_changed_at` DATETIME NOT NULL COMMENT '最后修改密码时间；时间点按UTC保存',
+  `expires_at` DATETIME NOT NULL COMMENT '到期时间点，UTC',
+  `force_change` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否强制修改（0-否 1-是）',
+  `grace_login_remaining` INT NOT NULL DEFAULT 0 COMMENT '剩余宽限登录次数',
+  `next_warning_at` DATETIME NULL COMMENT '下次提醒时间；时间点按UTC保存',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间点，UTC',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录最后更新时间点，UTC',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_id` (`user_id`),
+  KEY `idx_expires_at` (`expires_at`),
+  KEY `idx_next_warning_at` (`next_warning_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='密码过期信息；所属模块：ingot-security-credential-data';
+
+-- ====================================================================
+-- Source: ingot-framework/ingot-security/ingot-security-event-store-mysql/src/main/resources/sql/ingot-security-event-store-mysql/schema.sql
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS `fw_security_event` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '统一安全事件持久记录记录标识；数据库自增',
   `event_id` varchar(32) DEFAULT NULL COMMENT 'producer 幂等 ID',
   `event_type` varchar(64) NOT NULL COMMENT '事件类型',
@@ -1063,35 +1091,24 @@ CREATE TABLE `security_event` (
   KEY `idx_event_type` (`event_type`,`received_at`),
   KEY `idx_tenant_user` (`tenant_id`,`user_id`),
   KEY `idx_trace` (`trace_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=93243 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统一安全事件（canonical）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统一安全事件（canonical）；所属模块：ingot-security-event-store-mysql';
 
-CREATE TABLE `sys_social_details` (
-  `id` bigint unsigned NOT NULL COMMENT '社交登录渠道配置记录标识',
-  `tenant_id` bigint unsigned NOT NULL COMMENT '租户ID',
-  `app_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '第三方平台分配的客户端App ID，不是IAM应用目录数字ID',
-  `app_secret` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '第三方应用密钥，可空；禁止在审计及字典示例中泄露',
-  `redirect_url` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '重定向地址',
-  `name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '社交名称',
-  `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '第三方登录渠道类型，对应社交登录渠道配置',
-  `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT '0' COMMENT '状态, 0:正常，9:禁用',
-  `created_at` datetime DEFAULT NULL COMMENT '记录创建时间点，UTC',
-  `updated_at` datetime DEFAULT NULL COMMENT '记录最后更新时间点，UTC',
-  `deleted_at` datetime DEFAULT NULL COMMENT '软删除时间点，UTC；NULL表示未删除',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='社交登录渠道配置';
+-- ====================================================================
+-- Source: ingot-framework/ingot-id/src/main/resources/sql/ingot-id/schema.sql
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS `fw_id_leaf_alloc` (
+  `biz_tag` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT 'Leaf业务号段名称，不同业务独立分配',
+  `max_id` bigint NOT NULL DEFAULT '1' COMMENT '已分配号段的最大ID高水位，更新必须保持发号原子性',
+  `step` int NOT NULL COMMENT '每次申请的号段长度',
+  `description` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '业务说明，可空',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '号段高水位最近更新时间点，UTC',
+  PRIMARY KEY (`biz_tag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Leaf业务号段分配高水位；所属模块：ingot-id';
 
-CREATE TABLE `sys_user_social` (
-  `id` bigint NOT NULL COMMENT '全局账号社交身份绑定记录标识',
-  `tenant_id` bigint NOT NULL COMMENT '组织ID',
-  `user_id` bigint NOT NULL COMMENT '被绑定的全局Account标识，旧列名保留；不表示租户成员ID',
-  `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '渠道类型',
-  `unique_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '渠道唯一ID',
-  `bind_at` datetime NOT NULL COMMENT '社交身份绑定时间点，UTC',
-  PRIMARY KEY (`id`),
-  KEY `idx_unique_type_user` (`unique_id`,`type`,`user_id`) USING BTREE COMMENT '渠道用户索引'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='全局账号社交身份绑定';
-
-CREATE TABLE IF NOT EXISTS asset_upload (
+-- ====================================================================
+-- Source: ingot-framework/ingot-oss/ingot-oss-common/src/main/resources/sql/ingot-oss-common/schema.sql
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS fw_oss_asset_upload (
     id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '一次性上传凭证 ID',
     owner_key VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '服务端恢复的域、组织和操作者',
     purpose VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '固定业务用途编码',
@@ -1103,74 +1120,7 @@ CREATE TABLE IF NOT EXISTS asset_upload (
     PRIMARY KEY (id),
     KEY idx_asset_upload_expires (expires_at, id),
     CONSTRAINT ck_asset_upload_state CHECK (state IN ('PENDING','READY'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务图片暂存与一次性绑定凭证';
-
--- ====================================================================
--- Source: ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql
--- ====================================================================
-CREATE TABLE IF NOT EXISTS account_lock_state (
-  id              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '安全框架账号锁定状态记录标识；数据库自增',
-  user_id         BIGINT       NOT NULL COMMENT '被锁定的安全用户ID，与user_type共同唯一标识用户',
-  user_type       VARCHAR(20)  NOT NULL DEFAULT '0' COMMENT '安全用户类型，对应UserTypeEnum：0系统账号、1会员账号',
-
-  -- 锁定状态
-  locked          TINYINT(1)   NOT NULL DEFAULT 0     COMMENT '是否锁定（0-否 1-是）',
-  lock_type       VARCHAR(20)  DEFAULT NULL            COMMENT '锁定类型（MANUAL-手动 AUTO-自动）',
-  lock_reason_code   VARCHAR(50)  DEFAULT NULL         COMMENT '锁定原因代码',
-  lock_reason_detail VARCHAR(500) DEFAULT NULL         COMMENT '锁定原因详情',
-
-  -- 锁定时间信息
-  locked_at       DATETIME     DEFAULT NULL COMMENT '锁定时间；时间点按UTC保存',
-  locked_until    DATETIME     DEFAULT NULL COMMENT '锁定到期时间（NULL=永久锁定）；时间点按UTC保存',
-
-  -- 操作信息（手动锁定时填写）
-  operator_id     BIGINT       DEFAULT NULL            COMMENT '操作人ID',
-  operator_name   VARCHAR(64)  DEFAULT NULL            COMMENT '操作人姓名',
-
-  -- 登录失败计数
-  failed_login_count INT        NOT NULL DEFAULT 0    COMMENT '连续登录失败次数',
-  last_failed_at  DATETIME     DEFAULT NULL COMMENT '最后一次失败时间；时间点按UTC保存',
-
-  -- 时间戳
-  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间点，UTC',
-  updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录最后更新时间点，UTC',
-
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_user_id_type (user_id, user_type)       COMMENT '用户ID + 用户类型联合唯一',
-  KEY idx_locked (locked, locked_until) USING BTREE     COMMENT '锁定状态 + 到期时间索引（自动解锁任务使用）'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号锁定状态表';
-
--- ====================================================================
--- Source: ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql
--- ====================================================================
-CREATE TABLE IF NOT EXISTS `password_history` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '安全框架密码历史环形缓冲记录标识；数据库自增',
-  `user_id` BIGINT NOT NULL COMMENT '安全框架全局用户ID；同用户按sequence_number维护环形历史',
-  `password_hash` VARCHAR(255) NOT NULL COMMENT '不可逆密码哈希，禁止作为响应明文返回',
-  `sequence_number` INT NOT NULL COMMENT '序号（用于环形缓冲，从1开始）',
-  `version` bigint NOT NULL DEFAULT '1' COMMENT '记录乐观锁版本；变更时按所属业务事务递增',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间点，UTC',
-  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录最后更新时间点，UTC',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_sequence` (`user_id`, `sequence_number`),
-  KEY `idx_created_at` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='密码历史记录（环形缓冲）';
-
-CREATE TABLE IF NOT EXISTS `password_expiration` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '安全框架密码过期状态记录标识；数据库自增',
-  `user_id` BIGINT NOT NULL COMMENT '安全框架全局用户ID，唯一对应一份密码过期状态',
-  `last_changed_at` DATETIME NOT NULL COMMENT '最后修改密码时间；时间点按UTC保存',
-  `expires_at` DATETIME NOT NULL COMMENT '到期时间点，UTC',
-  `force_change` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否强制修改（0-否 1-是）',
-  `grace_login_remaining` INT NOT NULL DEFAULT 0 COMMENT '剩余宽限登录次数',
-  `next_warning_at` DATETIME NULL COMMENT '下次提醒时间；时间点按UTC保存',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间点，UTC',
-  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录最后更新时间点，UTC',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_id` (`user_id`),
-  KEY `idx_expires_at` (`expires_at`),
-  KEY `idx_next_warning_at` (`next_warning_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='密码过期信息';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务图片暂存与一次性绑定凭证；所属模块：ingot-oss-common';
 
 -- ====================================================================
 -- Source: databases/iam/006_bootstrap.sql
@@ -1185,9 +1135,9 @@ SET time_zone = '+00:00';
 -- 平台首个账号由 provider 冷启动器经安全框架注册用例创建。
 
 -- 发号准备：静态保留标识全部小于起点，运行时发号不会与种子冲突。
-INSERT INTO biz_leaf_alloc (biz_tag, max_id, step, description)
+INSERT INTO fw_id_leaf_alloc (biz_tag, max_id, step, description)
 SELECT 'iam', 1000000, 100, 'IAM 冷启动发号' FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM biz_leaf_alloc WHERE biz_tag = 'iam');
+WHERE NOT EXISTS (SELECT 1 FROM fw_id_leaf_alloc WHERE biz_tag = 'iam');
 
 -- 应用：租户域基础应用在组织创建时缺省开通。
 INSERT INTO iam_application (id, code, domain, name, icon, description, sort_order, baseline, enabled)

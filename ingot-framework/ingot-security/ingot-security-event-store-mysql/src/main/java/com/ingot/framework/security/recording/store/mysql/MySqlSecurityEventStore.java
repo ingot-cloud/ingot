@@ -15,7 +15,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.List;
 
 /**
- * <p>MySQL canonical {@code security_event} Store：真批量写入、eventId 幂等与 writer 舱壁。</p>
+ * <p>MySQL canonical {@code fw_security_event} Store：真批量写入、eventId 幂等与 writer 舱壁。</p>
  *
  * @author jy
  * @since 1.0.0

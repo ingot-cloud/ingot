@@ -58,7 +58,7 @@ class AccountIdentityServiceTest {
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, account_id BIGINT, tenant_id BIGINT, status VARCHAR(16), version BIGINT)");
         jdbc.execute("CREATE TABLE iam_member_department(tenant_id BIGINT, member_id BIGINT, department_id BIGINT, is_primary BOOLEAN)");
         jdbc.execute("""
-                CREATE TABLE account_lock_state(id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id BIGINT, user_type VARCHAR(16),
+                CREATE TABLE fw_security_account_lock_state(id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id BIGINT, user_type VARCHAR(16),
                   locked BOOLEAN, lock_type VARCHAR(16), lock_reason_code VARCHAR(64), lock_reason_detail VARCHAR(255),
                   locked_at TIMESTAMP, locked_until TIMESTAMP, operator_id BIGINT, operator_name VARCHAR(64),
                   failed_login_count INT, last_failed_at TIMESTAMP, created_at TIMESTAMP, updated_at TIMESTAMP)
@@ -161,7 +161,7 @@ class AccountIdentityServiceTest {
 
     @Test
     void lockedAccountComesFromSecurityFrameworkLockState() {
-        jdbc.update("INSERT INTO account_lock_state(user_id,user_type,locked,failed_login_count) VALUES (1,?,TRUE,0)",
+        jdbc.update("INSERT INTO fw_security_account_lock_state(user_id,user_type,locked,failed_login_count) VALUES (1,?,TRUE,0)",
                 UserTypeEnum.ADMIN.getValue());
         var response = service.load(request("alice", null)).orElseThrow();
         assertTrue(response.getLocked());

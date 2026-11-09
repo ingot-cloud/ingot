@@ -5,6 +5,7 @@ import unittest
 from database_sources import sources, read_source
 from isolated_mysql import IsolatedMysql
 from schema_comments import SNAPSHOT, upgrade as upgrade_comments, normalized, read_definitions
+from historical_schema import restore_historical_tables, historical_snapshot
 from schema_key_upgrade import upgrade, RECIPIENT, PASSWORD, ALLOCATOR, LONG_MAX, preflight
 
 
@@ -21,6 +22,7 @@ class SchemaKeyUpgradeMysqlTest(unittest.TestCase):
         self.mysql.sql('DROP DATABASE IF EXISTS key_upgrade;CREATE DATABASE key_upgrade')
         for source in sources('schemas') + sources('frameworkSchemas'):
             self.query(read_source(source))
+        restore_historical_tables(self.query)
         self.query('ALTER TABLE iam_delegation_recipient_member DROP PRIMARY KEY,DROP COLUMN id;'
                    'ALTER TABLE password_history ADD INDEX idx_user_id(user_id);'
                    "INSERT INTO biz_leaf_alloc(biz_tag,max_id,step) VALUES('iam',100000,100);")
@@ -47,7 +49,7 @@ class SchemaKeyUpgradeMysqlTest(unittest.TestCase):
 
     def test_upgrade_preserves_rows_matches_new_schema_and_repeats(self):
         before = self.projection()
-        snapshot = json.loads(SNAPSHOT.read_text())['tables']
+        snapshot = historical_snapshot(json.loads(SNAPSHOT.read_text()))['tables']
         old = read_definitions(self.query, snapshot)
         calls = []
         upgrade(lambda sql: (calls.append(sql), self.query(sql))[1])

@@ -10,7 +10,7 @@ import com.ingot.framework.security.recording.spi.SecurityEventPublisher;
 import java.util.List;
 
 /**
- * <p>账号域 {@link SecurityEventPort}：经统一 Publisher 写入 canonical {@code security_event}。</p>
+ * <p>账号域 {@link SecurityEventPort}：经统一 Publisher 写入 canonical {@code fw_security_event}。</p>
  *
  * @author jy
  * @since 1.0.0

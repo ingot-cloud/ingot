@@ -4,7 +4,7 @@
 <mapper namespace="com.ingot.framework.security.recording.store.mysql.mapper.SecurityEventStoreMapper">
 
     <insert id="insertBatch">
-        INSERT INTO security_event (
+        INSERT INTO fw_security_event (
             event_id, event_type, event_category, priority, occurred_at, received_at,
             tenant_id, user_id, user_type, account,
             client_id, app_id, session_id, device_id,
@@ -29,7 +29,7 @@
 
     <select id="selectByCursor" resultType="com.ingot.framework.security.recording.store.mysql.model.CanonicalSecurityEventEntity">
         SELECT *
-        FROM security_event
+        FROM fw_security_event
         WHERE received_at &gt;= #{receivedFrom}
           AND received_at &lt;= #{receivedTo}
         <if test="query.eventType != null and query.eventType != ''">
@@ -60,14 +60,14 @@
 
     <select id="selectExpiredIds" resultType="long">
         SELECT id
-        FROM security_event
+        FROM fw_security_event
         WHERE received_at &lt; #{cutoff}
         ORDER BY received_at ASC, id ASC
         LIMIT #{limit}
     </select>
 
     <delete id="deleteByIds">
-        DELETE FROM security_event
+        DELETE FROM fw_security_event
         WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}

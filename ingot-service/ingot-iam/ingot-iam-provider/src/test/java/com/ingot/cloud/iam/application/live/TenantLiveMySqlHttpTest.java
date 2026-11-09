@@ -118,12 +118,13 @@ class TenantLiveMySqlHttpTest {
     void start() throws Exception {
         container=command("docker","run","--detach","--rm","--pull=never","--name","iam-tenant-live-"+UUID.randomUUID(),"-p","127.0.0.1::3306","-e","MYSQL_ALLOW_EMPTY_PASSWORD=yes","-e","MYSQL_ROOT_HOST=%","-e","MYSQL_DATABASE=fixture","mysql:8.4");
         var address=command("docker","port",container,"3306/tcp");
-        var source=new DriverManagerDataSource("jdbc:mysql://"+address+"/fixture?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false","root","");
+        var jdbcOptions="?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false";
+        var source=new DriverManagerDataSource("jdbc:mysql://"+address+"/fixture"+jdbcOptions,"root","");
         jdbc=new JdbcTemplate(source);long deadline=System.nanoTime()+Duration.ofSeconds(60).toNanos();
         while(true){try{jdbc.execute("SELECT 1");break;}catch(Exception e){if(System.nanoTime()>deadline)throw e;Thread.sleep(500);}}
-        pool=new com.zaxxer.hikari.HikariDataSource();pool.setJdbcUrl(source.getUrl());pool.setUsername("root");pool.setPassword("");pool.setMaximumPoolSize(64);pool.setMinimumIdle(8);pool.setConnectionTimeout(5000);jdbc=new JdbcTemplate(pool);
         Path root=Path.of("").toAbsolutePath();while(!Files.exists(root.resolve("databases/iam/manifest.json")))root=root.getParent();
-        new ResourceDatabasePopulator(new FileSystemResource(root.resolve("databases/ingot_iam.sql"))).execute(pool);
+        new ResourceDatabasePopulator(new FileSystemResource(root.resolve("databases/ingot_iam.sql"))).execute(source);
+        pool=new com.zaxxer.hikari.HikariDataSource();pool.setJdbcUrl("jdbc:mysql://"+address+"/ingot_iam"+jdbcOptions);pool.setUsername("root");pool.setPassword("");pool.setMaximumPoolSize(64);pool.setMinimumIdle(8);pool.setConnectionTimeout(5000);jdbc=new JdbcTemplate(pool);
         jdbc.update("INSERT INTO iam_account(id,username,password_hash) VALUES(1,'fixture-1','not-a-credential'),(2,'fixture-2','not-a-credential'),(3,'fixture-3','not-a-credential'),(4,'fixture-4','not-a-credential')");
         jdbc.update("INSERT INTO iam_platform_member(id,account_id,display_name) VALUES(1001,1,'平台')");
         jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,valid_from,source) SELECT 900,'PLATFORM','MEMBER',1001,r.id,'SYSTEM','{}',UTC_TIMESTAMP(6),'INITIALIZATION' FROM iam_role_revision r JOIN iam_role_definition d ON d.id=r.role_id WHERE d.domain='PLATFORM' AND d.kind='SYSTEM' ORDER BY r.revision DESC LIMIT 1");

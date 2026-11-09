@@ -95,7 +95,7 @@ public class MemberUser extends BaseModel<MemberUser> implements UserType {
     private Boolean enabled;
 
     /**
-     * 是否锁定（true-锁定 false-正常，冗余字段，详情见 account_lock_state 表）
+     * 是否锁定（true-锁定 false-正常，冗余字段，详情见 fw_security_account_lock_state 表）
      */
     private Boolean locked;
 

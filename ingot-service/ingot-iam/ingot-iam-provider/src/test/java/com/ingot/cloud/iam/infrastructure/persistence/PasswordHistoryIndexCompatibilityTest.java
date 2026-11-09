@@ -23,10 +23,10 @@ class PasswordHistoryIndexCompatibilityTest {
         var source = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID()
                 + ";MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE", "sa", "");
         var jdbc = new JdbcTemplate(source);
-        jdbc.execute("CREATE TABLE password_history(id BIGINT AUTO_INCREMENT PRIMARY KEY,user_id BIGINT NOT NULL,"
+        jdbc.execute("CREATE TABLE fw_security_password_history(id BIGINT AUTO_INCREMENT PRIMARY KEY,user_id BIGINT NOT NULL,"
                 + "password_hash VARCHAR(255),sequence_number INT NOT NULL,version BIGINT,created_at TIMESTAMP,updated_at TIMESTAMP,"
                 + "UNIQUE(user_id,sequence_number))");
-        jdbc.execute("CREATE INDEX idx_created_at ON password_history(created_at)");
+        jdbc.execute("CREATE INDEX idx_created_at ON fw_security_password_history(created_at)");
         var encoder = mock(PasswordEncoder.class);
         when(encoder.encode(any())).thenAnswer(invocation -> "encoded:" + invocation.getArgument(0));
         when(encoder.matches(any(), any())).thenAnswer(invocation ->
@@ -35,10 +35,10 @@ class PasswordHistoryIndexCompatibilityTest {
         service.saveHistory(1L, "fixture-a", 2);
         service.saveHistory(1L, "fixture-b", 2);
         service.saveHistory(2L, "fixture-other", 2);
-        Long originalId = jdbc.queryForObject("SELECT id FROM password_history WHERE user_id=1 AND sequence_number=1", Long.class);
+        Long originalId = jdbc.queryForObject("SELECT id FROM fw_security_password_history WHERE user_id=1 AND sequence_number=1", Long.class);
         service.saveHistory(1L, "fixture-c", 2);
-        assertEquals(originalId, jdbc.queryForObject("SELECT id FROM password_history WHERE user_id=1 AND sequence_number=1", Long.class));
-        assertEquals(3L, jdbc.queryForObject("SELECT version FROM password_history WHERE user_id=1 AND sequence_number=1", Long.class));
+        assertEquals(originalId, jdbc.queryForObject("SELECT id FROM fw_security_password_history WHERE user_id=1 AND sequence_number=1", Long.class));
+        assertEquals(3L, jdbc.queryForObject("SELECT version FROM fw_security_password_history WHERE user_id=1 AND sequence_number=1", Long.class));
         assertEquals(2, service.getRecentHistory(1L, 2).size());
         assertTrue(service.isPasswordUsed(1L, "fixture-c", 2));
         assertFalse(service.isPasswordUsed(1L, "fixture-a", 2));

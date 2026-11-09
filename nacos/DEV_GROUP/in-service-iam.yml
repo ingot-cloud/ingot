@@ -37,7 +37,7 @@ ingot:
       # 总开关。false：SecurityEventPublisher 不投递任何事件；true：由 target 决定落点。
       enabled: true
       # 主投递目标。
-      # local  = 写入本服务库 security_event（须 classpath 有 Store，通常配 primary-store: mysql）
+      # local  = 写入本服务库 fw_security_event（须 classpath 有 Store，通常配 primary-store: mysql）
       # center = 经 Feign/Transport 上报 ingot-security 中心 admission
       target: local
       # target=local 且 classpath 存在多个 SecurityEventStore 时的主 Store id。
@@ -47,7 +47,7 @@ ingot:
       # 次要投递目标（迁移 shadow 双写用）。稳定态留空 []。
       # 元素取值：local | center；与主 target 去重后额外投递一份，shadow 失败不影响主链路 ack。
       shadow-targets: []
-      # 上报方模块标识，写入 security_event.source_module。
+      # 上报方模块标识，写入 fw_security_event.source_module。
       # IAM 填 IAM，Member 填 MEMBER。
       source-module: IAM
       # 按事件大类过滤是否上报（enabled=true 时生效）；false 则该类别事件在 Publisher 层被丢弃。
@@ -60,7 +60,7 @@ ingot:
         credential: true
         # ACCESS：网关封禁/限流违规等访问防护类；IAM/Member 通常不产生，可保持 true
         access: true
-      # canonical security_event 过期物理删除（PurgeCanonicalSecurityEventTask，cron 0 30 3 * * ?）。
+      # canonical fw_security_event 过期物理删除（PurgeCanonicalSecurityEventTask，cron 0 30 3 * * ?）。
       # delivery / mysql 在 in-security-policy.yml（本服务已 import）。
       retention:
         # 是否启用定时清理；false 等同永久保留。

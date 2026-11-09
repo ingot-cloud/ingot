@@ -40,7 +40,7 @@ public class StagedImageUploads {
     private static final Pattern UPLOAD_ID = Pattern.compile("[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}");
     private static final String LOCK_UPLOAD = """
             SELECT owner_key,purpose,target_key,bucket_name,object_name,state,expires_at
-              FROM asset_upload WHERE id=? FOR UPDATE
+              FROM fw_oss_asset_upload WHERE id=? FOR UPDATE
             """;
 
     private final JdbcTemplate jdbc;
@@ -74,7 +74,7 @@ public class StagedImageUploads {
         String id = UUID.randomUUID().toString();
         String object = OBJECT_PREFIX + id + "." + image.extension();
         jdbc.update("""
-                INSERT INTO asset_upload (id,owner_key,purpose,target_key,bucket_name,object_name,state,expires_at)
+                INSERT INTO fw_oss_asset_upload (id,owner_key,purpose,target_key,bucket_name,object_name,state,expires_at)
                 VALUES (?,?,?,?,?,?,?,?)
                 """, id, owner, purpose, key(target), bucket, object, PENDING,
                 Timestamp.from(Instant.now().plus(VALIDITY)));
@@ -89,7 +89,7 @@ public class StagedImageUploads {
             } catch (Exception failure) {
                 throw new IllegalStateException("暂存图片上传失败", failure);
             }
-            jdbc.update("UPDATE asset_upload SET state=? WHERE id=? AND state=?", READY, id, PENDING);
+            jdbc.update("UPDATE fw_oss_asset_upload SET state=? WHERE id=? AND state=?", READY, id, PENDING);
         });
         return new AssetUpload(REFERENCE_PREFIX + id);
     }
@@ -124,7 +124,7 @@ public class StagedImageUploads {
                 || !row.owner().equals(owner) || !row.purpose().equals(purpose) || !row.target().equals(key(target))) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        jdbc.update("DELETE FROM asset_upload WHERE id=?", id);
+        jdbc.update("DELETE FROM fw_oss_asset_upload WHERE id=?", id);
         return row.bucket() + "/" + row.object();
     }
 
@@ -132,7 +132,7 @@ public class StagedImageUploads {
     @Scheduled(fixedDelay = CLEANUP_INTERVAL_MS)
     public void cleanExpired() {
         var now = Instant.now();
-        var ids = jdbc.queryForList("SELECT id FROM asset_upload WHERE expires_at<=? ORDER BY expires_at LIMIT ?",
+        var ids = jdbc.queryForList("SELECT id FROM fw_oss_asset_upload WHERE expires_at<=? ORDER BY expires_at LIMIT ?",
                 String.class, Timestamp.from(now), CLEANUP_BATCH_SIZE);
         for (String id : ids) {
             try {
@@ -144,7 +144,7 @@ public class StagedImageUploads {
                         } catch (Exception failure) {
                             throw new IllegalStateException("暂存图片删除失败", failure);
                         }
-                        jdbc.update("DELETE FROM asset_upload WHERE id=?", id);
+                        jdbc.update("DELETE FROM fw_oss_asset_upload WHERE id=?", id);
                     }
                 });
             } catch (RuntimeException failure) {

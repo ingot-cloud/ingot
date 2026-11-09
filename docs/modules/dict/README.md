@@ -151,11 +151,11 @@ DictService.evict(dictCode)  ←  L1 + L2 自顶向下逐层清理
 
 ## 数据库设计
 
-字典单表 `platform_dict` 同时存储字典类型节点（`type=TYPE`）与字典项节点（`type=ITEM`），通过 `pid` 形成两层树形结构。完整字段定义见 [API / RPC 参考](./API-REFERENCE.md#数据库platform_dict)。
+字典单表 `iam_dictionary` 同时存储字典类型节点（`type=TYPE`）与字典项节点（`type=ITEM`），通过 `pid` 形成两层树形结构。完整字段定义见 [API / RPC 参考](./API-REFERENCE.md#数据库iam_dictionary)。
 
 ```sql
 -- 关键字段示意
-CREATE TABLE platform_dict (
+CREATE TABLE iam_dictionary (
     id          bigint        NOT NULL,
     pid         bigint        DEFAULT NULL COMMENT '父ID（字典项指向其字典类型）',
     code        varchar(64)   NOT NULL    COMMENT '字典编码',
@@ -180,7 +180,7 @@ CREATE TABLE platform_dict (
 
 数据库迁移脚本：
 
-- `databases/migrations/003_rename_meta_to_platform.sql` — 把 `meta_dict` 重命名为 `platform_dict`
+- `databases/migrations/003_rename_meta_to_platform.sql` — 把 `meta_dict` 重命名为 `iam_dictionary`
 - `databases/migrations/004_upgrade_platform_dict.sql` — 升级到企业级字段方案（新增 `value/label/scope_type/tenant_id/app_id/sort/system_flag/extra/审计字段`）
 
 ---

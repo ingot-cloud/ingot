@@ -10,7 +10,7 @@ import java.util.Optional;
 
 
 /**
- * 锁定状态数据访问端口（基于 account_lock_state 表）
+ * 锁定状态数据访问端口（基于 fw_security_account_lock_state 表）
  *
  * @author jymot
  * @since 2026-02-13

@@ -249,8 +249,8 @@ Credential Service 数据库存储策略配置和审计日志，实现策略的�
 各服务独立数据库存储密码历史和过期信息，实现数据的服务自治。
 
 **核心表：**
-- `password_history` - 密码历史表（环形缓冲设计）
-- `password_expiration` - 密码过期表
+- `fw_security_password_history` - 密码历史表（环形缓冲设计）
+- `fw_security_password_expiration` - 密码过期表
 
 **数据库脚本位置：**
 - `databases/ingot_security.sql` - Credential Service

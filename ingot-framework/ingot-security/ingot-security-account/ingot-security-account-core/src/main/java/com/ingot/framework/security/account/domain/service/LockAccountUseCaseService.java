@@ -50,7 +50,7 @@ public class LockAccountUseCaseService implements LockAccountUseCase {
             return;
         }
 
-        // 1. 更新锁定状态（account_lock_state 表）
+        // 1. 更新锁定状态（fw_security_account_lock_state 表）
         lockStatePort.updateLockStatus(
                 command.getUserId(),
                 command.getUserType(),

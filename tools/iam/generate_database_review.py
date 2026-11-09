@@ -11,7 +11,7 @@ TARGET = ROOT / 'docs/modules/iam/DATABASE-REVIEW.md'
 
 # 评估依据为当前生产入口；不使用行数、负载或碎片的虚构测量。
 NOTES = {
-'asset_upload': '一次性上传凭证按ID取得并在业务事务中消费；归属、用途、目标绑定与到期清理由上传框架维护，属于有效运行结构。',
+'fw_oss_asset_upload': '一次性上传凭证按ID取得并在业务事务中消费；归属、用途、目标绑定与到期清理由上传框架维护，属于有效运行结构。',
 'iam_account': '全局账号按ID及登录名定位；手机号/邮箱索引服务匹配检索。账号、成员和外部用户标识不可混用。',
 'iam_platform_member': '按账号唯一定位平台资格；状态列表使用status/id。account_id唯一索引同时防止重复资格。',
 'iam_tenant': '组织ID是组织事务的锁定对象；(id,owner_member_id)支持所属组织拥有者复合引用，不因id已有主键就删除。',
@@ -62,16 +62,16 @@ NOTES = {
 'iam_authorization_audit': '审计按租户时间、操作者、分配创建及待投递分别检索；event_id唯一承担幂等。需实际保留量、写入速率和执行计划才能判断索引增删。',
 'iam_role_application_task': '按角色/准备键幂等；running_role_id唯一限制同角色一个RUNNING；状态/租约/id服务多实例领取。状态变化触发辅助索引维护是必要成本。',
 'iam_role_application_item': 'task_id/assignment_id唯一去重，task_id/status/id支持批执行；独立ID承载明细状态和配置，不能按纯关联表处理。',
-'biz_leaf_alloc': '按业务标签锁定并领取号段，高水位增长不代表新增记录。biz_tag短字符串业务主键合适；禁止为改善顺序插入而重置高水位。',
-'platform_dict': '树父节点、编码、类型状态和作用域各有读取索引；code当前不是数据库唯一键，不能无业务确认直接加唯一约束。',
-'security_event': '数据库自增聚簇键，事件幂等、时间、用户、追踪索引分别服务入口；事件量和保留策略决定成本。event_id允许NULL，因此缺失幂等ID不互斥。',
-'sys_social_details': '按ID及渠道配置定位，第三方app_id为字符串客户端标识；旧列名不意味着当前IAM数字应用ID。',
-'sys_user_social': '独立绑定ID，unique_id/type/user_id反查渠道身份；是否需要其他方向查询和业务唯一约束需实际入口与历史重复数据共同验证。',
-'account_lock_state': '数据库自增ID，user_id/user_type业务唯一；locked/locked_until服务解锁扫描。框架持久化归属保留，不迁入IAM自有Mapper。',
-'password_history': '保留原自增主键及user_id/sequence_number业务唯一键；经隔离MySQL三态对照后删除重叠idx_user_id。实际PasswordHistoryServiceImpl按用户查询/覆盖槽位/删除；最近历史仍按created_at排序，本轮不改变环形历史行为。',
-'password_expiration': '自增ID，user_id唯一，expires_at和next_warning_at服务到期和提醒扫描；宽时效扫描成本需实际用户量及调度统计。',
+'fw_id_leaf_alloc': '按业务标签锁定并领取号段，高水位增长不代表新增记录。biz_tag短字符串业务主键合适；禁止为改善顺序插入而重置高水位。',
+'iam_dictionary': '树父节点、编码、类型状态和作用域各有读取索引；code当前不是数据库唯一键，不能无业务确认直接加唯一约束。',
+'fw_security_event': '数据库自增聚簇键，事件幂等、时间、用户、追踪索引分别服务入口；事件量和保留策略决定成本。event_id允许NULL，因此缺失幂等ID不互斥。',
+'iam_social_config': '按ID及渠道配置定位，第三方app_id为字符串客户端标识；旧列名不意味着当前IAM数字应用ID。',
+'iam_account_social_binding': '独立绑定ID，unique_id/type/user_id反查渠道身份；是否需要其他方向查询和业务唯一约束需实际入口与历史重复数据共同验证。',
+'fw_security_account_lock_state': '数据库自增ID，user_id/user_type业务唯一；locked/locked_until服务解锁扫描。框架持久化归属保留，不迁入IAM自有Mapper。',
+'fw_security_password_history': '保留原自增主键及user_id/sequence_number业务唯一键；经隔离MySQL三态对照后删除重叠idx_user_id。实际PasswordHistoryServiceImpl按用户查询/覆盖槽位/删除；最近历史仍按created_at排序，本轮不改变环形历史行为。',
+'fw_security_password_expiration': '自增ID，user_id唯一，expires_at和next_warning_at服务到期和提醒扫描；宽时效扫描成本需实际用户量及调度统计。',
 }
-RUNTIME = {'iam_role_parameter','iam_role_assignment','iam_member_export','iam_member_workbook','iam_department_workbook','iam_download_task','iam_authorization_audit','security_event','password_expiration','sys_user_social'}
+RUNTIME = {'iam_role_parameter','iam_role_assignment','iam_member_export','iam_member_workbook','iam_department_workbook','iam_download_task','iam_authorization_audit','fw_security_event','fw_security_password_expiration','iam_account_social_binding'}
 CANDIDATES = set()
 REWRITES = {'iam_member_department':'已改为共享差量写入', 'iam_department_leader':'已为差量；本轮跳过不变主标记',
  'iam_platform_group_member':'已改为差量写入','iam_tenant_group_member':'已改为差量写入','iam_tenant_group_department':'已改为差量写入及属性UPDATE',
@@ -136,13 +136,13 @@ def render():
         entities=[p.stem for p,text in direct if '@TableName' in text]
         related=[p for p,text in java if p.name.endswith('Repository.java') and any(re.search(r'\b'+e+r'\b',text) for e in entities)]
         evidence=list(dict.fromkeys(related+[p for p,_ in direct]))[:3]
-        if t.name == 'password_history':
+        if t.name == 'fw_security_password_history':
             evidence = [ROOT / 'ingot-framework/ingot-security/ingot-security-credential-data/src/main/java/com/ingot/framework/security/credential/data/service/PasswordHistoryServiceImpl.java']
         links=', '.join(f'[{p.name}](../../../{p.relative_to(ROOT)})' for p in evidence) or '受控迁移/建库工具，未发现在线业务写入入口'
         pk=' / '.join(keys) if keys else '未声明；唯一键含可空生成列，使用InnoDB隐藏行标识'
         gen='数据库AUTO_INCREMENT' if any('AUTO_INCREMENT' in x.upper() for x in t.columns.values()) else '组合关系/业务配置键，由绑定对象或受控工具提供' if len(keys)!=1 or keys[0]!='id' else '服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号'
         gen = {'iam_delegation_recipient_member': 'IAM Leaf号段发号，应用显式填入BigInteger/IdType.INPUT',
-               'biz_leaf_alloc': '配置的业务标签字符串，原行更新号段高水位'}.get(t.name,gen)
+               'fw_id_leaf_alloc': '配置的业务标签字符串，原行更新号段高水位'}.get(t.name,gen)
         foreign=[x for x in parts(definition[start+1:end]) if 'FOREIGN KEY' in x.upper()]
         lines += [f'### {t.name} — {decision}（{priority}）','',comment(t.options),'',
                   f'- 主键：`{pk}`；宽度：{width(t,keys) if keys else "隐藏行标识6字节，另维护业务唯一索引"}。',

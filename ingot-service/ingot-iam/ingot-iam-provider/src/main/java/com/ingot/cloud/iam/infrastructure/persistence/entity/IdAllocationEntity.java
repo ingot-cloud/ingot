@@ -20,7 +20,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@TableName("biz_leaf_alloc")
+@TableName("fw_id_leaf_alloc")
 public class IdAllocationEntity extends BaseModel<IdAllocationEntity> {
     @Serial
     private static final long serialVersionUID = 1L;

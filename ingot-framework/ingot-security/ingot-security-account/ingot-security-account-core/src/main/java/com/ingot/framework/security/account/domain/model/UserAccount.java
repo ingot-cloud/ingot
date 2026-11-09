@@ -71,7 +71,7 @@ public class UserAccount {
     private Boolean enabled;
 
     /**
-     * 是否锁定（1-锁定 0-正常，详情见 account_lock_state）
+     * 是否锁定（1-锁定 0-正常，详情见 fw_security_account_lock_state）
      */
     private Boolean locked;
 

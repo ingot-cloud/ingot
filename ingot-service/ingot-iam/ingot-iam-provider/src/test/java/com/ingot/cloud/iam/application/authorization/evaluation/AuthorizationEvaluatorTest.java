@@ -155,7 +155,7 @@ class AuthorizationEvaluatorTest {
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY,account_id BIGINT,status VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,enabled BOOLEAN,deleted_at TIMESTAMP)");
         jdbc.execute("ALTER TABLE iam_account ADD COLUMN must_change_password BOOLEAN DEFAULT FALSE NOT NULL");
-        jdbc.execute("CREATE TABLE account_lock_state(user_id BIGINT,user_type VARCHAR(16),locked BOOLEAN,locked_until TIMESTAMP)");
+        jdbc.execute("CREATE TABLE fw_security_account_lock_state(user_id BIGINT,user_type VARCHAR(16),locked BOOLEAN,locked_until TIMESTAMP)");
         jdbc.update("INSERT INTO iam_account(id,enabled,deleted_at) VALUES (1,TRUE,NULL)");
         jdbc.update("INSERT INTO iam_platform_member VALUES (1001,1,'ACTIVE')");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,status VARCHAR(16))");
@@ -766,9 +766,9 @@ class AuthorizationEvaluatorTest {
         jdbc.update("UPDATE iam_role_assignment SET valid_until=NULL,delegation_grant_id=1 WHERE id=41");
         assertFalse(evaluator.platformAdministrator(PLATFORM));
         jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=NULL WHERE id=41");
-        jdbc.update("INSERT INTO account_lock_state VALUES (1,'0',TRUE,NULL)");
+        jdbc.update("INSERT INTO fw_security_account_lock_state VALUES (1,'0',TRUE,NULL)");
         assertFalse(evaluator.platformAdministrator(PLATFORM));
-        jdbc.update("DELETE FROM account_lock_state");
+        jdbc.update("DELETE FROM fw_security_account_lock_state");
         jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=1");
         assertFalse(evaluator.platformAdministrator(PLATFORM));
         assertFalse(evaluator.platformAdministrator(TENANT));

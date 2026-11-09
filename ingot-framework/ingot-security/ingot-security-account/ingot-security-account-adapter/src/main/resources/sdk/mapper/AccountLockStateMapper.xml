@@ -7,7 +7,7 @@
         依赖唯一键 uk_user_id_type (user_id, user_type)。
     -->
     <insert id="upsertIncrementFailCount">
-        INSERT INTO account_lock_state
+        INSERT INTO fw_security_account_lock_state
             (user_id, user_type, locked, failed_login_count, last_failed_at, created_at, updated_at)
         VALUES
             (#{userId}, #{userType}, 0, 1, #{now}, #{now}, #{now})
@@ -19,7 +19,7 @@
 
     <!-- 直接将失败计数清零，无需先 SELECT -->
     <update id="resetFailCountDirect">
-        UPDATE account_lock_state
+        UPDATE fw_security_account_lock_state
         SET failed_login_count = 0,
             last_failed_at     = NULL,
             updated_at         = #{now}
@@ -29,7 +29,7 @@
 
     <select id="findExpiredLocksByPage" resultType="com.ingot.framework.security.account.adapter.entity.AccountLockStateEntity">
         SELECT *
-        FROM account_lock_state
+        FROM fw_security_account_lock_state
         WHERE locked = 1
           AND locked_until IS NOT NULL
           AND locked_until &lt;= #{now}

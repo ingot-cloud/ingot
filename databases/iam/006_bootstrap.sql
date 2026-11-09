@@ -8,9 +8,9 @@ SET time_zone = '+00:00';
 -- 平台首个账号由 provider 冷启动器经安全框架注册用例创建。
 
 -- 发号准备：静态保留标识全部小于起点，运行时发号不会与种子冲突。
-INSERT INTO biz_leaf_alloc (biz_tag, max_id, step, description)
+INSERT INTO fw_id_leaf_alloc (biz_tag, max_id, step, description)
 SELECT 'iam', 1000000, 100, 'IAM 冷启动发号' FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM biz_leaf_alloc WHERE biz_tag = 'iam');
+WHERE NOT EXISTS (SELECT 1 FROM fw_id_leaf_alloc WHERE biz_tag = 'iam');
 
 -- 应用：租户域基础应用在组织创建时缺省开通。
 INSERT INTO iam_application (id, code, domain, name, icon, description, sort_order, baseline, enabled)

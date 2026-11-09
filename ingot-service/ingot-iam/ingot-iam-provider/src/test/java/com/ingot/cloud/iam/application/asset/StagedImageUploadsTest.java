@@ -53,7 +53,7 @@ class StagedImageUploadsTest {
         transaction = new TransactionTemplate(manager);
         jdbc = new JdbcTemplate(source);
         jdbc.execute("""
-                CREATE TABLE asset_upload (id VARCHAR(36) PRIMARY KEY, owner_key VARCHAR(128), purpose VARCHAR(64),
+                CREATE TABLE fw_oss_asset_upload (id VARCHAR(36) PRIMARY KEY, owner_key VARCHAR(128), purpose VARCHAR(64),
                 target_key VARCHAR(64), bucket_name VARCHAR(128), object_name VARCHAR(256),
                 state VARCHAR(16), expires_at TIMESTAMP)
                 """);
@@ -67,7 +67,7 @@ class StagedImageUploadsTest {
         assertThrows(BizException.class, () -> uploads.stage(OWNER, PURPOSE, TARGET,
                 new ByteArrayInputStream(new byte[5 * 1024 * 1024 + 1])));
         verifyNoInteractions(storage);
-        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM asset_upload", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM fw_oss_asset_upload", Integer.class));
     }
 
     @Test
@@ -97,10 +97,10 @@ class StagedImageUploadsTest {
             assertEquals(1, first.get() + second.get());
         }
         String expired = stage();
-        jdbc.update("UPDATE asset_upload SET expires_at=?", Timestamp.from(Instant.EPOCH));
+        jdbc.update("UPDATE fw_oss_asset_upload SET expires_at=?", Timestamp.from(Instant.EPOCH));
         assertDenied(OWNER, PURPOSE, TARGET, expired);
         uploads.cleanExpired();
-        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM asset_upload", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM fw_oss_asset_upload", Integer.class));
     }
 
     @Test
@@ -126,13 +126,13 @@ class StagedImageUploadsTest {
             assertTrue(response.body().length > 0);
         }
         stage();
-        String orphan = jdbc.queryForObject("SELECT object_name FROM asset_upload", String.class);
+        String orphan = jdbc.queryForObject("SELECT object_name FROM fw_oss_asset_upload", String.class);
         try (var input = minio.getObject(bucket, orphan)) {
             assertTrue(input.read() >= 0);
         }
-        jdbc.update("UPDATE asset_upload SET expires_at=?", Timestamp.from(Instant.EPOCH));
+        jdbc.update("UPDATE fw_oss_asset_upload SET expires_at=?", Timestamp.from(Instant.EPOCH));
         uploads.cleanExpired();
-        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM asset_upload", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM fw_oss_asset_upload", Integer.class));
         assertThrows(RuntimeException.class, () -> minio.getObject(bucket, orphan));
         try (var input = minio.getObject(bucket, object)) {
             assertTrue(input.read() >= 0);

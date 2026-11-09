@@ -26,7 +26,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_social_details")
+@TableName("iam_social_config")
 public class SocialConfigEntity extends BaseModel<SocialConfigEntity> {
 
     @Serial

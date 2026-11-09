@@ -19,7 +19,7 @@
 # 可通过 priority-overrides 按 eventType 覆盖内置默认表。
 #
 # =============================================================================
-# 场景 A：IAM / Member（业务库本地 canonical security_event）
+# 场景 A：IAM / Member（业务库本地 canonical fw_security_event）
 # 用于：in-service-iam.yml、in-service-member.yml
 # =============================================================================
 
@@ -30,7 +30,7 @@ ingot:
       enabled: true
 
       # 主投递目标。
-      # local  = 写入本服务库 security_event（须 classpath 有 Store，通常配 primary-store: mysql）
+      # local  = 写入本服务库 fw_security_event（须 classpath 有 Store，通常配 primary-store: mysql）
       # center = 经 Feign/Transport 上报 ingot-security 中心 admission
       target: local
 
@@ -43,7 +43,7 @@ ingot:
       # 元素取值：local | center；与主 target 去重后额外投递一份，shadow 失败不影响主链路 ack。
       shadow-targets: []
 
-      # 上报方模块标识，写入 security_event.source_module。
+      # 上报方模块标识，写入 fw_security_event.source_module。
       # IAM 填 IAM，Member 填 MEMBER。
       source-module: IAM
 
@@ -90,12 +90,12 @@ ingot:
 
       # MySQL SecurityEventStore 写入侧参数（target=local 且 primary-store=mysql 时生效）。
       mysql:
-        # 并发写入信号量许可数；默认 1，避免 canonical security_event 热点写冲突。
+        # 并发写入信号量许可数；默认 1，避免 canonical fw_security_event 热点写冲突。
         max-concurrent-writes: 1
         # 单批 INSERT 事务超时（秒）。
         transaction-timeout-seconds: 5
 
-      # canonical security_event 过期物理删除（PurgeCanonicalSecurityEventTask，cron 0 30 3 * * ?）。
+      # canonical fw_security_event 过期物理删除（PurgeCanonicalSecurityEventTask，cron 0 30 3 * * ?）。
       retention:
         # 是否启用定时清理；false 等同永久保留。
         enabled: true
@@ -126,13 +126,13 @@ ingot:
       # 总开关；Gateway 仅在上报 ACCESS 类事件时依赖此项。
       enabled: true
 
-      # center：经 Feign 上报 ingot-security admission；不写网关本地 security_event 表。
+      # center：经 Feign 上报 ingot-security admission；不写网关本地 fw_security_event 表。
       target: center
 
       # Gateway 稳定态不需要 shadow；留空 []。
       shadow-targets: []
 
-      # 写入中心 security_event.source_module。
+      # 写入中心 fw_security_event.source_module。
       source-module: GATEWAY
 
       # Gateway 通常只产生 ACCESS 类事件；其余类别关闭可减少无效配置。
@@ -158,7 +158,7 @@ ingot:
         enabled: false
 
 # =============================================================================
-# 场景 C：Security 中心（ingot_security.security_event）
+# 场景 C：Security 中心（ingot_security.fw_security_event）
 # 用于：in-service-security.yml
 # =============================================================================
 
@@ -168,7 +168,7 @@ ingot:
       # 中心 admission 接收的事件异步入库；false 则 admission 入队被禁用。
       enabled: true
 
-      # 中心将事件写入本库 ingot_security.security_event。
+      # 中心将事件写入本库 ingot_security.fw_security_event。
       target: local
 
       primary-store: mysql

@@ -170,7 +170,7 @@ GET    /v1/platform/base/dict/items/{code}            字典项查询
 
 ### 4.1 字典类型 vs 字典项
 
-`platform_dict` 是单表两层树：
+`iam_dictionary` 是单表两层树：
 
 ```
 [TYPE]  user_status  "用户状态"
@@ -252,7 +252,7 @@ String color = extra == null ? null : (String) extra.get("color");
 
 仅在以下罕见场景：
 
-1. **绕过 IAM 直接写库**（例如运维通过 SQL 直接修改 `platform_dict`）：
+1. **绕过 IAM 直接写库**（例如运维通过 SQL 直接修改 `iam_dictionary`）：
    ```java
    dictService.evict("user_status");      // 单 code
    dictService.evictAll();                 // 全量

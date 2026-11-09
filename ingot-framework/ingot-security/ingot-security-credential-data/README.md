@@ -47,8 +47,8 @@ mysql -u root -p ingot_core < databases/migrations/add_password_history.sql
 ```
 
 **创建的表：**
-- `password_history` - 密码历史（环形缓冲）
-- `password_expiration` - 密码过期信息
+- `fw_security_password_history` - 密码历史（环形缓冲）
+- `fw_security_password_expiration` - 密码过期信息
 
 ---
 
@@ -262,10 +262,10 @@ public class CredentialDataAutoConfiguration {
 
 ## 📊 数据库设计
 
-### password_history 表
+### fw_security_password_history 表
 
 ```sql
-CREATE TABLE password_history (
+CREATE TABLE fw_security_password_history (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL COMMENT '用户ID',
   password_hash VARCHAR(255) NOT NULL COMMENT '密码哈希',
@@ -284,10 +284,10 @@ CREATE TABLE password_history (
 
 ---
 
-### password_expiration 表
+### fw_security_password_expiration 表
 
 ```sql
-CREATE TABLE password_expiration (
+CREATE TABLE fw_security_password_expiration (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL UNIQUE COMMENT '用户ID',
   last_changed_at DATETIME NOT NULL COMMENT '最后修改时间',
@@ -383,7 +383,7 @@ ingot:
 │    Member Service        │      IAM Service             │
 │  (会员数据 - 分散存储)    │   (管理员数据 - 分散存储)     │
 │  ┌──────────────────┐    │    ┌──────────────────┐      │
-│  │ password_history │    │    │ password_history │      │
+│  │ fw_security_password_history │    │    │ fw_security_password_history │      │
 │  │ password_expire  │    │    │ password_expire  │      │
 │  └──────────────────┘    │    └──────────────────┘      │
 └──────────────────────────┴──────────────────────────────┘
@@ -524,3 +524,7 @@ Copyright © 2026 Ingot Cloud
 
 **版本：** 0.1.0  
 **最后更新：** 2026-01-30
+
+## 数据库建表
+
+本模块的数据库结构由[src/main/resources/sql/ingot-security-credential-data/schema.sql](src/main/resources/sql/ingot-security-credential-data/schema.sql)维护，表为`fw_security_password_history`、`fw_security_password_expiration`。在消费服务DataSource对应的库执行，脚本不选库、不删表、不写入运行数据；完整服务初始化已包含时无需重复执行。依赖与服务落库关系见仓库根[databases/README.md](../../../databases/README.md)。

@@ -259,10 +259,10 @@ spring:
 3. **历史密码查询优化**
 ```sql
 -- 使用索引
-CREATE INDEX idx_user_created ON password_history(user_id, created_at DESC);
+CREATE INDEX idx_user_created ON fw_security_password_history(user_id, created_at DESC);
 
 -- 限制查询数量
-SELECT * FROM password_history 
+SELECT * FROM fw_security_password_history
 WHERE user_id = ? 
 ORDER BY created_at DESC 
 LIMIT 5;

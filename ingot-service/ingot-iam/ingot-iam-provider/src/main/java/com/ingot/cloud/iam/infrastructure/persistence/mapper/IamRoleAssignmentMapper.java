@@ -334,7 +334,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
                AND ra.subject_type='MEMBER' AND ra.delegation_grant_id IS NULL AND ra.revision_kind='SYSTEM'
                AND r.code=#{code} AND r.enabled=TRUE AND r.tenant_id IS NULL AND ra.platform_member_id=#{memberId}
                AND ra.valid_from<=CURRENT_TIMESTAMP AND (ra.valid_until IS NULL OR ra.valid_until>CURRENT_TIMESTAMP)
-               AND NOT EXISTS (SELECT 1 FROM account_lock_state ls WHERE ls.user_id=ac.id AND ls.user_type='0'
+               AND NOT EXISTS (SELECT 1 FROM fw_security_account_lock_state ls WHERE ls.user_id=ac.id AND ls.user_type='0'
                  AND ls.locked=TRUE AND (ls.locked_until IS NULL OR ls.locked_until>CURRENT_TIMESTAMP))
              ORDER BY ra.id
             """)
@@ -356,7 +356,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
                AND ra.subject_type='MEMBER' AND ra.delegation_grant_id IS NULL AND ra.revision_kind='SYSTEM'
                AND r.code=#{code} AND r.enabled=TRUE AND r.tenant_id IS NULL
                AND ra.valid_from<=CURRENT_TIMESTAMP AND ra.valid_until IS NULL
-               AND NOT EXISTS (SELECT 1 FROM account_lock_state ls WHERE ls.user_id=ac.id AND ls.user_type='0'
+               AND NOT EXISTS (SELECT 1 FROM fw_security_account_lock_state ls WHERE ls.user_id=ac.id AND ls.user_type='0'
                  AND ls.locked=TRUE AND (ls.locked_until IS NULL OR ls.locked_until>CURRENT_TIMESTAMP))
             """)
     long availablePermanentAdministrators(@Param("code") String code);

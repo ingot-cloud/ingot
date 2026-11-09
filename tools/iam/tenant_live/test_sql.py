@@ -10,6 +10,7 @@ sys.path.insert(0,str(ROOT))
 sys.path.insert(0,str(Path(__file__).parent))
 from databases.iam import test_identity_schema as schema
 from tools.iam.database_sources import legacy_schema_files
+from tools.iam.historical_schema import restore_historical_tables
 from migrate import preflight,forward,reverse,digest,verify
 from export import export
 from tools.iam.tenant_live.legacy_fixture import read_legacy_schema
@@ -21,6 +22,7 @@ class MigrationSqlTest(unittest.TestCase):
     def stop_container(cls):schema.IdentitySchemaTest.stop_container.__func__(cls)
     def setUp(self):
         schema.IdentitySchemaTest.setUp(self)
+        restore_historical_tables(self.sql)
         for source in legacy_schema_files():
             self.sql(source.read_text())
         self.sql("UPDATE iam_resource SET scope_capabilities='[\"ALL\",\"SELF\"]'")

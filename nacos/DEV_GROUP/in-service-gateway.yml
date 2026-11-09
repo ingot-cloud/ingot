@@ -113,11 +113,11 @@ ingot:
     event:
       # 总开关；Gateway 仅在上报 ACCESS 类事件时依赖此项。
       enabled: true
-      # center：经 Feign 上报 ingot-security admission；不写网关本地 security_event 表。
+      # center：经 Feign 上报 ingot-security admission；不写网关本地 fw_security_event 表。
       target: center
       # Gateway 稳定态不需要 shadow；留空 []。
       shadow-targets: []
-      # 写入中心 security_event.source_module。
+      # 写入中心 fw_security_event.source_module。
       source-module: GATEWAY
       # Gateway 通常只产生 ACCESS 类事件；其余类别关闭可减少无效配置。
       categories:

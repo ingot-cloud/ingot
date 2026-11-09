@@ -477,7 +477,7 @@ Credential Service DB (ingot_credential)
 └── 策略配置、审计日志（集中管理）
 
 Member Service DB / IAM Service DB
-└── password_history, password_expiration（本地管理）
+└── fw_security_password_history, fw_security_password_expiration（本地管理）
 ```
 
 **优势：**
@@ -536,7 +536,7 @@ CREATE TABLE credential_audit_log (
 
 ```sql
 -- 密码历史表（环形缓冲）
-CREATE TABLE password_history (
+CREATE TABLE fw_security_password_history (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
@@ -547,7 +547,7 @@ CREATE TABLE password_history (
 );
 
 -- 密码过期表
-CREATE TABLE password_expiration (
+CREATE TABLE fw_security_password_expiration (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL UNIQUE,
   last_changed_at DATETIME NOT NULL,

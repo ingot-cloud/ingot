@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / 'databases/iam/manifest.json'
+DATABASE_NAME = 'ingot_iam'
 CREATE_TABLE = re.compile(r'^CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`?([a-z_]+)', re.MULTILINE)
 FRAMEWORK_CREATE = re.compile(
     r'^CREATE TABLE\s+(?:IF NOT EXISTS\s+)?[^\n]+\([\s\S]*?^\)\s*ENGINE[^;]*;',
@@ -33,7 +34,7 @@ def schema_files():
 
 
 def legacy_schema_files():
-    """显式选择的历史元数据/记录结构，绝不进入默认建库或重建清单。"""
+    """显式选择的历史元数据/记录结构，不进入首次部署的建表清单。"""
     return sources('legacySchemas')
 
 
@@ -55,32 +56,35 @@ def read_source(path):
 
 
 def render_bundle():
-    """重建清单内的表，外键仅在删除阶段关闭，不携带开发快照数据。"""
+    """输出自包含的首次部署SQL，重建固定IAM库及必要基础数据。"""
     contents = [(path, read_source(path)) for path in initialization_files()]
-    tables = []
     names = set()
     for _, content in contents:
         for table in CREATE_TABLE.findall(content):
             if table in names:
                 raise ValueError('重复CREATE TABLE: ' + table)
             names.add(table)
-            tables.append(table)
     lines = [
-        '-- IAM 完整初始化（可重复执行；每次清空并重建清单内全部表，不是已有库升级脚本）。',
+        '-- IAM 首次部署完整初始化：直接执行本文件即可建库、建表并写入默认数据。',
+        '-- 每次执行都会删除并重建 ingot_iam 库，该库已有表及数据全部清空。',
         '-- 自动生成：python3 tools/iam/generate_database.py；不要手工编辑。',
         '-- 来源顺序：databases/iam/manifest.json；框架DDL仍由原模块维护。',
-        '-- 在调用者选定的数据库执行；先备份并停止服务，无CREATE/DROP DATABASE或固定USE。',
-        '-- 写入正式治理目录和唯一的平台管理员账号；业务组织由管理员手动创建。',
+        '-- 固定作用于 ingot_iam，不需要预先建库或选择数据库；执行前停止使用该库的服务。',
+        '-- 包含应用、资源、权限操作、菜单、角色及关联；不导入测试租户或运行记录。',
+        '-- 默认平台账号 platform，初始密码 11111111，首次登录必须修改密码。',
         '-- MySQL 8.0.16+；仅删除阶段关闭外键，建表/种子阶段开启，最后恢复原设置；数据时间按UTC写入。',
         'SET NAMES utf8mb4;',
         "SET SESSION time_zone = '+00:00';",
         '',
-        '-- 重建：组织与所有者等循环外键要求先删除全部目标表，再开始建表。',
+        '-- 整库重建同时移除历史迁移表和其他遗留表；不处理其他数据库。',
         'SET @iam_init_previous_foreign_key_checks = @@SESSION.FOREIGN_KEY_CHECKS;',
         'SET SESSION FOREIGN_KEY_CHECKS = 0;',
+        f'DROP DATABASE IF EXISTS `{DATABASE_NAME}`;',
+        f'CREATE DATABASE `{DATABASE_NAME}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;',
+        f'USE `{DATABASE_NAME}`;',
+        'SET SESSION FOREIGN_KEY_CHECKS = 1;',
+        '',
     ]
-    lines.extend(f'DROP TABLE IF EXISTS `{table}`;' for table in reversed(tables))
-    lines.extend(['SET SESSION FOREIGN_KEY_CHECKS = 1;', ''])
     for path, content in contents:
         lines.extend(['-- ====================================================================',
                       '-- Source: ' + str(path.relative_to(ROOT)),

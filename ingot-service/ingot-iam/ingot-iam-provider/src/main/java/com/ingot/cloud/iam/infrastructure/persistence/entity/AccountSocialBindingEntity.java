@@ -23,7 +23,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TenantTable
-@TableName("sys_user_social")
+@TableName("iam_account_social_binding")
 public class AccountSocialBindingEntity extends BaseModel<AccountSocialBindingEntity> {
 
     @Serial

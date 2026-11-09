@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.*;
 
 public interface IDAllocMapper {
 
-    @Select("SELECT biz_tag, max_id, step, update_time FROM biz_leaf_alloc")
+    @Select("SELECT biz_tag, max_id, step, update_time FROM fw_id_leaf_alloc")
     @Results(value = {
             @Result(column = "biz_tag", property = "key"),
             @Result(column = "max_id", property = "maxId"),
@@ -16,7 +16,7 @@ public interface IDAllocMapper {
     })
     List<LeafAlloc> getAllLeafAllocs();
 
-    @Select("SELECT biz_tag, max_id, step FROM biz_leaf_alloc WHERE biz_tag = #{tag}")
+    @Select("SELECT biz_tag, max_id, step FROM fw_id_leaf_alloc WHERE biz_tag = #{tag}")
     @Results(value = {
             @Result(column = "biz_tag", property = "key"),
             @Result(column = "max_id", property = "maxId"),
@@ -24,12 +24,12 @@ public interface IDAllocMapper {
     })
     LeafAlloc getLeafAlloc(@Param("tag") String tag);
 
-    @Update("UPDATE biz_leaf_alloc SET max_id = max_id + step WHERE biz_tag = #{tag}")
+    @Update("UPDATE fw_id_leaf_alloc SET max_id = max_id + step WHERE biz_tag = #{tag}")
     void updateMaxId(@Param("tag") String tag);
 
-    @Update("UPDATE biz_leaf_alloc SET max_id = max_id + #{step} WHERE biz_tag = #{key}")
+    @Update("UPDATE fw_id_leaf_alloc SET max_id = max_id + #{step} WHERE biz_tag = #{key}")
     void updateMaxIdByCustomStep(@Param("leafAlloc") LeafAlloc leafAlloc);
 
-    @Select("SELECT biz_tag FROM biz_leaf_alloc")
+    @Select("SELECT biz_tag FROM fw_id_leaf_alloc")
     List<String> getAllTags();
 }

@@ -27,7 +27,7 @@ public interface RemoteSecurityPolicyService {
     R<SecurityPolicySnapshotVO> snapshot();
 
     /**
-     * 上报访问防护类安全事件，由 ingot-security 落 {@code security_event}。
+     * 上报访问防护类安全事件，由 ingot-security 落 {@code fw_security_event}。
      * 兼容旧路径 {@code /inner/security/blacklist/report}，内部转调统一入库。
      */
     @PostMapping("/inner/security/blacklist/report")

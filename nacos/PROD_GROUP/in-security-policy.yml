@@ -117,7 +117,7 @@ ingot:
           retry-max-ms: 60000
       # MySQL SecurityEventStore 写入侧参数（target=local 且 primary-store=mysql 时生效）。
       mysql:
-        # 并发写入信号量许可数；默认 1，避免 canonical security_event 热点写冲突。
+        # 并发写入信号量许可数；默认 1，避免 canonical fw_security_event 热点写冲突。
         max-concurrent-writes: 1
         # 单批 INSERT 事务超时（秒）。
         transaction-timeout-seconds: 5

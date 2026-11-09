@@ -459,9 +459,9 @@ def build(check=False):
         '-- 发号准备：静态保留标识全部小于起点，运行时发号不会与种子冲突。',
     ]
     lines.append(
-        f"INSERT INTO biz_leaf_alloc (biz_tag, max_id, step, description)\n"
+        f"INSERT INTO fw_id_leaf_alloc (biz_tag, max_id, step, description)\n"
         f"SELECT {quote(LEAF_TAG)}, {LEAF_MAX_ID}, {LEAF_STEP}, {quote('IAM 冷启动发号')} FROM DUAL\n"
-        f"WHERE NOT EXISTS (SELECT 1 FROM biz_leaf_alloc WHERE biz_tag = {quote(LEAF_TAG)});\n")
+        f"WHERE NOT EXISTS (SELECT 1 FROM fw_id_leaf_alloc WHERE biz_tag = {quote(LEAF_TAG)});\n")
 
     lines.append('-- 应用：租户域基础应用在组织创建时缺省开通。')
     for code, meta in APPLICATIONS.items():

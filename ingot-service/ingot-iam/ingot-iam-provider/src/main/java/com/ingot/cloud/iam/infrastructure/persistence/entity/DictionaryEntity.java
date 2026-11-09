@@ -35,7 +35,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@TableName(value = "platform_dict", autoResultMap = true)
+@TableName(value = "iam_dictionary", autoResultMap = true)
 public class DictionaryEntity extends BaseModel<DictionaryEntity> {
     @Serial
     private static final long serialVersionUID = 1L;

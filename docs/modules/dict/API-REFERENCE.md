@@ -9,7 +9,7 @@
 - [内部 RPC（Feign）](#内部-rpcfeign)
 - [事件总线契约](#事件总线契约)
 - [配置项](#配置项)
-- [数据库（platform_dict）](#数据库platform_dict)
+- [数据库（iam_dictionary）](#数据库iam_dictionary)
 - [枚举字典](#枚举字典)
 
 ---
@@ -340,12 +340,12 @@ ingot:
 
 ---
 
-## 数据库（`platform_dict`）
+## 数据库（`iam_dictionary`）
 
 ### 表结构
 
 ```sql
-CREATE TABLE `platform_dict` (
+CREATE TABLE `iam_dictionary` (
   `id`          bigint        NOT NULL,
   `pid`         bigint        DEFAULT NULL                    COMMENT '父ID（字典项指向其字典类型）',
   `code`        varchar(64)   NOT NULL                        COMMENT '字典编码',
@@ -392,7 +392,7 @@ CREATE TABLE `platform_dict` (
 
 | 版本 | 文件 | 说明 |
 |-----|------|------|
-| V3 | `databases/migrations/003_rename_meta_to_platform.sql` | `meta_dict` → `platform_dict` |
+| V3 | `databases/migrations/003_rename_meta_to_platform.sql` | `meta_dict` → `iam_dictionary` |
 | V4 | `databases/migrations/004_upgrade_platform_dict.sql` | 升级到企业级字段方案 |
 
 回滚脚本：`databases/migrations/rollback_003.sql`。
@@ -403,7 +403,7 @@ CREATE TABLE `platform_dict` (
 
 ```sql
 SELECT id, pid, code, name, value, label, sort, extra
-FROM platform_dict
+FROM iam_dictionary
 WHERE deleted_at IS NULL
   AND code = 'user_status'
   AND type = '1'
@@ -415,7 +415,7 @@ ORDER BY sort ASC;
 按租户查（`scope_type='1'` + `tenant_id`）：
 
 ```sql
-SELECT ... FROM platform_dict
+SELECT ... FROM iam_dictionary
 WHERE deleted_at IS NULL
   AND code = 'order_status'
   AND scope_type = '1' AND tenant_id = 12345

@@ -14,7 +14,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from tools.iam.database_sources import schema_files, legacy_schema_files
+from tools.iam.database_sources import schema_files, legacy_schema_files, sources
 
 
 IMAGE = "mysql:8.4"
@@ -33,7 +33,8 @@ class IdentitySchemaTest(unittest.TestCase):
         result = subprocess.run(
             ["docker", "run", "--detach", "--rm", "--pull=never", "--network=none",
              "--name", "ingot-iam-identity-test-" + uuid.uuid4().hex,
-             "--env", "MYSQL_ALLOW_EMPTY_PASSWORD=yes", IMAGE],
+             "--env", "MYSQL_ALLOW_EMPTY_PASSWORD=yes", IMAGE,
+             "--innodb-buffer-pool-size=64M", "--performance-schema=OFF", "--max-connections=20"],
             check=True, capture_output=True, text=True, timeout=30,
         )
         cls.container = result.stdout.strip()
@@ -74,7 +75,7 @@ class IdentitySchemaTest(unittest.TestCase):
     def setUp(self):
         self.database = "iam_case_" + uuid.uuid4().hex
         self.sql(f"CREATE DATABASE `{self.database}`", database=False)
-        for schema in schema_files():
+        for schema in schema_files() + sources('frameworkSchemas'):
             self.sql(schema.read_text())
         self.sql("""
             INSERT INTO iam_account (id, username, password_hash) VALUES

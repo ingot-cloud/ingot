@@ -739,21 +739,7 @@
 - 判断：task_id/assignment_id唯一去重，task_id/status/id支持批执行；独立ID承载明细状态和配置，不能按纯关联表处理。
 - DDL证据：[004_policy_audit_migration.sql](../../../databases/iam/004_policy_audit_migration.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_role_application_item)。
 
-### biz_leaf_alloc — 保留（P3）
-
-Leaf业务号段分配高水位
-
-- 主键：`biz_tag`；宽度：512 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：配置的业务标签字符串，原行更新号段高水位。
-- 主要访问/写入：[IdAllocationEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IdAllocationEntity.java), [IDAllocMapper.java](../../../ingot-framework/ingot-id/src/main/java/com/ingot/framework/id/leaf/segment/dao/IDAllocMapper.java)。
-- 有效二级索引/业务唯一键：无。
-- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
-- 被其他表引用：未声明入向外键。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：按业务标签锁定并领取号段，高水位增长不代表新增记录。biz_tag短字符串业务主键合适；禁止为改善顺序插入而重置高水位。
-- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#biz_leaf_alloc)。
-
-### platform_dict — 保留（P3）
+### iam_dictionary — 保留（P3）
 
 多作用域字典及字典项
 
@@ -765,25 +751,9 @@ Leaf业务号段分配高水位
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：树父节点、编码、类型状态和作用域各有读取索引；code当前不是数据库唯一键，不能无业务确认直接加唯一约束。
-- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#platform_dict)。
+- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_dictionary)。
 
-### security_event — 需要运行数据验证（P2）
-
-统一安全事件（canonical）
-
-- 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：数据库AUTO_INCREMENT。
-- 主要访问/写入：[MySqlSecurityEventQueryRepository.java](../../../ingot-framework/ingot-security/ingot-security-event-store-mysql/src/main/java/com/ingot/framework/security/recording/store/mysql/MySqlSecurityEventQueryRepository.java), [RemoteSecurityPolicyService.java](../../../ingot-service/ingot-security/ingot-security-api/src/main/java/com/ingot/cloud/security/api/rpc/RemoteSecurityPolicyService.java), [CompositeSecurityEventPort.java](../../../ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/java/com/ingot/framework/security/account/adapter/port/CompositeSecurityEventPort.java)。
-- 有效二级索引/业务唯一键：``KEY `idx_event_type` (`event_type`,`received_at`)``；``KEY `idx_received_id` (`received_at`,`id`)``；``KEY `idx_tenant_user` (`tenant_id`,`user_id`)``；``KEY `idx_trace` (`trace_id`)``；``UNIQUE KEY `uk_event_id` (`event_id`)``。
-- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
-- 被其他表引用：未声明入向外键。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：数据库自增聚簇键，事件幂等、时间、用户、追踪索引分别服务入口；事件量和保留策略决定成本。event_id允许NULL，因此缺失幂等ID不互斥。
-- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#security_event)。
-
-后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
-
-### sys_social_details — 保留（P3）
+### iam_social_config — 保留（P3）
 
 社交登录渠道配置
 
@@ -795,9 +765,9 @@ Leaf业务号段分配高水位
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：按ID及渠道配置定位，第三方app_id为字符串客户端标识；旧列名不意味着当前IAM数字应用ID。
-- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#sys_social_details)。
+- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_social_config)。
 
-### sys_user_social — 需要运行数据验证（P2）
+### iam_account_social_binding — 需要运行数据验证（P2）
 
 全局账号社交身份绑定
 
@@ -809,27 +779,13 @@ Leaf业务号段分配高水位
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：独立绑定ID，unique_id/type/user_id反查渠道身份；是否需要其他方向查询和业务唯一约束需实际入口与历史重复数据共同验证。
-- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#sys_user_social)。
+- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#iam_account_social_binding)。
 
 后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
 
-### asset_upload — 保留（P3）
+### fw_security_account_lock_state — 保留（P3）
 
-业务图片暂存与一次性绑定凭证
-
-- 主键：`id`；宽度：36 字节（最大键值，不含记录头及变长开销）。
-- 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
-- 主要访问/写入：[StagedImageUploads.java](../../../ingot-framework/ingot-oss/ingot-oss-common/src/main/java/com/ingot/framework/oss/upload/StagedImageUploads.java)。
-- 有效二级索引/业务唯一键：``KEY `idx_asset_upload_expires` (`expires_at`,`id`)``。
-- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
-- 被其他表引用：未声明入向外键。
-- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
-- 判断：一次性上传凭证按ID取得并在业务事务中消费；归属、用途、目标绑定与到期清理由上传框架维护，属于有效运行结构。
-- DDL证据：[005_auxiliary.sql](../../../databases/iam/005_auxiliary.sql)；列定义见[数据字典](DATA-DICTIONARY.md#asset_upload)。
-
-### account_lock_state — 保留（P3）
-
-账号锁定状态表
+账号锁定状态表；所属模块：ingot-security-account-adapter
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：数据库AUTO_INCREMENT。
@@ -839,11 +795,11 @@ Leaf业务号段分配高水位
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：数据库自增ID，user_id/user_type业务唯一；locked/locked_until服务解锁扫描。框架持久化归属保留，不迁入IAM自有Mapper。
-- DDL证据：[account_lock_state.sql](../../../ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql)；列定义见[数据字典](DATA-DICTIONARY.md#account_lock_state)。
+- DDL证据：[schema.sql](../../../ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/ingot-security-account-adapter/schema.sql)；列定义见[数据字典](DATA-DICTIONARY.md#fw_security_account_lock_state)。
 
-### password_history — 保留（P3）
+### fw_security_password_history — 保留（P3）
 
-密码历史记录（环形缓冲）
+密码历史记录（环形缓冲）；所属模块：ingot-security-credential-data
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：数据库AUTO_INCREMENT。
@@ -853,20 +809,64 @@ Leaf业务号段分配高水位
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：保留原自增主键及user_id/sequence_number业务唯一键；经隔离MySQL三态对照后删除重叠idx_user_id。实际PasswordHistoryServiceImpl按用户查询/覆盖槽位/删除；最近历史仍按created_at排序，本轮不改变环形历史行为。
-- DDL证据：[add_password_history.sql](../../../ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql)；列定义见[数据字典](DATA-DICTIONARY.md#password_history)。
+- DDL证据：[schema.sql](../../../ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/ingot-security-credential-data/schema.sql)；列定义见[数据字典](DATA-DICTIONARY.md#fw_security_password_history)。
 
-### password_expiration — 需要运行数据验证（P2）
+### fw_security_password_expiration — 需要运行数据验证（P2）
 
-密码过期信息
+密码过期信息；所属模块：ingot-security-credential-data
 
 - 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
 - 标识来源：数据库AUTO_INCREMENT。
-- 主要访问/写入：受控迁移/建库工具，未发现在线业务写入入口。
+- 主要访问/写入：[PasswordExpiration.java](../../../ingot-framework/ingot-security/ingot-security-credential/src/main/java/com/ingot/framework/security/credential/model/domain/PasswordExpiration.java)。
 - 有效二级索引/业务唯一键：``KEY `idx_expires_at` (`expires_at`)``；``KEY `idx_next_warning_at` (`next_warning_at`)``；``UNIQUE KEY `uk_user_id` (`user_id`)``。
 - 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
 - 被其他表引用：未声明入向外键。
 - 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
 - 判断：自增ID，user_id唯一，expires_at和next_warning_at服务到期和提醒扫描；宽时效扫描成本需实际用户量及调度统计。
-- DDL证据：[add_password_history.sql](../../../ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql)；列定义见[数据字典](DATA-DICTIONARY.md#password_expiration)。
+- DDL证据：[schema.sql](../../../ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/ingot-security-credential-data/schema.sql)；列定义见[数据字典](DATA-DICTIONARY.md#fw_security_password_expiration)。
 
 后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
+
+### fw_security_event — 需要运行数据验证（P2）
+
+统一安全事件（canonical）；所属模块：ingot-security-event-store-mysql
+
+- 主键：`id`；宽度：8 字节（最大键值，不含记录头及变长开销）。
+- 标识来源：数据库AUTO_INCREMENT。
+- 主要访问/写入：[MySqlSecurityEventQueryRepository.java](../../../ingot-framework/ingot-security/ingot-security-event-store-mysql/src/main/java/com/ingot/framework/security/recording/store/mysql/MySqlSecurityEventQueryRepository.java), [RemoteSecurityPolicyService.java](../../../ingot-service/ingot-security/ingot-security-api/src/main/java/com/ingot/cloud/security/api/rpc/RemoteSecurityPolicyService.java), [CompositeSecurityEventPort.java](../../../ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/java/com/ingot/framework/security/account/adapter/port/CompositeSecurityEventPort.java)。
+- 有效二级索引/业务唯一键：``KEY `idx_event_type` (`event_type`,`received_at`)``；``KEY `idx_received_id` (`received_at`,`id`)``；``KEY `idx_tenant_user` (`tenant_id`,`user_id`)``；``KEY `idx_trace` (`trace_id`)``；``UNIQUE KEY `uk_event_id` (`event_id`)``。
+- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
+- 被其他表引用：未声明入向外键。
+- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
+- 判断：数据库自增聚簇键，事件幂等、时间、用户、追踪索引分别服务入口；事件量和保留策略决定成本。event_id允许NULL，因此缺失幂等ID不互斥。
+- DDL证据：[schema.sql](../../../ingot-framework/ingot-security/ingot-security-event-store-mysql/src/main/resources/sql/ingot-security-event-store-mysql/schema.sql)；列定义见[数据字典](DATA-DICTIONARY.md#fw_security_event)。
+
+后续验证：采集该表行数、主键/二级索引体积、写入频率、代表SQL的EXPLAIN及缓冲池命中；使用匿名等量数据比较原结构与候选结构的总写入、查询和空间。结构变更必须单独批准并提供外键、数据校验、发布及回滚方案。
+
+### fw_id_leaf_alloc — 保留（P3）
+
+Leaf业务号段分配高水位；所属模块：ingot-id
+
+- 主键：`biz_tag`；宽度：512 字节（最大键值，不含记录头及变长开销）。
+- 标识来源：配置的业务标签字符串，原行更新号段高水位。
+- 主要访问/写入：[IdAllocationEntity.java](../../../ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/IdAllocationEntity.java), [IDAllocMapper.java](../../../ingot-framework/ingot-id/src/main/java/com/ingot/framework/id/leaf/segment/dao/IDAllocMapper.java)。
+- 有效二级索引/业务唯一键：无。
+- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
+- 被其他表引用：未声明入向外键。
+- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
+- 判断：按业务标签锁定并领取号段，高水位增长不代表新增记录。biz_tag短字符串业务主键合适；禁止为改善顺序插入而重置高水位。
+- DDL证据：[schema.sql](../../../ingot-framework/ingot-id/src/main/resources/sql/ingot-id/schema.sql)；列定义见[数据字典](DATA-DICTIONARY.md#fw_id_leaf_alloc)。
+
+### fw_oss_asset_upload — 保留（P3）
+
+业务图片暂存与一次性绑定凭证；所属模块：ingot-oss-common
+
+- 主键：`id`；宽度：36 字节（最大键值，不含记录头及变长开销）。
+- 标识来源：服务端提供标识；IAM目录含预留值，历史辅助记录沿既有发号。
+- 主要访问/写入：[StagedImageUploads.java](../../../ingot-framework/ingot-oss/ingot-oss-common/src/main/java/com/ingot/framework/oss/upload/StagedImageUploads.java)。
+- 有效二级索引/业务唯一键：``KEY `idx_asset_upload_expires` (`expires_at`,`id`)``。
+- 本表引用外键：DDL未声明；业务归属仍须由消费方校验。
+- 被其他表引用：未声明入向外键。
+- 关系重写：参照下述入口语义；本轮保留该表写入生命周期。
+- 判断：一次性上传凭证按ID取得并在业务事务中消费；归属、用途、目标绑定与到期清理由上传框架维护，属于有效运行结构。
+- DDL证据：[schema.sql](../../../ingot-framework/ingot-oss/ingot-oss-common/src/main/resources/sql/ingot-oss-common/schema.sql)；列定义见[数据字典](DATA-DICTIONARY.md#fw_oss_asset_upload)。

@@ -66,10 +66,10 @@ ingot:
     event:
       # 安全事件总开关；false 时不做任何上报
       enabled: true
-      # center：会话撤销等 AUTH 事件 Feign 上报安全中心，Auth 本库不落 security_event
+      # center：会话撤销等 AUTH 事件 Feign 上报安全中心，Auth 本库不落 fw_security_event
       target: center
       shadow-targets: []
-      # 写入 security_event.source_module
+      # 写入 fw_security_event.source_module
       sourceModule: AUTH
       # 安全事件大类上报开关
       categories:

@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * <p>canonical {@code security_event} 批量写入、游标查询与 retention 专用 Mapper。</p>
+ * <p>canonical {@code fw_security_event} 批量写入、游标查询与 retention 专用 Mapper。</p>
  *
  * @author jy
  * @since 1.0.0

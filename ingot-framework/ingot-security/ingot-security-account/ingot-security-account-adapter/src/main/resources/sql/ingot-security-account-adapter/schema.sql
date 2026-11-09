@@ -1,17 +1,8 @@
--- ============================================================
--- account_lock_state 表 DDL
--- 模块: ingot-security-account-adapter
--- 说明: 账号锁定状态表，记录账号的锁定/解锁状态及失败计数。
---       引入 ingot-security-account-adapter 模块时需执行此脚本。
---
--- 字段说明：
---   user_type 与 UserTypeEnum.value 对应：
---     0 = ADMIN（系统用户 / IAM）
---     1 = APP  （C端用户 / Member）
---   (user_id, user_type) 联合唯一，支持 IAM 和 Member 同 ID 的用户共存。
--- ============================================================
+-- ingot-security-account-adapter MySQL 建表脚本（MySQL 8.0.16+）。
+-- 在消费服务DataSource对应的数据库执行；不选库、不删除表、不写入业务数据。
+SET time_zone = '+00:00';
 
-CREATE TABLE IF NOT EXISTS account_lock_state (
+CREATE TABLE IF NOT EXISTS fw_security_account_lock_state (
   id              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '安全框架账号锁定状态记录标识；数据库自增',
   user_id         BIGINT       NOT NULL COMMENT '被锁定的安全用户ID，与user_type共同唯一标识用户',
   user_type       VARCHAR(20)  NOT NULL DEFAULT '0' COMMENT '安全用户类型，对应UserTypeEnum：0系统账号、1会员账号',
@@ -41,4 +32,4 @@ CREATE TABLE IF NOT EXISTS account_lock_state (
   PRIMARY KEY (id),
   UNIQUE KEY uk_user_id_type (user_id, user_type)       COMMENT '用户ID + 用户类型联合唯一',
   KEY idx_locked (locked, locked_until) USING BTREE     COMMENT '锁定状态 + 到期时间索引（自动解锁任务使用）'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号锁定状态表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号锁定状态表；所属模块：ingot-security-account-adapter';

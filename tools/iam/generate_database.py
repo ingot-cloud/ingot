@@ -8,12 +8,14 @@ from generate_bootstrap import build
 from generate_capability_migration import build as build_migration
 from generate_member_migration import build as build_member_migration
 from schema_comments import build as build_comments
+from generate_framework_databases import build as build_framework
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='只读核对种子和完整初始化文件')
     args = parser.parse_args()
+    build_framework(check=args.check)
     build(check=args.check)
     build_migration(check=args.check)
     build_member_migration(check=args.check)

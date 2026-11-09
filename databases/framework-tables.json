@@ -1,0 +1,76 @@
+{
+  "mysqlMinimum": "8.0.16",
+  "tableRenames": {
+    "sys_social_details": "iam_social_config",
+    "sys_user_social": "iam_account_social_binding",
+    "platform_dict": "iam_dictionary",
+    "account_lock_state": "fw_security_account_lock_state",
+    "password_history": "fw_security_password_history",
+    "password_expiration": "fw_security_password_expiration",
+    "security_event": "fw_security_event",
+    "biz_leaf_alloc": "fw_id_leaf_alloc",
+    "asset_upload": "fw_oss_asset_upload"
+  },
+  "modules": [
+    {
+      "module": "ingot-security-account-adapter",
+      "schema": "ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/ingot-security-account-adapter/schema.sql",
+      "tables": [
+        "fw_security_account_lock_state"
+      ],
+      "services": [
+        "ingot_iam",
+        "ingot_member"
+      ]
+    },
+    {
+      "module": "ingot-security-credential-data",
+      "schema": "ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/ingot-security-credential-data/schema.sql",
+      "tables": [
+        "fw_security_password_history",
+        "fw_security_password_expiration"
+      ],
+      "services": [
+        "ingot_iam"
+      ]
+    },
+    {
+      "module": "ingot-security-event-store-mysql",
+      "schema": "ingot-framework/ingot-security/ingot-security-event-store-mysql/src/main/resources/sql/ingot-security-event-store-mysql/schema.sql",
+      "tables": [
+        "fw_security_event"
+      ],
+      "services": [
+        "ingot_iam",
+        "ingot_member",
+        "ingot_security"
+      ]
+    },
+    {
+      "module": "ingot-id",
+      "schema": "ingot-framework/ingot-id/src/main/resources/sql/ingot-id/schema.sql",
+      "tables": [
+        "fw_id_leaf_alloc"
+      ],
+      "services": [
+        "ingot_iam",
+        "ingot_member"
+      ]
+    },
+    {
+      "module": "ingot-oss-common",
+      "schema": "ingot-framework/ingot-oss/ingot-oss-common/src/main/resources/sql/ingot-oss-common/schema.sql",
+      "tables": [
+        "fw_oss_asset_upload"
+      ],
+      "services": [
+        "ingot_iam",
+        "ingot_member"
+      ]
+    }
+  ],
+  "serviceBundles": {
+    "ingot_member": "databases/ingot_member.sql",
+    "ingot_security": "databases/ingot_security.sql"
+  }
+}

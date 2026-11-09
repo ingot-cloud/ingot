@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 锁定状态端口默认实现（基于 account_lock_state 表）
+ * 锁定状态端口默认实现（基于 fw_security_account_lock_state 表）
  * <p>
  * 由 {@code AccountAdapterAutoConfiguration} 以 {@code @ConditionalOnMissingBean} 方式注册，
  * 不使用 {@code @Component}，避免与业务服务中的自定义实现产生冲突。

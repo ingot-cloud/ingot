@@ -9,7 +9,7 @@ ingot:
     event:
       # 中心 admission 接收的事件异步入库；false 则 admission 入队被禁用。
       enabled: true
-      # 中心将事件写入本库 ingot_security.security_event。
+      # 中心将事件写入本库 ingot_security.fw_security_event。
       target: local
       primary-store: mysql
       shadow-targets: []

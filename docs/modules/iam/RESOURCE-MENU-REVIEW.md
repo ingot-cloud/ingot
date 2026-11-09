@@ -205,7 +205,7 @@
 | 内部运行能力 | IAM 授权快照与执行、内网字典/发号/社交/身份查询，安全事件上报、凭证/策略读写、会话失效等 | 内部调用身份。IAM 授权 RPC 还恢复转发的在线成员身份。 | 在服务契约中登记。实际管理界面开放时再定义面向管理角色的操作。 |
 | 开发与旧入口 | `apps/dev-portal`、`examples/iam-ops`、`ingot-test`；管理台 13 个未绑定正式种子的旧页面或样板 | 当前正式宿主目录未提供这些页面的种子入口。旧页面仍有部分 PMS API 引用。 | 样例与开发文档单列。旧页面先用实际库查引用，再决定退役。 |
 
-安全中心目前展示的是历史封禁记录。统一安全事件 `security_event` 已有采集、存储和内部入口，现行基线还没有平台读侧 API。若将事件查询纳入产品范围，应增设安全事件资源及独立的查看、导出操作，旧封禁历史按其数据源标注。会话客户端筛选继续单独校验 `platform:develop:client:query`。[安全事件中心](../../../specs/current/security/security-event-center/SPEC.md) · [平台能力](../../../specs/current/iam/platform-capabilities/SPEC.md) · [下载中心](../../../specs/current/framework/download-center/SPEC.md)
+安全中心目前展示的是历史封禁记录。统一安全事件 `fw_security_event` 已有采集、存储和内部入口，现行基线还没有平台读侧 API。若将事件查询纳入产品范围，应增设安全事件资源及独立的查看、导出操作，旧封禁历史按其数据源标注。会话客户端筛选继续单独校验 `platform:develop:client:query`。[安全事件中心](../../../specs/current/security/security-event-center/SPEC.md) · [平台能力](../../../specs/current/iam/platform-capabilities/SPEC.md) · [下载中心](../../../specs/current/framework/download-center/SPEC.md)
 
 本机前端额外注册的 13 个未绑定正式种子的页面键，按宿主分组如下。两个表格工作簿页已有单独的静态入口，见上表。
 

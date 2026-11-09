@@ -10,14 +10,13 @@ import time
 import unittest
 import uuid
 import sys
-import re
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'tools/iam'))
 from schema_comments import normalized
 from tools.iam.generate_bootstrap import ADMIN_ROLE_CODE
-from tools.iam.database_sources import read_source, schema_files, sources, legacy_schema_files
+from tools.iam.database_sources import DATABASE_NAME, read_source, schema_files, sources, legacy_schema_files
 
 
 IMAGE = "mysql:8.4"
@@ -40,7 +39,8 @@ class BootstrapSeedTest(unittest.TestCase):
         result = subprocess.run(
             ["docker", "run", "--detach", "--rm", "--pull=never", "--network=none",
              "--name", "ingot-iam-bootstrap-test-" + uuid.uuid4().hex,
-             "--env", "MYSQL_ALLOW_EMPTY_PASSWORD=yes", IMAGE],
+             "--env", "MYSQL_ALLOW_EMPTY_PASSWORD=yes", IMAGE,
+             "--innodb-buffer-pool-size=64M", "--performance-schema=OFF", "--max-connections=20"],
             check=True, capture_output=True, text=True, timeout=30,
         )
         cls.container = result.stdout.strip()
@@ -85,11 +85,17 @@ class BootstrapSeedTest(unittest.TestCase):
     def setUp(self):
         self.database = "iam_bootstrap_" + uuid.uuid4().hex
         self.sql(f"CREATE DATABASE `{self.database}`", database=False)
-        for schema in schema_files():
+        for schema in schema_files() + sources('frameworkSchemas'):
             self.sql(schema.read_text())
 
     def bootstrap(self):
         self.sql(BOOTSTRAP.read_text())
+
+    def initialize(self, *, before='', after=''):
+        """Execute the delivered file without selecting or pre-creating its database."""
+        result = self.sql(before + sources('bundle')[0].read_text() + after, database=False)
+        self.database = DATABASE_NAME
+        return result
 
     def test_picker_name_capability_does_not_grant_default_filter_permission(self):
         self.bootstrap()
@@ -244,9 +250,7 @@ class BootstrapSeedTest(unittest.TestCase):
         tables = self.sql('SHOW TABLES').splitlines()
         definitions = {table: self.sql(f'SHOW CREATE TABLE `{table}`') for table in tables}
         counts = {table: self.count(table) for table in tables}
-        self.database = 'iam_bundle_' + uuid.uuid4().hex
-        self.sql(f'CREATE DATABASE `{self.database}`', database=False)
-        self.sql(sources('bundle')[0].read_text())
+        self.initialize()
         self.assertEqual(tables, self.sql('SHOW TABLES').splitlines())
         for table in tables:
             self.assertEqual(definitions[table], self.sql(f'SHOW CREATE TABLE `{table}`'), table)
@@ -255,21 +259,27 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(181, self.count('iam_action'))
         self.assertEqual(41, self.count('iam_menu'))
         for table in ['iam_tenant', 'iam_tenant_member', 'iam_authorization_audit',
-                      'account_lock_state', 'password_history', 'password_expiration', 'security_event']:
+                      'fw_security_account_lock_state', 'fw_security_password_history', 'fw_security_password_expiration', 'fw_security_event']:
             self.assertEqual(0, self.count(table), table)
         self.assertEqual('1', self.sql('SELECT @@FOREIGN_KEY_CHECKS'))
 
     def test_full_initialization_resets_linked_data_and_restores_session_foreign_keys(self):
-        # setUp created IAM tables only: the full initializer must also handle partial initialization.
-        bundle = sources('bundle')[0].read_text()
-        self.sql(bundle)
+        # Reproduce partial initialization in the fixed deployment database.
+        self.sql(f'SET FOREIGN_KEY_CHECKS=0; DROP DATABASE IF EXISTS `{DATABASE_NAME}`; '
+                 f'CREATE DATABASE `{DATABASE_NAME}`; SET FOREIGN_KEY_CHECKS=1;', database=False)
+        self.database = DATABASE_NAME
+        for source in schema_files():
+            self.sql(read_source(source))
+        self.initialize()
         tables = self.sql('SHOW TABLES').splitlines()
         counts = ' UNION ALL '.join(
             f"SELECT '{table}', COUNT(*) FROM `{table}`" for table in tables) + ' ORDER BY 1'
         expected_counts = self.sql(counts)
         expected_menu = self.sql('SHOW CREATE TABLE iam_menu')
-        self.sql('CREATE TABLE iam_unmanaged_fixture (id INT PRIMARY KEY); '
-                 'INSERT INTO iam_unmanaged_fixture VALUES (1);')
+        other_database = 'iam_unrelated_' + uuid.uuid4().hex
+        self.sql(f'CREATE DATABASE `{other_database}`; '
+                 f'CREATE TABLE `{other_database}`.sentinel (id INT PRIMARY KEY); '
+                 f'INSERT INTO `{other_database}`.sentinel VALUES (1);', database=False)
 
         for initial_fk_checks in (1, 0):
             with self.subTest(initial_fk_checks=initial_fk_checks):
@@ -288,14 +298,17 @@ class BootstrapSeedTest(unittest.TestCase):
                     UPDATE iam_menu SET view_path = NULL WHERE kind = 'DIRECTORY';
                     ALTER TABLE iam_menu ADD COLUMN temporary_fixture INT NULL;
                     UPDATE iam_action SET enabled = FALSE;
-                    UPDATE biz_leaf_alloc SET max_id = 8888888 WHERE biz_tag = 'iam';
+                    UPDATE fw_id_leaf_alloc SET max_id = 8888888 WHERE biz_tag = 'iam';
+                    CREATE TABLE iam_unmanaged_fixture (id INT PRIMARY KEY);
+                    INSERT INTO iam_unmanaged_fixture VALUES (1);
                 """)
-                self.assertEqual(str(initial_fk_checks), self.sql(
-                    f'SET SESSION FOREIGN_KEY_CHECKS = {initial_fk_checks};\n'
-                    + bundle + '\nSELECT @@SESSION.FOREIGN_KEY_CHECKS;'))
+                self.assertEqual(str(initial_fk_checks), self.initialize(
+                    before=f'SET SESSION FOREIGN_KEY_CHECKS = {initial_fk_checks};\n',
+                    after='\nSELECT @@SESSION.FOREIGN_KEY_CHECKS;'))
                 self.assertEqual(expected_counts, self.sql(counts))
                 self.assertEqual(expected_menu, self.sql('SHOW CREATE TABLE iam_menu'))
-                self.assertEqual(1, self.count('iam_unmanaged_fixture'))
+                self.assertEqual(tables, self.sql('SHOW TABLES').splitlines())
+                self.assertEqual('1', self.sql(f'SELECT COUNT(*) FROM `{other_database}`.sentinel'))
                 self.assertEqual('0', self.sql("SELECT COUNT(*) FROM iam_menu WHERE kind = 'DIRECTORY' "
                                                "AND parent_id IS NULL "
                                                "AND (view_path IS NULL OR view_path <> 'layout.main')"))
@@ -304,7 +317,7 @@ class BootstrapSeedTest(unittest.TestCase):
                                                "AND (view_path IS NULL OR view_path <> 'layout.simple')"))
                 self.assertEqual(0, self.count('iam_action', 'NOT enabled'))
                 self.assertEqual(str(RESERVED_CEILING),
-                                 self.sql("SELECT max_id FROM biz_leaf_alloc WHERE biz_tag = 'iam'"))
+                                 self.sql("SELECT max_id FROM fw_id_leaf_alloc WHERE biz_tag = 'iam'"))
                 self.sql("INSERT INTO iam_platform_member (id, account_id, display_name) "
                          "VALUES (999001, 999002, '非法引用')", error=1452)
 
@@ -350,30 +363,40 @@ class BootstrapSeedTest(unittest.TestCase):
         """))
         self.assertEqual(0, self.count("iam_resource", "code='resource-field-policy'"))
         self.assertEqual(1, self.count("iam_default_policy_revision"))
-        self.assertEqual(1, self.count("biz_leaf_alloc", "biz_tag = 'iam'"))
+        self.assertEqual(1, self.count("fw_id_leaf_alloc", "biz_tag = 'iam'"))
         # The catalog component does not create identities before the account seed runs.
         self.assertEqual(0, self.count("iam_account"))
         self.assertEqual(0, self.count("iam_platform_member"))
         self.assertEqual(0, self.count("iam_role_assignment"))
 
-    def test_runtime_rebuild_preserves_optional_legacy_tables_and_rows(self):
+    def test_full_initialization_removes_historical_and_other_old_tables(self):
+        self.initialize()
+        expected_tables = self.sql('SHOW TABLES').splitlines()
         for source in legacy_schema_files():
             self.sql(read_source(source))
         self.sql("INSERT INTO iam_migration_batch(id,source_fingerprint,target_identifier,rules_version) "
                  "VALUES('preserved',REPEAT('a',64),'isolated-fixture','1')")
         self.sql("INSERT INTO sys_tenant_plan_record(id,tenant_id,plan_id,type,duration,unit,created_at) "
                  "VALUES(1,10,1,'0',12,'1',UTC_TIMESTAMP())")
-        self.sql(sources('bundle')[0].read_text())
-        self.assertEqual('preserved', self.sql('SELECT id FROM iam_migration_batch'))
-        self.assertEqual('12', self.sql('SELECT duration FROM sys_tenant_plan_record WHERE id=1'))
+        self.sql('CREATE TABLE iam_field_access_016_legacy_rule (rule_id BIGINT PRIMARY KEY); '
+                 'INSERT INTO iam_field_access_016_legacy_rule VALUES(1); '
+                 'CREATE TABLE iam_unmanaged_fixture (id INT PRIMARY KEY); '
+                 'INSERT INTO iam_unmanaged_fixture VALUES(1);')
+        self.assertEqual(67, len(self.sql('SHOW TABLES').splitlines()))
+        self.initialize()
+        self.assertEqual(expected_tables, self.sql('SHOW TABLES').splitlines())
+        self.assertEqual(59, len(expected_tables))
         self.assertEqual(1, self.count('iam_account'))
         self.assertEqual(0, self.count('iam_tenant'))
-        for source in legacy_schema_files():
-            for table in re.findall(r'^CREATE TABLE\s+`?([a-z_]+)', read_source(source), re.M):
-                self.assertIn(table, self.sql('SHOW TABLES').splitlines())
 
     def test_full_initialization_creates_one_platform_admin_and_no_tenant(self):
-        self.sql(sources('bundle')[0].read_text())
+        self.sql(f'SET FOREIGN_KEY_CHECKS=0; DROP DATABASE IF EXISTS `{DATABASE_NAME}`; '
+                 'SET FOREIGN_KEY_CHECKS=1;', database=False)
+        self.initialize()
+        self.assertEqual(DATABASE_NAME, self.sql('SELECT DATABASE()'))
+        self.assertEqual('utf8mb4\tutf8mb4_0900_ai_ci', self.sql(
+            'SELECT DEFAULT_CHARACTER_SET_NAME,DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA '
+            'WHERE SCHEMA_NAME=DATABASE()'))
         self.assertEqual(1, self.count('iam_account'))
         self.assertEqual('platform\t1\t1', self.sql("""
             SELECT username, enabled, must_change_password FROM iam_account
@@ -533,7 +556,7 @@ class BootstrapSeedTest(unittest.TestCase):
 
     def test_reserved_identifiers_stay_below_the_allocator_start(self):
         self.bootstrap()
-        allocator_start = int(self.sql("SELECT max_id FROM biz_leaf_alloc WHERE biz_tag = 'iam'"))
+        allocator_start = int(self.sql("SELECT max_id FROM fw_id_leaf_alloc WHERE biz_tag = 'iam'"))
         self.assertEqual(RESERVED_CEILING, allocator_start)
         for table in ("iam_application", "iam_resource", "iam_action", "iam_menu",
                       "iam_role_definition", "iam_role_revision", "iam_default_policy_revision"):
@@ -541,7 +564,7 @@ class BootstrapSeedTest(unittest.TestCase):
             self.assertLess(highest, allocator_start, table)
 
     def test_rebuilt_minimal_roles_open_only_their_authorized_page_entries(self):
-        self.sql(sources('bundle')[0].read_text())
+        self.initialize()
         self.sql("INSERT INTO iam_tenant (id, name) VALUES (850000, '隔离授权组织')")
         fixtures = [
             ('platform-member-read', 'PLATFORM', ['iam-platform:member:read'], ['platform.iam.personnel']),

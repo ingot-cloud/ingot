@@ -678,7 +678,7 @@ class RoleWorkspaceMySqlHttpTest {
     @Test
     void trustedSystemSourcesAndConcurrentLastAdministratorRemovalUseRealMySql() throws Exception {
         jdbc.execute("CREATE TABLE IF NOT EXISTS iam_account(id BIGINT PRIMARY KEY,username VARCHAR(100),enabled BOOLEAN,deleted_at DATETIME,must_change_password BOOLEAN NOT NULL DEFAULT FALSE)");
-        jdbc.execute("CREATE TABLE IF NOT EXISTS account_lock_state(user_id BIGINT,user_type VARCHAR(16),locked BOOLEAN,locked_until DATETIME)");
+        jdbc.execute("CREATE TABLE IF NOT EXISTS fw_security_account_lock_state(user_id BIGINT,user_type VARCHAR(16),locked BOOLEAN,locked_until DATETIME)");
         jdbc.update("INSERT INTO iam_account(id,username,enabled) VALUES(901,'admin-one',TRUE),(902,'admin-two',TRUE)");
         jdbc.update("INSERT INTO iam_platform_member(id,display_name,status,account_id) VALUES(901,'Admin one','ACTIVE',901),(902,'Admin two','ACTIVE',902)");
         jdbc.update("INSERT INTO iam_role_definition(id,name,domain,enabled,code,kind) VALUES(900,'Super','PLATFORM',TRUE,?,'SYSTEM')",
@@ -694,9 +694,9 @@ class RoleWorkspaceMySqlHttpTest {
             jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=NULL,valid_until=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 SECOND) WHERE id=901");
             assertTrue(repository.platformAdministrators("901").isEmpty());
             jdbc.update("UPDATE iam_role_assignment SET valid_until=NULL WHERE id=901");
-            jdbc.update("INSERT INTO account_lock_state VALUES(901,'0',TRUE,NULL)");
+            jdbc.update("INSERT INTO fw_security_account_lock_state VALUES(901,'0',TRUE,NULL)");
             assertTrue(repository.platformAdministrators("901").isEmpty());
-            jdbc.update("DELETE FROM account_lock_state WHERE user_id=901");
+            jdbc.update("DELETE FROM fw_security_account_lock_state WHERE user_id=901");
             jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=901");
             assertTrue(repository.platformAdministrators("901").isEmpty());
             jdbc.update("UPDATE iam_account SET enabled=TRUE WHERE id=901");
@@ -718,7 +718,7 @@ class RoleWorkspaceMySqlHttpTest {
             jdbc.update("DELETE FROM iam_role_definition WHERE id=900");
             jdbc.update("DELETE FROM iam_platform_member WHERE id IN (901,902)");
             jdbc.update("DELETE FROM iam_account WHERE id IN (901,902)");
-            jdbc.update("DELETE FROM account_lock_state WHERE user_id IN (901,902)");
+            jdbc.update("DELETE FROM fw_security_account_lock_state WHERE user_id IN (901,902)");
         }
     }
 

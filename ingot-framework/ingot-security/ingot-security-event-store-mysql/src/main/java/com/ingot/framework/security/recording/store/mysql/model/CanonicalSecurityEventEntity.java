@@ -9,13 +9,13 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * <p>canonical {@code security_event} 表实体，供 recording MySQL Store 读写。</p>
+ * <p>canonical {@code fw_security_event} 表实体，供 recording MySQL Store 读写。</p>
  *
  * @author jy
  * @since 1.0.0
  */
 @Data
-@TableName("security_event")
+@TableName("fw_security_event")
 public class CanonicalSecurityEventEntity {
 
     @TableId(type = IdType.AUTO)

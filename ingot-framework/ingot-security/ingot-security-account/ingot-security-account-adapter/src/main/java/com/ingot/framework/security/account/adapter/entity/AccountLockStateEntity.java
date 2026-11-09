@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * @since 2026-02-13
  */
 @Data
-@TableName("account_lock_state")
+@TableName("fw_security_account_lock_state")
 public class AccountLockStateEntity {
 
     @TableId(type = IdType.AUTO)

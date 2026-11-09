@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
@@ -14,6 +15,7 @@ import lombok.Data;
  * @since 2026-01-23
  */
 @Data
+@TableName("fw_security_password_history")
 public class PasswordHistory implements Serializable {
 
     @Serial

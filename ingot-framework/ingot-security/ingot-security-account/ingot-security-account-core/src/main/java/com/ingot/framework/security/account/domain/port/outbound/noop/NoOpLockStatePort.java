@@ -16,7 +16,7 @@ import java.util.Optional;
  * <p>
  * 当不需要独立的锁定状态表时，使用此空实现作为默认值。
  * 默认的 {@link com.ingot.framework.security.account.adapter.port.DefaultLockStatePortAdapter}
- * 提供基于 account_lock_state 表的完整实现；
+ * 提供基于 fw_security_account_lock_state 表的完整实现；
  * 此 NoOp 实现适用于只需要 sys_user.locked 冗余字段而无需独立锁定表的场景。
  * </p>
  *

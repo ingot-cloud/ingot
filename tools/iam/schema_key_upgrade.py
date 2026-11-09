@@ -8,6 +8,7 @@ from pathlib import Path
 from database_sources import ROOT
 from schema_comments import BASELINE, SNAPSHOT, normalized, read_definitions, source_digest
 from schema_model import closing, parts
+from historical_schema import historical_snapshot
 
 RECIPIENT = 'iam_delegation_recipient_member'
 PASSWORD = 'password_history'
@@ -32,7 +33,7 @@ def preflight(query, reserving=True):
     latest = json.loads(SNAPSHOT.read_text())
     if latest['source_digest'] != source_digest():
         raise ValueError('最新结构快照过期，未执行任何DDL')
-    expected = latest['tables']
+    expected = historical_snapshot(latest)['tables']
     actual = read_definitions(query, [RECIPIENT, PASSWORD, ALLOCATOR])
     choices = {RECIPIENT: {'old': normalized(old[RECIPIENT]), 'nullable': intermediate_definition(expected[RECIPIENT]),
                             'new': normalized(expected[RECIPIENT])},

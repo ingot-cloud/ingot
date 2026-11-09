@@ -1,25 +1,11 @@
 -- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
 SET time_zone = '+00:00';
 
--- IAM 独立目标库：保留辅助领域结构，仅提取源结构定义，不包含数据、DROP 或 USE。
--- 这些旧列名继续表示新 Account/Tenant/Application/Plan 的映射 ID；真实映射在迁移阶段验证。
---
--- 归属说明：account_lock_state、password_history、password_expiration 的权威 DDL 由安全框架自带，
--- 不在本文件重复定义。部署 IAM 数据库时另行执行：
---   ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql
---   ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql
--- 表可以部署在 IAM 库，但持久化职责仍归框架适配器，IAM 不得新增同表实体或 Mapper。
+-- IAM 自有辅助结构：多作用域字典、社交渠道配置和账号社交绑定。
+-- 6张共享框架表由所属library的sql/schema.sql维护，manifest统一投影到完整初始化。
+-- 完整部署只执行databases/ingot_iam.sql；依赖与脚本对应关系见databases/README.md。
 
-CREATE TABLE `biz_leaf_alloc` (
-  `biz_tag` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT 'Leaf业务号段名称，不同业务独立分配',
-  `max_id` bigint NOT NULL DEFAULT '1' COMMENT '已分配号段的最大ID高水位，更新必须保持发号原子性',
-  `step` int NOT NULL COMMENT '每次申请的号段长度',
-  `description` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '业务说明，可空',
-  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '号段高水位最近更新时间点，UTC',
-  PRIMARY KEY (`biz_tag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Leaf业务号段分配高水位';
-
-CREATE TABLE `platform_dict` (
+CREATE TABLE `iam_dictionary` (
   `id` bigint NOT NULL COMMENT '多作用域字典及字典项记录标识',
   `pid` bigint NOT NULL DEFAULT '0' COMMENT '父ID',
   `code` varchar(64) NOT NULL COMMENT '编码',
@@ -48,43 +34,7 @@ CREATE TABLE `platform_dict` (
   KEY `idx_dict_scope` (`scope_type`,`tenant_id`,`app_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='多作用域字典及字典项';
 
-CREATE TABLE `security_event` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '统一安全事件持久记录记录标识；数据库自增',
-  `event_id` varchar(32) DEFAULT NULL COMMENT 'producer 幂等 ID',
-  `event_type` varchar(64) NOT NULL COMMENT '事件类型',
-  `event_category` varchar(20) NOT NULL COMMENT 'AUTH/ACCOUNT/CREDENTIAL/ACCESS',
-  `priority` varchar(16) NOT NULL DEFAULT 'BEST_EFFORT' COMMENT 'BEST_EFFORT/DURABLE',
-  `occurred_at` datetime DEFAULT NULL COMMENT '业务发生时间点，UTC',
-  `received_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '服务端接收安全事件的时间点，UTC',
-  `tenant_id` bigint DEFAULT NULL COMMENT '事件所属租户ID；NULL表示平台事件或未提供租户上下文',
-  `user_id` bigint DEFAULT NULL COMMENT '安全事件关联的用户标识，结合user_type解释；可空',
-  `user_type` varchar(20) DEFAULT NULL COMMENT '安全用户类型，对应UserTypeEnum：0系统账号、1会员账号',
-  `account` varchar(128) DEFAULT NULL COMMENT '事件涉及的账号显示标识，可空',
-  `client_id` varchar(64) DEFAULT NULL COMMENT '认证客户端标识，可空',
-  `app_id` varchar(64) DEFAULT NULL COMMENT '上报方提供的应用标识，可空',
-  `session_id` varchar(64) DEFAULT NULL COMMENT '认证会话标识，可空',
-  `device_id` varchar(128) DEFAULT NULL COMMENT '设备标识，可空',
-  `client_ip` varchar(64) DEFAULT NULL COMMENT '客户端IP地址，可空',
-  `request_uri` varchar(512) DEFAULT NULL COMMENT '触发事件的请求路径，可空',
-  `user_agent` varchar(512) DEFAULT NULL COMMENT '客户端User-Agent，可空',
-  `result` varchar(20) DEFAULT NULL COMMENT '安全操作结果稳定标识，可空',
-  `reason_code` varchar(50) DEFAULT NULL COMMENT '安全事件原因代码，可空',
-  `reason_detail` varchar(500) DEFAULT NULL COMMENT '安全事件原因说明，不保存凭证原文',
-  `source_module` varchar(64) NOT NULL COMMENT '上报模块',
-  `source` varchar(50) DEFAULT NULL COMMENT '安全事件来源渠道或触发来源，可空',
-  `operator_id` bigint DEFAULT NULL COMMENT '操作人标识，可空',
-  `operator_name` varchar(64) DEFAULT NULL COMMENT '操作人姓名快照，可空',
-  `trace_id` varchar(64) DEFAULT NULL COMMENT '请求链路追踪标识，可空',
-  `extension` json DEFAULT NULL COMMENT '安全事件扩展JSON，须遵守脱敏白名单',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_event_id` (`event_id`),
-  KEY `idx_received_id` (`received_at`,`id`),
-  KEY `idx_event_type` (`event_type`,`received_at`),
-  KEY `idx_tenant_user` (`tenant_id`,`user_id`),
-  KEY `idx_trace` (`trace_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=93243 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统一安全事件（canonical）';
-
-CREATE TABLE `sys_social_details` (
+CREATE TABLE `iam_social_config` (
   `id` bigint unsigned NOT NULL COMMENT '社交登录渠道配置记录标识',
   `tenant_id` bigint unsigned NOT NULL COMMENT '租户ID',
   `app_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '第三方平台分配的客户端App ID，不是IAM应用目录数字ID',
@@ -99,7 +49,7 @@ CREATE TABLE `sys_social_details` (
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='社交登录渠道配置';
 
-CREATE TABLE `sys_user_social` (
+CREATE TABLE `iam_account_social_binding` (
   `id` bigint NOT NULL COMMENT '全局账号社交身份绑定记录标识',
   `tenant_id` bigint NOT NULL COMMENT '组织ID',
   `user_id` bigint NOT NULL COMMENT '被绑定的全局Account标识，旧列名保留；不表示租户成员ID',
@@ -109,17 +59,3 @@ CREATE TABLE `sys_user_social` (
   PRIMARY KEY (`id`),
   KEY `idx_unique_type_user` (`unique_id`,`type`,`user_id`) USING BTREE COMMENT '渠道用户索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='全局账号社交身份绑定';
-
-CREATE TABLE IF NOT EXISTS asset_upload (
-    id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '一次性上传凭证 ID',
-    owner_key VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '服务端恢复的域、组织和操作者',
-    purpose VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '固定业务用途编码',
-    target_key VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '既有目标 ID 或空字符串',
-    bucket_name VARCHAR(63) NOT NULL COMMENT '服务端选定的私有 bucket',
-    object_name VARCHAR(255) NOT NULL COMMENT '服务端生成的对象名',
-    state VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '暂存状态，消费成功随业务事务移除',
-    expires_at DATETIME(6) NOT NULL COMMENT '凭证到期时间，UTC',
-    PRIMARY KEY (id),
-    KEY idx_asset_upload_expires (expires_at, id),
-    CONSTRAINT ck_asset_upload_state CHECK (state IN ('PENDING','READY'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务图片暂存与一次性绑定凭证';

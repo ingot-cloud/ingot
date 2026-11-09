@@ -53,3 +53,14 @@ tasks.named('check') {
     dependsOn 'iamPackageBoundariesCheck', 'iamContractCheck'
 }
 
+tasks.register('iamFrameworkSchemaCheck', Exec) {
+    group = 'verification'
+    description = 'Verify framework SQL ownership and consumer projections'
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'tools/iam/test_framework_schemas.py'
+}
+
+tasks.named('check') {
+    dependsOn 'iamFrameworkSchemaCheck'
+}
+
