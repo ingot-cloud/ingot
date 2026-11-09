@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.commons.constants.PermissionConstants;
 import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
@@ -16,9 +17,11 @@ import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtA
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -73,10 +76,28 @@ class InTokenAuthFilterTest {
         assertEquals(503, perform(null, "GET", "/v1/me/profile").getStatus());
     }
 
-    @Test void passwordEndpointStillRequiresAuthentication() throws Exception {
-        SecurityContextHolder.clearContext();
-        assertThrows(org.springframework.security.oauth2.core.OAuth2AuthenticationException.class,
-                () -> perform(null, "GET", "/v1/me/password"));
+    @Test void missingTokenReturnsUnauthorizedBeforeBusinessAndPasswordEndpoints() throws Exception {
+        for (String path : List.of("/v1/me/bootstrap", "/v1/platform/applications/1/action-catalog", "/v1/me/password")) {
+            assertInvalidToken(perform(null, "GET", path));
+        }
+        assertInvalidToken(perform(null, "PUT", "/v1/me/password"));
+        assertNull(SessionContextHolder.get());
+    }
+
+    @Test void jwtWithoutSessionIdReturnsUnauthorized() throws Exception {
+        authenticate(List.of());
+        var user = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var jwt = Jwt.withTokenValue("test").header("alg", "none").subject("test").build();
+        SecurityContextHolder.getContext().setAuthentication(new InJwtAuthenticationToken(jwt, (InUser) user, List.of()));
+        assertInvalidToken(perform(null, "GET", "/v1/me/bootstrap"));
+        assertNull(SessionContextHolder.get());
+    }
+
+    private void assertInvalidToken(MockHttpServletResponse response) throws Exception {
+        assertEquals(401, response.getStatus());
+        assertEquals("Bearer error=\"invalid_token\"", response.getHeader(HttpHeaders.WWW_AUTHENTICATE));
+        assertEquals(OAuth2ErrorCodes.INVALID_TOKEN,
+                new ObjectMapper().readTree(response.getContentAsString()).path("code").asText());
     }
 
     @Test void sessionPasswordMarkerCannotBeBypassedWithLiveFalse() throws Exception {

@@ -18,12 +18,16 @@ import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.resource.access.expression.TrustedAuthoritySource;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.resource.web.InBearerTokenAuthenticationEntryPoint;
 import com.ingot.framework.security.web.InTokenAuthFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.method.HandlerMethod;
@@ -65,7 +69,17 @@ class PasswordChangeBoundaryTest {
         ObjectProvider<TrustedAuthoritySource> provider = mock(ObjectProvider.class);
         when(provider.getIfAvailable()).thenReturn(source);
         var filter = new InTokenAuthFilter(resolver.publicRequestMatcher(), resolver.passwordChangeRequestMatcher(), provider);
-        var mvc = MockMvcBuilders.standaloneSetup(api).addFilters(filter).build();
+        var bearerFilter = new BearerTokenAuthenticationFilter(mock(AuthenticationManager.class));
+        bearerFilter.setAuthenticationEntryPoint(new InBearerTokenAuthenticationEntryPoint());
+        var mvc = MockMvcBuilders.standaloneSetup(api).addFilters(bearerFilter, filter).build();
+        mvc.perform(get("/v1/me/bootstrap"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string(HttpHeaders.WWW_AUTHENTICATE, "Bearer error=\"invalid_token\""))
+                .andExpect(jsonPath("$.code").value("invalid_token"));
+        mvc.perform(get("/v1/me/bootstrap").header(HttpHeaders.AUTHORIZATION, "Bearer invalid!"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("invalid_token"));
+
         var user = InUser.stateless(1L, null, "web", "standard", "0", "test", List.of(), List.of(), Map.of())
                 .toBuilder().authorizationContext(context).build();
         var jwt = Jwt.withTokenValue("test").header("alg", "none").subject("test").claim(JwtClaimNamesExtension.SID, "sid").build();

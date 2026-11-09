@@ -17,9 +17,9 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.context.SessionContextHolder;
 import com.ingot.framework.security.core.userdetails.InUser;
-import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.resource.web.InBearerTokenAuthenticationEntryPoint;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +28,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -36,8 +38,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
  *
  * <p>位于
  * {@link org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter}
- * 之后，此时 JWT 已验签且会话已确认存在（见
+ * 之后。存在 Bearer Token 时，JWT 已验签且会话已确认存在（见
  * {@link com.ingot.framework.security.oauth2.server.resource.authentication.JwtInUserConverter}）。
+ * 受保护路径缺少有效会话身份时直接交由 Bearer 认证入口返回 401。
  * 被踢下线的 Token 在 Converter 阶段因 sid 主数据缺失已被拒绝，本过滤器不再重复校验。
  * 必须改密的 IAM 账号只允许精确标记的密码端点及已有公开入口；
  * 会话存储降级无法证明账号状态时，受保护请求失败关闭。</p>
@@ -48,6 +51,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class InTokenAuthFilter extends OncePerRequestFilter {
     private static final ObjectMapper ERROR_MAPPER = new ObjectMapper();
+    private final InBearerTokenAuthenticationEntryPoint authenticationEntryPoint = new InBearerTokenAuthenticationEntryPoint();
     private final RequestMatcher ignoreRequestMatcher;
     private final RequestMatcher passwordChangeRequestMatcher;
     private final ObjectProvider<TrustedAuthoritySource> trustedAuthorities;
@@ -63,19 +67,16 @@ public class InTokenAuthFilter extends OncePerRequestFilter {
 
         try {
             InUser user = SecurityAuthContext.getUser();
-            if (user == null) {
-                OAuth2ErrorUtils.throwInvalidToken();
-            }
-
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (!(authentication instanceof InJwtAuthenticationToken jwtAuthentication)) {
-                OAuth2ErrorUtils.throwInvalidToken();
+            if (user == null || !(authentication instanceof InJwtAuthenticationToken jwtAuthentication)) {
+                rejectInvalidToken(request, response);
                 return;
             }
 
             String sid = JwtClaimNamesExtension.getSid(jwtAuthentication.getToken());
             if (StrUtil.isEmpty(sid)) {
-                OAuth2ErrorUtils.throwInvalidToken();
+                rejectInvalidToken(request, response);
+                return;
             }
             SessionContextHolder.set(sid);
             if (!passwordChangeRequestMatcher.matches(request)) {
@@ -111,6 +112,11 @@ public class InTokenAuthFilter extends OncePerRequestFilter {
         } finally {
             SessionContextHolder.clear();
         }
+    }
+
+    private void rejectInvalidToken(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        authenticationEntryPoint.commence(request, response, new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_TOKEN));
     }
 
     private void reject(HttpServletResponse response, IamReasonCode reason) throws IOException {
