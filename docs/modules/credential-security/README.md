@@ -286,10 +286,7 @@ dependencies {
 }
 ```
 
-```bash
-# 执行数据库脚本
-mysql -u root -p < databases/migrations/001_add_password_history_member.sql
-```
+独立接入时，在宿主数据库执行凭证数据模块的 [schema.sql](../../../ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/ingot-security-credential-data/schema.sql)。IAM 的完整初始化已包含这两张表。
 
 ```java
 @Autowired
@@ -560,52 +557,17 @@ CREATE TABLE fw_security_password_expiration (
 );
 ```
 
-**数据库脚本位置：**
-- `databases/ingot_security.sql` - Credential Service 初始化
-- `databases/migrations/001_add_password_history_member.sql` - Member Service
-- `databases/migrations/add_password_history.sql` - IAM Service
+两张表的权威定义见凭证数据模块的 [schema.sql](../../../ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/ingot-security-credential-data/schema.sql)。
 
 ---
 
 ## 🚀 部署指南
 
-### 1. 数据库初始化
+- 集中凭证策略由 Security 提供，数据库使用 [ingot_security.sql](../../../databases/ingot_security.sql)。
+- 首次部署 IAM 执行 [ingot_iam.sql](../../../databases/ingot_iam.sql)，其中已包含密码历史和过期表。
+- Member 当前使用默认空实现。其他宿主接入 `ingot-security-credential-data` 时，在其数据源对应库执行模块的建表脚本。
 
-```bash
-# Credential Service
-mysql -u root -p < databases/ingot_security.sql
-
-# Member Service
-mysql -u root -p < databases/migrations/001_add_password_history_member.sql
-
-# IAM Service
-mysql -u root -p < databases/migrations/add_password_history.sql
-```
-
-### 2. 启动服务
-
-```bash
-# 确保 Redis 运行
-redis-cli ping
-
-# 启动 Credential Service
-cd ingot-service/ingot-credential/ingot-credential-provider
-./gradlew bootRun
-```
-
-### 3. Docker 部署
-
-```bash
-# 构建镜像
-./gradlew :ingot-service:ingot-credential:ingot-credential-provider:buildDockerProdImage
-
-# 启动容器
-docker run -d \
-  --name ingot-credential \
-  -p 9091:9091 \
-  -e SPRING_PROFILES_ACTIVE=prod \
-  ingot/credential:latest
-```
+服务初始化和依赖模块的脚本对应关系见[数据库初始化说明](../../../databases/README.md)。
 
 ---
 

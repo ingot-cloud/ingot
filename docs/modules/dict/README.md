@@ -178,10 +178,10 @@ CREATE TABLE iam_dictionary (
 );
 ```
 
-数据库迁移脚本：
+新库的 `iam_dictionary` 随 [IAM 初始化](../../../databases/ingot_iam.sql) 创建。旧 Core 字典的脚本仅供相应历史版本使用。
 
-- `databases/migrations/003_rename_meta_to_platform.sql` — 把 `meta_dict` 重命名为 `iam_dictionary`
-- `databases/migrations/004_upgrade_platform_dict.sql` — 升级到企业级字段方案（新增 `value/label/scope_type/tenant_id/app_id/sort/system_flag/extra/审计字段`）
+- [003_rename_meta_to_platform.sql](../../../databases/archive/migrations/003_rename_meta_to_platform.sql) 将 `meta_dict` 重命名为 `platform_dict`。
+- [004_upgrade_platform_dict.sql](../../../databases/archive/migrations/004_upgrade_platform_dict.sql) 为旧 `platform_dict` 增加字典项、作用域和审计字段。
 
 ---
 

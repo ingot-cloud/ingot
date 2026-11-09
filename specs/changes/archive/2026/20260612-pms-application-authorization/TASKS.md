@@ -23,7 +23,7 @@
 
 ### 待统一验收
 
-- [ ] 测试库执行 `databases/migrations/007_application_authorization.sql`
+- [ ] 测试库执行 `databases/archive/migrations/007_application_authorization.sql`
 - [ ] 应用中心化 API 联调（见 [API.md](./API.md)）
 - [ ] 前端应用列表 → 详情（基本信息/菜单/权限）冒烟
 - [ ] Dev API 审计/快照 + 登录菜单权限回归

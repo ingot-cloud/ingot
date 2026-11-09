@@ -134,7 +134,7 @@ spring:
 
 ### 1.3 阶段二：Remote 模式配置（再测安全中心）
 
-确认 security 已执行 `005_security_policy_center.sql`，再切换为三域 `remote`：
+确认 Security 测试库已具备策略表。首次建库按 [Security 初始化说明](../databases/README.md#已有服务初始化入口)导入 `ingot_security.sql`，再切换为三域 `remote`。
 
 ```yaml
 ingot:
@@ -698,4 +698,4 @@ curl -s "$SECURITY_INNER/inner/security/policy/snapshot" | jq '.data.version, .d
 ## 16. 相关文档
 
 - [网关限流与安全策略执行面](../docs/modules/security-center/GATEWAY-RATE-LIMIT.md)
-- [DB 迁移 `005_security_policy_center.sql`](../databases/migrations/005_security_policy_center.sql)
+- [Security 数据库初始化](../databases/ingot_security.sql)

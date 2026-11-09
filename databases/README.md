@@ -57,6 +57,8 @@ python3 tools/iam/generate_database.py --check
 
 ## 历史脚本与升级边界
 
-[ingot_core.sql](ingot_core.sql)、[migrations](migrations)、[iam/migrations](iam/migrations)及[可选历史DDL](iam/legacy/README.md)保留其历史名称和对应版本，不作为当前首次部署清单，不应逐个遍历执行。表名统一后不能用旧历史脚本升级当前新名结构；保留现有数据的迁移须单独设计。
+原顶层 `databases/migrations/` 的 Core/PMS、Member 和 Security 升级及回滚 SQL 已移至[历史迁移归档](archive/migrations/README.md)。当前首次部署按上面的服务入口执行。归档 SQL 和旧版 [ingot_core.sql](ingot_core.sql) 对应各自的历史版本。
+
+IAM 旧库补丁和离线演练结构分别见 [iam/migrations](iam/migrations/README.md) 和[可选历史 DDL](iam/legacy/README.md)。旧补丁只适用于匹配的库结构，保留现有数据并升级到新表名须单独设计迁移。
 
 本轮不创建兼容旧表名的视图或双写。首次部署需同步使用匹配的新版本应用和初始化文件；已有旧名表不会因为library脚本的IF NOT EXISTS而自动转换。

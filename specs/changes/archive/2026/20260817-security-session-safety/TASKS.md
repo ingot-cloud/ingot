@@ -68,7 +68,7 @@
   - 顺带清理：三套 `in-security-policy.yml` 与 `PolicySnapshotFloorAssembler` 的登录地板改 `/bff/auth/login/**`（旧 `/auth/token/**` 已无保护对象）
 - [x] T2-8：Phase 02 测试（含联动失败可观测、A13 / A16 / A19）
   - 单测已完成并全仓 `./gradlew test` 通过；需真实 Redis + 服务实例的集成验收待联调环境
-  - 遗留已闭合：`011` 种子里的 `/auth/token/**` 由 [`015_login_auth_group_pattern_fix.sql`](../../../../../databases/migrations/015_login_auth_group_pattern_fix.sql) 修正（仅改仍含旧路径的行）；基线 `databases/ingot_security.sql` 早已为 `/bff/auth/login`
+  - 遗留已闭合：`011` 种子里的 `/auth/token/**` 由 [`015_login_auth_group_pattern_fix.sql`](../../../../../databases/archive/migrations/015_login_auth_group_pattern_fix.sql) 修正（仅改仍含旧路径的行）；基线 `databases/ingot_security.sql` 早已为 `/bff/auth/login`
 
 **阶段门禁**：A7、A11、A13、A16、A18、A19；Inner 可被后续中心调用。
 
@@ -84,7 +84,7 @@
   - 顺带修正 `RemotePmsUserDetailsService.getAllUserInfo` 的契约错误（声明 `@GetMapping` 但服务端是 `POST /inner/user/list`，调用必然 405；Phase 02 摘掉 Auth 的 enrichment 后本方法无调用方，本 Phase 首次真正使用）
 - [x] T3-2：[`PLATFORM-API.md`](./PLATFORM-API.md) 与 Controller/Swagger 对齐
   - 含旧 `/auth/token/**` → 新接口的字段级迁移映射与前端改造清单（列表形态由「用户行 + tokens[]」改为扁平会话，下线入参 `jti` → `sid`）
-- [x] T3-3：权限码种子 [`014_session_admin_permission_seed.sql`](../../../../../databases/migrations/014_session_admin_permission_seed.sql) + rollback + `databases/ingot_core.sql` 基线
+- [x] T3-3：权限码种子 [`014_session_admin_permission_seed.sql`](../../../../../databases/archive/migrations/014_session_admin_permission_seed.sql) + rollback + `databases/ingot_core.sql` 基线
   - `platform:security:session:query` / `:revoke` 作为操作级 API 权限挂在既有「在线用户」菜单权限下
 - [ ] T3-4：Phase 03 E2E：中心列表 + 按 sid/用户下线
   - 单测已完成：`SessionAdminServiceImplTest` 11 例（范围校验、租户上下文回落、PMS 降级、C 端用户跳过 PMS、跨 Client 内存分页、撤销原因/操作者固定）
@@ -98,9 +98,9 @@
 
 详见 [phases/04-concurrency-policy.md](./phases/04-concurrency-policy.md)。
 
-- [x] T4-1：migration [`016_session_concurrency_policy.sql`](../../../../../databases/migrations/016_session_concurrency_policy.sql) + rollback + 基线 SQL（`014` / `015` 已被 Phase 03 与 Phase 02 遗留修正占用）
+- [x] T4-1：migration [`016_session_concurrency_policy.sql`](../../../../../databases/archive/migrations/016_session_concurrency_policy.sql) + rollback + 基线 SQL（`014` / `015` 已被 Phase 03 与 Phase 02 遗留修正占用）
   - GLOBAL 种子 `max_sessions=0`，升级后行为与升级前一致（收紧靠新增窄 scope 记录）
-  - 权限码另起 [`017_session_policy_permission_seed.sql`](../../../../../databases/migrations/017_session_policy_permission_seed.sql) + rollback（目标库不同，`016` 是 `ingot_security`、`017` 是 `ingot_core`，不能合并成一个脚本）
+  - 权限码另起 [`017_session_policy_permission_seed.sql`](../../../../../databases/archive/migrations/017_session_policy_permission_seed.sql) + rollback（目标库不同，`016` 是 `ingot_security`、`017` 是 `ingot_core`，不能合并成一个脚本）
   - 基线同步：`databases/ingot_security.sql` 增表与种子、`databases/ingot_core.sql` 增两条权限
 - [x] T4-2：中心 Entity/Mapper/AdminService/Platform CRUD/Inner
   - `SessionConcurrencyPolicy` / `SessionConcurrencyPolicyMapper` / `SessionConcurrencyPolicyAdminService(+Impl)`

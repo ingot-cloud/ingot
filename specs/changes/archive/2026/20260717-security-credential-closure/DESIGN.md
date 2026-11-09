@@ -91,7 +91,7 @@
 
 ## 迁移与回滚
 
-- **DDL 变更（修正）**：实测线上基线 `databases/ingot_core.sql` 的 `password_expiration` **无 `force_change` 列**（仅 credential-data 内置 DDL 有）。已补：基线加列 + 迁移 `databases/migrations/008_add_force_change_password_expiration.sql`（含存量按 `sys_user.must_change_pwd` 回填）+ 回滚 `rollback_008.sql`。列默认 0，兼容存量。
+- **DDL 变更（修正）**：实测线上基线 `databases/ingot_core.sql` 的 `password_expiration` **无 `force_change` 列**（仅 credential-data 内置 DDL 有）。已补：基线加列 + 迁移 `databases/archive/migrations/008_add_force_change_password_expiration.sql`（含存量按 `sys_user.must_change_pwd` 回填）+ 回滚 `rollback_008.sql`。列默认 0，兼容存量。
 - 初始密码策略默认值保持「兼容现状」：`generation=RANDOM`、`oneTime=true`、`forceChangeOnFirstLogin=true`、`validHours` 给较宽松默认（如 72）。默认不改变现有 `ADMIN_CREATE` 行为（已 `mustChangePwd=true`）。
 - 回滚：各改动均为增量接入，回退代码即恢复原行为；无数据不可逆操作。
 

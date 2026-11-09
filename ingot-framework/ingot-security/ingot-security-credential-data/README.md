@@ -38,13 +38,13 @@ dependencies {
 
 ### 步骤 2：执行数据库脚本
 
-```bash
-# Member Service
-mysql -u root -p ingot_member < databases/migrations/add_password_history.sql
+独立接入时，从仓库根目录执行模块的 [schema.sql](src/main/resources/sql/ingot-security-credential-data/schema.sql)，`your_service_db` 使用宿主数据源对应的库名。
 
-# IAM Service
-mysql -u root -p ingot_core < databases/migrations/add_password_history.sql
+```bash
+mysql -u root -p --database=your_service_db < ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/ingot-security-credential-data/schema.sql
 ```
+
+IAM 首次部署的 [ingot_iam.sql](../../../databases/ingot_iam.sql) 已包含这两张表。
 
 **创建的表：**
 - `fw_security_password_history` - 密码历史（环形缓冲）
@@ -309,7 +309,7 @@ CREATE TABLE fw_security_password_expiration (
 
 ## 🎯 使用场景
 
-### 场景 1：Member Service（会员系统）
+### 场景 1：宿主服务独立接入
 
 ```gradle
 // build.gradle
@@ -318,12 +318,7 @@ dependencies {
 }
 ```
 
-```bash
-# 执行脚本
-mysql -u root -p ingot_member < databases/migrations/add_password_history.sql
-```
-
-**数据存储：** `ingot_member` 数据库
+按快速开始的建表步骤，在宿主数据源对应库创建两张表。Member 当前使用默认空实现。
 
 ---
 
@@ -336,12 +331,7 @@ dependencies {
 }
 ```
 
-```bash
-# 执行脚本
-mysql -u root -p ingot_core < databases/migrations/add_password_history.sql
-```
-
-**数据存储：** `ingot_core` 数据库
+IAM 已引入该模块。密码历史和过期信息存储在 `ingot_iam`，建表随 [IAM 完整初始化](../../../databases/ingot_iam.sql) 完成。
 
 ---
 

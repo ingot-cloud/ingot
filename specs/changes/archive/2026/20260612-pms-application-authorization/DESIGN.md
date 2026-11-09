@@ -299,7 +299,7 @@ menu.sort ASC
 
 ### 11.1 数据库
 
-- 迁移脚本目录：`databases/migrations/`
+- 迁移脚本见[旧版数据库迁移归档](../../../../../databases/archive/migrations/README.md)。
 - 初始化脚本：`databases/ingot_core.sql`（阶段 6 同步更新）
 
 ### 11.2 后端服务

@@ -23,7 +23,7 @@
 - [x] T2：`ingot_member` 库 DDL 迁移与基线同步
   - 依赖：D2
   - 验收：`009` 在 `ingot_member` 建 `account_lock_state` / `account_security_event` 成功；`rollback_009` 可回退；`databases/ingot_member.sql` 基线含两表
-  - 实现：新增 `databases/migrations/009_member_account_protection.sql`（`USE ingot_member` + 复用 adapter 内置两表 DDL）+ `databases/migrations/rollback_009.sql`；同步 `databases/ingot_member.sql`
+  - 实现：新增 `databases/archive/migrations/009_member_account_protection.sql`（`USE ingot_member` + 复用 adapter 内置两表 DDL）+ `databases/archive/migrations/rollback_009.sql`；同步 `databases/ingot_member.sql`
 
 - [x] T3：新增 Member 登录记录 Feign 接口
   - 依赖：D1

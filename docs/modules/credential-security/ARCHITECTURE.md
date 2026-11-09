@@ -252,9 +252,7 @@ Credential Service 数据库存储策略配置和审计日志，实现策略的�
 - `fw_security_password_history` - 密码历史表（环形缓冲设计）
 - `fw_security_password_expiration` - 密码过期表
 
-**数据库脚本位置：**
-- `databases/ingot_security.sql` - Credential Service
-- `databases/migrations/add_password_history.sql` - 其他服务
+Security 的集中策略表随 [ingot_security.sql](../../../databases/ingot_security.sql) 初始化。密码历史与过期表随 [ingot_iam.sql](../../../databases/ingot_iam.sql) 初始化，其他接入凭证数据模块的宿主在自身数据库执行该模块的 [schema.sql](../../../ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/ingot-security-credential-data/schema.sql)。
 
 ## 扩展新的策略
 

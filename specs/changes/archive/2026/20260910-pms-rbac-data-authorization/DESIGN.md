@@ -274,7 +274,7 @@ GROUP 通配统一 `:**`。迁移将旧 `:*` 转为 `:**`；创建接口不再�
 
 ## 10. 迁移映射清单格式
 
-操作脚本：`databases/migrations/022_pms_rbac_data_authorization.sql`（schema）、`022_pms_rbac_data_authorization_data.sql`（数据，支持 dry-run 开关）、`023_pms_menu_permission_finalize.sql`（通配页关联叶子并 DROP `platform_menu.permission_id`）、`024_pms_permission_drop_legacy_columns.sql`（收口 NAVIGATION 并 DROP `managed`/`source_type`/`source_id`）、`025_pms_permission_drop_type.sql`（DROP `platform_permission.type`）、`026_pms_role_drop_legacy_scope.sql`（DROP 角色级 `scope_type`/`scopes`）、`rollback_022_*.sql` / `rollback_023_*.sql` / `rollback_024_*.sql` / `rollback_025_*.sql` / `rollback_026_*.sql`。Java 规则与报告：`AuthorizationMigrationAnalyzer`，禁止猜测修复。
+操作脚本：`databases/archive/migrations/022_pms_rbac_data_authorization.sql`（schema）、`022_pms_rbac_data_authorization_data.sql`（数据，支持 dry-run 开关）、`023_pms_menu_permission_finalize.sql`（通配页关联叶子并 DROP `platform_menu.permission_id`）、`024_pms_permission_drop_legacy_columns.sql`（收口 NAVIGATION 并 DROP `managed`/`source_type`/`source_id`）、`025_pms_permission_drop_type.sql`（DROP `platform_permission.type`）、`026_pms_role_drop_legacy_scope.sql`（DROP 角色级 `scope_type`/`scopes`）、`rollback_022_*.sql` / `rollback_023_*.sql` / `rollback_024_*.sql` / `rollback_025_*.sql` / `rollback_026_*.sql`。Java 规则与报告：`AuthorizationMigrationAnalyzer`，禁止猜测修复。
 
 ### 10.1 阻断类别
 

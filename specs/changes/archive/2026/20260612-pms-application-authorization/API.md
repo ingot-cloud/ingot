@@ -218,7 +218,7 @@
 
 ## 验收联调顺序
 
-1. 测试库执行 `databases/migrations/007_application_authorization.sql`
+1. 测试库执行 `databases/archive/migrations/007_application_authorization.sql`
 2. Postman/Apifox 调用本契约全流程
 3. 前端：应用列表 → 创建 → 详情内维护菜单/权限
 4. 登录验证菜单与按钮权限

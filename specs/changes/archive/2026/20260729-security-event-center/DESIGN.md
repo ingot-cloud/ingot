@@ -20,7 +20,7 @@
 | 账号 | `ingot-security-account-adapter` | 映射器、`RemoteSecurityEventPortAdapter`、`CompositeSecurityEventPort`、Properties |
 | 账号 | `ingot-security-account-core` | 无 UseCase 改动；可选 `SecurityEventProperties` 接口定义 |
 | 网关 | `ingot-gateway` | Reporter 改调统一 Feign；DTO 映射 |
-| 数据 | `databases/migrations/010_*` | `security_event` DDL + 回滚 + 基线 |
+| 数据 | [010 迁移](../../../../../databases/archive/migrations/010_unified_security_event.sql) | `security_event` DDL + 回滚 + 基线 |
 
 ## 数据模型与接口
 
@@ -105,8 +105,8 @@ CREATE TABLE `security_event` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='统一安全事件';
 ```
 
-- migration：`databases/migrations/010_unified_security_event.sql`
-- 回滚：`databases/migrations/rollback_010.sql`
+- migration：`databases/archive/migrations/010_unified_security_event.sql`
+- 回滚：`databases/archive/migrations/rollback_010.sql`
 - 基线同步：`databases/ingot_security.sql`
 
 **不含**聚合表、物化视图、分区策略（阶段二安全概览）。

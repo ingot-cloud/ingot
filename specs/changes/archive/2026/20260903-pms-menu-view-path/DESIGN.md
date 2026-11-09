@@ -40,7 +40,7 @@ PMS 不再区分「默认视图 / 自定义视图」。`view_path` 只承载前�
 
 ## 迁移与回滚
 
-脚本：`databases/migrations/021_menu_view_path_encoding.sql`、`rollback_021_menu_view_path_encoding.sql`。
+脚本：`databases/archive/migrations/021_menu_view_path_encoding.sql`、`rollback_021_menu_view_path_encoding.sql`。
 
 1. 按旧文件路径 CASE 更新页面与目录 `view_path`（含种子中的 `onlinetoken` → `security.sessions`）
 2. 按钮不改

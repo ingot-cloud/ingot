@@ -185,7 +185,7 @@ remote 缓存名 `session-concurrency-policy`：`LayeredCacheBuilder`（L1 → �
 
 - 发布清空存量会话 / 旧 jti 索引 / BFF 会话键：`bin/session_keys_purge.sh`（SCAN + UNLINK，默认 dry-run，`--apply` 执行）。上线无 sid 的旧 JWT 立即失效，用户重新登录。
 - 小时任务扫 `session:online:registry`，禁止对 `online:user:` 使用 `RedisTemplate.keys`。
-- 登录路径分组修正：`015_login_auth_group_pattern_fix.sql`（把仍含 `/auth/token/**` 的种子行改为现网登录路径）。
+- `login-auth` 的初始路径为 `POST /bff/auth/login`，见 [Security 数据库初始化](../../../../databases/ingot_security.sql)。
 
 ## 10. 已知限制
 

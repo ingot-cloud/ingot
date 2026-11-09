@@ -45,7 +45,7 @@ flowchart LR
 
 ### Migration
 
-**`databases/migrations/013_drop_account_security_event.sql`**（示意）：
+**`databases/archive/migrations/013_drop_account_security_event.sql`**（示意）：
 
 ```sql
 -- ingot_core
@@ -57,7 +57,7 @@ USE ingot_member;
 DROP TABLE IF EXISTS `account_security_event`;
 ```
 
-**`databases/migrations/rollback_013_drop_account_security_event.sql`**：
+**`databases/archive/migrations/rollback_013_drop_account_security_event.sql`**：
 
 - 在两库按本 change 附带的 `rollback_013_drop_account_security_event.sql` DDL 重建空表（无数据）。
 - 回滚仅用于紧急恢复「表存在」假设，**不**恢复审计内容。

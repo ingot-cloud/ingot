@@ -1,8 +1,9 @@
 # 网关限流与安全策略执行面
 
 > **文档定位**：描述 `ingot-gateway`（执行面）与 `ingot-gateway-rule-client`（规则 SDK）的当前实现，便于开发与运维对照代码。  
-> **数据与管理面**：规则持久化与 Platform/Inner API 见 `ingot-service/ingot-security` 与 `databases/migrations/005_security_policy_center.sql`。  
-> **验证**：端到端步骤见 [`test-case/security-policy-e2e.md`](../../test-case/security-policy-e2e.md)。
+> **数据与管理面**见 `ingot-service/ingot-security`，当前表定义和初始数据见 [ingot_security.sql](../../../databases/ingot_security.sql)。
+>
+> 端到端步骤见[安全策略 E2E](../../../test-case/security-policy-e2e.md)。
 
 ---
 
@@ -423,4 +424,4 @@ spring:
 
 ## 10. 版本说明
 
-本文描述 **Phase 1–4** 网关执行面与 SDK 的 As-Built 行为（2026-05）。管理面 API 见 `ingot-service/ingot-security`；E2E 用例见 `test-case/security-policy-e2e.md`；DB 表结构见 `databases/migrations/005_security_policy_center.sql`。
+本文描述 **Phase 1–4** 网关执行面与 SDK 的 As-Built 行为（2026-05）。管理面 API 见 `ingot-service/ingot-security`，验收步骤见[安全策略 E2E](../../../test-case/security-policy-e2e.md)，当时的建表脚本见 [005 历史归档](../../../databases/archive/migrations/005_security_policy_center.sql)。

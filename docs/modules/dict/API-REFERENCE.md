@@ -388,14 +388,16 @@ CREATE TABLE `iam_dictionary` (
 | `extra` | JSON，约定 key：`icon` / `color` / `i18n` 等；新增 key 需保持向后兼容 |
 | `deleted_at` | 逻辑删除（MyBatis-Plus `@TableLogic`） |
 
-### 迁移脚本
+### 旧 Core 字典迁移
+
+当前 `iam_dictionary` 随 [IAM 初始化](../../../databases/ingot_iam.sql) 创建。下表对应旧 Core 版本。
 
 | 版本 | 文件 | 说明 |
 |-----|------|------|
-| V3 | `databases/migrations/003_rename_meta_to_platform.sql` | `meta_dict` → `iam_dictionary` |
-| V4 | `databases/migrations/004_upgrade_platform_dict.sql` | 升级到企业级字段方案 |
+| V3 | [003_rename_meta_to_platform.sql](../../../databases/archive/migrations/003_rename_meta_to_platform.sql) | `meta_dict` → `platform_dict` |
+| V4 | [004_upgrade_platform_dict.sql](../../../databases/archive/migrations/004_upgrade_platform_dict.sql) | 扩展旧 `platform_dict` 的字典项和作用域字段 |
 
-回滚脚本：`databases/migrations/rollback_003.sql`。
+对应回滚见 [rollback_003.sql](../../../databases/archive/migrations/rollback_003.sql) 和 [rollback_004.sql](../../../databases/archive/migrations/rollback_004.sql)。
 
 ### 典型查询
 

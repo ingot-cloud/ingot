@@ -198,7 +198,7 @@ sequenceDiagram
 
 ## 迁移与回滚
 
-- **DDL 迁移**：新增 `databases/migrations/009_member_account_protection.sql`（`USE ingot_member;` + 复用 adapter 内置 `CREATE TABLE IF NOT EXISTS` 两张表），并同步 `databases/ingot_member.sql` 基线；回滚 `databases/migrations/rollback_009.sql`（`DROP TABLE`）。
+- **DDL 迁移**：新增 `databases/archive/migrations/009_member_account_protection.sql`（`USE ingot_member;` + 复用 adapter 内置 `CREATE TABLE IF NOT EXISTS` 两张表），并同步 `databases/ingot_member.sql` 基线；回滚 `databases/archive/migrations/rollback_009.sql`（`DROP TABLE`）。
 - **配置迁移**：`ingot.account.*` → `ingot.security.account.*` 一次性改键。上线需同步更新 Nacos（DEV/TEST/PROD 各 `in-service-pms.yml`）与新增 `in-service-member.yml`；代码与 Nacos 同版本发布，避免旧键残留导致读默认值。
 - **执行顺序**：先执行 `009` 建表 + 更新 Nacos 键 → 再上线含 adapter 依赖与新前缀的服务。
 - **兼容性**：`CREATE TABLE IF NOT EXISTS` 幂等；两张表为新增，不影响存量 `member_user`；`mode` 缺省 `local`，行为与现状一致；seam 为读取来源替换，判定逻辑不变。

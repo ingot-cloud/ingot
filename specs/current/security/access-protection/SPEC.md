@@ -114,11 +114,10 @@ Platform：`/platform/security/access/login-failure-policies`（CRUD）；变更
 IP / 设备取自 Auth 入站头（`In-Inner-Client-Real-IP` / `In-Ca-Sig`），BFF Feign 须原样转发，否则会写成 BFF 网卡 IP，与网关 `BlacklistFilter` 对不齐。  
 登录成功清零各维度计数。
 
-## 3. DB 种子（migration 011）
+## 3. 数据库种子
 
 - 分组：`login-auth`（登录路径）、`api-business`（`/pms/**`、`/member/**`、`/security/**`）。
-- 限流规则：`login-ip`、`pms-ip`、`member-ip`、`security-ip` 等（详见 migration SQL）。
-- 回滚：`rollback_011_security_access_protection_seed.sql`。
+- 初始限流规则为 `login-ip` 和 `business-ip`，见 [ingot_security.sql](../../../../databases/ingot_security.sql)。
 
 ## 4. 安全事件
 

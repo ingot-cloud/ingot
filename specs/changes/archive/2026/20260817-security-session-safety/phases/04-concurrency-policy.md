@@ -9,7 +9,7 @@
 
 ## 实现要点
 
-- `databases/migrations/016_session_concurrency_policy.sql` + `rollback_016_session_concurrency_policy.sql`（`014` / `015` 已被 Phase 03 权限种子与 Phase 02 遗留修正占用）；`USE ingot_security`；GLOBAL 种子 `max_sessions=0`。
+- `databases/archive/migrations/016_session_concurrency_policy.sql` + `rollback_016_session_concurrency_policy.sql`（`014` / `015` 已被 Phase 03 权限种子与 Phase 02 遗留修正占用）；`USE ingot_security`；GLOBAL 种子 `max_sessions=0`。
 - Provider：Entity / Mapper / AdminService / Platform CRUD / Inner `GET /inner/security/session/concurrency-policies`。
 - `SecurityPolicyDomain.SESSION_CONCURRENCY` 失效广播。
 - Auth：`LayeredCacheBuilder` 装配（参考 `GatewayRuleClientAutoConfiguration` 的 `resilientSingleKey`）；配置键 `ingot.security.session.*` 留在 Auth。
