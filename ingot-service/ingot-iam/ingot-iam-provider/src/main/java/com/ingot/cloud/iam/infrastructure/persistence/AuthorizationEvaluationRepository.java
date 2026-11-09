@@ -12,9 +12,7 @@ import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleAssignmentMa
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleDeltaMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleGrantMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleRevisionMapper;
-import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamTenantAppEntitlementMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.projection.AuthorizationEvalRows;
-import com.ingot.cloud.iam.domain.catalog.AudienceKind;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -39,7 +37,7 @@ public class AuthorizationEvaluationRepository {
     private final IamRoleDeltaMapper deltas;
     private final IamRoleRevisionMapper revisions;
     private final IamActionMapper actions;
-    private final IamTenantAppEntitlementMapper entitlements;
+    private final EntitlementRepository entitlements;
     private final IamDelegationActionCeilingMapper ceilings;
 
     /**
@@ -196,7 +194,7 @@ public class AuthorizationEvaluationRepository {
     public AuthorizationEvalRows.Entitlement entitlement(BigInteger tenantId, BigInteger applicationId,
                                                          BigInteger memberId) {
         AuthorizationEvalRows.Entitlement row =
-                entitlements.entitlementForMember(tenantId, applicationId, memberId, AudienceKind.ALL);
+                entitlements.memberEntitlements(tenantId, memberId, List.of(applicationId)).get(applicationId);
         return row == null ? new AuthorizationEvalRows.Entitlement(0, null) : row;
     }
 

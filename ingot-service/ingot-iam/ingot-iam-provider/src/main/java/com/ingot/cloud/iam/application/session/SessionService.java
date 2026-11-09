@@ -4,6 +4,7 @@ import com.ingot.cloud.iam.domain.authorization.AuthorizationView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,7 +13,7 @@ import com.ingot.cloud.iam.application.authorization.evaluation.AuthorizationEva
 import com.ingot.cloud.iam.application.catalog.MenuConfiguration;
 import com.ingot.cloud.iam.domain.identity.ActiveIdentity;
 import com.ingot.cloud.iam.infrastructure.persistence.SessionRepository;
-import com.ingot.cloud.iam.infrastructure.persistence.entity.IamMenuEntity;
+import com.ingot.cloud.iam.infrastructure.persistence.projection.SessionMenuRow;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.cloud.iam.domain.catalog.ApplicationSummary;
@@ -78,20 +79,21 @@ public class SessionService {
         for (ApplicationSummary app : applications) {
             accessibleAppIds.add(Long.parseLong(app.id()));
         }
-        List<SessionMenuAssembler.MenuRow> rows = new ArrayList<>();
-        List<Long> menuIds = new ArrayList<>();
-        for (IamMenuEntity row : sessions.menus(actor.context().domain())) {
-            SessionMenuAssembler.MenuRow snapshot = new SessionMenuAssembler.MenuRow(
-                    row.getId().longValueExact(), row.getApplicationId().longValueExact(),
+        Map<Long, SessionMenuAssembler.MenuRow> rows = new LinkedHashMap<>();
+        Map<Long, List<String>> required = new LinkedHashMap<>();
+        for (SessionMenuRow row : sessions.menus(actor.context().domain(), accessibleAppIds)) {
+            long menuId = row.getId().longValueExact();
+            rows.computeIfAbsent(menuId, id -> new SessionMenuAssembler.MenuRow(
+                    id, row.getApplicationId().longValueExact(),
                     row.getParentId() == null ? null : row.getParentId().longValueExact(), row.getName(),
                     row.getKind(), row.getPath(), row.getViewPath(), row.getRouteName(), row.getIcon(),
                     row.getSortOrder() == null ? 0 : row.getSortOrder(), row.getMatchMode(), row.getAccessMode(),
                     Boolean.TRUE.equals(row.getHidden()), Boolean.TRUE.equals(row.getIsCache()),
-                    Boolean.TRUE.equals(row.getProps()), MenuConfiguration.parameters(row));
-            rows.add(snapshot);
-            menuIds.add(snapshot.id());
+                    Boolean.TRUE.equals(row.getProps()), MenuConfiguration.parameters(row)));
+            if (row.getRequiredActionCode() != null) {
+                required.computeIfAbsent(menuId, id -> new ArrayList<>()).add(row.getRequiredActionCode());
+            }
         }
-        Map<Long, List<String>> required = sessions.requiredActionCodes(menuIds);
-        return SessionMenuAssembler.assemble(rows, accessibleAppIds, Set.copyOf(view.actionCodes()), required);
+        return SessionMenuAssembler.assemble(List.copyOf(rows.values()), accessibleAppIds, Set.copyOf(view.actionCodes()), required);
     }
 }

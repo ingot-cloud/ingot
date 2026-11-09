@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.infrastructure.persistence.mapper;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMembershipSql;
@@ -38,23 +39,25 @@ public interface IamTenantAppEntitlementMapper extends BaseMapper<IamTenantAppEn
     long countEntitled(@Param("tenantId") BigInteger tenantId, @Param("applicationId") BigInteger applicationId);
 
     /**
-     * 统计当前租户开通且成员落入人群时的命中数与最近开通截止，不读取开通表主键。
+     * 一次统计已开通且成员落入人群的候选应用。
      *
      * @param tenantId 已授权租户 ID
-     * @param applicationId 应用 ID
+     * @param applicationIds 去重后的非空候选应用 ID
      * @param memberId 租户成员 ID
      * @param allKind 全组织人群种类
-     * @return 命中条数与最近截止；存在不限期开通时截止为空
+     * @return 仅返回命中的应用；不限期开通时截止为空
      */
-    @Select(IamMembershipSql.DEPARTMENT_REACH + IamMembershipSql.MEMBER_GROUPS + """
-            SELECT COUNT(*) AS hits,
-                   CASE WHEN COUNT(*)>COUNT(e.valid_until) THEN NULL ELSE MIN(e.valid_until) END AS earliest_expiry
+    @Select("<script>" + IamMembershipSql.DEPARTMENT_REACH + IamMembershipSql.MEMBER_GROUPS + """
+            SELECT e.application_id, COUNT(*) AS hits,
+                   CASE WHEN COUNT(*)&gt;COUNT(e.valid_until) THEN NULL ELSE MIN(e.valid_until) END AS earliest_expiry
               FROM iam_tenant_app_entitlement e
               JOIN iam_app_audience aud ON aud.tenant_id=e.tenant_id AND aud.application_id=e.application_id
-             WHERE e.tenant_id=#{tenantId} AND e.application_id=#{applicationId} AND e.enabled=TRUE
+             WHERE e.tenant_id=#{tenantId} AND e.enabled=TRUE
+               AND e.application_id IN
+               <foreach collection="applicationIds" item="id" open="(" separator="," close=")">#{id}</foreach>
                AND aud.enabled=TRUE
-               AND (e.valid_from IS NULL OR e.valid_from<=CURRENT_TIMESTAMP(6))
-               AND (e.valid_until IS NULL OR e.valid_until>CURRENT_TIMESTAMP(6))
+               AND (e.valid_from IS NULL OR e.valid_from&lt;=CURRENT_TIMESTAMP(6))
+               AND (e.valid_until IS NULL OR e.valid_until&gt;CURRENT_TIMESTAMP(6))
                AND (aud.audience_kind=#{allKind}
                     OR EXISTS (
                         SELECT 1 FROM iam_audience_member m
@@ -70,9 +73,10 @@ public interface IamTenantAppEntitlementMapper extends BaseMapper<IamTenantAppEn
                           JOIN member_reach r ON r.id=d.department_id
                          WHERE d.tenant_id=e.tenant_id AND d.application_id=e.application_id
                            AND (r.direct OR d.include_descendants)))
+             GROUP BY e.application_id
+            </script>
             """)
-    AuthorizationEvalRows.Entitlement entitlementForMember(@Param("tenantId") BigInteger tenantId,
-                                                           @Param("applicationId") BigInteger applicationId,
-                                                           @Param("memberId") BigInteger memberId,
-                                                           @Param("allKind") AudienceKind allKind);
+    List<AuthorizationEvalRows.ApplicationEntitlement> entitlementsForMember(@Param("tenantId") BigInteger tenantId,
+            @Param("applicationIds") List<BigInteger> applicationIds, @Param("memberId") BigInteger memberId,
+            @Param("allKind") AudienceKind allKind);
 }

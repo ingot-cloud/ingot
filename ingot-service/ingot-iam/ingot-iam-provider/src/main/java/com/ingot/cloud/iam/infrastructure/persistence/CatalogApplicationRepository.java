@@ -14,6 +14,7 @@ import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantAppEntitle
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamApplicationMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamTenantAppEntitlementMapper;
 import com.ingot.cloud.iam.domain.shared.IamFilters;
+import com.ingot.cloud.iam.infrastructure.persistence.projection.ActionCatalogRow;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -63,6 +64,17 @@ public class CatalogApplicationRepository {
      */
     public IamApplicationEntity findApplication(long id) {
         return applications.selectById(BigInteger.valueOf(id));
+    }
+
+    /**
+     * 一次读取应用存在性及其有序操作目录。
+     *
+     * @param id 已通过入口访问检查的应用 ID
+     * @param enabledOnly 是否只读取启用资源及操作
+     * @return 目录行，应用不存在时为空列表
+     */
+    public List<ActionCatalogRow> actionCatalog(long id, boolean enabledOnly) {
+        return applications.selectActionCatalog(BigInteger.valueOf(id), enabledOnly);
     }
 
     /**

@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +21,6 @@ import com.ingot.cloud.iam.infrastructure.persistence.EntitlementRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.TenantRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamActionEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamAppAudienceEntity;
-import com.ingot.cloud.iam.infrastructure.persistence.entity.IamApplicationEntity;
-import com.ingot.cloud.iam.infrastructure.persistence.entity.IamResourceEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantAppEntitlementEntity;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
 import com.ingot.cloud.iam.domain.shared.IamFilters;
@@ -32,8 +29,6 @@ import com.ingot.cloud.iam.application.shared.ResourceDetailFactory;
 import com.ingot.cloud.iam.domain.shared.IamIds;
 import com.ingot.cloud.iam.application.shared.IamPages;
 import com.ingot.framework.commons.error.BizException;
-import com.ingot.cloud.iam.application.catalog.model.ActionCatalogItem;
-import com.ingot.cloud.iam.application.catalog.model.ActionCatalogResource;
 import com.ingot.cloud.iam.application.catalog.model.ActionCatalogView;
 import com.ingot.cloud.iam.application.catalog.model.ActionRecord;
 import com.ingot.cloud.iam.application.catalog.model.AudienceDepartmentView;
@@ -172,28 +167,7 @@ public class EntitlementService {
         if (!entitlements.entitled(tenantId, appId)) {
             throw new BizException(IamReasonCode.APPLICATION_UNAVAILABLE);
         }
-        IamApplicationEntity application = catalog.findApplication(appId);
-        if (application == null) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        }
-        Map<BigInteger, List<ActionCatalogItem>> actions = new LinkedHashMap<>();
-        for (IamActionEntity row : catalog.listEnabledActions(appId)) {
-            if (row.getResourceId() == null) {
-                continue;
-            }
-            actions.computeIfAbsent(row.getResourceId(), key -> new ArrayList<>()).add(catalogItem(row));
-        }
-        List<ActionCatalogResource> resources = new ArrayList<>();
-        for (IamResourceEntity resource : catalog.listEnabledResources(appId)) {
-            List<ActionCatalogItem> items = actions.getOrDefault(resource.getId(), List.of());
-            if (items.isEmpty()) {
-                continue;
-            }
-            resources.add(new ActionCatalogResource(text(resource.getId()), resource.getCode(),
-                    label(resource.getName(), resource.getCode()), items));
-        }
-        return new ActionCatalogView(text(application.getId()), application.getCode(),
-                label(application.getName(), application.getCode()), resources);
+        return ActionCatalogAssembler.assemble(catalog.actionCatalog(appId, true), true);
     }
 
     /**
@@ -440,11 +414,6 @@ public class EntitlementService {
                 statusOf(row.getEnabled()), row.getSource(),
                 row.getSourceId() == null ? null : row.getSourceId().toString(),
                 instant(row.getValidFrom()), instant(row.getValidUntil()));
-    }
-
-    private static ActionCatalogItem catalogItem(IamActionEntity row) {
-        return new ActionCatalogItem(text(row.getId()), text(row.getResourceId()), row.getCode(),
-                label(row.getName(), row.getCode()), statusOf(row.getEnabled()));
     }
 
     private static String label(String name, String fallback) {

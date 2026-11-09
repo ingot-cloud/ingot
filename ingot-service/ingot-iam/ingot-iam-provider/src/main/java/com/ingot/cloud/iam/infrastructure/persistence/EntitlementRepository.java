@@ -3,6 +3,7 @@ package com.ingot.cloud.iam.infrastructure.persistence;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -26,6 +27,7 @@ import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamTenantGroupMappe
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamTenantMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamTenantMemberMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.projection.AudienceBindingRows;
+import com.ingot.cloud.iam.infrastructure.persistence.projection.AuthorizationEvalRows;
 import com.ingot.cloud.iam.domain.catalog.AudienceKind;
 import com.ingot.cloud.iam.domain.organization.MemberStatus;
 import lombok.RequiredArgsConstructor;
@@ -119,6 +121,25 @@ public class EntitlementRepository {
      */
     public boolean entitled(long tenantId, long applicationId) {
         return entitlements.countEntitled(id(tenantId), id(applicationId)) == 1;
+    }
+
+    /**
+     * 在同一条数据库语句中判断当前成员对各候选应用的开通与人群匹配。
+     *
+     * @param tenantId 已验证的租户 ID
+     * @param memberId 已验证的租户成员 ID
+     * @param applicationIds 候选应用 ID，可为空集合
+     * @return 仅包含命中应用与其截止信息，空候选不访问数据库
+     */
+    public Map<BigInteger, AuthorizationEvalRows.Entitlement> memberEntitlements(BigInteger tenantId,
+            BigInteger memberId, Collection<BigInteger> applicationIds) {
+        if (applicationIds.isEmpty()) {
+            return Map.of();
+        }
+        List<BigInteger> ids = applicationIds.stream().distinct().toList();
+        return entitlements.entitlementsForMember(tenantId, ids, memberId, AudienceKind.ALL).stream()
+                .collect(Collectors.toMap(AuthorizationEvalRows.ApplicationEntitlement::applicationId,
+                        row -> new AuthorizationEvalRows.Entitlement(row.hits(), row.earliestExpiry())));
     }
 
     /**

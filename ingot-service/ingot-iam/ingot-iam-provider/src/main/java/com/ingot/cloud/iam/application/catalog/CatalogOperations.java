@@ -18,7 +18,6 @@ import com.ingot.cloud.iam.application.authorization.SensitiveConfirmationGuard;
 import com.ingot.cloud.iam.domain.shared.IamIds;
 import com.ingot.cloud.iam.infrastructure.serialization.IamJsonCodec;
 import com.ingot.framework.commons.error.BizException;
-import com.ingot.cloud.iam.application.catalog.model.ActionCatalogItem;
 import com.ingot.cloud.iam.application.catalog.model.GrantCatalogAction;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.cloud.iam.domain.shared.ConfigurationStatus;
@@ -186,11 +185,6 @@ public class CatalogOperations {
         entity.setSortOrder(input.sortOrder());
         entity.setEnabled(enabled);
         return entity;
-    }
-
-    ActionCatalogItem catalogItem(IamActionEntity row) {
-        return new ActionCatalogItem(text(row.getId()), text(row.getResourceId()), row.getCode(), row.getName(),
-                statusOf(row.getEnabled()));
     }
 
     GrantCatalogAction grantCatalogAction(IamActionEntity row) {

@@ -21,11 +21,9 @@ import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamActionMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamApplicationMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamMemberDepartmentMapper;
-import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamMenuActionMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamMenuMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamPlatformMemberMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamResourceMapper;
-import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamTenantAppEntitlementMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.IamTenantMemberMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantAdministrationMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantRoleWorkspaceMapper;
@@ -58,6 +56,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
 import com.fasterxml.jackson.databind.*;
 import com.ingot.cloud.iam.configuration.IamReadRequestConfiguration;
+import com.ingot.cloud.iam.application.catalog.CatalogFacade;
+import com.ingot.cloud.iam.application.catalog.EntitlementResolver;
+import com.ingot.cloud.iam.application.catalog.EntitlementService;
+import com.ingot.cloud.iam.application.catalog.model.ApplicationPurgeInput;
+import com.ingot.cloud.iam.application.shared.model.SensitiveConfirmation;
+import com.ingot.cloud.iam.domain.shared.SensitiveConfirmationKind;
+import com.ingot.cloud.iam.interfaces.http.platform.PlatformApplicationAPI;
+import com.ingot.cloud.iam.interfaces.http.tenant.TenantApplicationAPI;
 import com.ingot.cloud.iam.application.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.iam.application.session.SessionService;
 import com.ingot.cloud.iam.interfaces.http.IamErrorHandler;
@@ -127,7 +133,8 @@ class TenantLiveMySqlHttpTest {
         pool=new com.zaxxer.hikari.HikariDataSource();pool.setJdbcUrl("jdbc:mysql://"+address+"/ingot_iam"+jdbcOptions);pool.setUsername("root");pool.setPassword("");pool.setMaximumPoolSize(64);pool.setMinimumIdle(8);pool.setConnectionTimeout(5000);jdbc=new JdbcTemplate(pool);
         jdbc.update("INSERT INTO iam_account(id,username,password_hash) VALUES(1,'fixture-1','not-a-credential'),(2,'fixture-2','not-a-credential'),(3,'fixture-3','not-a-credential'),(4,'fixture-4','not-a-credential')");
         jdbc.update("INSERT INTO iam_platform_member(id,account_id,display_name) VALUES(1001,1,'平台')");
-        jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,valid_from,source) SELECT 900,'PLATFORM','MEMBER',1001,r.id,'SYSTEM','{}',UTC_TIMESTAMP(6),'INITIALIZATION' FROM iam_role_revision r JOIN iam_role_definition d ON d.id=r.role_id WHERE d.domain='PLATFORM' AND d.kind='SYSTEM' ORDER BY r.revision DESC LIMIT 1");
+        // 平台超管查询使用秒级时钟，夹具种子在首个请求前应已生效。
+        jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,valid_from,source) SELECT 900,'PLATFORM','MEMBER',1001,r.id,'SYSTEM','{}',UTC_TIMESTAMP(6)-INTERVAL 1 SECOND,'INITIALIZATION' FROM iam_role_revision r JOIN iam_role_definition d ON d.id=r.role_id WHERE d.domain='PLATFORM' AND d.kind='SYSTEM' ORDER BY r.revision DESC LIMIT 1");
         jdbc.update("INSERT INTO iam_tenant(id,name) VALUES(10,'组织A'),(20,'组织B')");
         jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name) VALUES(101,10,1,'拥有者A'),(102,10,2,'成员A'),(103,10,3,'管理员A'),(104,10,4,'接收人A'),(201,20,1,'拥有者B'),(202,20,2,'成员B')");
         jdbc.update("UPDATE iam_tenant SET owner_member_id=CASE id WHEN 10 THEN 101 ELSE 201 END");
@@ -136,7 +143,8 @@ class TenantLiveMySqlHttpTest {
         jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id,enabled,valid_from,source) SELECT 600+tenant.id,tenant.id,app.id,TRUE,'2000-01-01','INITIALIZATION' FROM iam_tenant tenant JOIN iam_application app ON app.code='iam-tenant'");
         jdbc.update("INSERT INTO iam_field_policy(tenant_id,resource_id,default_revision_id) SELECT t.id,d.resource_id,d.id FROM iam_tenant t JOIN iam_default_policy_revision d ON d.kind='FIELD' WHERE d.revision=(SELECT MAX(revision) FROM iam_default_policy_revision WHERE kind='FIELD' AND resource_id=d.resource_id)");
         jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,audience_kind) SELECT tenant.id,app.id,'ALL' FROM iam_tenant tenant JOIN iam_application app ON app.code='iam-tenant'");
-        first=node(pool);second=node(pool);
+        first = node(pool);
+        second = node(pool);
     }
     private AnnotationConfigServletWebServerApplicationContext node(DataSource source) {
         var web=new AnnotationConfigServletWebServerApplicationContext();
@@ -150,7 +158,7 @@ class TenantLiveMySqlHttpTest {
         var roleService=new TenantRoleDefinitionService(access,resources,live,IamMybatisTestAccess.currentRoles(source),new RoleGrantValidator(IamMybatisTestAccess.roles(source)),transaction,IamMybatisTestAccess.audits(source),changes,IamMybatisTestAccess.roleFields(source),IamMybatisTestAccess.fieldMetadata(source));
         var assignmentService=com.ingot.cloud.iam.fixture.TenantAssignmentFixture.create(access,live,IamMybatisTestAccess.mapper(source,com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantRoleWorkspaceMapper.class),IamMybatisTestAccess.currentRoles(source),roleService,resources,transaction,IamMybatisTestAccess.audits(source),changes,IamMybatisTestAccess.mapper(source,TenantScopeCandidateMapper.class),new DepartmentClosure(IamMybatisTestAccess.mapper(source,IamDepartmentMapper.class)),new com.ingot.cloud.iam.application.organization.OrganizationMemberDepartments(access,resources,IamMybatisTestAccess.memberQueries(source),new DepartmentQueryRepository(IamMybatisTestAccess.mapper(source,IamDepartmentMapper.class),IamMybatisTestAccess.mapper(source,IamMemberDepartmentMapper.class),IamMybatisTestAccess.mapper(source,IamTenantMemberMapper.class))));
         var delegationService=com.ingot.cloud.iam.fixture.TenantDelegationFacadeFixture.create(access,live,IamMybatisTestAccess.currentRoles(source),new TenantRoleDefinitionResolver(live,IamMybatisTestAccess.currentRoles(source)),new TenantRoleLockService(live),new TenantScopeBindingService(live,IamMybatisTestAccess.mapper(source,TenantScopeCandidateMapper.class),new DepartmentClosure(IamMybatisTestAccess.mapper(source,IamDepartmentMapper.class))),resources,transaction,IamMybatisTestAccess.audits(source),changes);
-        var sessionStore=new SessionRepository(IamMybatisTestAccess.mapper(source,IamPlatformMemberMapper.class),IamMybatisTestAccess.mapper(source,IamTenantMemberMapper.class),IamMybatisTestAccess.mapper(source,IamApplicationMapper.class),IamMybatisTestAccess.mapper(source,IamActionMapper.class),IamMybatisTestAccess.mapper(source,IamMenuMapper.class),IamMybatisTestAccess.mapper(source,IamMenuActionMapper.class),IamMybatisTestAccess.mapper(source,IamTenantAppEntitlementMapper.class));
+        var sessionStore=new SessionRepository(IamMybatisTestAccess.mapper(source,IamPlatformMemberMapper.class),IamMybatisTestAccess.mapper(source,IamTenantMemberMapper.class),IamMybatisTestAccess.mapper(source,IamApplicationMapper.class),IamMybatisTestAccess.mapper(source,IamMenuMapper.class),IamMybatisTestAccess.entitlements(source));
         var sessions=new SessionService(access,evaluator,sessionStore,live);
         registerResourceClients(web,source,identities,evaluator);
         web.registerBean(ServletWebServerFactory.class,()->new TomcatServletWebServerFactory(0));
@@ -159,6 +167,15 @@ class TenantLiveMySqlHttpTest {
         web.registerBean(TenantAssignmentAPI.class,()->new TenantAssignmentAPI(assignmentService));
         web.registerBean(TenantDelegationAPI.class,()->new TenantDelegationAPI(delegationService));
         web.registerBean(FixtureCatalog.class,()->new FixtureCatalog(access,live));
+        var transactions = new DataSourceTransactionManager(source);
+        var catalog = IamMybatisTestAccess.catalogService(access, source, transactions);
+        var catalogRepository = IamMybatisTestAccess.catalogs(source);
+        var entitlements = new EntitlementService(access, IamMybatisTestAccess.audits(source), changes,
+                catalogRepository, IamMybatisTestAccess.entitlements(source), IamMybatisTestAccess.tenants(source),
+                new EntitlementResolver(IamMybatisTestAccess.catalog(source), catalogRepository), transactions);
+        web.registerBean(CatalogFacade.class, () -> catalog);
+        web.registerBean(PlatformApplicationAPI.class, () -> new PlatformApplicationAPI(catalog));
+        web.registerBean(TenantApplicationAPI.class, () -> new TenantApplicationAPI(entitlements));
         web.registerBean(CurrentSessionAPI.class,()->new CurrentSessionAPI(sessions,org.mockito.Mockito.mock(com.ingot.cloud.iam.application.account.CurrentAccountService.class)));
         web.registerBean(IamErrorHandler.class,IamErrorHandler::new);
         web.registerBean(com.ingot.cloud.iam.interfaces.http.TenantCurrentContractErrorHandler.class,com.ingot.cloud.iam.interfaces.http.TenantCurrentContractErrorHandler::new);
@@ -167,14 +184,27 @@ class TenantLiveMySqlHttpTest {
             @Override protected void doFilterInternal(jakarta.servlet.http.HttpServletRequest request,jakarta.servlet.http.HttpServletResponse response,jakarta.servlet.FilterChain chain) throws java.io.IOException,jakarta.servlet.ServletException {
                 var actor=ACTORS.get(request.getHeader("X-Fixture-Actor"));
                 if(actor==null){response.setStatus(401);return;}
-                var user=InUser.stateless(Long.parseLong(actor.accountId()),actor.tenantId()==null?null:Long.parseLong(actor.tenantId()),"web","standard",UserTypeEnum.ADMIN.getValue(),"fixture",List.of(),List.of(),Map.of()).toBuilder().authorizationContext(actor).build();
-                SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user,null,List.of()));
+                authenticateFixture(actor);
                 try{chain.doFilter(request,response);}finally{SecurityContextHolder.clearContext();}
             }}));
         web.register(Mvc.class,IamReadRequestConfiguration.class);web.refresh();return web;
     }
+    private static void authenticateFixture(AuthorizationContext actor) {
+        var user = InUser.stateless(Long.parseLong(actor.accountId()),
+                actor.tenantId() == null ? null : Long.parseLong(actor.tenantId()), "web", "standard",
+                UserTypeEnum.ADMIN.getValue(), "fixture", List.of(), List.of(), Map.of())
+                .toBuilder().authorizationContext(actor).build();
+        SecurityContextHolder.getContext().setAuthentication(
+                UsernamePasswordAuthenticationToken.authenticated(user, null, List.of()));
+    }
+
     @AfterAll
-    void stop() throws Exception {if(first!=null)first.close();if(second!=null)second.close();if(pool!=null)pool.close();if(container!=null)command("docker","stop","--timeout","10",container);}
+    void stop() throws Exception {
+        if (first != null) first.close();
+        if (second != null) second.close();
+        if (pool != null) pool.close();
+        if (container != null) command("docker","stop","--timeout","10",container);
+    }
 
     @Test
     @Order(1)
@@ -400,6 +430,249 @@ class TenantLiveMySqlHttpTest {
         metrics.putObject("sharedSaveDml").put("oneActiveAssignment",oneAssignmentDml).put("hundredActiveAssignments",hundredAssignmentDml);
         Files.writeString(Path.of("build/tenant-live-http-metrics.json"),json.writerWithDefaultPrettyPrinter().writeValueAsString(metrics));
     }
+    @Test
+    @Order(6)
+    void batchedAudienceAndEntitlementChangesApplyOnTheNextRequest() throws Exception {
+        long application = 910001;
+        long action = 910003;
+        String actionCode = "audience-fixture:items:read";
+        jdbc.update("INSERT INTO iam_application(id,code,domain,name) VALUES(?,'audience-fixture','TENANT','Audience')",
+                application);
+        jdbc.update("""
+                INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities)
+                VALUES(910002,?,'items','Items','["ALL"]','[]')
+                """, application);
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name) VALUES(?,?,910002,?,'Read')",
+                action, application, actionCode);
+        jdbc.update("""
+                INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id,enabled,source)
+                VALUES(910004,10,?,TRUE,'INITIALIZATION')
+                """, application);
+        jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,audience_kind) VALUES(10,?,'SELECTED')",
+                application);
+        var created = request(first, "platform", "POST", "/v1/platform/shared-roles",
+                Map.of("code", "audience-fixture", "name", "Audience", "definition", definition(Long.toString(action))));
+        assertEquals(200, created.statusCode(), created.body());
+        assign("owner-a", "104", data(created).path("id").asText(), null);
+        assertAudience(application, actionCode, false);
+
+        jdbc.update("INSERT INTO iam_audience_member(tenant_id,application_id,member_id) VALUES(10,?,104)", application);
+        assertAudience(application, actionCode, true);
+        jdbc.update("DELETE FROM iam_audience_member WHERE tenant_id=10 AND application_id=?", application);
+        jdbc.update("""
+                INSERT INTO iam_audience_department(tenant_id,application_id,department_id,include_descendants)
+                VALUES(10,?,11,FALSE)
+                """, application);
+        assertAudience(application, actionCode, false);
+        jdbc.update("UPDATE iam_audience_department SET include_descendants=TRUE WHERE tenant_id=10 AND application_id=?",
+                application);
+        assertAudience(application, actionCode, true);
+        jdbc.update("DELETE FROM iam_audience_department WHERE tenant_id=10 AND application_id=?", application);
+
+        jdbc.update("INSERT INTO iam_tenant_group(id,tenant_id,name) VALUES(910005,10,'Audience')");
+        jdbc.update("INSERT INTO iam_audience_group(tenant_id,application_id,group_id) VALUES(10,?,910005)", application);
+        jdbc.update("INSERT INTO iam_tenant_group_member(tenant_id,group_id,member_id) VALUES(10,910005,104)");
+        assertAudience(application, actionCode, true);
+        jdbc.update("DELETE FROM iam_tenant_group_member WHERE tenant_id=10 AND group_id=910005");
+        jdbc.update("""
+                INSERT INTO iam_tenant_group_department(tenant_id,group_id,department_id,include_descendants)
+                VALUES(10,910005,11,TRUE)
+                """);
+        assertAudience(application, actionCode, true);
+
+        var repository = IamMybatisTestAccess.entitlements(pool);
+        BigInteger appId = BigInteger.valueOf(application);
+        BigInteger tenant = BigInteger.TEN;
+        BigInteger member = BigInteger.valueOf(104);
+        var unlimited = repository.memberEntitlements(tenant, member, List.of(appId, appId));
+        assertEquals(1, unlimited.size());
+        assertNull(unlimited.get(appId).earliestExpiry());
+        var otherTenant = repository.memberEntitlements(BigInteger.valueOf(20), BigInteger.valueOf(202),
+                List.of(appId));
+        assertTrue(otherTenant.isEmpty());
+        assertTrue(repository.memberEntitlements(tenant, member, List.of()).isEmpty());
+
+        jdbc.update("UPDATE iam_app_audience SET enabled=FALSE WHERE tenant_id=10 AND application_id=?", application);
+        assertAudience(application, actionCode, false);
+        jdbc.update("UPDATE iam_app_audience SET enabled=TRUE WHERE tenant_id=10 AND application_id=?", application);
+        jdbc.update("""
+                UPDATE iam_tenant_app_entitlement SET valid_from=UTC_TIMESTAMP(6)+INTERVAL 10 MINUTE
+                WHERE tenant_id=10 AND application_id=?
+                """, application);
+        assertAudience(application, actionCode, false);
+        var future = LocalDateTime.now(ZoneOffset.UTC).plusMinutes(10).truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+        jdbc.update("UPDATE iam_tenant_app_entitlement SET valid_from=UTC_TIMESTAMP(6),valid_until=? WHERE tenant_id=10 AND application_id=?",
+                future, application);
+        assertAudience(application, actionCode, true);
+        assertEquals(future, repository.memberEntitlements(tenant, member, List.of(appId)).get(appId).earliestExpiry());
+        jdbc.update("UPDATE iam_tenant_app_entitlement SET enabled=FALSE WHERE tenant_id=10 AND application_id=?", application);
+        assertAudience(application, actionCode, false);
+        jdbc.update("""
+                UPDATE iam_tenant_app_entitlement SET enabled=TRUE,valid_from=NULL,valid_until=UTC_TIMESTAMP(6)
+                WHERE tenant_id=10 AND application_id=?
+                """, application);
+        assertAudience(application, actionCode, false);
+    }
+
+    private void assertAudience(long application, String actionCode, boolean expected) throws Exception {
+        assertEquals(expected, codes(second, "recipient-a").contains(actionCode));
+        var response = request(second, "recipient-a", "GET", "/v1/me/bootstrap", null);
+        assertEquals(200, response.statusCode(), response.body());
+        var applications = data(response).path("applications");
+        assertEquals(expected, applications.findValuesAsText("id").contains(Long.toString(application)));
+    }
+
+    @Test
+    @Order(7)
+    void catalogReadsOneSnapshotAndSeesCommittedWritesAcrossNodes() throws Exception {
+        String platformApps = "/v1/platform/applications";
+        var app = catalogResponse(first, "platform", "POST", platformApps + "/bundles", Map.of(
+                "application", Map.of("code", "catalog-fixture", "domain", "TENANT", "name", "Catalog"),
+                "resources", List.of(Map.of("tempId", "r1", "code", "items", "name", "Items",
+                        "scopeCapabilities", List.of("ALL"), "fieldCapabilities", List.of(),
+                        "actions", List.of(Map.of("tempId", "a1", "code", "read", "name", "Read")))),
+                "menus", List.of()));
+        String appId = app.path("id").asText();
+        String appPath = platformApps + "/" + appId;
+        String platformPath = appPath + "/action-catalog";
+        String tenantPath = "/v1/tenant/applications/" + appId + "/action-catalog";
+        jdbc.update("""
+                INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id,enabled,source)
+                VALUES(910006,10,?,TRUE,'INITIALIZATION')
+                """, appId);
+
+        catalogResponse(first, "platform", "GET", platformPath, null);
+        catalogResponse(first, "owner-a", "GET", tenantPath, null);
+        long before = mysqlSelects();
+        var platformView = catalogResponse(first, "platform", "GET", platformPath, null);
+        assertEquals(7, mysqlSelects() - before);
+        assertEquals(platformView, catalogResponse(second, "platform", "GET", platformPath, null));
+
+        before = mysqlSelects();
+        var tenantView = catalogResponse(first, "owner-a", "GET", tenantPath, null);
+        assertEquals(9, mysqlSelects() - before);
+        assertEquals(tenantView, catalogResponse(second, "owner-a", "GET", tenantPath, null));
+        assertTrue(codes(second, "owner-a").contains("catalog-fixture:items:read"));
+        assertNotEquals(200, request(second, "owner-b", "GET", tenantPath, null).statusCode());
+        assertNotEquals(200, request(second, "member-a", "GET", tenantPath, null).statusCode());
+
+        var initialResource = platformView.path("resources").get(0);
+        String resourceId = initialResource.path("id").asText();
+        String actionId = initialResource.path("actions").get(0).path("id").asText();
+        catalogResponse(first, "platform", "PUT", appPath + "/actions/" + actionId,
+                Map.of("expectedVersion", "0", "name", "Updated"));
+        var updated = catalogResponse(second, "owner-a", "GET", tenantPath, null);
+        assertTrue(updated.findValuesAsText("name").contains("Updated"));
+
+        catalogResponse(first, "platform", "PATCH", appPath + "/actions/" + actionId,
+                Map.of("expectedVersion", "1", "status", "DISABLED"));
+        var tenantAfterDisable = catalogResponse(second, "owner-a", "GET", tenantPath, null);
+        assertTrue(tenantAfterDisable.path("resources").isEmpty());
+        assertFalse(codes(second, "owner-a").contains("catalog-fixture:items:read"));
+        assertTrue(catalogResponse(second, "platform", "GET", platformPath, null)
+                .findValuesAsText("status").contains("DISABLED"));
+
+        catalogResponse(first, "platform", "DELETE", appPath + "/actions/" + actionId, null);
+        assertTrue(catalogResponse(second, "platform", "GET", platformPath, null).findValues("status").isEmpty());
+        catalogResponse(first, "platform", "PUT", appPath + "/resources/" + resourceId,
+                Map.of("expectedVersion", "0", "name", "Updated resource", "scopeCapabilities", List.of("ALL"),
+                        "fieldCapabilities", List.of()));
+        assertTrue(catalogResponse(second, "platform", "GET", platformPath, null)
+                .findValuesAsText("name").contains("Updated resource"));
+        catalogResponse(first, "platform", "DELETE", appPath + "/resources/" + resourceId, null);
+        assertTrue(catalogResponse(second, "platform", "GET", platformPath, null).path("resources").isEmpty());
+        catalogResponse(first, "platform", "POST", appPath + "/resources",
+                Map.of("code", "new", "name", "New", "scopeCapabilities", List.of("ALL"),
+                        "fieldCapabilities", List.of()));
+        String newResource = catalogResponse(second, "platform", "GET", platformPath, null)
+                .path("resources").get(0).path("id").asText();
+        catalogResponse(first, "platform", "POST", appPath + "/actions",
+                Map.of("code", "read", "name", "New action", "resourceId", newResource));
+        assertTrue(catalogResponse(second, "owner-a", "GET", tenantPath, null)
+                .findValuesAsText("name").contains("New action"));
+
+        jdbc.update("UPDATE iam_tenant_app_entitlement SET enabled=FALSE WHERE tenant_id=10 AND application_id=?", appId);
+        assertNotEquals(200, request(second, "owner-a", "GET", tenantPath, null).statusCode());
+
+        catalogResponse(first, "platform", "PUT", appPath, Map.of("expectedVersion", "0",
+                "name", "New app name", "sortOrder", 0, "baseline", false));
+        assertEquals("New app name", catalogResponse(second, "platform", "GET", platformPath, null)
+                .path("applicationName").asText());
+        catalogResponse(first, "platform", "PATCH", appPath,
+                Map.of("expectedVersion", "1", "status", "DISABLED"));
+
+        // 清除事务走生产用例，合成确认模拟 HTTP 解密后的输入。
+        authenticateFixture(ACTORS.get("platform"));
+        try {
+            var purged = first.getBean(CatalogFacade.class).purgeApplication(appId, new ApplicationPurgeInput("2",
+                    new SensitiveConfirmation(SensitiveConfirmationKind.LOGIN_PASSWORD, "synthetic")));
+            assertEquals(appId, purged.id());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        assertEquals(404, request(second, "platform", "GET", platformPath, null).statusCode());
+    }
+
+    @Test
+    @Order(8)
+    void bootstrapReadsMenuBindingsAndAdmissionFromOneLiveSnapshot() throws Exception {
+        long app = 925001;
+        long menu = 925005;
+        jdbc.update("INSERT INTO iam_application(id,code,domain,name) VALUES(?,'menu-query-fixture','TENANT','Menus')", app);
+        jdbc.update("""
+                INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities)
+                VALUES(925002,?,'items','Items','["ALL"]','[]')
+                """, app);
+        jdbc.update("""
+                INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled)
+                VALUES(925003,?,925002,'menu-query-fixture:items:read','Read',TRUE),
+                      (925004,?,925002,'menu-query-fixture:items:write','Write',FALSE)
+                """, app, app);
+        jdbc.update("""
+                INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id,enabled,source)
+                VALUES(925006,10,?,TRUE,'INITIALIZATION')
+                """, app);
+        jdbc.update("""
+                INSERT INTO iam_menu(id,application_id,name,path,kind,match_mode,access_mode,hidden)
+                VALUES(?,?,'Bound','/bound','PAGE','ALL','ACTION',TRUE),
+                      (925007,?,'Open','/open','PAGE','ANY','OPEN',FALSE)
+                """, menu, app, app);
+        assertMenu(second, menu, false);
+        assertMenu(second, 925007, true);
+        long before = mysqlSelects();
+        assertMenu(second, menu, false);
+        long withoutBindings = mysqlSelects() - before;
+
+        jdbc.update("INSERT INTO iam_menu_action(application_id,menu_id,action_id) VALUES(?,?,925003),(?,?,925004)",
+                app, menu, app, menu);
+        before = mysqlSelects();
+        assertMenu(second, menu, false);
+        assertEquals(withoutBindings, mysqlSelects() - before);
+
+        jdbc.update("UPDATE iam_menu SET match_mode='ANY' WHERE id=?", menu);
+        assertMenu(second, menu, true);
+        jdbc.update("DELETE FROM iam_menu_action WHERE menu_id=? AND action_id=925003", menu);
+        assertMenu(second, menu, false);
+        jdbc.update("UPDATE iam_menu SET access_mode='OPEN' WHERE id=?", menu);
+        assertMenu(second, menu, true);
+        jdbc.update("UPDATE iam_menu SET enabled=FALSE WHERE id=?", menu);
+        assertMenu(second, menu, false);
+        jdbc.update("UPDATE iam_tenant_app_entitlement SET enabled=FALSE WHERE application_id=?", app);
+        assertMenu(second, 925007, false);
+    }
+
+    private void assertMenu(AnnotationConfigServletWebServerApplicationContext node, long menu, boolean expected) throws Exception {
+        var bootstrap = catalogResponse(node, "owner-a", "GET", "/v1/me/bootstrap", null);
+        assertEquals(expected, bootstrap.path("menus").findValuesAsText("id").contains(Long.toString(menu)));
+    }
+
+    private JsonNode catalogResponse(AnnotationConfigServletWebServerApplicationContext node,
+            String actor, String method, String path, Object body) throws Exception {
+        var response = request(node, actor, method, path, body);
+        assertEquals(200, response.statusCode(), response.body());
+        return data(response);
+    }
+
     private long dmlForSharedSave(String role) throws Exception {
         var assignmentsBefore=jdbc.queryForList("SELECT * FROM iam_role_assignment WHERE role_id=? ORDER BY id",role);
         String lock=data(request(first,"platform","GET","/v1/platform/shared-roles/"+role,null)).path("version").asText();

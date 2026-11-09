@@ -270,8 +270,7 @@ public final class IamMybatisTestAccess {
         return new AuthorizationEvaluationRepository(mapper(source, IamRoleAssignmentMapper.class),
                 mapper(source, IamRoleGrantMapper.class), mapper(source, IamRoleDeltaMapper.class),
                 mapper(source, IamRoleRevisionMapper.class), mapper(source, IamActionMapper.class),
-                mapper(source, IamTenantAppEntitlementMapper.class),
-                mapper(source, IamDelegationActionCeilingMapper.class));
+                entitlements(source), mapper(source, IamDelegationActionCeilingMapper.class));
     }
 
     /** 在当前夹具数据源上建立无缓存的授权求值器。 */
@@ -291,7 +290,7 @@ public final class IamMybatisTestAccess {
     }
     /** 租户实时求值器，平台测试仍使用原查询路径。 */
     public static com.ingot.cloud.iam.application.authorization.evaluation.TenantAuthorizationEvaluator liveEvaluator(DataSource source) {
-        return new com.ingot.cloud.iam.application.authorization.evaluation.TenantAuthorizationEvaluator(mapper(source,com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantAdministrationMapper.class),currentRoles(source),evaluations(source),new DepartmentClosure(mapper(source,IamDepartmentMapper.class)));
+        return new com.ingot.cloud.iam.application.authorization.evaluation.TenantAuthorizationEvaluator(mapper(source,com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantAdministrationMapper.class),currentRoles(source),entitlements(source),new DepartmentClosure(mapper(source,IamDepartmentMapper.class)));
     }
     /** 在当前夹具数据源上建立范围编译器。 */
     public static ObjectScopeCompiler objectScopes(DataSource source) {

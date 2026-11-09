@@ -11,6 +11,7 @@ import com.ingot.cloud.iam.infrastructure.persistence.entity.IamApplicationEntit
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamMenuEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamPlanEntity;
 import com.ingot.cloud.iam.infrastructure.persistence.entity.IamResourceEntity;
+import com.ingot.cloud.iam.infrastructure.persistence.projection.ActionCatalogRow;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.cloud.iam.domain.catalog.MenuAccessMode;
 import com.ingot.cloud.iam.domain.catalog.ActionMatchMode;
@@ -60,6 +61,17 @@ public class CatalogRepository {
      */
     public IamApplicationEntity findApplication(long id) {
         return application.findApplication(id);
+    }
+
+    /**
+     * 一次读取应用存在性及其有序操作目录。
+     *
+     * @param id 已通过入口访问检查的应用 ID
+     * @param enabledOnly 是否只读取启用资源及操作
+     * @return 目录行，应用不存在时为空列表
+     */
+    public List<ActionCatalogRow> actionCatalog(long id, boolean enabledOnly) {
+        return application.actionCatalog(id, enabledOnly);
     }
 
     /**

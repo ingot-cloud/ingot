@@ -17,7 +17,6 @@ import com.ingot.cloud.iam.domain.shared.IamIds;
 import com.ingot.cloud.iam.infrastructure.serialization.IamJsonCodec;
 import com.ingot.cloud.iam.application.shared.IamPages;
 import com.ingot.framework.commons.error.BizException;
-import com.ingot.cloud.iam.application.catalog.model.ActionCatalogResource;
 import com.ingot.cloud.iam.application.catalog.model.ActionCatalogView;
 import com.ingot.cloud.iam.application.catalog.model.GrantCatalogResource;
 import com.ingot.cloud.iam.domain.catalog.ActionCodes;
@@ -84,20 +83,7 @@ public class ActionCatalogService {
     public ActionCatalogView getActionCatalog(String applicationId) {
         operationsContext.access().require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
         long appId = IamIds.require(applicationId);
-        IamApplicationEntity application = operationsContext.catalog().findApplication(appId);
-        if (application == null) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        }
-        List<IamResourceEntity> resources = operationsContext.catalog().listResources(appId);
-        Map<BigInteger, List<IamActionEntity>> actions = new LinkedHashMap<>();
-        for (IamActionEntity row : operationsContext.catalog().listActions(appId)) {
-            actions.computeIfAbsent(row.getResourceId(), key -> new ArrayList<>()).add(row);
-        }
-        List<ActionCatalogResource> nodes = resources.stream()
-            .map(resource -> new ActionCatalogResource(CatalogOperations.text(resource.getId()), resource.getCode(), resource.getName(),
-                    actions.getOrDefault(resource.getId(), List.of()).stream().map(operationsContext::catalogItem).toList()))
-            .toList();
-        return new ActionCatalogView(CatalogOperations.text(application.getId()), application.getCode(), application.getName(), nodes);
+        return ActionCatalogAssembler.assemble(operationsContext.catalog().actionCatalog(appId, false), false);
     }
 
     /**

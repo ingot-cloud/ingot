@@ -60,6 +60,18 @@ public final class AuthorizationEvalRows {
     }
 
     /**
+     * <p>当前成员命中的一个候选应用，供批量查询按应用索引。</p>
+     *
+     * @param applicationId 应用 ID
+     * @param hits 当前有效开通命中数
+     * @param earliestExpiry 最近截止；不限期为空
+     * @author jy
+     * @since 1.0.0
+     */
+    public record ApplicationEntitlement(BigInteger applicationId, long hits, LocalDateTime earliestExpiry) {
+    }
+
+    /**
      * <p>已启用角色定义上的版本及其可选基础版本。</p>
      *
      * @param id 当前版本 ID

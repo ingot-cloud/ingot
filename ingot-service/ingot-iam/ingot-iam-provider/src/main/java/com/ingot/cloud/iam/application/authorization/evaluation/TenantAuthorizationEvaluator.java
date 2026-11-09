@@ -3,7 +3,7 @@ package com.ingot.cloud.iam.application.authorization.evaluation;
 import com.ingot.cloud.iam.domain.authorization.ResolvedActionScope;
 import com.ingot.cloud.iam.domain.authorization.ScopeBinder;
 import com.ingot.cloud.iam.domain.authorization.ScopeClause;
-import com.ingot.cloud.iam.infrastructure.persistence.AuthorizationEvaluationRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.EntitlementRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentClosure;
 import com.ingot.framework.commons.model.iam.ActionScopeCeiling;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
@@ -32,7 +32,6 @@ import com.ingot.cloud.iam.infrastructure.persistence.TenantRoleDefinitionReposi
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.TenantAdministrationMapper;
 import com.ingot.cloud.iam.infrastructure.persistence.projection.TenantAdministrationRows;
 import com.ingot.cloud.iam.infrastructure.serialization.IamJsonCodec;
-import com.ingot.cloud.iam.infrastructure.persistence.projection.AuthorizationEvalRows;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.*;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +56,7 @@ public class TenantAuthorizationEvaluator {
             .map(IamAction::getCode).collect(java.util.stream.Collectors.toUnmodifiableSet());
     private final TenantAdministrationMapper live;
     private final TenantRoleDefinitionRepository roles;
-    private final AuthorizationEvaluationRepository evaluations;
+    private final EntitlementRepository entitlements;
     private final DepartmentClosure departments;
 
     /** 按当前事实生成授权视图；调用方先校验凭证及改密限制。 */
@@ -89,7 +88,6 @@ public class TenantAuthorizationEvaluator {
             Map<BigInteger, List<TenantAdministrationRows.Ceiling>> ceilings = new HashMap<>();
             Map<BigInteger,TenantAdministrationRows.Delegation> sourcesById=new HashMap<>();
             Map<BigInteger,List<BigInteger>> allowedRolesBySource=new HashMap<>();
-            Map<BigInteger, AuthorizationEvalRows.Entitlement> entitlements = new HashMap<>();
             Map<ScopeClause,ScopeClause> expanded = new HashMap<>();
             Set<BigInteger> ids = new LinkedHashSet<>();
             fingerprint.add(heads);fingerprint.add(assignments);
@@ -97,6 +95,9 @@ public class TenantAuthorizationEvaluator {
             Map<String, TenantAdministrationRows.Action> actions = new HashMap<>();
             if (!ids.isEmpty()) live.actions(List.copyOf(ids)).forEach(a -> actions.put(a.actionId().toString(), a));
             fingerprint.add(actions);
+            var candidateApps = actions.values().stream().filter(action -> Boolean.TRUE.equals(action.enabled()))
+                    .map(TenantAdministrationRows.Action::applicationId).toList();
+            var matches = entitlements.memberEntitlements(tenant, member, candidateApps);
             for (var assignment : assignments) {
                 var definition = definitions.get(assignment.roleId());
                 if (definition == null) continue;
@@ -114,8 +115,8 @@ public class TenantAuthorizationEvaluator {
                 for (var grant : definition.grants()) {
                     var action = actions.get(grant.actionId());
                     if (action == null || !Boolean.TRUE.equals(action.enabled()) || assignment.delegationGrantId()!=null && INDEPENDENT_MANAGEMENT.contains(action.actionCode())) continue;
-                    var entitlement = entitlements.computeIfAbsent(action.applicationId(), id -> evaluations.entitlement(tenant, id, member));
-                    if (entitlement.hits() <= 0) continue;
+                    var entitlement = matches.get(action.applicationId());
+                    if (entitlement == null) continue;
                     deadline = earlier(deadline, entitlement.earliestExpiry());
                     boolean missing = grant.scopes().stream().filter(s -> s.parameterKey() != null).anyMatch(s -> {
                         var expected = definition.parameterDefinitions().stream().filter(p -> p.key().equals(s.parameterKey())).findFirst().orElse(null);
