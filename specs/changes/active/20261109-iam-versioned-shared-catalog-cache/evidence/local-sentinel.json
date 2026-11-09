@@ -1,0 +1,32 @@
+{
+  "files": 200,
+  "recordedSeconds": 15746,
+  "first": "2026-09-14 15:16:33",
+  "last": "2026-11-09 17:21:57",
+  "routes": {
+    "/v1/me/bootstrap": {
+      "passed": 1011,
+      "activeSeconds": 970,
+      "activeP50": 1,
+      "activeP95": 1,
+      "peak1s": 3,
+      "peakCalendarMinuteQps": 0.18333333333333332
+    },
+    "/v1/platform/applications/{id}/action-catalog": {
+      "passed": 17,
+      "activeSeconds": 17,
+      "activeP50": 1,
+      "activeP95": 1,
+      "peak1s": 1,
+      "peakCalendarMinuteQps": 0.016666666666666666
+    },
+    "/v1/tenant/applications/{id}/action-catalog": {
+      "passed": 13,
+      "activeSeconds": 13,
+      "activeP50": 1,
+      "activeP95": 1,
+      "peak1s": 1,
+      "peakCalendarMinuteQps": 0.03333333333333333
+    }
+  }
+}

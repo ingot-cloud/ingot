@@ -1,0 +1,197 @@
+{
+  "observed_at": "2026-11-09T20:46:50+08:00",
+  "scope": "local IAM via gateway, read-only HTTP cases after both logins",
+  "sql_scope": "ingot_iam performance_schema digest deltas around each request",
+  "cases": [
+    {
+      "case": "platform-bootstrap",
+      "http": 200,
+      "reason": "S0200",
+      "ms": 58.22,
+      "applications": [
+        "100001",
+        "100003",
+        "100004",
+        "100005"
+      ],
+      "menus": 27,
+      "menus_outside_applications": 0,
+      "tenant_owner": false,
+      "action_codes": 137,
+      "schema_selects": 7,
+      "schema_explain_selects": 7,
+      "menu_selects": 1,
+      "catalog_selects": 0,
+      "entitlement_guard_selects": 0,
+      "contract": "passed"
+    },
+    {
+      "case": "platform-catalog-1",
+      "http": 200,
+      "reason": "S0200",
+      "ms": 86.83,
+      "application": "iam-platform",
+      "resources": 17,
+      "actions": 77,
+      "action_statuses": [
+        "ENABLED"
+      ],
+      "schema_selects": 11,
+      "schema_explain_selects": 11,
+      "menu_selects": 0,
+      "catalog_selects": 1,
+      "entitlement_guard_selects": 0,
+      "contract": "passed"
+    },
+    {
+      "case": "platform-catalog-2",
+      "http": 200,
+      "reason": "S0200",
+      "ms": 91.58,
+      "application": "iam-platform",
+      "resources": 17,
+      "actions": 77,
+      "action_statuses": [
+        "ENABLED"
+      ],
+      "schema_selects": 11,
+      "schema_explain_selects": 11,
+      "menu_selects": 0,
+      "catalog_selects": 1,
+      "entitlement_guard_selects": 0,
+      "contract": "passed"
+    },
+    {
+      "case": "platform-missing-app",
+      "http": 404,
+      "reason": "ObjectNotFound",
+      "ms": 96.87,
+      "schema_selects": 11,
+      "schema_explain_selects": 11,
+      "menu_selects": 0,
+      "catalog_selects": 1,
+      "entitlement_guard_selects": 0,
+      "contract": "passed"
+    },
+    {
+      "case": "platform-to-tenant-catalog",
+      "http": 403,
+      "reason": "ActionDenied",
+      "ms": 29.07,
+      "schema_selects": 3,
+      "schema_explain_selects": 3,
+      "menu_selects": 0,
+      "catalog_selects": 0,
+      "entitlement_guard_selects": 0,
+      "contract": "passed"
+    },
+    {
+      "case": "tenant-bootstrap",
+      "http": 200,
+      "reason": "S0200",
+      "ms": 99.74,
+      "applications": [
+        "100002"
+      ],
+      "menus": 14,
+      "menus_outside_applications": 0,
+      "tenant_owner": true,
+      "action_codes": 44,
+      "schema_selects": 11,
+      "schema_explain_selects": 11,
+      "menu_selects": 1,
+      "catalog_selects": 0,
+      "entitlement_guard_selects": 0,
+      "contract": "passed"
+    },
+    {
+      "case": "tenant-catalog-1",
+      "http": 200,
+      "reason": "S0200",
+      "ms": 82.66,
+      "application": "iam-tenant",
+      "resources": 13,
+      "actions": 44,
+      "action_statuses": [
+        "ENABLED"
+      ],
+      "schema_selects": 11,
+      "schema_explain_selects": 11,
+      "menu_selects": 0,
+      "catalog_selects": 1,
+      "entitlement_guard_selects": 1,
+      "contract": "passed"
+    },
+    {
+      "case": "tenant-catalog-2",
+      "http": 200,
+      "reason": "S0200",
+      "ms": 101.45,
+      "application": "iam-tenant",
+      "resources": 13,
+      "actions": 44,
+      "action_statuses": [
+        "ENABLED"
+      ],
+      "schema_selects": 11,
+      "schema_explain_selects": 11,
+      "menu_selects": 0,
+      "catalog_selects": 1,
+      "entitlement_guard_selects": 1,
+      "contract": "passed"
+    },
+    {
+      "case": "tenant-unentitled-app",
+      "http": 403,
+      "reason": "ApplicationUnavailable",
+      "ms": 77.51,
+      "schema_selects": 10,
+      "schema_explain_selects": 10,
+      "menu_selects": 0,
+      "catalog_selects": 0,
+      "entitlement_guard_selects": 1,
+      "contract": "passed"
+    },
+    {
+      "case": "tenant-to-platform-catalog",
+      "http": 403,
+      "reason": "S0403",
+      "ms": 71.15,
+      "schema_selects": 9,
+      "schema_explain_selects": 9,
+      "menu_selects": 0,
+      "catalog_selects": 0,
+      "entitlement_guard_selects": 0,
+      "contract": "passed"
+    },
+    {
+      "case": "tenant-header-mismatch",
+      "http": 401,
+      "reason": "invalid_token",
+      "ms": 9.45,
+      "schema_selects": 0,
+      "schema_explain_selects": 0,
+      "menu_selects": 0,
+      "catalog_selects": 0,
+      "entitlement_guard_selects": 0,
+      "contract": "passed"
+    },
+    {
+      "case": "anonymous-bootstrap",
+      "http": 500,
+      "reason": "invalid_token",
+      "ms": 6.66,
+      "schema_selects": 0,
+      "schema_explain_selects": 0,
+      "menu_selects": 0,
+      "catalog_selects": 0,
+      "entitlement_guard_selects": 0,
+      "contract": "unexpected_500"
+    }
+  ],
+  "repeat_read_window": {
+    "binlog_position_unchanged": true,
+    "platform_content_equal": true,
+    "tenant_content_equal": true
+  }
+}

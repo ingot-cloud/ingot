@@ -1,0 +1,88 @@
+{
+  "environment": "local IAM",
+  "source": "Sentinel IAM metrics",
+  "windows": {
+    "previous_calendar_week": {
+      "start": "2026-11-02T00:00:00+08:00",
+      "end_exclusive": "2026-11-09T00:00:00+08:00",
+      "pid_filter": null,
+      "metric_files": 11,
+      "processes": 10,
+      "recorded_seconds_any_resource": 539,
+      "first_recorded": "2026-11-03T19:25:29+08:00",
+      "last_recorded": "2026-11-08T15:48:38+08:00",
+      "complete_minute_coverage": "unknown",
+      "routes": {
+        "/v1/me/bootstrap": {
+          "passed": 60,
+          "blocked": 0,
+          "active_seconds": 54,
+          "active_second_p50_qps": 1,
+          "active_second_p95_qps": 2,
+          "observed_peak_second_qps": 3,
+          "observed_peak_calendar_minute_qps": 0.18333333333333332
+        },
+        "/v1/platform/applications/{id}/action-catalog": {
+          "passed": 0,
+          "blocked": 0,
+          "active_seconds": 0,
+          "active_second_p50_qps": null,
+          "active_second_p95_qps": null,
+          "observed_peak_second_qps": null,
+          "observed_peak_calendar_minute_qps": null
+        },
+        "/v1/tenant/applications/{id}/action-catalog": {
+          "passed": 2,
+          "blocked": 0,
+          "active_seconds": 2,
+          "active_second_p50_qps": 1,
+          "active_second_p95_qps": 1,
+          "observed_peak_second_qps": 1,
+          "observed_peak_calendar_minute_qps": 0.03333333333333333
+        }
+      }
+    },
+    "running_instance_before_validation": {
+      "start": "2026-11-09T15:38:25+08:00",
+      "end_exclusive": "2026-11-09T18:45:00+08:00",
+      "pid_filter": "6823",
+      "metric_files": 1,
+      "processes": 1,
+      "recorded_seconds_any_resource": 43,
+      "first_recorded": "2026-11-09T16:12:15+08:00",
+      "last_recorded": "2026-11-09T17:33:30+08:00",
+      "complete_minute_coverage": "unknown",
+      "routes": {
+        "/v1/me/bootstrap": {
+          "passed": 4,
+          "blocked": 0,
+          "active_seconds": 4,
+          "active_second_p50_qps": 1,
+          "active_second_p95_qps": 1,
+          "observed_peak_second_qps": 1,
+          "observed_peak_calendar_minute_qps": 0.03333333333333333
+        },
+        "/v1/platform/applications/{id}/action-catalog": {
+          "passed": 2,
+          "blocked": 0,
+          "active_seconds": 2,
+          "active_second_p50_qps": 1,
+          "active_second_p95_qps": 1,
+          "observed_peak_second_qps": 1,
+          "observed_peak_calendar_minute_qps": 0.016666666666666666
+        },
+        "/v1/tenant/applications/{id}/action-catalog": {
+          "passed": 0,
+          "blocked": 0,
+          "active_seconds": 0,
+          "active_second_p50_qps": null,
+          "active_second_p95_qps": null,
+          "observed_peak_second_qps": null,
+          "observed_peak_calendar_minute_qps": null
+        }
+      }
+    }
+  },
+  "same_catalog_revision_reads": null,
+  "same_catalog_revision_evidence": "IAM route metrics contain neither application IDs nor read snapshot revisions"
+}

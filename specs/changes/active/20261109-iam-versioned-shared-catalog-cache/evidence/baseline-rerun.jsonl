@@ -1,0 +1,11 @@
+{"p95Ms":14.450458,"scenario":"member-1-apps-bootstrap","samples":200,"p99Ms":17.043042,"p50Ms":10.903125,"selectsPerRequest":17.0}
+{"p95Ms":11.64575,"scenario":"member-1-apps-capabilities","samples":200,"p99Ms":12.873042,"p50Ms":8.419083,"selectsPerRequest":13.0}
+{"p95Ms":16.099875,"scenario":"member-16-apps-bootstrap","samples":200,"p99Ms":19.471333,"p50Ms":10.823042,"selectsPerRequest":17.0}
+{"p95Ms":9.705375,"scenario":"member-16-apps-capabilities","samples":200,"p99Ms":10.548792,"p50Ms":8.158625,"selectsPerRequest":13.0}
+{"p95Ms":10.073417,"scenario":"delegate-bootstrap","samples":200,"p99Ms":11.086875,"p50Ms":8.638917,"selectsPerRequest":14.0}
+{"p95Ms":6.993792,"scenario":"delegate-capabilities","samples":200,"p99Ms":7.693708,"p50Ms":5.381125,"selectsPerRequest":10.0}
+{"p95Ms":6.728833,"scenario":"owner-bootstrap","samples":200,"p99Ms":7.821208,"p50Ms":5.500708,"selectsPerRequest":9.0}
+{"p95Ms":4.515834,"scenario":"owner-capabilities","samples":200,"p99Ms":5.59975,"p50Ms":3.387042,"selectsPerRequest":6.0}
+{"p95Ms":5.37325,"scenario":"owner-role-page","samples":200,"p99Ms":6.077917,"p50Ms":3.821167,"selectsPerRequest":8.0}
+{"p95Ms":10.141791,"scenario":"tenant-action-catalog","samples":200,"p99Ms":11.0,"p50Ms":7.521458,"selectsPerRequest":16.0}
+{"p95Ms":4.90425,"scenario":"platform-action-catalog","samples":200,"p99Ms":5.839,"p50Ms":3.3245,"selectsPerRequest":7.0}

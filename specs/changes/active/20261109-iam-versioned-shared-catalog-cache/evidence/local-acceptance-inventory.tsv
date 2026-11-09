@@ -1,0 +1,6 @@
+observed_at	application_id	application_code	domain	application_enabled	platform_actions	tenant_actions
+2026-11-09T10:46:36.302741Z	100001	iam-platform	PLATFORM	1	77	77
+2026-11-09T10:46:36.302741Z	100002	iam-tenant	TENANT	1	44	44
+2026-11-09T10:46:36.302741Z	100003	platform-developer	PLATFORM	1	15	15
+2026-11-09T10:46:36.302741Z	100004	platform-security	PLATFORM	1	20	20
+2026-11-09T10:46:36.302741Z	100005	platform-member	PLATFORM	1	25	25

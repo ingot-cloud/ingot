@@ -188,6 +188,12 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [受保护接口的无令牌响应](./changes/active/20261109-security-missing-bearer-401/README.md)（validating，定向回归通过，待本机加载新版复测）
+
+- [IAM 共享目录版本校验与长缓存](./changes/active/20261109-iam-versioned-shared-catalog-cache/README.md)（validating，合并直查及隔离对照通过，待目标环境验收）
+
+- [IAM 应用开通批量查询与操作目录缓存](./changes/active/20261109-iam-entitlement-batch-action-catalog-cache/README.md)（validating，开通与人群批量查询待发布验收，短缓存由后续直查替代）
+
 - [IAM 历史代码清理、职责分层与命名重构](./changes/active/20261107-iam-legacy-cleanup-package-refactor/README.md)（validating；P0–P6完成，目标环境/人工验收待办；历史表、数据及数据库升级脚本未改）
 
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
