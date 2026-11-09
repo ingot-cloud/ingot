@@ -122,7 +122,7 @@ IP / 设备取自 Auth 入站头（`In-Inner-Client-Real-IP` / `In-Ca-Sig`），
 
 ## 4. 安全事件
 
-L4 扩展 ACCESS 类型（写入 `security_event`，非 `gateway_blacklist_event`）：
+L4 扩展 ACCESS 类型（写入 `fw_security_event`，非 `gateway_blacklist_event`）：
 
 ```text
 LOGIN_FAIL_IP_EXCEED, LOGIN_FAIL_DEVICE_EXCEED,
@@ -131,7 +131,7 @@ LOGIN_FAIL_CLIENT_EXCEED, LOGIN_FAIL_ACCOUNT_IP_EXCEED
 
 网关违规仍映射为 `RATE_LIMIT_VIOLATION` / `BLACKLIST_BLOCK`（见 [security-event-center](../security-event-center/SPEC.md)）。`RATE_LIMIT_VIOLATION` 优先级仍为 BEST_EFFORT；**触发**为边沿（见 §1.4）。`BLACKLIST_BLOCK` 同为超阈值边沿。
 
-**封禁审计 Platform API**：`GET /platform/security/policy/events` 仅查 **历史** `gateway_blacklist_event`；新事件请查 `security_event`（Platform 读侧后续 change）。
+**封禁审计 Platform API**：`GET /platform/security/policy/events` 仅查 **历史** `gateway_blacklist_event`；新事件请查 `fw_security_event`（Platform 读侧后续 change）。
 
 ## 5. 与 L2 账号保护交叉
 

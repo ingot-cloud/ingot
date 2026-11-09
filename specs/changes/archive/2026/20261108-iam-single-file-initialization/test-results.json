@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-08",
+  "status": "validating",
+  "actualDatabaseAccessed": false,
+  "actualDatabaseModified": false,
+  "commitCreated": false,
+  "sql": "databases/ingot_iam.sql",
+  "database": "ingot_iam",
+  "schemaSourceAndSeedsUnchanged": 104,
+  "sqlSha256": "ce3b8e29a80f00c96a6c3f70c0eb43a0f61c30ee723cecae22055dd95048833c",
+  "python": [
+    {
+      "suite": "database_sources",
+      "tests": 6,
+      "passed": 6,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.059,
+      "log": "/tmp/iam-single-file-sources.log"
+    },
+    {
+      "suite": "schema_comments",
+      "tests": 9,
+      "passed": 9,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 4.03,
+      "log": "/tmp/iam-single-file-comments.log"
+    },
+    {
+      "suite": "bootstrap_generation",
+      "tests": 7,
+      "passed": 7,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.004,
+      "log": "/tmp/iam-single-file-bootstrap-generation.log"
+    },
+    {
+      "suite": "isolated_mysql_bootstrap",
+      "tests": 24,
+      "passed": 24,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 253.312,
+      "log": "/tmp/iam-single-file-mysql.log"
+    }
+  ],
+  "jvm": [
+    {
+      "suite": "com.ingot.cloud.iam.application.live.TenantLiveMySqlHttpTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    },
+    {
+      "suite": "com.ingot.cloud.iam.application.identity.AccountIdentityServiceTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "jvmLog": "/tmp/iam-single-file-http.log",
+  "passed": {
+    "offline": 22,
+    "isolatedMysql": 24,
+    "jvmIdentityAndMysqlHttp": 14
+  },
+  "skipped": {
+    "jvmOptionalPerformanceAndBrowser": 2
+  },
+  "generationChecks": {
+    "database": true,
+    "databaseReview": true,
+    "log": "/tmp/iam-single-file-generated-check.log"
+  },
+  "manualAcceptancePending": true
+}

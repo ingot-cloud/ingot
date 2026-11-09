@@ -1,0 +1,11 @@
+{
+  "sys_social_details": "iam_social_config",
+  "sys_user_social": "iam_account_social_binding",
+  "platform_dict": "iam_dictionary",
+  "account_lock_state": "fw_security_account_lock_state",
+  "password_history": "fw_security_password_history",
+  "password_expiration": "fw_security_password_expiration",
+  "security_event": "fw_security_event",
+  "biz_leaf_alloc": "fw_id_leaf_alloc",
+  "asset_upload": "fw_oss_asset_upload"
+}

@@ -2,9 +2,25 @@
 
 ## 权威定义与说明
 
-`databases/iam/manifest.json` 是完整初始化的来源清单，管理 65 张表、540 个字段。IAM 结构在 001–005 权威 DDL 维护，共库框架表在所属框架模块维护，生成时仅投影建表定义。
+`databases/iam/manifest.json` 管理 59 张运行表和 501 个字段。IAM 自有 53 张表采用 `iam_` 前缀，包含 `iam_dictionary`、`iam_social_config` 和 `iam_account_social_binding`。字典覆盖平台、租户和应用三种作用域。社交绑定关联全局 IAM 账号。下载任务表 `iam_download_task` 由 IAM 实现下载框架的存储接口。
 
-所有表和字段具备中文COMMENT，解释业务对象、引用与租户归属，以及适用的枚举、NULL、默认值、UTC时间、JSON、对象存储路径和版本语义。数据字典与完整初始化由`tools/iam/generate_database.py`生成，主键索引报告由`generate_database_review.py`生成；生成检查不得产生漂移。完整初始化会重建清单内表，不用于保留已有库数据。
+| 框架模块 | 共享表 |
+|---|---|
+| `ingot-security-account-adapter` | `fw_security_account_lock_state` |
+| `ingot-security-credential-data` | `fw_security_password_history`、`fw_security_password_expiration` |
+| `ingot-security-event-store-mysql` | `fw_security_event` |
+| `ingot-id` | `fw_id_leaf_alloc` |
+| `ingot-oss-common` | `fw_oss_asset_upload` |
+
+框架模块通过 `sql/<module>/schema.sql` 发布权威建表定义。独立接入时在消费服务的数据源对应库执行，使用 `CREATE TABLE IF NOT EXISTS`。IAM、Member 和 Security 的完整初始化按各自依赖收录共享表，具体对应关系见[数据库脚本索引](../../../../databases/README.md)。
+
+首次部署 IAM 只执行 [ingot_iam.sql](../../../../databases/ingot_iam.sql)。它固定删除并重建 `ingot_iam`，创建运行表，写入默认应用、资源、权限、角色、菜单、关联关系及平台管理员。初始账号为 `platform`，初始密码为 `11111111`，`must_change_password=TRUE`。历史迁移表、租户测试数据和运行记录不进入初始化。已有业务数据的保留需要对应版本的迁移方案。
+
+所有表和字段的中文说明在权威 DDL 维护。通过 `tools/iam/generate_database.py` 生成完整初始化和数据字典，通过 `generate_database_review.py` 生成主键与索引评估。
+
+## Provider 职责边界
+
+`MemberFacade` 聚合成员用例，读取和投影由 `MemberQueryService` 处理，成员资料、创建和角色变更由 `MemberProfileCommandService` 处理。普通持久化读取进入 `MemberQueryRepository`，写入、行锁和关系变更进入 `MemberWriteRepository`。目录仓储按应用、资源、操作、菜单、套餐和跨表清理分工。字段策略持久化由 `FieldPolicyRepository` 承担，`FieldPolicySnapshotLoader` 加载快照，`FieldAccessEvaluator` 负责授权求值。
 
 成员主部门辅助列`primary_member_id`仅在主标记成立时取成员ID，否则为NULL；部门主负责人辅助列`primary_department_id`同理取部门ID。配套租户唯一索引保证至多一个主关系；非空集合需要恰好一个主关系等完整规则由事务服务保证，辅助列不接受应用写入。
 
@@ -34,7 +50,7 @@
 
 ## 密码历史索引
 
-`password_history`保留原自增id主键、`UNIQUE(user_id,sequence_number)`及`idx_created_at`；不再维护与联合唯一键左前缀重叠的`idx_user_id`。按用户读取、槽位覆盖、历史检查和删除的服务行为不变，最近历史仍按created_at倒序及limit查询。
+`fw_security_password_history`保留原自增id主键、`UNIQUE(user_id,sequence_number)`及`idx_created_at`；不再维护与联合唯一键左前缀重叠的`idx_user_id`。按用户读取、槽位覆盖、历史检查和删除的服务行为不变，最近历史仍按created_at倒序及limit查询。
 
 框架权威DDL、IAM共库初始化和数据字典保持一致。密码过期表及其他框架表结构不随该索引精简改变。
 
@@ -42,7 +58,7 @@
 
 `iam_authorization_audit` 按租户、发生时间和 ID 排序。平台域使用 `tenant_id IS NULL`。操作者和具体对象查询分别使用 `(tenant_id, actor_member_id, occurred_at, id)`、`(tenant_id, target_type, target_id, occurred_at, id)` 索引。已有库通过 032 增量安装两条索引，支持重复执行及回滚。
 
-IAM 与 Member 在业务所属库的 `asset_upload` 记录短时图片凭证，业务绑定与凭证消费同事务提交。清理按到期索引定位超时记录，并在锁定后复核状态。
+IAM 与 Member 在业务所属库的 `fw_oss_asset_upload` 记录短时图片凭证，业务绑定与凭证消费同事务提交。清理按到期索引定位超时记录，并在锁定后复核状态。
 
 ## 维护与兼容
 

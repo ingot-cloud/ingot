@@ -9,7 +9,7 @@
 - 登录成功后，处于宽限期的软过期账号消费一次宽限次数；宽限耗尽的硬过期账号在认证阶段被拒。
 - 初始密码由统一策略生成（随机 / 固定），支持有效期与首登强制改密。
 - 密码硬过期登录提示区分初始／重置、普通、未知原因；平台与租户共用 Auth 文案配置，集中在独立 `in-security-messages.yml`，支持动态修改及缺省、空白、删除后默认回退。
-- `password_expiration.force_change` 与账号域 `must_change_pwd` 语义对齐：创建 / 重置置位，改密成功清除。
+- `fw_security_password_expiration.force_change` 与账号域 `must_change_pwd` 语义对齐：创建 / 重置置位，改密成功清除。
 - 强制改密期间通过签发**受限 scope**（`in:init_pwd`）约束仅可访问改密相关接口，无需独立拦截器。
 - 初始密码策略统一经 `CredentialPolicyLoader` 取值，与强度/历史/过期共享同一降级阶梯；`ADMIN_CREATE` 的强制改密由 `forceChangeOnFirstLogin` 驱动，登录期 `validHours` 硬超期拦截落在账号域单点。
 - `remote` 模式采用企业级弹性降级阶梯 `L1 Caffeine → L2 Redis → Resilient(remote → LKG → Nacos 地板)`，区分「远程失败」与「合法空」，**永不 fail-open**；当前生效来源经 actuator 端点 `credentialpolicy` 可观测。
@@ -19,13 +19,13 @@
 
 - 本能力覆盖凭证（密码）安全：强度、历史、过期宽限、初始密码、强制改密对齐及密码过期阻断登录的场景化提示。
 - **不含**：弱密码 / 泄露库识别（凭证风险）、MFA、账号登录失败锁定（属账号保护闭环）、统一安全事件中心。
-- Member 侧为**域级对齐**：走账号域用例 + `AuthContextSupport` + 受限 scope；`PasswordExpirationService` / `PasswordHistoryService` 在 Member provider 为 NoOp，**尚无**独立凭证持久化（`ingot_member` 未建 `password_history` / `password_expiration`）。
+- Member 侧为**域级对齐**：走账号域用例 + `AuthContextSupport` + 受限 scope；`PasswordExpirationService` / `PasswordHistoryService` 在 Member provider 为 NoOp，**尚无**独立凭证持久化（`ingot_member` 未建 `fw_security_password_history` / `fw_security_password_expiration`）。
 - 弹性降级仅覆盖策略**配置读取**（含初始密码配置）；不含运行时服务发现级探活切换、安全中心策略管理台，以及远程调用熔断（P2 可选，本期未接入）。
 
 ## 所有者
 
 - 策略引擎与服务：`ingot-security-credential`
-- 通用持久化：`ingot-security-credential-data`（`sys_user` / `ingot_core` 侧）
+- 通用持久化：`ingot-security-credential-data`（`ingot_iam`）
 - 账号域用例：`ingot-framework/ingot-security/ingot-security-account/ingot-security-account-core`
 - 接入方：`ingot-pms-provider`、`ingot-member-provider`、`ingot-auth`
 

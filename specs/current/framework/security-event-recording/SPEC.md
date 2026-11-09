@@ -73,7 +73,7 @@ SecurityEventPublisher (业务唯一写入口)
 
 ## 6. MySQL Store
 
-- 表：canonical `security_event`（`event_id` UNIQUE、`priority`、`received_at` 索引）。
+- MySQL 事件存储使用 `fw_security_event`，含 `event_id` 唯一键和接收时间索引。脚本归属和消费库见[数据库脚本索引](../../../../databases/README.md)。
 - 写入：`max-concurrent-writes=1` semaphore + 真批量 INSERT。
 - 查询：`SecurityEventQueryRepository` 游标 `(receivedAt,id)` 降序；默认 24h、最大 31 天；page 默认 50、最大 200。
 - Retention：命名锁、分批删除、30s 时间预算、队列积压 50% 让步；任务 `PurgeCanonicalSecurityEventTask` cron `0 30 3 * * ?`。
@@ -86,13 +86,13 @@ Feign/HTTP 上报 → 校验 → `SecurityEventEnqueue` → 异步 Store；HTTP 
 
 ## 8. 配置
 
-唯一 `@ConfigurationProperties`：`com.ingot.framework.security.recording.config.SecurityEventProperties`（前缀 `ingot.security.event`）。`delivery`/`mysql` 由 PMS/Member/Security 从 `in-security-policy.yml` 读取；L3 仍在各 `in-service-*.yml`。字段说明与样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml) 与 [README](./README.md)。落点见 [config-governance](../../security/config-governance/SPEC.md)。
+唯一 `@ConfigurationProperties`：`com.ingot.framework.security.recording.config.SecurityEventProperties`（前缀 `ingot.security.event`）。`delivery`/`mysql` 由 IAM/Member/Security 从 `in-security-policy.yml` 读取；L3 仍在各 `in-service-*.yml`。字段说明与样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml) 与 [README](./README.md)。落点见 [config-governance](../../security/config-governance/SPEC.md)。
 
 ## 9. 稳定态
 
 显式配置 `target=local|center` 且 `shadow-targets: []`：
 
-- 仅 canonical `security_event` 增长；
+- 仅 canonical `fw_security_event` 增长；
 - legacy `account_security_event` 已物理删除（migration `013`）。
 
 ## 10. Legacy 清理后事实

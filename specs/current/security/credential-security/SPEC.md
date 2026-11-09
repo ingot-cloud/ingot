@@ -19,10 +19,10 @@
 
 ## 2. 数据模型
 
-- `password_history`：保留自增id主键、`UNIQUE(user_id,sequence_number)`及`idx_created_at`，按用户查询可使用联合唯一键左前缀，不维护独立`idx_user_id`。环形槽位覆盖、version递增、历史校验和按用户删除行为保留；最近历史仍按created_at倒序及limit读取。框架权威DDL由`ingot-security-credential-data`维护，IAM共库结构与其一致，见[持久化契约](../../iam/database-persistence/SPEC.md)。
-- `password_expiration`（`ingot_core`）：`user_id`、`last_changed_at`、`expires_at`、`force_change TINYINT(1)`、`grace_login_remaining INT`、`next_warning_at`。
-  - `force_change` 由迁移 `databases/migrations/008_add_force_change_password_expiration.sql` 补齐（存量按 `sys_user.must_change_pwd` 回填），回滚见 `rollback_008.sql`。
-- `sys_user` / `member_user`：`must_change_pwd`、`password_changed_at`（复用，未新增列）。
+- `fw_security_password_history`：保留自增id主键、`UNIQUE(user_id,sequence_number)`及`idx_created_at`，按用户查询可使用联合唯一键左前缀，不维护独立`idx_user_id`。环形槽位覆盖、version递增、历史校验和按用户删除行为保留；最近历史仍按created_at倒序及limit读取。框架权威DDL由`ingot-security-credential-data`维护，IAM共库结构与其一致，见[持久化契约](../../iam/database-persistence/SPEC.md)。
+- `fw_security_password_expiration`（`ingot_iam`）：`user_id`、`last_changed_at`、`expires_at`、`force_change TINYINT(1)`、`grace_login_remaining INT`、`next_warning_at`。
+  - 两张凭证表的权威 DDL 由凭证数据模块发布，IAM 初始化收录其建表定义。见[数据库脚本索引](../../../../databases/README.md)。
+- `iam_account` 记录 `must_change_password` 和 `password_changed_at`，`member_user` 记录 `must_change_pwd` 和 `password_changed_at`。
 - `expires_at` 为空时视为「永不过期」（`maxDays<=0`），`next_warning_at` 亦为空，判定不抛 NPE。
 
 ## 3. 宽限期扣减（登录成功链路）
@@ -158,6 +158,6 @@ Auth 各环境使用 `optional:nacos:in-security-messages.yml?refreshEnabled=tru
 
 ## 10. 已知限制 / 后续跟踪
 
-1. Member 完整凭证持久化未落地：Member provider 未依赖 `ingot-security-credential-data`，`ingot_member` 未建 `password_history` / `password_expiration`；当前 Member 为域级对齐 + NoOp 持久化。
+1. Member 完整凭证持久化未落地：Member provider 未依赖 `ingot-security-credential-data`，`ingot_member` 未建 `fw_security_password_history` / `fw_security_password_expiration`；当前 Member 为域级对齐 + NoOp 持久化。
 2. 安全中心 `INITIAL_PASSWORD` 本期仅**预留类型 + 远程可读**，可视化管理台后续 change。
 3. 远程调用熔断（Sentinel）为 P2 可选增强，本期未接入；以「每次远程失败即兜底 + 不缓存失败」保证正确性。

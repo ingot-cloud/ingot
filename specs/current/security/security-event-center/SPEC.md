@@ -11,10 +11,10 @@
 | 键 | 默认 | 说明 |
 |---|---|---|
 | `enabled` | `true` | 总开关；`false` 时不做任何上报 |
-| `target` | `local` | `local` 写本库 `security_event`；`center` Feign 上报中心 |
+| `target` | `local` | `local` 写本库 `fw_security_event`；`center` Feign 上报中心 |
 | `shadow-targets` | `[]` | 次要投递；稳定态必须为空 |
 | `primary-store` | （空） | `target=local` 时填 `mysql` |
-| `source-module` | `unknown` | 写入 `security_event.source_module` |
+| `source-module` | `unknown` | 写入 `fw_security_event.source_module` |
 
 ### 1.2 类别过滤（`categories.*`）
 
@@ -58,7 +58,7 @@
 
 | 表 | 任务 | cron |
 |---|---|---|
-| canonical `security_event` | `PurgeCanonicalSecurityEventTask` | `0 30 3 * * ?` |
+| canonical `fw_security_event` | `PurgeCanonicalSecurityEventTask` | `0 30 3 * * ?` |
 
 > legacy `account_security_event` 已由 migration `013` 物理删除；无独立 retention 任务。
 
@@ -66,12 +66,12 @@
 
 | 服务 | `target` | `primary-store` | `source-module` |
 |---|---|---|---|
-| PMS | `local` | `mysql` | `PMS` |
+| IAM | `local` | `mysql` | `IAM` |
 | Member | `local` | `mysql` | `MEMBER` |
 | Gateway | `center` | — | `GATEWAY` |
 | Security | `local` | `mysql` | `SECURITY` |
 
-**推荐配置（PMS/Member/Security）**：
+**推荐配置（IAM/Member/Security）**：
 
 ```yaml
 ingot:
@@ -80,7 +80,7 @@ ingot:
       enabled: true
       target: local
       shadow-targets: []
-      source-module: PMS
+      source-module: IAM
       primary-store: mysql
 ```
 
@@ -110,7 +110,7 @@ Feign：`RemoteSecurityEventService`；DTO 含 `eventId`、`priority`（可选�
 
 ## 3. 数据模型
 
-中心与 PMS/Member 各自库：canonical `security_event`（migration `012`）。
+IAM、Member 和 Security 各自在消费服务库安装 `fw_security_event`。建表定义由 MySQL 事件存储模块发布，完整服务脚本见[数据库脚本索引](../../../../databases/README.md)。
 
 核心列：`event_id`(UK)、`priority`、`occurred_at`、`received_at`、`source_module`、`extension` JSON。
 
@@ -136,12 +136,7 @@ Feign：`RemoteSecurityEventService`；DTO 含 `eventId`、`priority`（可选�
 
 ## 7. 迁移与回滚
 
-1. 执行 migration `012`（canonical `security_event`）
-2. 执行 migration `013`（DROP legacy `account_security_event`；可选事前 dump）
-3. 部署 recording + store + transport 模块
-4. Nacos 使用 `target`（禁止旧 `mode`）
-5. 回滚 recording：改 `target` 或 `enabled=false`；以 `eventId` 对账
-6. 回滚 `013`：`rollback_013` 仅重建空旧表，不恢复数据
+首次部署使用服务完整初始化或对应模块建表脚本，再配置 recording、store 和 transport。服务版本和事件表结构配套使用。历史 012、013 和回滚 SQL 保留其原版本表名。运行时以 `eventId` 对账，并通过 `target` 或 `enabled` 控制投递。
 
 ## 8. 来源变更
 

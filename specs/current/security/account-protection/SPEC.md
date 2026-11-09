@@ -19,7 +19,7 @@
 
 **B/C 差异**：
 
-- `mode=local`：仍由服务级 Nacos 表达。PMS 推荐 5 / 30 / 3（允许永久锁）；Member 推荐 5 / 15 / 3。现网 Member Nacos 地板仍可能为 30 分钟。
+- `mode=local`：仍由服务级 Nacos 表达。IAM 推荐 5 / 30 / 3（允许永久锁）；Member 推荐 5 / 15 / 3。现网 Member Nacos 地板仍可能为 30 分钟。
 - `mode=remote`：安全中心 `account_lockout_policy_config` 按 `user_type` 两行。ADMIN 种子 5 / 30min / 15 / 3；APP 种子 5 / 15min / 15 / 3，管理面禁止 APP `lockDurationMinutes=0`。
 
 旧前缀 `ingot.account.*` 已废弃，代码不再读取。
@@ -33,30 +33,30 @@
 - 缓存名 `account-lockout-policy`；L2 `in:sec:account:policy:snapshot`；LKG `in:sec:account:policy:lkg`。失效域 `SecurityPolicyDomain.ACCOUNT_LOCKOUT`。Actuator `GET /actuator/accountlockoutpolicy`。
 - 安全中心：表 `account_lockout_policy_config`（migration `018`）；Platform `/platform/security/account/lockout-policies`；Inner `/inner/security/account/lockout-policies`；前端契约见 change 内 `PLATFORM-API.md`。
 
-**策略 vs 用户数据分离**：seam 仅覆盖 lockout 策略参数；`account_lock_state` 锁定状态与失败计数永远落 DB，不进入 remote/LKG/缓存链。
+**策略 vs 用户数据分离**：seam 仅覆盖 lockout 策略参数；`fw_security_account_lock_state` 锁定状态与失败计数永远落 DB，不进入 remote/LKG/缓存链。
 
 ## 3. 数据模型
 
-锁定态表结构 ADMIN / Member **完全一致**，分库部署；安全事件写入各库 canonical `security_event`（migration `012`）：
+锁定态表结构 ADMIN / Member **完全一致**，分库部署；安全事件写入各库的 `fw_security_event`：
 
 | 库 | 锁定态表 | 事件表（权威） | `user_type` |
 |---|---|---|---|
-| `ingot_core` | `account_lock_state` | `security_event` | `0`（ADMIN） |
-| `ingot_member` | `account_lock_state` | `security_event` | `1`（APP） |
+| `ingot_iam` | `fw_security_account_lock_state` | `fw_security_event` | `0`（ADMIN） |
+| `ingot_member` | `fw_security_account_lock_state` | `fw_security_event` | `1`（APP） |
 
-- `account_lock_state`：`(user_id, user_type)` 联合唯一；`failed_login_count`、`locked`、`locked_until`、`lock_type`、`lock_reason_code` 等。
-- `security_event`：登录成功/失败、锁定/解锁等事件经 recording 写入；`event_category`（AUTH / ACCOUNT / CREDENTIAL）。
+- `fw_security_account_lock_state`：`(user_id, user_type)` 联合唯一；`failed_login_count`、`locked`、`locked_until`、`lock_type`、`lock_reason_code` 等。
+- `fw_security_event`：登录成功/失败、锁定/解锁等事件经 recording 写入；`event_category`（AUTH / ACCOUNT / CREDENTIAL）。
 - legacy `account_security_event`：**已物理删除**（migration `013`）；历史 migration `009` 正文保留作档案。
-- 用户表冗余：`sys_user.locked` / `member_user.locked` 与 lock_state 同步（经 `UserAccountPort.updateLockStatus`）。
+- IAM 从锁定表读取状态，`iam_account` 不存锁定冗余列。Member 通过 `UserAccountPort.updateLockStatus` 同步 `member_user.locked`。
 
-Member 锁定态建表迁移：`databases/migrations/009_member_account_protection.sql`；回滚 `rollback_009.sql`；基线 `databases/ingot_member.sql`。canonical 事件表见 `012_security_event_recording_schema.sql`；旧事件表下线见 `013_drop_account_security_event.sql`。
+锁定和事件表分别由账号保护适配器和 MySQL 事件存储模块维护。IAM 与 Member 的完整初始化收录对应定义。历史 009、012、013 脚本按原版本归档。建表入口见[数据库脚本索引](../../../../databases/README.md)。
 
 ## 4. 登录事件回调链路
 
 ```
 Auth 登录成功/失败
   → LoginEventListener（@Async）
-    → userType=0 (ADMIN) → RemotePmsLoginRecordService → PMS InnerLoginRecordAPI
+    → userType=0 (ADMIN) → RemoteIamLoginRecordService → IAM InnerLoginRecordAPI
     → userType=1 (APP)   → RemoteMemberLoginRecordService → Member InnerLoginRecordAPI
   → RecordLoginUseCase.recordSuccess / recordFailure（userType 区分）
     → LockStatePort（incrementFailCount / resetFailCount）
@@ -68,7 +68,7 @@ Auth 登录成功/失败
 
 - **异步**：失败不阻断当次登录响应。
 - **幂等安全**：缺 `userId` 时按 `username` 在对应用户体系查找；查不到静默忽略（防枚举）。
-- **DTO 归属**：PMS / Member 各持 `LoginRecordDTO`（member-api 不依赖 pms-api）。
+- **DTO 归属**：IAM / Member 各持 `LoginRecordDTO`。
 
 自动锁定在**本次失败异步回调落库后**生效；当次请求仍返回 bad credentials，下次登录才命中 locked（与 ADMIN 历史行为一致）。
 
@@ -91,7 +91,7 @@ Auth 登录成功/失败
 `ingot-member-provider` 依赖 `ingot-security-account-adapter` 后：
 
 - `LockStatePort` / `SecurityEventPort` 为真实 MyBatis 实现（非 NoOp）。
-- `AccountLockTask` 自动注册，扫描 `ingot_member.account_lock_state` 过期锁定。
+- `AccountLockTask` 自动注册，扫描 `ingot_member.fw_security_account_lock_state` 过期锁定。
 - 手动锁定/解锁（`BizUserServiceImpl`）经既有 `LockAccountUseCase` / `UnlockAccountUseCase` 落库。
 
 `lockout.enabled=false` 时：不递增失败计数、不自动锁定、不发安全事件（与 ADMIN baseline 一致）。
@@ -124,7 +124,7 @@ in:sec:account:locked:name:{userType}:{username}
 | BFF | 加密登录短路（`ingot.security.account.bff`，默认 enabled，配在 `in-service-bff.yml`） | 解密后 username → name key；默认不调 Auth |
 | Gateway | 已认证 API 短路（`ingot.security.account.gateway`，`AccountLockFilter`，配在 `in-service-gateway.yml`） | JWT `i` + OnlineToken/`ut` 补全的 userType → uid key；命中 **403** `ACCOUNT_LOCKED` |
 | Auth | UserDetails 缓存兜底 | name key hit 则跳过 Feign，返回 `locked=true` |
-| PMS/Member 领域层 | 边沿检测、事件、信号写入 | DB `LockStatePort` |
+| IAM/Member 领域层 | 边沿检测、事件、信号写入 | DB `LockStatePort` |
 
 Gateway 瘦身 JWT 通常不含 `ut`：`AuthContextRelayFilter` 用 `jti` 读 `token:jti:{jti}`（OnlineToken.userType）补全；Auth 与 Gateway 须共用同一 Redis。无 JWT / 解析失败 / Redis down / exclude 路径 → **fail-open**。Gateway **不**解析 `/bff/**` body。
 

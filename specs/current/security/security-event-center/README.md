@@ -6,9 +6,9 @@
 
 在统一契约与中心入库基础上，完成 **recording 管道** 与 **legacy 清理**：Publisher 分级投递、中心 admission、MySQL 权威 Store、Feign Transport。
 
-- **统一发布**：PMS/Member/Gateway 经 `SecurityEventPublisher` + `target` 路由（无旧 `mode=local|remote`）。
+- **统一发布**：IAM/Member/Gateway 经 `SecurityEventPublisher` + `target` 路由（无旧 `mode=local|remote`）。
 - **中心 ingest**：`InnerSecurityEventAPI` → admission 队列/spool → 异步批量写入；`InnerSecurityPolicyAPI.reportBlacklist` 经同一 admission。
-- **账号域**：`CompositeSecurityEventPort` → 统一 Publisher；仅写 canonical `security_event`（legacy `account_security_event` 已 DROP）。
+- **账号域**：`CompositeSecurityEventPort` → 统一 Publisher；仅写 canonical `fw_security_event`（legacy `account_security_event` 已 DROP）。
 - **网关 ACCESS**：`BlacklistEventReporter` → `SecurityEventReportPublisher`；默认 `target=center`。
 - **Retention**：仅 `PurgeCanonicalSecurityEventTask` 清理 canonical 表。
 

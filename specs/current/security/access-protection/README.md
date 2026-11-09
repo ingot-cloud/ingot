@@ -10,7 +10,7 @@ L4 已验收闭环，覆盖三块能力：
 2. **网关策略 remote 弹性**：共享快照 `SecurityPolicySnapshotVO` 走统一分层缓存（`ingot-cache`：`L1 → L2 → remote → LKG → Nacos 地板`），fail-closed；Actuator `securitypolicy` / `layeredcache` 可观测降级来源。
 3. **四维度登录失败保护**：Auth 侧 `ingot-security-access` 按 IP / 设备 / Client / 账号+IP 计数，达阈值写 Redis 临时封禁（与 Gateway `TempBlockStore` 共用 `in:gw:bl:tmp:*`）；策略 Platform CRUD + Inner Feign + Auth `mode=remote` 走统一分层缓存（`L1 → L2 → remote → LKG → Nacos 地板`）。
 
-与 L2 **账号 lockout**、L3 **安全事件中心** 分工明确：账号锁定仍仅账号维度；新封禁/违规审计写入 `security_event`（`gateway_blacklist_event` 历史只读）。
+与 L2 **账号 lockout**、L3 **安全事件中心** 分工明确：账号锁定仍仅账号维度；新封禁/违规审计写入 `fw_security_event`（`gateway_blacklist_event` 历史只读）。
 
 ## 边界
 

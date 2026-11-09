@@ -4,10 +4,10 @@
 
 ## 摘要
 
-账号域登录失败计数、自动锁定、安全事件持久化与定时自动解锁已覆盖 **ADMIN（PMS）与 Member（APP）** 全部用户类型，共用同一套用例与表结构语义：
+账号域登录失败计数、自动锁定、安全事件持久化与定时自动解锁已覆盖 **ADMIN（IAM）与 Member（APP）** 全部用户类型，共用同一套用例与表结构语义：
 
-- 登录失败经 Auth 异步回调到对应服务（ADMIN→PMS、APP→Member），原子递增 `failed_login_count`，达阈值触发自动锁定。
-- 锁定状态与失败计数**永远落 DB**（`account_lock_state`）；安全事件经 `CompositeSecurityEventPort` → recording 写入 canonical `security_event`（legacy `account_security_event` 表已物理下线）。
+- 登录失败经 Auth 异步回调到对应服务（ADMIN→IAM、APP→Member），原子递增 `failed_login_count`，达阈值触发自动锁定。
+- 锁定状态与失败计数**永远落 DB**（`fw_security_account_lock_state`）；安全事件经 `CompositeSecurityEventPort` → recording 写入 canonical `fw_security_event`（legacy `account_security_event` 表已物理下线）。
 - 临时锁定到期后 `AccountLockTask` 自动解锁并清零失败计数；登录成功同样清零。
 - 认证 meta 经 `AuthContextSupport` 填充失败次数、锁定截止时间与阈值提示。
 - 状态变更 DURABLE 事件 **边沿触发**；锁定后 skip 失败计数递增，仍可发 `LOGIN_FAILURE`。
@@ -46,12 +46,12 @@
 | Gateway 已认证拦截 | `ingot-gateway/.../AccountLockFilter.java`；userType 经 `AuthContextRelayFilter` + OnlineToken |
 | Auth UserDetails 缓存 | `ingot-auth/.../CachingRemoteUserDetailsService.java` |
 | 手动/自动解锁 | `ingot-security-account-core/.../service/UnlockAccountUseCaseService.java` |
-| 锁定状态持久化 | `DefaultLockStatePortAdapter.java` → `account_lock_state` |
-| 安全事件发布 | `CompositeSecurityEventPort.java` → `SecurityEventPublisher` → canonical `security_event` |
+| 锁定状态持久化 | `DefaultLockStatePortAdapter.java` → `fw_security_account_lock_state` |
+| 安全事件发布 | `CompositeSecurityEventPort.java` → `SecurityEventPublisher` → canonical `fw_security_event` |
 | 定时解锁任务 | `ingot-security-account-adapter/.../task/AccountLockTask.java` |
 | 认证 meta 填充 | `ingot-security-account-web-support/.../AuthContextSupport.java` |
 | Auth 登录事件分发 | `ingot-auth/.../event/LoginEventListener.java` |
-| PMS 登录记录回调 | `ingot-pms-provider/.../web/inner/InnerLoginRecordAPI.java` |
+| IAM 登录记录回调 | `ingot-iam-provider/.../interfaces/inner/InnerLoginRecordAPI.java` |
 | Member 登录记录回调 | `ingot-member-provider/.../web/inner/InnerLoginRecordAPI.java` |
 
 ## 文档索引

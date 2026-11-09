@@ -1,0 +1,134 @@
+{
+  "date": "2026-11-08",
+  "status": "validating",
+  "actualDatabaseModified": false,
+  "commitCreated": false,
+  "offline": [
+    {
+      "suite": "offline",
+      "tests": 6,
+      "passed": 6,
+      "seconds": 0.602,
+      "log": "/tmp/framework-naming-offline.log"
+    },
+    {
+      "suite": "sources",
+      "tests": 6,
+      "passed": 6,
+      "seconds": 0.075,
+      "log": "/tmp/framework-naming-sources.log"
+    },
+    {
+      "suite": "comments",
+      "tests": 9,
+      "passed": 9,
+      "seconds": 3.656,
+      "log": "/tmp/framework-naming-comments.log"
+    },
+    {
+      "suite": "bootstrap-offline",
+      "tests": 7,
+      "passed": 7,
+      "seconds": 0.007,
+      "log": "/tmp/framework-naming-bootstrap-offline.log"
+    },
+    {
+      "suite": "migrate-offline",
+      "tests": 9,
+      "passed": 9,
+      "seconds": 0.002,
+      "log": "/tmp/framework-naming-migrate-offline.log"
+    },
+    {
+      "suite": "testdata-manifest",
+      "tests": 1,
+      "passed": 1,
+      "seconds": 0.002,
+      "log": "/tmp/framework-naming-testdata-manifest.log"
+    }
+  ],
+  "isolatedMysql": [
+    {
+      "suite": "library-mysql",
+      "tests": 2,
+      "passed": 2,
+      "seconds": 25.304,
+      "log": "/tmp/framework-naming-library-mysql.log"
+    },
+    {
+      "suite": "bootstrap-mysql",
+      "tests": 24,
+      "passed": 24,
+      "seconds": 292.051,
+      "log": "/tmp/framework-naming-bootstrap-mysql.log"
+    },
+    {
+      "suite": "identity-mysql",
+      "tests": 28,
+      "passed": 28,
+      "seconds": 164.59,
+      "log": "/tmp/framework-naming-identity-mysql.log"
+    },
+    {
+      "suite": "historical-comments",
+      "tests": 3,
+      "passed": 3,
+      "seconds": 19.319,
+      "log": "/tmp/framework-naming-historical-comments.log"
+    },
+    {
+      "suite": "historical-keys",
+      "tests": 9,
+      "passed": 9,
+      "seconds": 97.373,
+      "log": "/tmp/framework-naming-historical-keys.log"
+    },
+    {
+      "suite": "dev-prepare",
+      "tests": 3,
+      "passed": 3,
+      "seconds": 41.355,
+      "log": "/tmp/framework-naming-dev-prepare.log"
+    },
+    {
+      "suite": "tenant-migration",
+      "tests": 5,
+      "passed": 5,
+      "evidence": "Initial group: 3 passed, 2 interrupted by host OSError 12 creating docker processes. Both interrupted cases passed on sequential rerun with smaller test containers.",
+      "initialLog": "/tmp/framework-naming-tenant-migration.log",
+      "retry": {
+        "suite": "tenant-retry",
+        "tests": 2,
+        "passed": 2,
+        "seconds": 123.332,
+        "log": "/tmp/framework-naming-tenant-retry.log"
+      }
+    }
+  ],
+  "jvmTotals": {
+    "tests": 1557,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 3
+  },
+  "jvmResults": "jvm-full-results.json",
+  "jvmLog": "/tmp/framework-naming-gradle-tests.log",
+  "compilationLog": "/tmp/framework-naming-compile.log",
+  "packagingAndResourceCheckLog": "/tmp/framework-naming-resource-check.log",
+  "tableStructuresCompared": 59,
+  "protectedHistoricalFiles": 94,
+  "librarySchemas": 5,
+  "frameworkTables": 6,
+  "iamOwnedTablesRenamed": 3,
+  "packagedResources": "packaged-resources.json",
+  "passedCaseEvidenceTotals": {
+    "offline": 38,
+    "mysql": 74,
+    "jvm": 1554
+  },
+  "pending": [
+    "User deployment of matching code and schema",
+    "Actual functional acceptance",
+    "Update current and archive after acceptance"
+  ]
+}

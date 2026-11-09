@@ -12,7 +12,7 @@
 |---|---|
 | `ingot-security-event-codes` | 事件 / 分类 code 字面量 SoT（`SecurityEventCodes` / `SecurityEventCategoryCodes`）；recording 与 api 共用 |
 | `ingot-security-recording` | SPI、dispatcher、优先级、file spool、配置、Actuator；只依赖 codes，不依赖 `ingot-security-api` |
-| `ingot-security-event-store-mysql` | canonical `security_event` 批量写入、游标查询、retention |
+| `ingot-security-event-store-mysql` | canonical `fw_security_event` 批量写入、游标查询、retention |
 | `ingot-security-event-store-log` | JSONL segment Store（无查询） |
 | `ingot-security-event-transport-feign` | Feign Transport + DTO 映射 |
 
@@ -22,7 +22,7 @@
 
 **唯一绑定类**：`com.ingot.framework.security.recording.config.SecurityEventProperties`（`ingot-security-recording` 模块）
 
-各服务 Nacos：L3（`enabled` / `target` / `source-module` / `categories` / `retention`）在对应 `in-service-*.yml`；PMS / Member / Security 的 `delivery` / `mysql` 在共享 `in-security-policy.yml`。完整字段说明与三场景样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml)。落点地图见 [config-governance](../../security/config-governance/SPEC.md)。
+各服务 Nacos：L3（`enabled` / `target` / `source-module` / `categories` / `retention`）在对应 `in-service-*.yml`；IAM / Member / Security 的 `delivery` / `mysql` 在共享 `in-security-policy.yml`。完整字段说明与三场景样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml)。落点地图见 [config-governance](../../security/config-governance/SPEC.md)。
 
 | 键 | 说明 |
 |---|---|
@@ -30,7 +30,7 @@
 | `target` | `local` \| `center`（默认 `local`） |
 | `primary-store` | `target=local` 时必填，典型 `mysql` |
 | `shadow-targets` | 迁移 shadow；稳定态 `[]` |
-| `source-module` | 写入 `security_event.source_module` |
+| `source-module` | 写入 `fw_security_event.source_module` |
 | `categories.*` | 按 AUTH/ACCOUNT/CREDENTIAL/ACCESS 过滤 |
 | `delivery.memory.*` | BEST_EFFORT 有界队列 |
 | `delivery.spool.*` | DURABLE file spool；`directory` 为父目录，运行时再拼 `spring.application.name` |
@@ -42,7 +42,7 @@
 
 | 服务 | `target` | `primary-store` | 说明 |
 |---|---|---|---|
-| PMS / Member | `local` | `mysql` | 写业务库 `security_event` |
+| IAM / Member | `local` | `mysql` | 写业务库 `fw_security_event` |
 | Gateway | `center` | — | ACCESS 事件 Feign 上报中心 |
 | Security 中心 | `local` | `mysql` | 中心 admission 异步入库 |
 
