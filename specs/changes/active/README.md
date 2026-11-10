@@ -15,7 +15,6 @@
 
 - [IAM 共享目录版本校验与长缓存](./20261109-iam-versioned-shared-catalog-cache/README.md)（validating，合并直查及隔离对照通过，待目标环境验收）
 - [IAM 应用开通批量查询与操作目录缓存](./20261109-iam-entitlement-batch-action-catalog-cache/README.md)（validating，开通与人群批量查询待发布验收，短缓存由后续直查替代）
-- [租户即时授权实际库发布验收](./20261106-iam-tenant-live-authorization-release/README.md)（draft；实际来源库预检、备份恢复、切换及回滚）
 - [同源双入口目标环境发布验收](./20261031-security-same-origin-release-acceptance/README.md)（draft；原实现已本地验收归档，实际环境证据单列）
 - [IAM 多租户身份与访问管理重构](./20260912-iam-identity-access-management/README.md)（implementing；主变更状态以其 README 为准，旧 PMS 迁移已退出必需范围）
 - [DataScope SQL 谓词规模升级](./20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
@@ -38,4 +37,7 @@
 
 - [同源登录已验收实现](../archive/2026/20261031-security-same-origin-login/README.md)（completed，2026-10-31）。
 
+已取消归档：
+
+- [租户即时授权实际库发布验收](../archive/2026/20261106-iam-tenant-live-authorization-release/README.md)（cancelled，2026-11-10 确认按新库首次部署，无数据迁移）
 - [IAM帮助内容方案（已取消）](../archive/2026/20261103-iam-help-center/README.md)（cancelled；2026-11-03 用户改用前端静态帮助，保留历史）

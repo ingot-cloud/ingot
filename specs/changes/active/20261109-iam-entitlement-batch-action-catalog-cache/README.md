@@ -29,7 +29,7 @@
 - [平台管理读取性能](../../../current/iam/platform-read-performance/SPEC.md)
 - [平台能力](../../../current/iam/platform-capabilities/SPEC.md)
 - [IAM 重构](../20260912-iam-identity-access-management/README.md)约束现有授权入口。目录缓存只作为展示读取的优化。
-- [实际库发布验收](../20261106-iam-tenant-live-authorization-release/README.md)继续独立跟踪实际库切换。
+- [旧库迁移发布验收](../../archive/2026/20261106-iam-tenant-live-authorization-release/README.md)因改用新库首次部署已取消归档。
 
 ## 评审记录
 

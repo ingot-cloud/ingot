@@ -50,7 +50,8 @@
 
 ## 现状与相关变更
 
-- 2026-11-06 [租户即时授权](../../archive/2026/20261014-iam-tenant-live-authorization/README.md)完成产品验收并归档，接管 R01/R03/R04/R05 中的拥有者、租户当前角色和资源委派。实际库发布由 [独立变更](../20261106-iam-tenant-live-authorization-release/README.md) 跟踪，主变更其他范围继续维护。
+- 2026-11-06 [租户即时授权](../../archive/2026/20261014-iam-tenant-live-authorization/README.md)完成产品验收并归档，接管 R01/R03/R04/R05 中的拥有者、租户当前角色和资源委派。
+- 2026-11-10 用户确认按新库首次部署，无数据迁移。[旧库迁移发布验收](../../archive/2026/20261106-iam-tenant-live-authorization-release/README.md)已取消归档，空库初始化及联调仍按本主变更验收。
 - 当前基线：[应用授权](../../../current/pms/application-authorization/SPEC.md)、[数据授权](../../../current/pms/data-authorization/SPEC.md)。
 - [SQL 规模优化 draft](../20260912-mybatis-data-scope-predicate-scale/README.md) 以旧快照及规则模型为前提。本 change 不直接实施其闭包表或 UNION 改写，不修改其状态；后续须按新模型重新评估。
 - 当前实现的平台默认层与租户追加层只有并集语义；本方案新增移除与范围替换，不能照搬旧合并算法。

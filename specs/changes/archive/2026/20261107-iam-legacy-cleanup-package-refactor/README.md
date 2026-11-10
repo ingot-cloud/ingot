@@ -17,7 +17,7 @@
 ## 关联变更
 
 - [IAM 主变更 T18](../../../active/20260912-iam-identity-access-management/TASKS.md)：本 change 接管其旧实现清理的代码工作，不代替原进程/RPC及产品验收。
-- [实际库发布验收](../../../active/20261106-iam-tenant-live-authorization-release/README.md)：保持独立，本次不修改其状态或脚本。
+- [旧库迁移发布验收](../20261106-iam-tenant-live-authorization-release/README.md)由独立变更跟踪，后因确认按新库首次部署而取消归档。
 - [持久化基线](../../../../current/iam/database-persistence/SPEC.md)、[平台能力](../../../../current/iam/platform-capabilities/SPEC.md)、[即时授权](../../../../current/iam/tenant-live-authorization/SPEC.md)、[版本应用](../../../../current/iam/role-version-application/SPEC.md)：作为保持行为的依据。
 
 ## 工件

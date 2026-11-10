@@ -60,7 +60,7 @@
 - 完成日期：2026-11-06（用户确认产品验收通过并要求归档）。
 - 关联实现提交：dfe4da45。
 - 更新的 current：[iam/tenant-live-authorization](../../../../current/iam/tenant-live-authorization/README.md)、[iam/role-version-application](../../../../current/iam/role-version-application/README.md)。
-- 最终交付：角色工作区、当前角色字段快照和组织字段策略以本次一并验收的后续增量为准。实际库发布和目标环境演练移交 [独立跟踪](../../../active/20261106-iam-tenant-live-authorization-release/README.md)。
+- 最终交付：角色工作区、当前角色字段快照和组织字段策略以本次一并验收的后续增量为准。旧库迁移曾移交 [独立变更](../20261106-iam-tenant-live-authorization-release/README.md)，后因确认按新库首次部署而取消归档。
 
 ## 历史完成检查
 

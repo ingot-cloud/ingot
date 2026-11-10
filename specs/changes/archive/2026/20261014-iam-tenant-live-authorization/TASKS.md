@@ -53,7 +53,7 @@
 ## 产品确认与发布交接
 
 - [x] 按 [ACCEPTANCE](./ACCEPTANCE.md) 完成组织设置/转交、成员表单、完整分配/委派交互、平台自有任务与宽窄工作区产品验收。
-- [x] 实际库执行事项已移交 [实际库发布跟踪](../../../active/20261106-iam-tenant-live-authorization-release/README.md)。
+- [x] 旧库迁移执行事项已移交 [独立变更](../20261106-iam-tenant-live-authorization-release/README.md)。
 - [x] 用户确认后完成T12/T13的产品证据登记，再更新current并归档T14。
 
 ## 未上线快速测试准备增量
@@ -66,4 +66,4 @@
 
 ## 归档验收
 
-2026-11-06 用户确认本次产品范围验收通过。实现和自动化证据沿用各阶段记录，验收确认来源为本次人工确认。 实际来源库预检、备份还原、目标环境切换及联合回滚证据移交 [实际库发布跟踪](../../../active/20261106-iam-tenant-live-authorization-release/README.md)。
+2026-11-06 用户确认本次产品范围验收通过。实现和自动化证据沿用各阶段记录。旧库预检、备份还原、切换及联合回滚移交 [独立变更](../20261106-iam-tenant-live-authorization-release/README.md)，该变更于 2026-11-10 随首次部署范围确认而取消归档。
