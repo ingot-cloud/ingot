@@ -74,7 +74,7 @@
 
 SQL 总数为每次请求前后 `ingot_iam` 的 MySQL 语句指纹增量，包含鉴权等读取。平台和租户操作目录各连续请求两次，同端的 SQL 次数与响应内容一致。复测前后 MySQL ROW binlog 文件与位置一致，期间没有记录到新的提交。两端各记录一次受控的同内容重复读取，真实流量中的版本复用次数与完整分钟 QPS 仍缺证据。 [逐请求证据](./evidence/local-http-boundaries.json)
 
-无令牌访问 `bootstrap` 或平台操作目录返回 `500 invalid_token`，同路径带格式错误的 Bearer 返回 `401 invalid_token`。IAM 直连和经网关结果一致，无令牌的 `bootstrap` 执行了 0 条 IAM 库 SELECT。共享 `InTokenAuthFilter` 在无身份时直接抛出 OAuth2 异常，且注册在 Bearer 过滤器之后、异常翻译过滤器之前，与现象吻合。相关安全链文件与 HEAD 一致。该认证缺陷已独立修复，定向回归通过，等待本机加载新版后复测。 [无令牌响应修复](../20261109-security-missing-bearer-401/README.md)
+无令牌访问 `bootstrap` 或平台操作目录返回 `500 invalid_token`，同路径带格式错误的 Bearer 返回 `401 invalid_token`。IAM 直连和经网关结果一致，无令牌的 `bootstrap` 执行了 0 条 IAM 库 SELECT。共享 `InTokenAuthFilter` 在无身份时直接抛出 OAuth2 异常，且注册在 Bearer 过滤器之后、异常翻译过滤器之前，与现象吻合。相关安全链文件与 HEAD 一致。该认证缺陷已独立修复，定向回归通过，本机直连与网关已复测为 HTTP 401，保留 Bearer challenge，见[无令牌响应修复](../../archive/2026/20261109-security-missing-bearer-401/README.md)。
 
 ## 流量与目录规模
 

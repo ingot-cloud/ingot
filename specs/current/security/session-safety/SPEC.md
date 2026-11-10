@@ -40,7 +40,8 @@
 
 | 条件 | 行为 |
 |---|---|
-| JWT 无 `sid` | 拒绝（`invalid_token`），无 jti 回退 |
+| 受保护接口无 Bearer 令牌或 Bearer 无效 | 返回 HTTP 401、`invalid_token` 和 `WWW-Authenticate: Bearer`，在业务处理前拒绝 |
+| JWT 无 `sid` | 返回 HTTP 401、`invalid_token` 和 Bearer challenge，无 jti 回退 |
 | `token:sid:{sid}` miss | 拒绝（视为已撤销） |
 | Redis 读写异常 | `ingot.security.session.store-unavailable-grace`（默认 30s）内，签名仍有效的 JWT 可过；超期一律拒绝。打点 `session.redis.unavailable` |
 | 长期 JWT-only fallback | **禁止**，无 `convertFromJwtOnly` 路径 |

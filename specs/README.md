@@ -188,7 +188,6 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [受保护接口的无令牌响应](./changes/active/20261109-security-missing-bearer-401/README.md)（validating，定向回归通过，待本机加载新版复测）
 
 - [IAM 共享目录版本校验与长缓存](./changes/active/20261109-iam-versioned-shared-catalog-cache/README.md)（validating，合并直查及隔离对照通过，待目标环境验收）
 
@@ -212,6 +211,7 @@ current/<domain>/<capability>/
 
 ### 2026-11-09 归档
 
+- [受保护接口的无令牌响应](./changes/archive/2026/20261109-security-missing-bearer-401/README.md)（completed，本机 IAM 直连及网关验收通过）
 - [IAM 职责与命名收尾](./changes/archive/2026/20261108-iam-responsibility-cleanup/README.md)
 - [IAM 新项目初始化精简](./changes/archive/2026/20261108-iam-clean-initialization/README.md)
 - [IAM 首次部署单文件初始化](./changes/archive/2026/20261108-iam-single-file-initialization/README.md)

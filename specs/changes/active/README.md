@@ -12,7 +12,6 @@
 
 当前变更：
 
-- [受保护接口的无令牌响应](./20261109-security-missing-bearer-401/README.md)（validating，定向回归通过，待本机加载新版复测）
 
 - [IAM 共享目录版本校验与长缓存](./20261109-iam-versioned-shared-catalog-cache/README.md)（validating，合并直查及隔离对照通过，待目标环境验收）
 - [IAM 应用开通批量查询与操作目录缓存](./20261109-iam-entitlement-batch-action-catalog-cache/README.md)（validating，开通与人群批量查询待发布验收，短缓存由后续直查替代）
@@ -29,6 +28,7 @@
 - [IAM SQL 防火墙兼容性检查与修复](../archive/2026/20261107-iam-member-groups-wall-filter/README.md)（completed，2026-11-10）
 - [IAM 登录后接口现场与发布验收](../archive/2026/20261110-iam-post-login-release-acceptance/README.md)（completed，2026-11-10）
 - [IAM 登录后接口提速与场景提示](../archive/2026/20261109-iam-post-login-read-performance/README.md)（completed，2026-11-10）
+- [受保护接口的无令牌响应](../archive/2026/20261109-security-missing-bearer-401/README.md)（completed，2026-11-09）
 - [IAM 功能目录与授权补齐](../archive/2026/20261106-iam-resource-catalog/README.md)（completed，2026-11-07）
 - [授权审计游标分页与可读展示](../archive/2026/20261024-iam-authorization-audit-readable/README.md)（completed，2026-11-07）
 - [20261020-iam-member-batch](../archive/2026/20261020-iam-member-batch/README.md)（completed，2026-10-21）
