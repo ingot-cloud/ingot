@@ -43,4 +43,4 @@
 
 2026-11-10 普通成员真实 BFF 会话通过本机验收。可用应用从 1 个增至 16 个时，`bootstrap` 和 `capabilities` 的开通与人群批量查询分别保持每请求两条和一条。应用开通与人群的提交后首请求检查通过，临时数据已清理。关联实现提交为 `c57394f4`。[验收记录](./VALIDATION.md#本机目标环境验收)
 
-现行实现保留开通与人群批量查询，已写入 [租户即时授权基线](../../../../current/iam/tenant-live-authorization/SPEC.md#普通成员的应用开通与人群)。[读取性能基线](../../../../current/iam/platform-read-performance/README.md)提供查询预算入口。首期短目录缓存已被实时单 SQL 替换，原设计和隔离实测保留为对照，目录直查与流量验收由[后续变更](../../../active/20261109-iam-versioned-shared-catalog-cache/README.md)跟踪。
+现行实现保留开通与人群批量查询，已写入 [租户即时授权基线](../../../../current/iam/tenant-live-authorization/SPEC.md#普通成员的应用开通与人群)。[读取性能基线](../../../../current/iam/platform-read-performance/README.md)提供查询预算入口。首期短目录缓存已由实时单 SQL 替换，原设计和隔离实测保留为对照。[目录直查验收](../20261109-iam-versioned-shared-catalog-cache/README.md)

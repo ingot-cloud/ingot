@@ -75,4 +75,5 @@
 
 - 目录、开通、菜单装配与隔离 MySQL 双节点共 40 项回归通过，另有同首期夹具复测 1 项通过；原 100 租户性能场景和浏览器场景未启用。
 - 包边界、HTTP 契约和框架表归属检查共 24 项通过。
-- 长缓存实现仅存在于隔离夹具。生产代码不引入缓存配置、额外数据库字段或迁移。当前处于 `validating`，待目标环境验收。
+- 2026-11-10 在 `9881bc8d` 上以 `-PiamLiveHttp=true` 运行 `TenantLiveMySqlHttpTest`、`CatalogFacadeTest`、`EntitlementServiceTest` 和 `SessionMenuAssemblerTest`。45 项通过，其中 11 项使用隔离 MySQL 双节点。5 项需单独开启的压测与浏览器场景跳过。
+- 七天长缓存仅用于隔离对照。直查实现通过本期功能验收，完整自然流量窗口及目录版本复用证据留待后续缓存评估。[本机功能验收](./TARGET-ACCEPTANCE.md)

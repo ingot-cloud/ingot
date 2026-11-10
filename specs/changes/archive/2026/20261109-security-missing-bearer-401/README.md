@@ -7,7 +7,7 @@
 - [需求](./REQUIREMENTS.md)
 - [设计](./DESIGN.md)
 - [实施与验收任务](./TASKS.md)
-- [问题复现](../../../active/20261109-iam-versioned-shared-catalog-cache/TARGET-ACCEPTANCE.md)
+- [问题复现](../20261109-iam-versioned-shared-catalog-cache/TARGET-ACCEPTANCE.md)
 - [会话安全基线](../../../../current/security/session-safety/SPEC.md)
 
 已在共享过滤器复用现有 Bearer 认证响应入口。22 项定向测试通过，IAM 打包、HTTP 契约和包边界检查通过。本机 IAM 直连及经网关复测通过。
