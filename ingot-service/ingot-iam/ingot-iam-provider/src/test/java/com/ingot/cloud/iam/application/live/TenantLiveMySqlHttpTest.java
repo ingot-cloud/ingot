@@ -1,7 +1,10 @@
 package com.ingot.cloud.iam.application.live;
 
 import com.ingot.cloud.iam.application.group.GroupService;
+import com.ingot.cloud.iam.application.assignment.PlatformAssignmentFacade;
+import com.ingot.cloud.iam.application.authorization.extension.LocalResourceAuthorizationClient;
 import com.ingot.cloud.iam.application.organization.MemberFacade;
+import com.ingot.cloud.iam.application.organization.MemberProfileCommandService;
 import com.ingot.cloud.iam.application.organization.MemberQueryService;
 import com.ingot.cloud.iam.application.organization.OrganizationMemberDepartments;
 import com.ingot.cloud.iam.application.organization.OrganizationMemberQueryService;
@@ -30,6 +33,7 @@ import com.ingot.cloud.iam.application.role.TenantRoleDefinitionService;
 import com.ingot.cloud.iam.application.shared.TenantAuthorizationTransaction;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentClosure;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentQueryRepository;
+import com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMybatisTestAccess;
 import com.ingot.cloud.iam.infrastructure.persistence.SessionRepository;
 import com.ingot.cloud.iam.infrastructure.persistence.mapper.AuthorizationCandidateMapper;
@@ -48,6 +52,9 @@ import com.ingot.cloud.iam.infrastructure.serialization.IamJsonCodec;
 import com.ingot.cloud.iam.interfaces.http.tenant.TenantAssignmentAPI;
 import com.ingot.cloud.iam.interfaces.http.tenant.TenantDelegationAPI;
 import com.ingot.cloud.iam.interfaces.http.tenant.TenantRoleCommandAPI;
+import com.ingot.framework.authorization.AuthorizationAccess;
+import com.ingot.framework.authorization.field.ClientFieldPolicyProvider;
+import com.ingot.framework.authorization.field.FieldWriteExecutor;
 import com.ingot.framework.commons.model.iam.AuthorizationCandidatePage;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -56,6 +63,8 @@ import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.ScopeKind;
+import com.ingot.framework.commons.model.iam.extension.AuthorizationDecision;
+import com.ingot.framework.commons.model.iam.extension.AuthorizationRequest;
 
 import com.ingot.cloud.iam.application.organization.model.MemberProfileInput;
 import com.ingot.cloud.iam.application.organization.model.MemberRecord;
@@ -69,6 +78,7 @@ import java.nio.file.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sql.DataSource;
 import com.fasterxml.jackson.databind.*;
 import com.ingot.cloud.iam.configuration.IamReadRequestConfiguration;
@@ -108,6 +118,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * <p>隔离MySQL与两个真实HTTP节点验证当前角色、拥有者、受限委派和旧契约退出。</p>
@@ -127,6 +138,7 @@ class TenantLiveMySqlHttpTest {
     private final HttpClient http=HttpClient.newHttpClient();
     private final AtomicLong ids=new AtomicLong(10_000_000);
     private final AtomicLong internalRpcCalls=new AtomicLong();
+    private final AtomicBoolean expireMemberWritePreview = new AtomicBoolean();
     private static final Map<String,AuthorizationContext> ACTORS=new java.util.concurrent.ConcurrentHashMap<>(Map.of(
         "platform",new AuthorizationContext(AuthorizationDomain.PLATFORM,null,"1","1001"),
         "owner-a",new AuthorizationContext(AuthorizationDomain.TENANT,"10","1","101"),
@@ -176,7 +188,18 @@ class TenantLiveMySqlHttpTest {
         var delegationService=com.ingot.cloud.iam.fixture.TenantDelegationFacadeFixture.create(access,live,IamMybatisTestAccess.currentRoles(source),new TenantRoleDefinitionResolver(live,IamMybatisTestAccess.currentRoles(source)),new TenantRoleLockService(live),new TenantScopeBindingService(live,IamMybatisTestAccess.mapper(source,TenantScopeCandidateMapper.class),new DepartmentClosure(IamMybatisTestAccess.mapper(source,IamDepartmentMapper.class))),resources,transaction,IamMybatisTestAccess.audits(source),changes);
         var sessionStore=new SessionRepository(IamMybatisTestAccess.mapper(source,IamPlatformMemberMapper.class),IamMybatisTestAccess.mapper(source,IamTenantMemberMapper.class),IamMybatisTestAccess.mapper(source,IamApplicationMapper.class),IamMybatisTestAccess.mapper(source,IamMenuMapper.class),IamMybatisTestAccess.entitlements(source));
         var sessions=new SessionService(access,evaluator,sessionStore,live);
-        registerResourceClients(web,source,identities,evaluator);
+        var local = spy(registerResourceClients(web, source, identities, evaluator));
+        doAnswer(invocation -> {
+            AuthorizationDecision decision = (AuthorizationDecision) invocation.callRealMethod();
+            var request = invocation.getArgument(0, AuthorizationRequest.class);
+            if (expireMemberWritePreview.get() && request.resource().equals(MemberResources.TENANT_MEMBER)
+                    && request.actionCodes().equals(List.of(IamAction.VALUE_TENANT_MEMBER_UPDATE))) {
+                return new AuthorizationDecision(decision.resource(), decision.context(), decision.actions(),
+                        decision.version(), Instant.EPOCH);
+            }
+            return decision;
+        }).when(local).preview(any(AuthorizationRequest.class));
+        var authorization = new AuthorizationAccess(local);
         web.registerBean(ServletWebServerFactory.class,()->new TomcatServletWebServerFactory(0));
         web.registerBean(TenantRoleCommandAPI.class,()->new TenantRoleCommandAPI(roleService,assignmentService,identities));
         web.registerBean(PlatformSharedRoleCommandAPI.class,()->new PlatformSharedRoleCommandAPI(roleService,identities));
@@ -218,13 +241,18 @@ class TenantLiveMySqlHttpTest {
                 new com.ingot.cloud.iam.infrastructure.persistence.AuthorizationScopeTransportCompiler(closure,
                         IamMybatisTestAccess.mapper(source, IamMemberDepartmentMapper.class)),
                 evaluator, manifests, com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache());
-        var memberQueries = new MemberQueryService(platformFields, access, resources,
+        var platformAssignments = mock(PlatformAssignmentFacade.class);
+        var memberQueries = new MemberQueryService(platformFields, access, authorization, resources,
                 new com.ingot.cloud.iam.application.authorization.evaluation.ObjectCapabilities(evaluator, resources),
-                fields, members, groups, null);
+                fields, members, groups, platformAssignments);
+        var writes = new FieldWriteExecutor(new ClientFieldPolicyProvider(authorization, registry));
+        var memberCommands = new MemberProfileCommandService(platformFields, FieldTestSupport.projection(), writes,
+                access, resources, IamMybatisTestAccess.audits(source), members, platformAssignments,
+                groupService, transactions, IamMybatisTestAccess.images(), memberQueries);
         var organizationQueries = new OrganizationMemberQueryService(access, resources, organizationMembers,
                 new OrganizationMemberDepartments(access, resources, members, departments), fields, groups,
                 closure, departments, members);
-        var memberFacade = new MemberFacade(memberQueries, null);
+        var memberFacade = new MemberFacade(memberQueries, memberCommands);
         web.registerBean(PlatformGroupAPI.class, () -> new PlatformGroupAPI(groupService, memberFacade));
         web.registerBean(PlatformMemberCommandAPI.class, () -> new PlatformMemberCommandAPI(null, memberFacade, null));
         web.registerBean(TenantMemberCommandAPI.class, () -> new TenantMemberCommandAPI(
@@ -389,7 +417,8 @@ class TenantLiveMySqlHttpTest {
         }
     }
 
-    private void registerResourceClients(AnnotationConfigServletWebServerApplicationContext web,DataSource source,CurrentIdentityService identities,AuthorizationEvaluator evaluator) {
+    private LocalResourceAuthorizationClient registerResourceClients(AnnotationConfigServletWebServerApplicationContext web,
+            DataSource source, CurrentIdentityService identities, AuthorizationEvaluator evaluator) {
         var candidates=IamMybatisTestAccess.mapper(source,AuthorizationCandidateMapper.class);
         var registry=new com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders(candidates).registry(List.of());
         var fields=new com.ingot.framework.authorization.field.FieldBindingRegistry(json);
@@ -400,7 +429,7 @@ class TenantLiveMySqlHttpTest {
         var compiler=new com.ingot.cloud.iam.infrastructure.persistence.AuthorizationScopeTransportCompiler(new DepartmentClosure(IamMybatisTestAccess.mapper(source,IamDepartmentMapper.class)),IamMybatisTestAccess.mapper(source,IamMemberDepartmentMapper.class));
         var tenantFields=com.ingot.cloud.iam.fixture.FieldAccessEvaluatorFixture.create(IamMybatisTestAccess.policies(source),IamMybatisTestAccess.mapper(source,IamMemberDepartmentMapper.class),new DepartmentClosure(IamMybatisTestAccess.mapper(source,IamDepartmentMapper.class)),absent(),new com.ingot.framework.authorization.field.FieldProjectionEngine(json,fields,new com.ingot.framework.authorization.field.DefaultMaskStrategy()),metadata,absent());
         var roleFields=new com.ingot.cloud.iam.application.authorization.extension.RoleFieldPermissionService(metadata,IamMybatisTestAccess.roles(source),compiler,evaluator,manifests,absent());
-        var local=new com.ingot.cloud.iam.application.authorization.extension.LocalResourceAuthorizationClient(identities,evaluator,registry,compiler,roleFields,candidates,tenantFields,metadata,IamMybatisTestAccess.objectScopes(source));
+        var local=new LocalResourceAuthorizationClient(identities,evaluator,registry,compiler,roleFields,candidates,tenantFields,metadata,IamMybatisTestAccess.objectScopes(source));
         web.registerBean(com.ingot.cloud.iam.interfaces.inner.InnerResourceAuthorizationAPI.class,()->new com.ingot.cloud.iam.interfaces.inner.InnerResourceAuthorizationAPI(local));
         var remote=new com.ingot.cloud.iam.api.rpc.RemoteIamAuthorizationService() {
             public com.ingot.framework.commons.model.support.R<com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotDTO> snapshot(com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotRequest request){throw new UnsupportedOperationException();}
@@ -425,6 +454,7 @@ class TenantLiveMySqlHttpTest {
         var sdk=new com.ingot.framework.authorization.RemoteAuthorizationClient(remote,registry,cache,json);
         web.registerBean(com.ingot.framework.authorization.SdkAuthorizationErrorHandler.class,com.ingot.framework.authorization.SdkAuthorizationErrorHandler::new);
         web.registerBean(FixtureConsumer.class,()->new FixtureConsumer(sdk));
+        return local;
     }
     @SuppressWarnings("unchecked")
     private static <T> org.springframework.beans.factory.ObjectProvider<T> absent() {return new org.springframework.beans.factory.support.StaticListableBeanFactory().getBeanProvider((Class<T>)Object.class);}
@@ -1294,6 +1324,82 @@ class TenantLiveMySqlHttpTest {
     private long mysqlSelects() {
         return jdbc.queryForObject("SHOW GLOBAL STATUS LIKE 'Com_select'",(row,index)->Long.parseLong(row.getString("Value")));
     }
+    @Test
+    @Order(57)
+    void tenantMemberEditHintsMatchTheScopedFieldWriteDecision() throws Exception {
+        String actor = "field-editor";
+        String target = "/v1/tenant/members/14811";
+        String phone = "15500014811";
+        String email = "field-editor@example.test";
+        String read = action(IamAction.VALUE_TENANT_MEMBER_READ);
+        String update = action(IamAction.VALUE_TENANT_MEMBER_UPDATE);
+        String resource = jdbc.queryForObject("SELECT resource_id FROM iam_action WHERE id=?",
+                BigInteger.class, new BigInteger(update)).toString();
+        jdbc.update("INSERT INTO iam_account(id,username,password_hash) VALUES(14801,'field-editor','fixture')");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,phone,email) "
+                + "VALUES(14811,10,14801,'字段验证',?,?)", phone, email);
+        jdbc.update("INSERT INTO iam_member_department(tenant_id,member_id,department_id) VALUES(10,14811,12)");
+        ACTORS.put(actor, new AuthorizationContext(AuthorizationDomain.TENANT, "10", "14801", "14811"));
+        try {
+            String readRole = catalogResponse(first, "owner-a", "POST", "/v1/tenant/roles",
+                    Map.of("code", "field-reader", "name", "仅查看", "definition", definition(read))).path("id").asText();
+            assign("owner-a", "14811", readRole, null);
+            var readOnly = catalogResponse(second, actor, "GET", target, null);
+            assertEquals(FieldVisibility.MASKED.name(), readOnly.at("/fieldAccess/phone/visibility").asText());
+            assertFalse(readOnly.at("/fieldAccess/displayName/editable").booleanValue());
+
+            var definition = Map.of("grants", List.of(Map.of("actionId", update,
+                    "scopes", List.of(Map.of("kind", ScopeKind.MEMBER_DEPARTMENTS.getValue())))),
+                    "parameterDefinitions", List.of());
+            String editRole = catalogResponse(first, "owner-a", "POST", "/v1/tenant/roles",
+                    Map.of("code", "field-editor", "name", "部门内编辑", "definition", definition)).path("id").asText();
+            // 角色创建夹具没有注册字段资源，直接预置当前快照以检验真实授权求值。
+            var snapshot = Map.of(resource, Map.of(
+                    "visibility", Map.of("displayName", "FULL", "avatar", "FULL", "phone", "MASKED", "email", "MASKED"),
+                    "operations", Map.of("displayName", new FieldOperations(true, false),
+                            "avatar", new FieldOperations(true, false), "phone", FieldOperations.NONE,
+                            "email", new FieldOperations(true, false))));
+            assertEquals(1, jdbc.update("UPDATE iam_role_revision SET resource_field_permissions=? "
+                    + "WHERE id=(SELECT current_revision_id FROM iam_role_definition WHERE id=?)",
+                    json.writeValueAsString(snapshot), editRole));
+            assign("owner-a", "14811", editRole, null);
+            var before = catalogResponse(second, actor, "GET", target, null);
+            String version = before.path("version").asText();
+            assertEquals(FieldVisibility.MASKED.name(), before.at("/fieldAccess/phone/visibility").asText());
+            assertFalse(before.at("/fieldAccess/phone/editable").booleanValue());
+            assertTrue(before.at("/record/phone").asText().contains("*"));
+            assertTrue(before.at("/fieldAccess/displayName/editable").booleanValue());
+            assertEquals(FieldVisibility.MASKED.name(), before.at("/fieldAccess/email/visibility").asText());
+            assertTrue(before.at("/fieldAccess/email/editable").booleanValue());
+            assertTrue(before.at("/record/email").asText().contains("*"));
+            var outside = catalogResponse(second, actor, "GET", "/v1/tenant/members/102", null);
+            assertFalse(outside.at("/fieldAccess/displayName/editable").booleanValue());
+            assertTrue(catalogResponse(second, "owner-a", "GET", target, null)
+                    .at("/fieldAccess/phone/editable").booleanValue());
+
+            var denied = request(first, actor, "PATCH", target,
+                    Map.of("expectedVersion", version, "phone", "15500014812"));
+            assertEquals(403, denied.statusCode(), denied.body());
+            assertEquals(phone, jdbc.queryForObject("SELECT phone FROM iam_tenant_member WHERE id=14811", String.class));
+            assertEquals(version, catalogResponse(first, actor, "GET", target, null).path("version").asText());
+
+            expireMemberWritePreview.set(true);
+            var expired = catalogResponse(first, actor, "GET", target, null);
+            assertEquals(before.path("record"), expired.path("record"));
+            expired.path("fieldAccess").forEach(field -> assertFalse(field.path("editable").booleanValue()));
+            var saved = catalogResponse(first, actor, "PATCH", target,
+                    Map.of("expectedVersion", version, "displayName", "已更新"));
+            assertEquals("已更新", saved.at("/record/displayName").asText());
+            assertNotEquals(version, saved.path("version").asText());
+            assertEquals(before.path("fieldAccess"), saved.path("fieldAccess"));
+            assertEquals(before.at("/record/phone"), saved.at("/record/phone"));
+        }
+        finally {
+            expireMemberWritePreview.set(false);
+            ACTORS.remove(actor);
+        }
+    }
+
     private String action(String code){return jdbc.queryForObject("SELECT id FROM iam_action WHERE code=?",BigInteger.class,code).toString();}
     private Map<String,Object> definition(String... actions){return Map.of("grants",Arrays.stream(actions).map(id->Map.of("actionId",id,"scopes",List.of(Map.of("kind","ALL")))).toList(),"parameterDefinitions",List.of());}
     private void assign(String actor,String member,String role,String source) throws Exception {

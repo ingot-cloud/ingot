@@ -206,7 +206,7 @@ public class MemberProfileCommandService {
     }
 
     /**
-     * 更新当前域成员资料，不修改全局账号或成员资格。手机号和邮箱写入当前域成员的联系字段，空引用表示不修改，空白表示清空。不可编辑字段仍拒绝写入。
+     * 更新当前域成员的联系资料。手机号和邮箱空引用表示保留，空白表示清空。租户响应的编辑提示使用事务内通过的字段授权。
      * @param domain 接口管理域
      * @param memberId 成员 ID
      * @param input 资料
@@ -236,7 +236,7 @@ public class MemberProfileCommandService {
             var actualDepartments = domain == AuthorizationDomain.PLATFORM ? List.<String>of()
                     : members.departmentViews(IamIds.require(actor.context().tenantId()), List.of(BigInteger.valueOf(id)))
                         .getOrDefault(BigInteger.valueOf(id), List.of()).stream().map(MemberDepartmentView::id).toList();
-            fieldWrites.require(resource, domain == AuthorizationDomain.PLATFORM ? IamAction.VALUE_PLATFORM_MEMBER_UPDATE
+            var writeDecision = fieldWrites.require(resource, domain == AuthorizationDomain.PLATFORM ? IamAction.VALUE_PLATFORM_MEMBER_UPDATE
                     : IamAction.VALUE_TENANT_MEMBER_UPDATE,
                     new ScopeTarget(memberId, memberId, actor.context().tenantId(), actualDepartments), submitted);
             String avatar = images.bind(actor.context(), domain == AuthorizationDomain.PLATFORM
@@ -252,7 +252,7 @@ public class MemberProfileCommandService {
                 requireApplied(members.updateTenant(tenantId, id, input.displayName(), avatar, input.phone(),
                         input.email(), version, input.suppliedFields()));
             }
-            ResourceDetail<MemberRecord> next = queries.load(domain, actor, id);
+            ResourceDetail<MemberRecord> next = queries.loadAfterUpdate(domain, actor, id, writeDecision);
             audits.write(actor.context(), access.nextId(), "member", memberId, AuditChangeType.UPDATE,
                     Map.of(AuditField.NAME, String.valueOf(current.record().displayName())),
                     Map.of(AuditField.NAME, String.valueOf(next.record().displayName())),

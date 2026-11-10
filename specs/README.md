@@ -194,8 +194,6 @@ current/<domain>/<capability>/
 
 - [IAM 应用开通批量查询与操作目录缓存](./changes/active/20261109-iam-entitlement-batch-action-catalog-cache/README.md)（validating，开通与人群批量查询待发布验收，短缓存由后续直查替代）
 
-- [IAM 历史代码清理、职责分层与命名重构](./changes/active/20261107-iam-legacy-cleanup-package-refactor/README.md)（validating；P0–P6完成，目标环境/人工验收待办；历史表、数据及数据库升级脚本未改）
-
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
 
 - [租户即时授权实际库发布验收](./changes/active/20261106-iam-tenant-live-authorization-release/README.md)（draft；实际来源库预检、备份恢复、切换及回滚）
@@ -207,6 +205,7 @@ current/<domain>/<capability>/
 
 ### 2026-11-10 归档
 
+- [IAM 历史代码清理、职责分层与命名重构](./changes/archive/2026/20261107-iam-legacy-cleanup-package-refactor/README.md)（completed，本机 P7 和 A09 验收通过）
 - [IAM SQL 防火墙兼容性检查与修复](./changes/archive/2026/20261107-iam-member-groups-wall-filter/README.md)（completed，本机真实会话复测通过）
 - [IAM 登录后接口现场与发布验收](./changes/archive/2026/20261110-iam-post-login-release-acceptance/README.md)（completed，两端首批成员 P95 对照、缓存分层和真实受限会话通过）
 - [IAM 登录后接口提速与场景提示](./changes/archive/2026/20261109-iam-post-login-read-performance/README.md)（completed，实现及隔离验证完成）

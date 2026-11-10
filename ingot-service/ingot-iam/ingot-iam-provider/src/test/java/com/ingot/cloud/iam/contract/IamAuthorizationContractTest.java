@@ -95,6 +95,7 @@ import com.ingot.cloud.iam.application.organization.model.PlatformMemberContext;
 import com.ingot.cloud.iam.application.organization.model.PlatformMemberEditInput;
 import com.ingot.cloud.iam.application.organization.model.PlatformMemberEditPreview;
 import com.ingot.cloud.iam.application.organization.model.TenantMemberCreated;
+import com.ingot.cloud.iam.application.organization.model.TenantMemberFilter;
 import com.ingot.cloud.iam.application.organization.model.TenantMemberRejoinInput;
 import com.ingot.cloud.iam.application.policy.model.FieldPolicyDraft;
 import com.ingot.cloud.iam.application.policy.model.FieldPolicyInput;
@@ -157,6 +158,7 @@ import com.ingot.cloud.iam.domain.catalog.MenuDraft;
 import com.ingot.cloud.iam.domain.group.GroupMembership;
 import com.ingot.cloud.iam.domain.group.GroupMembershipDepartment;
 import com.ingot.cloud.iam.domain.organization.MemberCreateInput;
+import com.ingot.cloud.iam.domain.organization.MemberResources;
 import com.ingot.cloud.iam.domain.organization.MemberStatusInput;
 import com.ingot.cloud.iam.domain.organization.OrganizationMemberPickerScene;
 import com.ingot.cloud.iam.domain.organization.TenantMemberCreateInput;
@@ -171,6 +173,10 @@ import com.ingot.cloud.iam.domain.shared.SelectionPurpose;
 import com.ingot.cloud.iam.domain.shared.VersionInput;
 import com.ingot.cloud.iam.domain.tenant.TenantCreateInput;
 import com.ingot.cloud.iam.domain.tenant.TenantPreviewResult;
+import com.ingot.framework.authorization.SdkAuthorizationException;
+import com.ingot.framework.authorization.field.FieldBindingRegistry;
+import com.ingot.framework.authorization.field.FieldInputCollector;
+import com.ingot.framework.commons.annotation.field.FieldUse;
 import com.ingot.framework.commons.model.iam.AssignmentDurationMode;
 import com.ingot.framework.commons.model.iam.AuthorizationCandidatePage;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
@@ -178,6 +184,7 @@ import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.DelegationInput;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.ResourceFieldContext;
@@ -236,6 +243,26 @@ class IamAuthorizationContractTest {
             assertNotNull(input);
             return mapper.readValue(input, type);
         }
+    }
+
+    @Test
+    void tenantMemberRejoinAcceptsVersionAsPublicKey() {
+        var registry = new FieldBindingRegistry(mapper);
+        assertDoesNotThrow(() -> registry.register(TenantMemberRejoinInput.class, MemberResources.TENANT_MEMBER,
+                IamAction.VALUE_TENANT_MEMBER_CREATE, FieldUse.WRITE));
+    }
+
+    @Test
+    void tenantMemberFilterAcceptsDepartmentAndStatusPublicKeys() throws Exception {
+        var registry = new FieldBindingRegistry(mapper);
+        var plan = registry.register(TenantMemberFilter.class, MemberResources.TENANT_MEMBER,
+                IamAction.VALUE_TENANT_MEMBER_READ, FieldUse.FILTER);
+        assertDoesNotThrow(() -> FieldInputCollector.collect(
+                mapper.readTree("{\"page\":\"1\",\"pageSize\":\"20\",\"departmentId\":\"1001103\"}"), plan));
+        assertDoesNotThrow(() -> FieldInputCollector.collect(
+                mapper.readTree("{\"page\":\"1\",\"pageSize\":\"20\",\"status\":\"ACTIVE\"}"), plan));
+        assertThrows(SdkAuthorizationException.class, () -> FieldInputCollector.collect(
+                mapper.readTree("{\"unknown\":\"1\"}"), plan));
     }
 
     @Test

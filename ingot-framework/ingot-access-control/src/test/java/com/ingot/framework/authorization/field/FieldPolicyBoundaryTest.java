@@ -1,7 +1,5 @@
 package com.ingot.framework.authorization.field;
 
-import com.ingot.cloud.iam.domain.organization.MemberResources;
-
 import java.time.Instant;
 import java.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 1.0.0
  */
 class FieldPolicyBoundaryTest {
-    private static final ResourceKey RESOURCE = MemberResources.PLATFORM_MEMBER;
-    private static final String READ = IamAction.VALUE_PLATFORM_MEMBER_READ;
+    private static final ResourceKey RESOURCE = new ResourceKey(AuthorizationDomain.PLATFORM, "test", "members");
+    private static final String READ = "test:members:read";
     private static final String SECRET = "manifest-test-secret-at-least-32-bytes";
 
     @Test

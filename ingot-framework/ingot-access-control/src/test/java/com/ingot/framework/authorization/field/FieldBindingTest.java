@@ -1,10 +1,5 @@
 package com.ingot.framework.authorization.field;
 
-import com.ingot.cloud.iam.application.organization.model.TenantMemberFilter;
-import com.ingot.cloud.iam.application.organization.model.TenantMemberRejoinInput;
-import com.ingot.cloud.iam.domain.organization.MemberResources;
-import com.ingot.cloud.iam.domain.policy.MemberFieldKey;
-
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 1.0.0
  */
 class FieldBindingTest {
-    private static final String PHONE = MemberFieldKey.VALUE_PHONE;
+    private static final String PHONE = "phone";
     private static final ResourceKey RESOURCE = new ResourceKey(AuthorizationDomain.PLATFORM, "test", "members");
     private static final String READ = "test:members:read";
     private static final String WRITE = "test:members:update";
@@ -71,24 +66,6 @@ class FieldBindingTest {
         assertThrows(IllegalArgumentException.class, () -> registry.register(Unclassified.class, RESOURCE, READ, FieldUse.READ));
         assertThrows(IllegalArgumentException.class, () -> registry.register(Conflict.class, RESOURCE, READ, FieldUse.READ));
         assertThrows(IllegalArgumentException.class, () -> registry.register(Duplicate.class, RESOURCE, WRITE, FieldUse.WRITE));
-    }
-
-    @Test
-    void tenantMemberRejoinAcceptsVersionAsPublicKey() {
-        assertDoesNotThrow(() -> registry.register(TenantMemberRejoinInput.class, MemberResources.TENANT_MEMBER,
-                IamAction.VALUE_TENANT_MEMBER_CREATE, FieldUse.WRITE));
-    }
-
-    @Test
-    void tenantMemberFilterAcceptsDepartmentAndStatusPublicKeys() throws Exception {
-        var plan = registry.register(TenantMemberFilter.class, MemberResources.TENANT_MEMBER,
-                IamAction.VALUE_TENANT_MEMBER_READ, FieldUse.FILTER);
-        assertDoesNotThrow(() -> FieldInputCollector.collect(
-                mapper.readTree("{\"page\":\"1\",\"pageSize\":\"20\",\"departmentId\":\"1001103\"}"), plan));
-        assertDoesNotThrow(() -> FieldInputCollector.collect(
-                mapper.readTree("{\"page\":\"1\",\"pageSize\":\"20\",\"status\":\"ACTIVE\"}"), plan));
-        assertThrows(SdkAuthorizationException.class, () -> FieldInputCollector.collect(
-                mapper.readTree("{\"unknown\":\"1\"}"), plan));
     }
 
     @Test

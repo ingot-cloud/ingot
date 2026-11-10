@@ -25,6 +25,7 @@
 
 本轮已验收归档：
 
+- [IAM 历史代码清理、职责分层与命名重构](../archive/2026/20261107-iam-legacy-cleanup-package-refactor/README.md)（completed，2026-11-10）
 - [IAM SQL 防火墙兼容性检查与修复](../archive/2026/20261107-iam-member-groups-wall-filter/README.md)（completed，2026-11-10）
 - [IAM 登录后接口现场与发布验收](../archive/2026/20261110-iam-post-login-release-acceptance/README.md)（completed，2026-11-10）
 - [IAM 登录后接口提速与场景提示](../archive/2026/20261109-iam-post-login-read-performance/README.md)（completed，2026-11-10）

@@ -51,3 +51,9 @@ CatalogFacade、PlatformRoleFacade、PlatformAssignmentFacade、TenantAssignment
 RoleVersionApplication 更名覆盖 HTTP 控制器、持久化实体/Mapper/Repository/投影和发布输入；表名、路由、operationId、事件 TYPE、配置键及指标名保持原协议。原校验消息键保留，因为其属于既有模板，不是 Java 类型引用。
 
 关联前端退出150个专用文件，包含 platform 旧配置/用户/组织和 org 旧 contacts 调用子图，以及无消费者的公共 PMS 查询；变更记录在 ingot-admin 的 20261107-base-iam-legacy-cleanup。
+
+## P7 成员资料字段回显
+
+详情 GET 在读取准入后，对成员更新操作取得一次本地授权预览，按当前租户、实际成员及其真实部门校验对象范围，使用与写入一致的字段策略求值。详情可见、对象允许更新、写字段存在且允许编辑时才回显 `editable=true`。预览拒绝、缺失或到期时沿用已有读取投影，字段回显为只读。
+
+保存 PATCH 在原事务内继续校验实际提交字段，成功响应使用本次通过的写授权决定生成编辑提示。保存前的内部读取、列表、导出、平台端及读取脱敏沿用现有路径。HTTP 结构、数据库、事务与缓存契约保持兼容。

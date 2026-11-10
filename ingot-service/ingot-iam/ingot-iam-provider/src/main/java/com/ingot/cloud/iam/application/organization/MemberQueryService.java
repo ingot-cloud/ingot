@@ -9,13 +9,17 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.application.assignment.PlatformAssignmentFacade;
 import com.ingot.cloud.iam.application.authorization.extension.RoleFieldPermissionService;
 import com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders;
+import com.ingot.cloud.iam.application.shared.model.ObjectCapability;
+import com.ingot.framework.authorization.AuthorizationAccess;
 import com.ingot.framework.authorization.FieldPolicyProcessor;
 import com.ingot.framework.authorization.SdkAuthorizationException;
+import com.ingot.framework.commons.model.iam.extension.AuthorizationDecision;
 import com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision;
 import com.ingot.framework.commons.model.iam.extension.ResourceKey;
 import com.ingot.framework.commons.model.iam.extension.ScopeTarget;
@@ -74,6 +78,8 @@ public class MemberQueryService {
     private final RoleFieldPermissionService platformFields;
 
     private final IamAccess access;
+
+    private final AuthorizationAccess authorization;
 
     private final ResourceScopeAccessService scopes;
 
@@ -388,7 +394,7 @@ public class MemberQueryService {
     }
 
     /**
-     * 读取当前域成员详情。
+     * 读取当前域成员详情，租户资料的编辑提示按目标的更新策略计算。
      * @param domain 接口管理域
      * @param memberId 成员 ID
      * @return 安全投影
@@ -400,7 +406,8 @@ public class MemberQueryService {
         scopes.requireVisibleMember(actor.context(),
                 domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ,
                 id);
-        return load(domain, actor, id);
+        return load(domain, actor, id, () -> authorization.preview(BuiltinResourceProviders.TENANT_MEMBER_RESOURCE,
+                IamAction.VALUE_TENANT_MEMBER_UPDATE));
     }
 
     /**
@@ -506,6 +513,16 @@ public class MemberQueryService {
     }
 
     ResourceDetail<MemberRecord> load(AuthorizationDomain domain, ActiveIdentity actor, long memberId) {
+        return load(domain, actor, memberId, null);
+    }
+
+    ResourceDetail<MemberRecord> loadAfterUpdate(AuthorizationDomain domain, ActiveIdentity actor, long memberId,
+            AuthorizationDecision writeDecision) {
+        return load(domain, actor, memberId, () -> writeDecision);
+    }
+
+    private ResourceDetail<MemberRecord> load(AuthorizationDomain domain, ActiveIdentity actor, long memberId,
+            Supplier<AuthorizationDecision> writeDecision) {
         if (domain == AuthorizationDomain.PLATFORM) {
             IamPlatformMemberEntity row = members.findPlatform(memberId);
             if (row == null) {
@@ -529,12 +546,33 @@ public class MemberQueryService {
         List<MemberDepartmentView> departments = members.departmentViews(tenantId, List.of(row.getId()))
             .getOrDefault(row.getId(), List.of());
         MemberRecord raw = tenantMemberDetail(row, departments);
-        var snapshot = fields.snapshot(tenantId, com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
+        var snapshot = fields.snapshot(tenantId, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
         var caps = capabilities.snapshot(actor.context());
         var batch = fields.prepare(snapshot, viewerId, List.of(row.getId().longValueExact()));
-        var rowCapabilities = capabilities.tenantMembers(caps, List.of(raw)).get(raw.id());
-        return detail(batch, rowCapabilities == null ? Map.of() : rowCapabilities, raw,
-                version(row.getVersion()), true);
+        var rowCapabilities = capabilities.tenantMembers(caps, List.of(raw)).getOrDefault(raw.id(), Map.of());
+        Map<String, FieldAccess> writeFields = null;
+        if (writeDecision != null) {
+            var target = new ScopeTarget(raw.id(), raw.id(), actor.context().tenantId(),
+                    departments.stream().map(MemberDepartmentView::id).toList());
+            writeFields = tenantUpdateAllowed(rowCapabilities) ? tenantWriteFields(writeDecision, target) : Map.of();
+        }
+        return detail(batch, rowCapabilities, raw, version(row.getVersion()), true, writeFields);
+    }
+
+    private Map<String, FieldAccess> tenantWriteFields(Supplier<AuthorizationDecision> writeDecision, ScopeTarget target) {
+        try {
+            var decision = writeDecision.get();
+            authorization.requireTarget(decision, IamAction.VALUE_TENANT_MEMBER_UPDATE, target);
+            var policy = FieldPolicyProcessor.forAction(decision, IamAction.VALUE_TENANT_MEMBER_UPDATE);
+            return FieldPolicyProcessor.access(policy, target);
+        }
+        catch (BizException exception) {
+            var code = exception.getCode();
+            if (IamReasonCode.ACTION_DENIED.getCode().equals(code)
+                    || IamReasonCode.AUTHORIZATION_UNAVAILABLE.getCode().equals(code))
+                return Map.of();
+            throw exception;
+        }
     }
 
     private ResourceDetail<MemberRecord> detail(FieldPolicySnapshot snapshot, ObjectCapabilities.Snapshot caps,
@@ -553,18 +591,22 @@ public class MemberQueryService {
         List<ResourceDetail<MemberRecord>> items = new ArrayList<>();
         for (int index = 0; index < raws.size(); index++) {
             items.add(detail(batch, rowCapabilities.get(raws.get(index).id()), raws.get(index), versions.get(index),
-                    false));
+                    false, null));
         }
         return items;
     }
 
     private ResourceDetail<MemberRecord> detail(FieldAccessEvaluator.FieldBatch batch,
-            Map<String, com.ingot.cloud.iam.application.shared.model.ObjectCapability> targetCapabilities, MemberRecord raw,
-            String version, boolean retainTimes) {
-        var update = targetCapabilities.get(IamAction.VALUE_TENANT_MEMBER_UPDATE);
-        var access = fields.memberAccess(batch, IamIds.require(raw.id())).entrySet().stream().collect(java.util.stream.Collectors.toMap(
-                Map.Entry::getKey, entry -> new com.ingot.framework.commons.model.iam.FieldAccess(entry.getValue().visibility(),
-                        entry.getValue().editable() && update != null && update.allowed())));
+            Map<String, ObjectCapability> targetCapabilities, MemberRecord raw, String version, boolean retainTimes,
+            Map<String, FieldAccess> writeFields) {
+        boolean canUpdate = tenantUpdateAllowed(targetCapabilities);
+        Map<String, FieldAccess> access = new LinkedHashMap<>();
+        fields.memberAccess(batch, IamIds.require(raw.id())).forEach((key, read) -> {
+            var write = writeFields == null ? read : writeFields.getOrDefault(key, HIDDEN_FIELD);
+            boolean editable = canUpdate && read.visibility() != FieldVisibility.HIDDEN
+                    && write.visibility() != FieldVisibility.HIDDEN && write.editable();
+            access.put(key, new FieldAccess(read.visibility(), editable));
+        });
         if (retainTimes) {
             var readonly = new FieldAccess(FieldVisibility.FULL, false);
             access.put(MemberTimeFields.JOINED_AT, readonly);
@@ -573,6 +615,11 @@ public class MemberQueryService {
         }
         return ResourceDetailFactory.of(fields.project(raw, access, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, batch.snapshot().masks()),
                 access, targetCapabilities, version);
+    }
+
+    private boolean tenantUpdateAllowed(Map<String, ObjectCapability> capabilities) {
+        var update = capabilities.get(IamAction.VALUE_TENANT_MEMBER_UPDATE);
+        return update != null && update.allowed();
     }
 
     private ResourceDetail<MemberRecord> platformDetail(FieldPolicyDecision policy, FieldPolicyDecision writePolicy,

@@ -20,6 +20,10 @@
 
 ## Provider 职责边界
 
+`ingot-iam-api` 提供 Feign RPC、传输模型及消费端装配。`ingot-commons` 提供跨模块复用的 IAM 契约和枚举。IAM 专用业务模型、持久化实体和映射位于 `ingot-iam-provider`。
+
+Provider 由 `com.ingot.cloud.iam.InIamApplication` 启动并扫描模块根包。外部 HTTP 和内部 RPC 在 `interfaces`，用例编排在 `application`，领域规则在 `domain`，数据库、缓存及外部集成适配在 `infrastructure`。固定角色版本的批量应用由 `application.roleapplication` 编排。
+
 `MemberFacade` 聚合成员用例，读取和投影由 `MemberQueryService` 处理，成员资料、创建和角色变更由 `MemberProfileCommandService` 处理。普通持久化读取进入 `MemberQueryRepository`，写入、行锁和关系变更进入 `MemberWriteRepository`。目录仓储按应用、资源、操作、菜单、套餐和跨表清理分工。字段策略持久化由 `FieldPolicyRepository` 承担，`FieldPolicySnapshotLoader` 加载快照，`FieldAccessEvaluator` 负责授权求值。
 
 成员主部门辅助列`primary_member_id`仅在主标记成立时取成员ID，否则为NULL；部门主负责人辅助列`primary_department_id`同理取部门ID。配套租户唯一索引保证至多一个主关系；非空集合需要恰好一个主关系等完整规则由事务服务保证，辅助列不接受应用写入。

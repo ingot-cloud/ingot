@@ -12,6 +12,7 @@ import com.ingot.cloud.iam.infrastructure.persistence.MemberRepository;
 import com.ingot.cloud.iam.application.policy.FieldAccessEvaluator;
 import com.ingot.cloud.iam.application.authorization.IamAccess;
 import com.ingot.cloud.iam.application.audit.AuthorizationAuditWriter;
+import com.ingot.framework.authorization.AuthorizationAccess;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -43,7 +44,8 @@ public final class MemberFacadeFixture {
             com.ingot.framework.authorization.field.FieldProjectionEngine projection,
             IamImageBinding images,
             com.ingot.framework.authorization.field.FieldWriteExecutor fieldWrites) {
-        var queries = new MemberQueryService(platformFields, access, scopes, capabilities, fields, members, groups, assignments);
+        var queries = new MemberQueryService(platformFields, access, org.mockito.Mockito.mock(AuthorizationAccess.class),
+                scopes, capabilities, fields, members, groups, assignments);
         var commands = new MemberProfileCommandService(platformFields, projection, fieldWrites, access, scopes, audits, members, assignments, groupCommands, transactionManager, images, queries);
         return new MemberFacade(queries, commands);
     }
