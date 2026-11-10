@@ -14,7 +14,6 @@
 
 
 - [IAM 共享目录版本校验与长缓存](./20261109-iam-versioned-shared-catalog-cache/README.md)（validating，合并直查及隔离对照通过，待目标环境验收）
-- [IAM 应用开通批量查询与操作目录缓存](./20261109-iam-entitlement-batch-action-catalog-cache/README.md)（validating，开通与人群批量查询待发布验收，短缓存由后续直查替代）
 - [同源双入口目标环境发布验收](./20261031-security-same-origin-release-acceptance/README.md)（draft；原实现已本地验收归档，实际环境证据单列）
 - [IAM 多租户身份与访问管理重构](./20260912-iam-identity-access-management/README.md)（implementing；主变更状态以其 README 为准，旧 PMS 迁移已退出必需范围）
 - [DataScope SQL 谓词规模升级](./20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
@@ -23,6 +22,7 @@
 
 本轮已验收归档：
 
+- [IAM 应用开通批量查询与操作目录缓存](../archive/2026/20261109-iam-entitlement-batch-action-catalog-cache/README.md)（completed，2026-11-10）
 - [IAM 历史代码清理、职责分层与命名重构](../archive/2026/20261107-iam-legacy-cleanup-package-refactor/README.md)（completed，2026-11-10）
 - [IAM SQL 防火墙兼容性检查与修复](../archive/2026/20261107-iam-member-groups-wall-filter/README.md)（completed，2026-11-10）
 - [IAM 登录后接口现场与发布验收](../archive/2026/20261110-iam-post-login-release-acceptance/README.md)（completed，2026-11-10）

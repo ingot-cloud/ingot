@@ -25,8 +25,8 @@
 
 ## 关联规格
 
-- [首期缓存与批量查询](../20261109-iam-entitlement-batch-action-catalog-cache/README.md)
-- [首期隔离实测](../20261109-iam-entitlement-batch-action-catalog-cache/VALIDATION.md)
+- [首期批量查询归档](../../archive/2026/20261109-iam-entitlement-batch-action-catalog-cache/README.md)
+- [首期隔离实测与批量查询现场验收](../../archive/2026/20261109-iam-entitlement-batch-action-catalog-cache/VALIDATION.md)
 - [租户即时授权](../../../current/iam/tenant-live-authorization/SPEC.md)
 - [平台读取性能](../../../current/iam/platform-read-performance/SPEC.md)
 - [数据库持久化](../../../current/iam/database-persistence/SPEC.md)

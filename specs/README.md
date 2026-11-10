@@ -191,8 +191,6 @@ current/<domain>/<capability>/
 
 - [IAM 共享目录版本校验与长缓存](./changes/active/20261109-iam-versioned-shared-catalog-cache/README.md)（validating，合并直查及隔离对照通过，待目标环境验收）
 
-- [IAM 应用开通批量查询与操作目录缓存](./changes/active/20261109-iam-entitlement-batch-action-catalog-cache/README.md)（validating，开通与人群批量查询待发布验收，短缓存由后续直查替代）
-
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
 
 - [IAM 多租户身份与访问管理重构](./changes/active/20260912-iam-identity-access-management/README.md)（implementing；全新系统授权补齐、框架复用与平台登录契约，历史迁移退出范围）
@@ -202,6 +200,7 @@ current/<domain>/<capability>/
 
 ### 2026-11-10 归档
 
+- [IAM 应用开通批量查询与操作目录缓存](./changes/archive/2026/20261109-iam-entitlement-batch-action-catalog-cache/README.md)（completed，开通与人群批量查询通过本机验收，短缓存由后续直查替代）
 - [租户即时授权实际库发布验收](./changes/archive/2026/20261106-iam-tenant-live-authorization-release/README.md)（cancelled，按新库首次部署，无数据迁移）
 - [IAM 历史代码清理、职责分层与命名重构](./changes/archive/2026/20261107-iam-legacy-cleanup-package-refactor/README.md)（completed，本机 P7 和 A09 验收通过）
 - [IAM SQL 防火墙兼容性检查与修复](./changes/archive/2026/20261107-iam-member-groups-wall-filter/README.md)（completed，本机真实会话复测通过）

@@ -10,3 +10,4 @@
 - [角色版本应用规则](../role-version-application/SPEC.md)
 - [平台组列表和登录后接口实现档案](../../../changes/archive/2026/20261109-iam-post-login-read-performance/README.md)
 - [平台组首屏和授权分层缓存现场验收](../../../changes/archive/2026/20261110-iam-post-login-release-acceptance/VALIDATION.md)
+- [租户会话的应用开通与人群查询预算](../tenant-live-authorization/SPEC.md#普通成员的应用开通与人群)
