@@ -1,0 +1,255 @@
+{
+  "fixture": {
+    "assignmentRows": 120,
+    "directRows": 60,
+    "delegatedRows": 60,
+    "volumeRows": 100000,
+    "warmup": 6,
+    "samples": 15,
+    "countsIncludeCtes": true
+  },
+  "before": [
+    {
+      "path": "/v1/tenant/members/context",
+      "p95Ms": 68.476125,
+      "p50Ms": 43.224666,
+      "meanSqlMs": 5.929373333333333,
+      "meanRows": 243.0,
+      "meanSelects": 73.0,
+      "responseSha256": "07cfc804e28534f4c98077578f35ef76a53afec25dfb751de662b5fba296894f"
+    },
+    {
+      "path": "/v1/tenant/assignments?pageSize=1",
+      "p95Ms": 16.928666,
+      "p50Ms": 11.701375,
+      "meanSqlMs": 2.6479733333333324,
+      "meanRows": 676.0,
+      "meanSelects": 15.0,
+      "responseSha256": "1bab4e32e4ae3cdebe998c4397bc0584402f3bad4ce907e4560882665484ba9f"
+    },
+    {
+      "path": "/v1/tenant/assignments?pageSize=20",
+      "p95Ms": 126.021958,
+      "p50Ms": 99.071834,
+      "meanSqlMs": 21.911960000000004,
+      "meanRows": 917.0,
+      "meanSelects": 208.0,
+      "responseSha256": "fd1f9af371e607784b1fd9df76ab9ef02d04eb89e06d34b1c0ea74be7098487f"
+    },
+    {
+      "path": "/v1/tenant/assignments?pageSize=100",
+      "p95Ms": 440.951125,
+      "p50Ms": 357.04575,
+      "meanSqlMs": 73.43576666666667,
+      "meanRows": 1917.0,
+      "meanSelects": 1008.0,
+      "responseSha256": "ccd4dec5d4b2ab1d64da0b5744dc5d09c4393afbb92cf70ca439776568c4f773"
+    },
+    {
+      "path": "/v1/tenant/assignments?pageSize=100&page=2",
+      "p95Ms": 94.711875,
+      "p50Ms": 74.468833,
+      "meanSqlMs": 16.689933333333343,
+      "meanRows": 1017.0,
+      "meanSelects": 208.0,
+      "responseSha256": "453efcb59748c1e4e759df80b9c1e1700cc1690ba325c8c1426e31848891ea69"
+    }
+  ],
+  "after": [
+    {
+      "p95Ms": 22.573542,
+      "p50Ms": 19.192625,
+      "meanSqlMs": 3.142373333333333,
+      "meanRows": 188.0,
+      "meanSelects": 15.0,
+      "path": "/v1/tenant/members/context",
+      "responseSha256": "07cfc804e28534f4c98077578f35ef76a53afec25dfb751de662b5fba296894f"
+    },
+    {
+      "p95Ms": 12.365958,
+      "p50Ms": 10.64625,
+      "meanSqlMs": 1.9855200000000006,
+      "meanRows": 313.0,
+      "meanSelects": 14.0,
+      "path": "/v1/tenant/assignments?pageSize=1",
+      "responseSha256": "1bab4e32e4ae3cdebe998c4397bc0584402f3bad4ce907e4560882665484ba9f"
+    },
+    {
+      "p95Ms": 17.070625,
+      "p50Ms": 15.480791,
+      "meanSqlMs": 4.220246666666666,
+      "meanRows": 397.0,
+      "meanSelects": 16.0,
+      "path": "/v1/tenant/assignments?pageSize=20",
+      "responseSha256": "fd1f9af371e607784b1fd9df76ab9ef02d04eb89e06d34b1c0ea74be7098487f"
+    },
+    {
+      "p95Ms": 29.222334,
+      "p50Ms": 16.617167,
+      "meanSqlMs": 4.691366666666666,
+      "meanRows": 717.0,
+      "meanSelects": 16.0,
+      "path": "/v1/tenant/assignments?pageSize=100",
+      "responseSha256": "ccd4dec5d4b2ab1d64da0b5744dc5d09c4393afbb92cf70ca439776568c4f773"
+    },
+    {
+      "p95Ms": 14.694875,
+      "p50Ms": 13.030625,
+      "meanSqlMs": 3.9054333333333338,
+      "meanRows": 397.0,
+      "meanSelects": 16.0,
+      "path": "/v1/tenant/assignments?pageSize=100&page=2",
+      "responseSha256": "453efcb59748c1e4e759df80b9c1e1700cc1690ba325c8c1426e31848891ea69"
+    }
+  ],
+  "fieldDigestsBefore": [
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT ? AS `category` , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `default_revision_id` ) , ? ) ) AS `token` FROM `iam_field_policy` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `revision` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_default_policy_revision` UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_department` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_tenant_group` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_tenant_member` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_tenant_app_entitlement` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `application_id` ) , ? ) ) FROM `iam_app_audience` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( `m` ."
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `resource_id` , `field_key` , `viewer_selector_id` , `target_scope` , `scope_bindings` , `visibility` FROM `iam_field_rule` WHERE ( `tenant_id` = ? AND `resource_id` = ? ) ORDER BY `id` ASC"
+    },
+    {
+      "executionsPerRequest": 17.0,
+      "digest": "SELECT `id` , `application_id` , CODE , NAME , `scope_capabilities` , `field_capabilities` , `field_policy` , `enabled` , `version` FROM `iam_resource` WHERE ( `application_id` = ? AND CODE = ? )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `tenant_id` , `resource_id` , `default_revision_id` , `version` , `operation_rules` FROM `iam_field_policy` WHERE ( `tenant_id` = ? AND `resource_id` = ? )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `id` , `resource_id` , `kind` , `revision` , DEFINITION FROM `iam_default_policy_revision` WHERE ( `kind` = ? AND `resource_id` = ? ) ORDER BY `revision` DESC , `id` DESC"
+    },
+    {
+      "executionsPerRequest": 4.0,
+      "digest": "SELECT `member_id` , `department_id` FROM `iam_member_department` WHERE ( `tenant_id` = ? AND `member_id` IN (...) )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `a` . `version` AS `account_version` , `m` . `version` AS `member_version` , `t` . `version` AS `tenant_version` , `m` . `id` AS `member_id` FROM `iam_account` `a` JOIN `iam_tenant_member` `m` ON `m` . `account_id` = `a` . `id` JOIN `iam_tenant` `t` ON `t` . `id` = `m` . `tenant_id` WHERE `a` . `id` = ? AND `m` . `tenant_id` = ? AND `a` . `enabled` = TRUE AND `a` . `deleted_at` IS NULL AND `m` . `status` = ? AND `t` . `enabled` = TRUE AND `t` . `deleted_at` IS NULL AND `m` . `id` = ?"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `t` . `owner_member_id` , `t` . `version` , `m` . `version` AS `member_version` , `a` . `version` AS `account_version` FROM `iam_tenant` `t` JOIN `iam_tenant_member` `m` ON `m` . `tenant_id` = `t` . `id` JOIN `iam_account` `a` ON `a` . `id` = `m` . `account_id` WHERE `t` . `id` = ? AND `m` . `id` = ? AND `t` . `enabled` = TRUE AND `t` . `deleted_at` IS NULL AND `m` . `status` = ? AND `a` . `enabled` = TRUE AND `a` . `deleted_at` IS NULL"
+    },
+    {
+      "executionsPerRequest": 17.0,
+      "digest": "SELECT `id` , CODE , `domain` , NAME , DESCRIPTION , `icon` , `sort_order` , `baseline` , `enabled` , `version` FROM `iam_application` WHERE ( `domain` = ? AND CODE = ? )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `a` . `must_change_password` FROM `iam_account` `a` JOIN `iam_tenant_member` `m` ON `m` . `account_id` = `a` . `id` WHERE `m` . `id` = ? AND `m` . `tenant_id` = ? AND `m` . `status` = ? AND `a` . `enabled` = TRUE AND `a` . `deleted_at` IS NULL"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `a` . `id` AS `action_id` , `a` . `code` AS `action_code` , `a` . `name` AS `action_name` , `app` . `id` AS `application_id` , `app` . `name` AS `application_name` , `r` . `id` AS `resource_id` , `r` . `name` AS `resource_name` , ( `a` . `enabled` AND `app` . `enabled` AND `r` . `enabled` ) AS `enabled` , `r` . `scope_capabilities` , `a` . `version` AS `action_version` , `app` . `version` AS `application_version` , `r` . `version` AS `resource_version` FROM `iam_action` `a` JOIN `iam_application` `app` ON `app` . `id` = `a` . `application_id` JOIN `iam_resource` `r` ON `r` . `id` = `a` . `resource_id` AND `r` . `application_id` = `app` . `id` WHERE `app` . `domain` = ? AND `app` . `enabled` = TRUE AND `r` . `enabled` = TRUE AND `a` . `enabled` = TRUE AND EXISTS ( SELECT ? FROM `iam_tenant_app_entitlement` `e` WHERE `e` . `tenant_id` = ? AND `e` . `application_id` = `app` . `id` AND `e` . `enabled` = TRUE AND ( `e` . `valid_from` IS NULL OR `e` . `valid_from` <= NOW (?) ) AND ( `e` . `valid_until` IS NULL OR `e` ."
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `id` , `resource_id` , `kind` , `revision` , DEFINITION FROM `iam_default_policy_revision` WHERE ( `id` = ? AND `kind` = ? )"
+    },
+    {
+      "executionsPerRequest": 17.0,
+      "digest": "SELECT `id` , CODE , `domain` , NAME , DESCRIPTION , `icon` , `sort_order` , `baseline` , `enabled` , `version` FROM `iam_application` WHERE `id` IN (...)"
+    },
+    {
+      "executionsPerRequest": 8.0,
+      "digest": "SELECT COUNT ( * ) FROM `iam_tenant` `t` JOIN `iam_tenant_member` `m` ON `m` . `tenant_id` = `t` . `id` AND `m` . `id` = `t` . `owner_member_id` JOIN `iam_account` `a` ON `a` . `id` = `m` . `account_id` WHERE `t` . `id` = ? AND `m` . `id` = ? AND `t` . `enabled` = TRUE AND `t` . `deleted_at` IS NULL AND `m` . `status` = ? AND `a` . `enabled` = TRUE AND `a` . `deleted_at` IS NULL"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `app` . `id` , `app` . `code` , `app` . `name` , `app` . `icon` , `app` . `sort_order` , CASE WHEN COUNT ( * ) > COUNT ( `e` . `valid_until` ) THEN ? ELSE MIN ( `e` . `valid_until` ) END AS `expires_at` FROM `iam_application` `app` JOIN `iam_tenant_app_entitlement` `e` ON `e` . `application_id` = `app` . `id` WHERE `app` . `domain` = ? AND `app` . `enabled` = TRUE AND `e` . `tenant_id` = ? AND `e` . `enabled` = TRUE AND ( `e` . `valid_from` IS NULL OR `e` . `valid_from` <= NOW (?) ) AND ( `e` . `valid_until` IS NULL OR `e` . `valid_until` > NOW (?) ) GROUP BY `app` . `id` , `app` . `code` , `app` . `name` , `app` . `icon` , `app` . `sort_order` ORDER BY `app` . `sort_order` , `app` . `id`"
+    }
+  ],
+  "fieldDigestsAfter": [
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT ? AS `category` , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `default_revision_id` ) , ? ) ) AS `token` FROM `iam_field_policy` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `revision` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_default_policy_revision` UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_department` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_tenant_group` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_tenant_member` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `id` ) , ? ) ) FROM `iam_tenant_app_entitlement` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( COUNT ( * ) , ? , COALESCE ( SUM ( `version` ) , ? ) , ? , COALESCE ( MAX ( `application_id` ) , ? ) ) FROM `iam_app_audience` WHERE `tenant_id` = ? UNION ALL SELECT ? , `CONCAT` ( `m` ."
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `resource_id` , `field_key` , `viewer_selector_id` , `target_scope` , `scope_bindings` , `visibility` FROM `iam_field_rule` WHERE ( `tenant_id` = ? AND `resource_id` = ? ) ORDER BY `id` ASC"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `id` , `application_id` , CODE , NAME , `scope_capabilities` , `field_capabilities` , `field_policy` , `enabled` , `version` FROM `iam_resource` WHERE ( `application_id` = ? AND CODE = ? )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `tenant_id` , `resource_id` , `default_revision_id` , `version` , `operation_rules` FROM `iam_field_policy` WHERE ( `tenant_id` = ? AND `resource_id` = ? )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `id` , `resource_id` , `kind` , `revision` , DEFINITION FROM `iam_default_policy_revision` WHERE ( `kind` = ? AND `resource_id` = ? ) ORDER BY `revision` DESC , `id` DESC"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `member_id` , `department_id` FROM `iam_member_department` WHERE ( `tenant_id` = ? AND `member_id` IN (...) )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `a` . `version` AS `account_version` , `m` . `version` AS `member_version` , `t` . `version` AS `tenant_version` , `m` . `id` AS `member_id` FROM `iam_account` `a` JOIN `iam_tenant_member` `m` ON `m` . `account_id` = `a` . `id` JOIN `iam_tenant` `t` ON `t` . `id` = `m` . `tenant_id` WHERE `a` . `id` = ? AND `m` . `tenant_id` = ? AND `a` . `enabled` = TRUE AND `a` . `deleted_at` IS NULL AND `m` . `status` = ? AND `t` . `enabled` = TRUE AND `t` . `deleted_at` IS NULL AND `m` . `id` = ?"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `t` . `owner_member_id` , `t` . `version` , `m` . `version` AS `member_version` , `a` . `version` AS `account_version` FROM `iam_tenant` `t` JOIN `iam_tenant_member` `m` ON `m` . `tenant_id` = `t` . `id` JOIN `iam_account` `a` ON `a` . `id` = `m` . `account_id` WHERE `t` . `id` = ? AND `m` . `id` = ? AND `t` . `enabled` = TRUE AND `t` . `deleted_at` IS NULL AND `m` . `status` = ? AND `a` . `enabled` = TRUE AND `a` . `deleted_at` IS NULL"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `id` , CODE , `domain` , NAME , DESCRIPTION , `icon` , `sort_order` , `baseline` , `enabled` , `version` FROM `iam_application` WHERE ( `domain` = ? AND CODE = ? )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `a` . `must_change_password` FROM `iam_account` `a` JOIN `iam_tenant_member` `m` ON `m` . `account_id` = `a` . `id` WHERE `m` . `id` = ? AND `m` . `tenant_id` = ? AND `m` . `status` = ? AND `a` . `enabled` = TRUE AND `a` . `deleted_at` IS NULL"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `a` . `id` AS `action_id` , `a` . `code` AS `action_code` , `a` . `name` AS `action_name` , `app` . `id` AS `application_id` , `app` . `name` AS `application_name` , `r` . `id` AS `resource_id` , `r` . `name` AS `resource_name` , ( `a` . `enabled` AND `app` . `enabled` AND `r` . `enabled` ) AS `enabled` , `r` . `scope_capabilities` , `a` . `version` AS `action_version` , `app` . `version` AS `application_version` , `r` . `version` AS `resource_version` FROM `iam_action` `a` JOIN `iam_application` `app` ON `app` . `id` = `a` . `application_id` JOIN `iam_resource` `r` ON `r` . `id` = `a` . `resource_id` AND `r` . `application_id` = `app` . `id` WHERE `app` . `domain` = ? AND `app` . `enabled` = TRUE AND `r` . `enabled` = TRUE AND `a` . `enabled` = TRUE AND EXISTS ( SELECT ? FROM `iam_tenant_app_entitlement` `e` WHERE `e` . `tenant_id` = ? AND `e` . `application_id` = `app` . `id` AND `e` . `enabled` = TRUE AND ( `e` . `valid_from` IS NULL OR `e` . `valid_from` <= NOW (?) ) AND ( `e` . `valid_until` IS NULL OR `e` ."
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `id` , `resource_id` , `kind` , `revision` , DEFINITION FROM `iam_default_policy_revision` WHERE ( `id` = ? AND `kind` = ? )"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `id` , CODE , `domain` , NAME , DESCRIPTION , `icon` , `sort_order` , `baseline` , `enabled` , `version` FROM `iam_application` WHERE `id` IN (...)"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT COUNT ( * ) FROM `iam_tenant` `t` JOIN `iam_tenant_member` `m` ON `m` . `tenant_id` = `t` . `id` AND `m` . `id` = `t` . `owner_member_id` JOIN `iam_account` `a` ON `a` . `id` = `m` . `account_id` WHERE `t` . `id` = ? AND `m` . `id` = ? AND `t` . `enabled` = TRUE AND `t` . `deleted_at` IS NULL AND `m` . `status` = ? AND `a` . `enabled` = TRUE AND `a` . `deleted_at` IS NULL"
+    },
+    {
+      "executionsPerRequest": 1.0,
+      "digest": "SELECT `app` . `id` , `app` . `code` , `app` . `name` , `app` . `icon` , `app` . `sort_order` , CASE WHEN COUNT ( * ) > COUNT ( `e` . `valid_until` ) THEN ? ELSE MIN ( `e` . `valid_until` ) END AS `expires_at` FROM `iam_application` `app` JOIN `iam_tenant_app_entitlement` `e` ON `e` . `application_id` = `app` . `id` WHERE `app` . `domain` = ? AND `app` . `enabled` = TRUE AND `e` . `tenant_id` = ? AND `e` . `enabled` = TRUE AND ( `e` . `valid_from` IS NULL OR `e` . `valid_from` <= NOW (?) ) AND ( `e` . `valid_until` IS NULL OR `e` . `valid_until` > NOW (?) ) GROUP BY `app` . `id` , `app` . `code` , `app` . `name` , `app` . `icon` , `app` . `sort_order` ORDER BY `app` . `sort_order` , `app` . `id`"
+    }
+  ],
+  "volume": [
+    {
+      "meanRows": 100275.0,
+      "meanSqlMs": 323.32982499999997,
+      "p95Ms": 370.353,
+      "meanSelects": 16.0,
+      "actor": "owner-a",
+      "path": "/v1/tenant/assignments?pageSize=20",
+      "firstMs": 554.337541,
+      "p99Ms": 397.8355
+    },
+    {
+      "meanRows": 100275.0,
+      "meanSqlMs": 672.19057,
+      "p95Ms": 756.136875,
+      "meanSelects": 16.0,
+      "actor": "owner-a",
+      "path": "/v1/tenant/assignments?pageSize=20&page=4000",
+      "firstMs": 756.152542,
+      "p99Ms": 759.2215
+    }
+  ],
+  "volumePlans": [
+    "-> Aggregate: count(0)  (cost=2501 rows=1) (actual time=301..301 rows=1 loops=1)\n    -> Filter: ((ra.domain = 'TENANT') and (ra.role_id is not null))  (cost=1251 rows=12500) (actual time=1.16..298 rows=100000 loops=1)\n        -> Index lookup on ra using idx_iam_assignment_tenant_member (tenant_id=10)  (cost=1251 rows=50001) (actual time=1.15..293 rows=100000 loops=1)\n",
+    "-> Sort: ra.id  (actual time=402..402 rows=20 loops=1)\n    -> Stream results  (cost=4.28 rows=0) (actual time=402..402 rows=20 loops=1)\n        -> Left hash join (g.id = ra.tenant_group_id), (g.tenant_id = ra.tenant_id)  (cost=4.28 rows=0) (actual time=402..402 rows=20 loops=1)\n            -> Nested loop left join  (cost=329 rows=0) (actual time=402..402 rows=20 loops=1)\n                -> Nested loop inner join  (cost=165 rows=0) (actual time=402..402 rows=20 loops=1)\n                    -> Table scan on d  (cost=1.3 rows=3) (actual time=0.0725..0.122 rows=3 loops=1)\n                    -> Index lookup on ra using <auto_key0> (role_id=d.id)  (cost=1251..1313 rows=219) (actual time=134..134 rows=6.67 loops=3)\n                        -> Materialize  (cost=1251..1251 rows=0) (actual time=402..402 rows=20 loops=1)\n                            -> Limit/Offset: 20/79980 row(s)  (cost=1251 rows=0) (actual time=401..401 rows=20 loops=1)\n                                -> Sort: ra.id, limit input to 80000 row(s) per chunk  (cost=1251 rows=50001) (actual time=390..400 rows=80000 loops=1)\n                                    -> Filter: ((ra.domain = 'TENANT') and (ra.role_id is not null))  (cost=1251 rows=50001) (actual time=0.0124..352 rows=100000 loops=1)\n                                        -> Index lookup on ra using idx_iam_assignment_tenant_member (tenant_id=10)  (cost=1251 rows=50001) (actual time=0.00912..344 rows=100000 loops=1)\n                -> Filter: (m.tenant_id = ra.tenant_id)  (cost=0.25 rows=1) (actual time=784e-6..865e-6 rows=1 loops=20)\n                    -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.25 rows=1) (actual time=609e-6..634e-6 rows=1 loops=20)\n            -> Hash\n                -> Table scan on g  (cost=0.00667 rows=1) (actual time=0.142..0.142 rows=0 loops=1)\n"
+  ]
+}

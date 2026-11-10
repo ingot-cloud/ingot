@@ -1,0 +1,248 @@
+{
+  "intermediatePlanRoots": {
+    "skip-scan": {
+      "first": {
+        "count": "-> Aggregate: count(0)  (cost=1395..1395 rows=1) (actual time=168..168 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=0.169..0.171 rows=20 loops=1)"
+      },
+      "deep": {
+        "count": "-> Aggregate: count(0)  (cost=1395..1395 rows=1) (actual time=166..166 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=129..129 rows=20 loops=1)"
+      },
+      "name-hit": {
+        "count": "-> Aggregate: count(0)  (cost=1395..1395 rows=1) (actual time=291..291 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=0.18..0.182 rows=20 loops=1)"
+      },
+      "name-miss": {
+        "count": "-> Aggregate: count(0)  (cost=1395..1395 rows=1) (actual time=296..296 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=298..298 rows=0 loops=1)"
+      }
+    },
+    "no-skip": {
+      "first": {
+        "count": "-> Aggregate: count(0)  (cost=2501 rows=1) (actual time=258..258 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=0.291..0.293 rows=20 loops=1)"
+      },
+      "deep": {
+        "count": "-> Aggregate: count(0)  (cost=2501 rows=1) (actual time=268..268 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=274..274 rows=20 loops=1)"
+      },
+      "name-hit": {
+        "count": "-> Aggregate: count(0)  (cost=2501 rows=1) (actual time=295..295 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=0.229..0.232 rows=20 loops=1)"
+      },
+      "name-miss": {
+        "count": "-> Aggregate: count(0)  (cost=2501 rows=1) (actual time=291..291 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=217..217 rows=0 loops=1)"
+      }
+    },
+    "cover": {
+      "first": {
+        "count": "-> Aggregate: count(0)  (cost=9147 rows=1) (actual time=17.4..17.4 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=0.257..0.259 rows=20 loops=1)"
+      },
+      "deep": {
+        "count": "-> Aggregate: count(0)  (cost=9147 rows=1) (actual time=18.1..18.1 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=286..286 rows=20 loops=1)"
+      },
+      "name-hit": {
+        "count": "-> Aggregate: count(0)  (cost=9147 rows=1) (actual time=23.7..23.7 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=0.24..0.242 rows=20 loops=1)"
+      },
+      "name-miss": {
+        "count": "-> Aggregate: count(0)  (cost=9147 rows=1) (actual time=19.3..19.3 rows=1 loops=1)",
+        "page": "-> Sort: page_ids.id  (actual time=20..20 rows=0 loops=1)"
+      }
+    }
+  },
+  "deepPageBeforeJoinOrderHint": {
+    "elapsedMs": 286.0,
+    "plan": "-> Sort: page_ids.id  (actual time=286..286 rows=20 loops=1)\n    -> Stream results  (cost=954 rows=0) (actual time=237..286 rows=20 loops=1)\n        -> Nested loop inner join  (cost=954 rows=0) (actual time=237..286 rows=20 loops=1)\n            -> Left hash join (g.id = ra.tenant_group_id), (g.tenant_id = ra.tenant_id)  (cost=39.2 rows=366) (actual time=0.313..242 rows=100000 loops=1)\n                -> Nested loop left join  (cost=168 rows=366) (actual time=0.18..236 rows=100000 loops=1)\n                    -> Nested loop inner join  (cost=39.4 rows=366) (actual time=0.17..203 rows=100000 loops=1)\n                        -> Table scan on d  (cost=0.55 rows=3) (actual time=0.00675..0.109 rows=3 loops=1)\n                        -> Index lookup on ra using idx_iam_assignment_current_role (role_id=d.id)  (cost=4.82 rows=122) (actual time=0.0541..66.4 rows=33333 loops=3)\n                    -> Filter: (m.tenant_id = ra.tenant_id)  (cost=0.25 rows=1) (actual time=167e-6..222e-6 rows=1 loops=100000)\n                        -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.25 rows=1) (actual time=70.1e-6..87.7e-6 rows=1 loops=100000)\n                -> Hash\n                    -> Table scan on g  (cost=0.00739 rows=1) (actual time=0.128..0.128 rows=0 loops=1)\n            -> Covering index lookup on page_ids using <auto_key0> (id=ra.id)  (cost=4648..4650 rows=10) (actual time=360e-6..360e-6 rows=200e-6 loops=100000)\n                -> Materialize  (cost=4647..4647 rows=0) (actual time=16..16 rows=20 loops=1)\n                    -> Limit/Offset: 20/79980 row(s)  (cost=4647 rows=0) (actual time=16..16 rows=20 loops=1)\n                        -> Filter: (ra.role_id is not null)  (cost=4647 rows=45001) (actual time=0.109..14.2 rows=80000 loops=1)\n                            -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.109..10.1 rows=80000 loops=1)\n"
+  },
+  "fixture": {
+    "assignments": 100000,
+    "pageSize": 20,
+    "deepPage": 4000,
+    "httpSamplesPerScenario": 20
+  },
+  "before": {
+    "first": {
+      "http": {
+        "p99Ms": 453.378208,
+        "firstMs": 454.066083,
+        "path": "/v1/tenant/assignments?pageSize=20",
+        "actor": "owner-a",
+        "meanSelects": 16.0,
+        "p95Ms": 420.545792,
+        "meanSqlMs": 355.759715,
+        "meanRows": 100275.0
+      },
+      "statements": {
+        "count": {
+          "elapsedMs": 280.0,
+          "plan": "-> Aggregate: count(0)  (cost=2501 rows=1) (actual time=280..280 rows=1 loops=1)\n    -> Filter: ((ra.domain = 'TENANT') and (ra.role_id is not null))  (cost=1251 rows=12500) (actual time=2.04..277 rows=100000 loops=1)\n        -> Index lookup on ra using idx_iam_assignment_tenant_member (tenant_id=10)  (cost=1251 rows=50001) (actual time=2.03..272 rows=100000 loops=1)\n"
+        },
+        "page": {
+          "elapsedMs": 0.239,
+          "plan": "-> Sort: ra.id  (actual time=0.238..0.239 rows=20 loops=1)\n    -> Stream results  (cost=2.23 rows=10) (actual time=0.202..0.22 rows=20 loops=1)\n        -> Left hash join (g.id = ra.tenant_group_id), (g.tenant_id = ra.tenant_id)  (cost=2.23 rows=10) (actual time=0.195..0.205 rows=20 loops=1)\n            -> Nested loop left join  (cost=25.8 rows=10) (actual time=0.152..0.161 rows=20 loops=1)\n                -> Inner hash join (d.id = ra.role_id)  (cost=4.82 rows=10) (actual time=0.109..0.112 rows=20 loops=1)\n                    -> Table scan on d  (cost=0.0227 rows=3) (actual time=0.00392..0.00513 rows=3 loops=1)\n                    -> Hash\n                        -> Table scan on ra  (cost=1.01..3.06 rows=5) (actual time=0.0915..0.0941 rows=20 loops=1)\n                            -> Materialize  (cost=0.5..0.5 rows=5) (actual time=0.0904..0.0904 rows=20 loops=1)\n                                -> Limit: 20 row(s)  (cost=500e-6 rows=5) (actual time=0.057..0.0658 rows=20 loops=1)\n                                    -> Filter: ((ra.tenant_id = 10) and (ra.domain = 'TENANT') and (ra.role_id is not null))  (cost=500e-6 rows=5) (actual time=0.0567..0.0648 rows=20 loops=1)\n                                        -> Index scan on ra using PRIMARY  (cost=500e-6 rows=40) (actual time=0.0378..0.046 rows=21 loops=1)\n                -> Filter: (m.tenant_id = ra.tenant_id)  (cost=0.502 rows=1) (actual time=0.0019..0.00194 rows=1 loops=20)\n                    -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.502 rows=1) (actual time=0.0018..0.00182 rows=1 loops=20)\n            -> Hash\n                -> Table scan on g  (cost=0.0325 rows=1) (actual time=0.035..0.035 rows=0 loops=1)\n"
+        }
+      }
+    },
+    "deep": {
+      "http": {
+        "p99Ms": 686.346125,
+        "firstMs": 673.521083,
+        "path": "/v1/tenant/assignments?pageSize=20&page=4000",
+        "actor": "owner-a",
+        "meanSelects": 16.0,
+        "p95Ms": 684.774084,
+        "meanSqlMs": 632.349375,
+        "meanRows": 100275.0
+      },
+      "statements": {
+        "count": {
+          "elapsedMs": 285.0,
+          "plan": "-> Aggregate: count(0)  (cost=2501 rows=1) (actual time=285..285 rows=1 loops=1)\n    -> Filter: ((ra.domain = 'TENANT') and (ra.role_id is not null))  (cost=1251 rows=12500) (actual time=2.13..282 rows=100000 loops=1)\n        -> Index lookup on ra using idx_iam_assignment_tenant_member (tenant_id=10)  (cost=1251 rows=50001) (actual time=2.13..276 rows=100000 loops=1)\n"
+        },
+        "page": {
+          "elapsedMs": 377.0,
+          "plan": "-> Sort: ra.id  (actual time=377..377 rows=20 loops=1)\n    -> Stream results  (cost=20.8 rows=0) (actual time=377..377 rows=20 loops=1)\n        -> Left hash join (g.id = ra.tenant_group_id), (g.tenant_id = ra.tenant_id)  (cost=20.8 rows=0) (actual time=377..377 rows=20 loops=1)\n            -> Left hash join (m.id = ra.tenant_member_id), (m.tenant_id = ra.tenant_id)  (cost=2.98 rows=0) (actual time=377..377 rows=20 loops=1)\n                -> Nested loop inner join  (cost=165 rows=0) (actual time=377..377 rows=20 loops=1)\n                    -> Table scan on d  (cost=0.55 rows=3) (actual time=0.00775..0.0115 rows=3 loops=1)\n                    -> Index lookup on ra using <auto_key0> (role_id=d.id)  (cost=1251..1313 rows=219) (actual time=126..126 rows=6.67 loops=3)\n                        -> Materialize  (cost=1251..1251 rows=0) (actual time=377..377 rows=20 loops=1)\n                            -> Limit/Offset: 20/79980 row(s)  (cost=1251 rows=0) (actual time=377..377 rows=20 loops=1)\n                                -> Sort: ra.id, limit input to 80000 row(s) per chunk  (cost=1251 rows=50001) (actual time=366..375 rows=80000 loops=1)\n                                    -> Filter: ((ra.domain = 'TENANT') and (ra.role_id is not null))  (cost=1251 rows=50001) (actual time=0.0414..326 rows=100000 loops=1)\n                                        -> Index lookup on ra using idx_iam_assignment_tenant_member (tenant_id=10)  (cost=1251 rows=50001) (actual time=0.0403..318 rows=100000 loops=1)\n                -> Hash\n                    -> Table scan on m  (cost=0.00544 rows=6) (actual time=0.134..0.141 rows=6 loops=1)\n            -> Hash\n                -> Table scan on g  (cost=0.00531 rows=1) (actual time=0.0647..0.0647 rows=0 loops=1)\n"
+        }
+      }
+    },
+    "name-hit": {
+      "http": {
+        "p99Ms": 849.873083,
+        "firstMs": 794.899667,
+        "path": "/v1/tenant/assignments?pageSize=20&keyword=atch%20prob",
+        "actor": "owner-a",
+        "meanSelects": 16.0,
+        "p95Ms": 835.371667,
+        "meanSqlMs": 711.33783,
+        "meanRows": 400238.0
+      },
+      "statements": {
+        "count": {
+          "elapsedMs": 323.0,
+          "plan": "-> Aggregate: count(0)  (cost=145 rows=1) (actual time=323..323 rows=1 loops=1)\n    -> Filter: ((m.display_name like '%atch prob%' escape '!') or (g.`name` like '%atch prob%' escape '!') or (d.`name` like '%atch prob%' escape '!'))  (cost=139 rows=61) (actual time=0.0923..320 rows=100000 loops=1)\n        -> Nested loop left join  (cost=139 rows=61) (actual time=0.0907..306 rows=100000 loops=1)\n            -> Nested loop left join  (cost=71.4 rows=61) (actual time=0.0893..286 rows=100000 loops=1)\n                -> Nested loop inner join  (cost=39.4 rows=91.5) (actual time=0.0852..256 rows=100000 loops=1)\n                    -> Table scan on d  (cost=0.55 rows=3) (actual time=0.00946..0.0118 rows=3 loops=1)\n                    -> Filter: ((ra.tenant_id = 10) and (ra.domain = 'TENANT'))  (cost=1.77 rows=30.5) (actual time=0.024..84.1 rows=33333 loops=3)\n                        -> Index lookup on ra using idx_iam_assignment_current_role (role_id=d.id)  (cost=1.77 rows=122) (actual time=0.0236..82 rows=33333 loops=3)\n                -> Filter: (m.tenant_id = 10)  (cost=0.251 rows=0.667) (actual time=145e-6..201e-6 rows=1 loops=100000)\n                    -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.251 rows=1) (actual time=63.6e-6..80.9e-6 rows=1 loops=100000)\n            -> Filter: (g.tenant_id = 10)  (cost=1 rows=1) (actual time=122e-6..122e-6 rows=0 loops=100000)\n                -> Single-row index lookup on g using PRIMARY (id=ra.tenant_group_id)  (cost=1 rows=1) (actual time=48.7e-6..48.7e-6 rows=0 loops=100000)\n"
+        },
+        "page": {
+          "elapsedMs": 492.0,
+          "plan": "-> Limit: 20 row(s)  (actual time=492..492 rows=20 loops=1)\n    -> Sort: ra.id, limit input to 20 row(s) per chunk  (actual time=492..492 rows=20 loops=1)\n        -> Stream results  (cost=139 rows=61) (actual time=0.0776..472 rows=100000 loops=1)\n            -> Filter: ((m.display_name like '%atch prob%' escape '!') or (g.`name` like '%atch prob%' escape '!') or (d.`name` like '%atch prob%' escape '!'))  (cost=139 rows=61) (actual time=0.0706..421 rows=100000 loops=1)\n                -> Nested loop left join  (cost=139 rows=61) (actual time=0.0697..405 rows=100000 loops=1)\n                    -> Nested loop left join  (cost=71.4 rows=61) (actual time=0.068..380 rows=100000 loops=1)\n                        -> Nested loop inner join  (cost=39.4 rows=91.5) (actual time=0.063..345 rows=100000 loops=1)\n                            -> Table scan on d  (cost=0.55 rows=3) (actual time=0.00596..0.00879 rows=3 loops=1)\n                            -> Filter: ((ra.tenant_id = 10) and (ra.domain = 'TENANT'))  (cost=1.77 rows=30.5) (actual time=0.0186..114 rows=33333 loops=3)\n                                -> Index lookup on ra using idx_iam_assignment_current_role (role_id=d.id)  (cost=1.77 rows=122) (actual time=0.0182..110 rows=33333 loops=3)\n                        -> Filter: (m.tenant_id = 10)  (cost=0.251 rows=0.667) (actual time=178e-6..236e-6 rows=1 loops=100000)\n                            -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.251 rows=1) (actual time=86e-6..104e-6 rows=1 loops=100000)\n                    -> Filter: (g.tenant_id = 10)  (cost=1 rows=1) (actual time=145e-6..145e-6 rows=0 loops=100000)\n                        -> Single-row index lookup on g using PRIMARY (id=ra.tenant_group_id)  (cost=1 rows=1) (actual time=68.4e-6..68.4e-6 rows=0 loops=100000)\n"
+        }
+      }
+    },
+    "name-miss": {
+      "http": {
+        "p99Ms": 716.815125,
+        "firstMs": 643.827167,
+        "path": "/v1/tenant/assignments?pageSize=20&keyword=missing-assignment",
+        "actor": "owner-a",
+        "meanSelects": 8.0,
+        "p95Ms": 701.862709,
+        "meanSqlMs": 628.1114249999998,
+        "meanRows": 400187.0
+      },
+      "statements": {
+        "count": {
+          "elapsedMs": 337.0,
+          "plan": "-> Aggregate: count(0)  (cost=145 rows=1) (actual time=337..337 rows=1 loops=1)\n    -> Filter: ((m.display_name like '%missing-assignment%' escape '!') or (g.`name` like '%missing-assignment%' escape '!') or (d.`name` like '%missing-assignment%' escape '!'))  (cost=139 rows=61) (actual time=337..337 rows=0 loops=1)\n        -> Nested loop left join  (cost=139 rows=61) (actual time=0.0803..326 rows=100000 loops=1)\n            -> Nested loop left join  (cost=71.4 rows=61) (actual time=0.0786..305 rows=100000 loops=1)\n                -> Nested loop inner join  (cost=39.4 rows=91.5) (actual time=0.075..275 rows=100000 loops=1)\n                    -> Table scan on d  (cost=0.55 rows=3) (actual time=0.00529..0.00829 rows=3 loops=1)\n                    -> Filter: ((ra.tenant_id = 10) and (ra.domain = 'TENANT'))  (cost=1.77 rows=30.5) (actual time=0.0228..90.3 rows=33333 loops=3)\n                        -> Index lookup on ra using idx_iam_assignment_current_role (role_id=d.id)  (cost=1.77 rows=122) (actual time=0.0224..88.1 rows=33333 loops=3)\n                -> Filter: (m.tenant_id = 10)  (cost=0.251 rows=0.667) (actual time=148e-6..204e-6 rows=1 loops=100000)\n                    -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.251 rows=1) (actual time=64.7e-6..82.5e-6 rows=1 loops=100000)\n            -> Filter: (g.tenant_id = 10)  (cost=1 rows=1) (actual time=127e-6..127e-6 rows=0 loops=100000)\n                -> Single-row index lookup on g using PRIMARY (id=ra.tenant_group_id)  (cost=1 rows=1) (actual time=50.1e-6..50.1e-6 rows=0 loops=100000)\n"
+        },
+        "page": {
+          "elapsedMs": 337.0,
+          "plan": "-> Limit: 20 row(s)  (actual time=337..337 rows=0 loops=1)\n    -> Sort: ra.id, limit input to 20 row(s) per chunk  (actual time=337..337 rows=0 loops=1)\n        -> Stream results  (cost=139 rows=61) (actual time=337..337 rows=0 loops=1)\n            -> Filter: ((m.display_name like '%missing-assignment%' escape '!') or (g.`name` like '%missing-assignment%' escape '!') or (d.`name` like '%missing-assignment%' escape '!'))  (cost=139 rows=61) (actual time=337..337 rows=0 loops=1)\n                -> Nested loop left join  (cost=139 rows=61) (actual time=0.0818..324 rows=100000 loops=1)\n                    -> Nested loop left join  (cost=71.4 rows=61) (actual time=0.0801..302 rows=100000 loops=1)\n                        -> Nested loop inner join  (cost=39.4 rows=91.5) (actual time=0.0749..271 rows=100000 loops=1)\n                            -> Table scan on d  (cost=0.55 rows=3) (actual time=0.00721..0.00962 rows=3 loops=1)\n                            -> Filter: ((ra.tenant_id = 10) and (ra.domain = 'TENANT'))  (cost=1.77 rows=30.5) (actual time=0.0222..88.8 rows=33333 loops=3)\n                                -> Index lookup on ra using idx_iam_assignment_current_role (role_id=d.id)  (cost=1.77 rows=122) (actual time=0.0218..86.4 rows=33333 loops=3)\n                        -> Filter: (m.tenant_id = 10)  (cost=0.251 rows=0.667) (actual time=155e-6..210e-6 rows=1 loops=100000)\n                            -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.251 rows=1) (actual time=71.9e-6..89.2e-6 rows=1 loops=100000)\n                    -> Filter: (g.tenant_id = 10)  (cost=1 rows=1) (actual time=132e-6..132e-6 rows=0 loops=100000)\n                        -> Single-row index lookup on g using PRIMARY (id=ra.tenant_group_id)  (cost=1 rows=1) (actual time=57.1e-6..57.1e-6 rows=0 loops=100000)\n"
+        }
+      }
+    }
+  },
+  "after": {
+    "first": {
+      "http": {
+        "p99Ms": 30.588583,
+        "firstMs": 24.495875,
+        "path": "/v1/tenant/assignments?pageSize=20",
+        "actor": "owner-a",
+        "meanSelects": 16.0,
+        "p95Ms": 29.916708,
+        "meanSqlMs": 15.578594999999996,
+        "meanRows": 100295.0
+      },
+      "statements": {
+        "count": {
+          "elapsedMs": 17.2,
+          "plan": "-> Aggregate: count(0)  (cost=9147 rows=1) (actual time=17.2..17.2 rows=1 loops=1)\n    -> Filter: (ra.role_id is not null)  (cost=4647 rows=45001) (actual time=0.104..14.7 rows=100000 loops=1)\n        -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.1..11.1 rows=100000 loops=1)\n"
+        },
+        "page": {
+          "elapsedMs": 0.234,
+          "plan": "-> Sort: page_ids.id  (actual time=0.232..0.234 rows=20 loops=1)\n    -> Stream results  (cost=8.55 rows=40) (actual time=0.206..0.217 rows=20 loops=1)\n        -> Inner hash join (d.id = ra.role_id)  (cost=8.55 rows=40) (actual time=0.195..0.198 rows=20 loops=1)\n            -> Table scan on d  (cost=0.0236 rows=3) (actual time=0.003..0.00454 rows=3 loops=1)\n            -> Hash\n                -> Left hash join (g.id = ra.tenant_group_id), (g.tenant_id = ra.tenant_id)  (cost=2.28 rows=20) (actual time=0.14..0.163 rows=20 loops=1)\n                    -> Nested loop left join  (cost=4666 rows=20) (actual time=0.132..0.153 rows=20 loops=1)\n                        -> Nested loop inner join  (cost=4659 rows=20) (actual time=0.129..0.144 rows=20 loops=1)\n                            -> Table scan on page_ids  (cost=4650..4652 rows=20) (actual time=0.121..0.122 rows=20 loops=1)\n                                -> Materialize  (cost=4649..4649 rows=20) (actual time=0.12..0.12 rows=20 loops=1)\n                                    -> Limit: 20 row(s)  (cost=4647 rows=20) (actual time=0.109..0.112 rows=20 loops=1)\n                                        -> Filter: (ra.role_id is not null)  (cost=4647 rows=45001) (actual time=0.108..0.111 rows=20 loops=1)\n                                            -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.107..0.109 rows=20 loops=1)\n                            -> Single-row index lookup on ra using PRIMARY (id=page_ids.id)  (cost=0.255 rows=1) (actual time=983e-6..994e-6 rows=1 loops=20)\n                        -> Filter: (m.tenant_id = ra.tenant_id)  (cost=0.255 rows=1) (actual time=304e-6..356e-6 rows=1 loops=20)\n                            -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.255 rows=1) (actual time=200e-6..223e-6 rows=1 loops=20)\n                    -> Hash\n                        -> Table scan on g  (cost=0.0181 rows=1) (actual time=0.00271..0.00271 rows=0 loops=1)\n"
+        }
+      }
+    },
+    "deep": {
+      "http": {
+        "p99Ms": 42.540667,
+        "firstMs": 32.807875,
+        "path": "/v1/tenant/assignments?pageSize=20&page=4000",
+        "actor": "owner-a",
+        "meanSelects": 16.0,
+        "p95Ms": 40.794583,
+        "meanSqlMs": 25.443680000000008,
+        "meanRows": 100295.0
+      },
+      "statements": {
+        "count": {
+          "elapsedMs": 16.6,
+          "plan": "-> Aggregate: count(0)  (cost=9147 rows=1) (actual time=16.6..16.6 rows=1 loops=1)\n    -> Filter: (ra.role_id is not null)  (cost=4647 rows=45001) (actual time=0.0902..14.3 rows=100000 loops=1)\n        -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.0895..10.7 rows=100000 loops=1)\n"
+        },
+        "page": {
+          "elapsedMs": 14.6,
+          "plan": "-> Sort: page_ids.id  (actual time=14.5..14.6 rows=20 loops=1)\n    -> Stream results  (cost=77.1 rows=0) (actual time=14.5..14.5 rows=20 loops=1)\n        -> Inner hash join (d.id = ra.role_id)  (cost=77.1 rows=0) (actual time=14.5..14.5 rows=20 loops=1)\n            -> Table scan on d  (cost=0.00111 rows=3) (actual time=0.00396..0.00529 rows=3 loops=1)\n            -> Hash\n                -> Left hash join (g.id = ra.tenant_group_id), (g.tenant_id = ra.tenant_id)  (cost=27.2 rows=0) (actual time=14.5..14.5 rows=20 loops=1)\n                    -> Nested loop left join  (cost=27150 rows=0) (actual time=14.5..14.5 rows=20 loops=1)\n                        -> Nested loop inner join  (cost=15900 rows=0) (actual time=14.5..14.5 rows=20 loops=1)\n                            -> Table scan on page_ids  (cost=4650..4650 rows=0) (actual time=14.4..14.4 rows=20 loops=1)\n                                -> Materialize  (cost=4647..4647 rows=0) (actual time=14.4..14.4 rows=20 loops=1)\n                                    -> Limit/Offset: 20/79980 row(s)  (cost=4647 rows=0) (actual time=14.4..14.4 rows=20 loops=1)\n                                        -> Filter: (ra.role_id is not null)  (cost=4647 rows=45001) (actual time=0.111..12.7 rows=80000 loops=1)\n                                            -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.111..9.81 rows=80000 loops=1)\n                            -> Single-row index lookup on ra using PRIMARY (id=page_ids.id)  (cost=0.25 rows=1) (actual time=0.00137..0.00138 rows=1 loops=20)\n                        -> Filter: (m.tenant_id = ra.tenant_id)  (cost=0.25 rows=1) (actual time=412e-6..460e-6 rows=1 loops=20)\n                            -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.25 rows=1) (actual time=287e-6..300e-6 rows=1 loops=20)\n                    -> Hash\n                        -> Table scan on g  (cost=606e-6 rows=1) (actual time=0.00346..0.00346 rows=0 loops=1)\n"
+        }
+      }
+    },
+    "name-hit": {
+      "http": {
+        "p99Ms": 32.533791,
+        "firstMs": 31.248792,
+        "path": "/v1/tenant/assignments?pageSize=20&keyword=atch%20prob",
+        "actor": "owner-a",
+        "meanSelects": 16.0,
+        "p95Ms": 32.170666,
+        "meanSqlMs": 21.38061,
+        "meanRows": 100295.0
+      },
+      "statements": {
+        "count": {
+          "elapsedMs": 23.6,
+          "plan": "-> Aggregate: count(0)  (cost=9147 rows=1) (actual time=23.6..23.6 rows=1 loops=1)\n    -> Filter: ((ra.role_id is not null) and (<in_optimizer>(ra.tenant_member_id,ra.tenant_member_id in (select #2)) or <in_optimizer>(ra.tenant_group_id,ra.tenant_group_id in (select #3)) or <in_optimizer>(ra.role_id,ra.role_id in (select #4))))  (cost=4647 rows=45001) (actual time=0.19..21 rows=100000 loops=1)\n        -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.123..13.1 rows=100000 loops=1)\n        -> Select #2 (subquery in condition; run only once)\n            -> Filter: ((ra.tenant_member_id = `<materialized_subquery>`.id))  (cost=0.7..0.7 rows=0.667) (actual time=0.0151..0.0151 rows=0 loops=1)\n                -> Limit: 1 row(s)  (cost=0.633..0.633 rows=0.667) (actual time=0.0149..0.0149 rows=0 loops=1)\n                    -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.tenant_member_id)  (actual time=0.0104..0.0104 rows=0 loops=1)\n                        -> Materialize with deduplication  (cost=0.633..0.633 rows=0.667) (actual time=0.0102..0.0102 rows=0 loops=1)\n                            -> Filter: (iam_tenant_member.display_name like '%atch prob%' escape '!')  (cost=0.567 rows=0.667) (actual time=0.00788..0.00788 rows=0 loops=1)\n                                -> Index lookup on iam_tenant_member using uk_iam_tenant_member_account (tenant_id=10)  (cost=0.567 rows=4) (actual time=0.00525..0.00625 rows=4 loops=1)\n        -> Select #3 (subquery in condition; run only once)\n            -> Filter: ((ra.tenant_group_id = `<materialized_subquery>`.id))  (cost=0.55..0.55 rows=1) (never executed)\n                -> Limit: 1 row(s)  (cost=0.45..0.45 rows=1) (never executed)\n                    -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.tenant_group_id)  (never executed)\n                        -> Materialize with deduplication  (cost=0.45..0.45 rows=1) (never executed)\n                            -> Filter: (iam_tenant_group.`name` like '%atch prob%' escape '!')  (cost=0.35 rows=1) (never executed)\n                                -> Index lookup on iam_tenant_group using uk_iam_tenant_group_domain (tenant_id=10)  (cost=0.35 rows=1) (never executed)\n        -> Select #4 (subquery in condition; run only once)\n            -> Filter: ((ra.role_id = `<materialized_subquery>`.id))  (cost=1.54..1.54 rows=0.667) (actual time=0.0243..0.0243 rows=0.5 loops=2)\n                -> Limit: 1 row(s)  (cost=1.48..1.48 rows=0.667) (actual time=0.024..0.024 rows=0.5 loops=2)\n                    -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.role_id)  (actual time=0.0238..0.0238 rows=0.5 loops=2)\n                        -> Materialize with deduplication  (cost=1.48..1.48 rows=0.667) (actual time=0.0464..0.0464 rows=1 loops=1)\n                            -> Filter: (iam_role_definition.`name` like '%atch prob%' escape '!')  (cost=1.41 rows=0.667) (actual time=0.035..0.0353 rows=1 loops=1)\n                                -> Index range scan on iam_role_definition using uk_iam_role_code over (domain = 'TENANT' AND tenant_key = 0) OR (domain = 'TENANT' AND tenant_key = 10), with index condition: ((iam_role_definition.tenant_key in (0,10)) and (iam_role_definition.domain = 'TENANT'))  (cost=1.41 rows=2) (actual time=0.00975..0.0125 rows=2 loops=1)\n"
+        },
+        "page": {
+          "elapsedMs": 0.234,
+          "plan": "-> Sort: page_ids.id  (actual time=0.232..0.234 rows=20 loops=1)\n    -> Stream results  (cost=8.55 rows=60) (actual time=0.212..0.222 rows=20 loops=1)\n        -> Inner hash join (d.id = ra.role_id)  (cost=8.55 rows=60) (actual time=0.206..0.208 rows=20 loops=1)\n            -> Table scan on d  (cost=0.0286 rows=3) (actual time=0.00212..0.00267 rows=3 loops=1)\n            -> Hash\n                -> Left hash join (g.id = ra.tenant_group_id), (g.tenant_id = ra.tenant_id)  (cost=2.28 rows=20) (actual time=0.172..0.194 rows=20 loops=1)\n                    -> Nested loop left join  (cost=4666 rows=20) (actual time=0.165..0.185 rows=20 loops=1)\n                        -> Nested loop inner join  (cost=4659 rows=20) (actual time=0.163..0.178 rows=20 loops=1)\n                            -> Table scan on page_ids  (cost=4650..4652 rows=20) (actual time=0.158..0.159 rows=20 loops=1)\n                                -> Materialize  (cost=4649..4649 rows=20) (actual time=0.157..0.157 rows=20 loops=1)\n                                    -> Limit: 20 row(s)  (cost=4647 rows=20) (actual time=0.151..0.154 rows=20 loops=1)\n                                        -> Filter: ((ra.role_id is not null) and (<in_optimizer>(ra.tenant_member_id,ra.tenant_member_id in (select #3)) or <in_optimizer>(ra.tenant_group_id,ra.tenant_group_id in (select #4)) or <in_optimizer>(ra.role_id,ra.role_id in (select #5))))  (cost=4647 rows=45001) (actual time=0.15..0.153 rows=20 loops=1)\n                                            -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.126..0.127 rows=20 loops=1)\n                                            -> Select #3 (subquery in condition; run only once)\n                                                -> Filter: ((ra.tenant_member_id = `<materialized_subquery>`.id))  (cost=0.7..0.7 rows=0.667) (actual time=0.00846..0.00846 rows=0 loops=1)\n                                                    -> Limit: 1 row(s)  (cost=0.633..0.633 rows=0.667) (actual time=0.00842..0.00842 rows=0 loops=1)\n                                                        -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.tenant_member_id)  (actual time=0.00838..0.00838 rows=0 loops=1)\n                                                            -> Materialize with deduplication  (cost=0.633..0.633 rows=0.667) (actual time=0.00825..0.00825 rows=0 loops=1)\n                                                                -> Filter: (iam_tenant_member.display_name like '%atch prob%' escape '!')  (cost=0.567 rows=0.667) (actual time=0.00733..0.00733 rows=0 loops=1)\n                                                                    -> Index lookup on iam_tenant_member using uk_iam_tenant_member_account (tenant_id=10)  (cost=0.567 rows=4) (actual time=0.00433..0.00533 rows=4 loops=1)\n                                            -> Select #4 (subquery in condition; run only once)\n                                                -> Filter: ((ra.tenant_group_id = `<materialized_subquery>`.id))  (cost=0.55..0.55 rows=1) (never executed)\n                                                    -> Limit: 1 row(s)  (cost=0.45..0.45 rows=1) (never executed)\n                                                        -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.tenant_group_id)  (never executed)\n                                                            -> Materialize with deduplication  (cost=0.45..0.45 rows=1) (never executed)\n                                                                -> Filter: (iam_tenant_group.`name` like '%atch prob%' escape '!')  (cost=0.35 rows=1) (never executed)\n                                                                    -> Index lookup on iam_tenant_group using uk_iam_tenant_group_domain (tenant_id=10)  (cost=0.35 rows=1) (never executed)\n                                            -> Select #5 (subquery in condition; run only once)\n                                                -> Filter: ((ra.role_id = `<materialized_subquery>`.id))  (cost=1.54..1.54 rows=0.667) (actual time=0.00635..0.00635 rows=0.5 loops=2)\n                                                    -> Limit: 1 row(s)  (cost=1.48..1.48 rows=0.667) (actual time=0.00625..0.00625 rows=0.5 loops=2)\n                                                        -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.role_id)  (actual time=0.00619..0.00619 rows=0.5 loops=2)\n                                                            -> Materialize with deduplication  (cost=1.48..1.48 rows=0.667) (actual time=0.0113..0.0113 rows=1 loops=1)\n                                                                -> Filter: (iam_role_definition.`name` like '%atch prob%' escape '!')  (cost=1.41 rows=0.667) (actual time=0.00862..0.00892 rows=1 loops=1)\n                                                                    -> Index range scan on iam_role_definition using uk_iam_role_code over (domain = 'TENANT' AND tenant_key = 0) OR (domain = 'TENANT' AND tenant_key = 10), with index condition: ((iam_role_definition.tenant_key in (0,10)) and (iam_role_definition.domain = 'TENANT'))  (cost=1.41 rows=2) (actual time=0.00625..0.00825 rows=2 loops=1)\n                            -> Single-row index lookup on ra using PRIMARY (id=page_ids.id)  (cost=0.255 rows=1) (actual time=825e-6..844e-6 rows=1 loops=20)\n                        -> Filter: (m.tenant_id = ra.tenant_id)  (cost=0.255 rows=1) (actual time=200e-6..250e-6 rows=1 loops=20)\n                            -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.255 rows=1) (actual time=121e-6..138e-6 rows=1 loops=20)\n                    -> Hash\n                        -> Table scan on g  (cost=0.0181 rows=1) (actual time=0.0025..0.0025 rows=0 loops=1)\n"
+        }
+      }
+    },
+    "name-miss": {
+      "http": {
+        "p99Ms": 58.567208,
+        "firstMs": 39.329459,
+        "path": "/v1/tenant/assignments?pageSize=20&keyword=missing-assignment",
+        "actor": "owner-a",
+        "meanSelects": 8.0,
+        "p95Ms": 51.154666,
+        "meanSqlMs": 34.84759000000001,
+        "meanRows": 100181.0
+      },
+      "statements": {
+        "count": {
+          "elapsedMs": 19.4,
+          "plan": "-> Aggregate: count(0)  (cost=9147 rows=1) (actual time=19.4..19.4 rows=1 loops=1)\n    -> Filter: ((ra.role_id is not null) and (<in_optimizer>(ra.tenant_member_id,ra.tenant_member_id in (select #2)) or <in_optimizer>(ra.tenant_group_id,ra.tenant_group_id in (select #3)) or <in_optimizer>(ra.role_id,ra.role_id in (select #4))))  (cost=4647 rows=45001) (actual time=19.4..19.4 rows=0 loops=1)\n        -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.115..13.5 rows=100000 loops=1)\n        -> Select #2 (subquery in condition; run only once)\n            -> Filter: ((ra.tenant_member_id = `<materialized_subquery>`.id))  (cost=0.7..0.7 rows=0.667) (actual time=0.00767..0.00767 rows=0 loops=1)\n                -> Limit: 1 row(s)  (cost=0.633..0.633 rows=0.667) (actual time=0.0075..0.0075 rows=0 loops=1)\n                    -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.tenant_member_id)  (actual time=0.00721..0.00721 rows=0 loops=1)\n                        -> Materialize with deduplication  (cost=0.633..0.633 rows=0.667) (actual time=0.00713..0.00713 rows=0 loops=1)\n                            -> Filter: (iam_tenant_member.display_name like '%missing-assignment%' escape '!')  (cost=0.567 rows=0.667) (actual time=0.00575..0.00575 rows=0 loops=1)\n                                -> Index lookup on iam_tenant_member using uk_iam_tenant_member_account (tenant_id=10)  (cost=0.567 rows=4) (actual time=0.00413..0.00475 rows=4 loops=1)\n        -> Select #3 (subquery in condition; run only once)\n            -> Filter: ((ra.tenant_group_id = `<materialized_subquery>`.id))  (cost=0.55..0.55 rows=1) (never executed)\n                -> Limit: 1 row(s)  (cost=0.45..0.45 rows=1) (never executed)\n                    -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.tenant_group_id)  (never executed)\n                        -> Materialize with deduplication  (cost=0.45..0.45 rows=1) (never executed)\n                            -> Filter: (iam_tenant_group.`name` like '%missing-assignment%' escape '!')  (cost=0.35 rows=1) (never executed)\n                                -> Index lookup on iam_tenant_group using uk_iam_tenant_group_domain (tenant_id=10)  (cost=0.35 rows=1) (never executed)\n        -> Select #4 (subquery in condition; run only once)\n            -> Filter: ((ra.role_id = `<materialized_subquery>`.id))  (cost=1.54..1.54 rows=0.667) (actual time=0.0143..0.0143 rows=0 loops=1)\n                -> Limit: 1 row(s)  (cost=1.48..1.48 rows=0.667) (actual time=0.0143..0.0143 rows=0 loops=1)\n                    -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.role_id)  (actual time=0.0142..0.0142 rows=0 loops=1)\n                        -> Materialize with deduplication  (cost=1.48..1.48 rows=0.667) (actual time=0.014..0.014 rows=0 loops=1)\n                            -> Filter: (iam_role_definition.`name` like '%missing-assignment%' escape '!')  (cost=1.41 rows=0.667) (actual time=0.0135..0.0135 rows=0 loops=1)\n                                -> Index range scan on iam_role_definition using uk_iam_role_code over (domain = 'TENANT' AND tenant_key = 0) OR (domain = 'TENANT' AND tenant_key = 10), with index condition: ((iam_role_definition.tenant_key in (0,10)) and (iam_role_definition.domain = 'TENANT'))  (cost=1.41 rows=2) (actual time=0.00808..0.00979 rows=2 loops=1)\n"
+        },
+        "page": {
+          "elapsedMs": 20.9,
+          "plan": "-> Sort: page_ids.id  (actual time=20.9..20.9 rows=0 loops=1)\n    -> Stream results  (cost=8.55 rows=60) (actual time=20.9..20.9 rows=0 loops=1)\n        -> Inner hash join (d.id = ra.role_id)  (cost=8.55 rows=60) (actual time=20.9..20.9 rows=0 loops=1)\n            -> Table scan on d  (cost=0.0286 rows=3) (never executed)\n            -> Hash\n                -> Left hash join (g.id = ra.tenant_group_id), (g.tenant_id = ra.tenant_id)  (cost=2.28 rows=20) (actual time=20.9..20.9 rows=0 loops=1)\n                    -> Nested loop left join  (cost=4666 rows=20) (actual time=20.9..20.9 rows=0 loops=1)\n                        -> Nested loop inner join  (cost=4659 rows=20) (actual time=20.9..20.9 rows=0 loops=1)\n                            -> Table scan on page_ids  (cost=4650..4652 rows=20) (actual time=20.9..20.9 rows=0 loops=1)\n                                -> Materialize  (cost=4649..4649 rows=20) (actual time=20.9..20.9 rows=0 loops=1)\n                                    -> Limit: 20 row(s)  (cost=4647 rows=20) (actual time=20.9..20.9 rows=0 loops=1)\n                                        -> Filter: ((ra.role_id is not null) and (<in_optimizer>(ra.tenant_member_id,ra.tenant_member_id in (select #3)) or <in_optimizer>(ra.tenant_group_id,ra.tenant_group_id in (select #4)) or <in_optimizer>(ra.role_id,ra.role_id in (select #5))))  (cost=4647 rows=45001) (actual time=20.9..20.9 rows=0 loops=1)\n                                            -> Covering index lookup on ra using idx_iam_assignment_tenant_list (tenant_id=10, domain='TENANT')  (cost=4647 rows=50001) (actual time=0.126..14.7 rows=100000 loops=1)\n                                            -> Select #3 (subquery in condition; run only once)\n                                                -> Filter: ((ra.tenant_member_id = `<materialized_subquery>`.id))  (cost=0.7..0.7 rows=0.667) (actual time=0.00688..0.00688 rows=0 loops=1)\n                                                    -> Limit: 1 row(s)  (cost=0.633..0.633 rows=0.667) (actual time=0.00679..0.00679 rows=0 loops=1)\n                                                        -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.tenant_member_id)  (actual time=0.00671..0.00671 rows=0 loops=1)\n                                                            -> Materialize with deduplication  (cost=0.633..0.633 rows=0.667) (actual time=0.00658..0.00658 rows=0 loops=1)\n                                                                -> Filter: (iam_tenant_member.display_name like '%missing-assignment%' escape '!')  (cost=0.567 rows=0.667) (actual time=0.00604..0.00604 rows=0 loops=1)\n                                                                    -> Index lookup on iam_tenant_member using uk_iam_tenant_member_account (tenant_id=10)  (cost=0.567 rows=4) (actual time=0.00421..0.00479 rows=4 loops=1)\n                                            -> Select #4 (subquery in condition; run only once)\n                                                -> Filter: ((ra.tenant_group_id = `<materialized_subquery>`.id))  (cost=0.55..0.55 rows=1) (never executed)\n                                                    -> Limit: 1 row(s)  (cost=0.45..0.45 rows=1) (never executed)\n                                                        -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.tenant_group_id)  (never executed)\n                                                            -> Materialize with deduplication  (cost=0.45..0.45 rows=1) (never executed)\n                                                                -> Filter: (iam_tenant_group.`name` like '%missing-assignment%' escape '!')  (cost=0.35 rows=1) (never executed)\n                                                                    -> Index lookup on iam_tenant_group using uk_iam_tenant_group_domain (tenant_id=10)  (cost=0.35 rows=1) (never executed)\n                                            -> Select #5 (subquery in condition; run only once)\n                                                -> Filter: ((ra.role_id = `<materialized_subquery>`.id))  (cost=1.54..1.54 rows=0.667) (actual time=0.009..0.009 rows=0 loops=1)\n                                                    -> Limit: 1 row(s)  (cost=1.48..1.48 rows=0.667) (actual time=0.00892..0.00892 rows=0 loops=1)\n                                                        -> Index lookup on <materialized_subquery> using <auto_distinct_key> (id=ra.role_id)  (actual time=0.00888..0.00888 rows=0 loops=1)\n                                                            -> Materialize with deduplication  (cost=1.48..1.48 rows=0.667) (actual time=0.00879..0.00879 rows=0 loops=1)\n                                                                -> Filter: (iam_role_definition.`name` like '%missing-assignment%' escape '!')  (cost=1.41 rows=0.667) (actual time=0.00846..0.00846 rows=0 loops=1)\n                                                                    -> Index range scan on iam_role_definition using uk_iam_role_code over (domain = 'TENANT' AND tenant_key = 0) OR (domain = 'TENANT' AND tenant_key = 10), with index condition: ((iam_role_definition.tenant_key in (0,10)) and (iam_role_definition.domain = 'TENANT'))  (cost=1.41 rows=2) (actual time=0.00608..0.00779 rows=2 loops=1)\n                            -> Single-row index lookup on ra using PRIMARY (id=page_ids.id)  (cost=0.255 rows=1) (never executed)\n                        -> Filter: (m.tenant_id = ra.tenant_id)  (cost=0.255 rows=1) (never executed)\n                            -> Single-row index lookup on m using PRIMARY (id=ra.tenant_member_id)  (cost=0.255 rows=1) (never executed)\n                    -> Hash\n                        -> Table scan on g  (cost=0.0181 rows=1) (never executed)\n"
+        }
+      }
+    }
+  }
+}

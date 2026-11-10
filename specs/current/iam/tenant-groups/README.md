@@ -4,3 +4,4 @@
 
 - [当前规格](./SPEC.md)
 - [有效成员分页验收](../../../changes/archive/2026/20261021-iam-group-effective-members/README.md)
+- [组摘要与批量读取实现档案](../../../changes/archive/2026/20261109-iam-post-login-read-performance/README.md)

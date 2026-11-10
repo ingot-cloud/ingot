@@ -8,3 +8,4 @@
 - [已验收变更](../../../changes/archive/2026/20261013-iam-platform-read-performance/README.md)
 - [验收依据](../../../changes/archive/2026/20261013-iam-platform-read-performance/VALIDATION.md)
 - [角色版本应用规则](../role-version-application/SPEC.md)
+- [平台组列表和登录后接口实现档案](../../../changes/archive/2026/20261109-iam-post-login-read-performance/README.md)

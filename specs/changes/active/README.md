@@ -12,6 +12,8 @@
 
 当前变更：
 
+- [IAM 登录后接口现场与发布验收](./20261110-iam-post-login-release-acceptance/README.md)（draft，承接真实 BFF、性能采样和迁移验证）
+
 - [受保护接口的无令牌响应](./20261109-security-missing-bearer-401/README.md)（validating，定向回归通过，待本机加载新版复测）
 
 - [IAM 共享目录版本校验与长缓存](./20261109-iam-versioned-shared-catalog-cache/README.md)（validating，合并直查及隔离对照通过，待目标环境验收）
@@ -25,6 +27,7 @@
 
 本轮已验收归档：
 
+- [IAM 登录后接口提速与场景提示](../archive/2026/20261109-iam-post-login-read-performance/README.md)（completed，2026-11-10）
 - [IAM 功能目录与授权补齐](../archive/2026/20261106-iam-resource-catalog/README.md)（completed，2026-11-07）
 - [授权审计游标分页与可读展示](../archive/2026/20261024-iam-authorization-audit-readable/README.md)（completed，2026-11-07）
 - [20261020-iam-member-batch](../archive/2026/20261020-iam-member-batch/README.md)（completed，2026-10-21）
