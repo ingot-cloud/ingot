@@ -11,5 +11,6 @@ manifest 管理 IAM 共库的 59 张表和 501 个字段，其中 53 张由 IAM 
 - [字段说明与关系写入验收](../../../changes/archive/2026/20261020-iam-schema-relations/README.md)
 - [接收成员主键与密码索引验收](../../../changes/archive/2026/20261020-iam-recipient-primary-key-password-index/README.md)
 - [租户角色分配覆盖索引实现与迁移验证](../../../changes/archive/2026/20261109-iam-post-login-read-performance/VALIDATION.md#2026-11-10-租户分配列表-10-万条分页)
+- [037 运行库列顺序和分页现场验证](../../../changes/archive/2026/20261110-iam-post-login-release-acceptance/VALIDATION.md)
 
 - [按资源存储的租户字段策略](../tenant-field-policy/SPEC.md)

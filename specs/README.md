@@ -188,8 +188,6 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [IAM 登录后接口现场与发布验收](./changes/active/20261110-iam-post-login-release-acceptance/README.md)（draft，真实 BFF、页面 P95、缓存与迁移状态待验证）
-
 - [受保护接口的无令牌响应](./changes/active/20261109-security-missing-bearer-401/README.md)（validating，定向回归通过，待本机加载新版复测）
 
 - [IAM 共享目录版本校验与长缓存](./changes/active/20261109-iam-versioned-shared-catalog-cache/README.md)（validating，合并直查及隔离对照通过，待目标环境验收）
@@ -209,6 +207,7 @@ current/<domain>/<capability>/
 
 ### 2026-11-10 归档
 
+- [IAM 登录后接口现场与发布验收](./changes/archive/2026/20261110-iam-post-login-release-acceptance/README.md)（completed，两端首批成员 P95 对照、缓存分层和真实受限会话通过）
 - [IAM 登录后接口提速与场景提示](./changes/archive/2026/20261109-iam-post-login-read-performance/README.md)（completed，实现及隔离验证完成）
 
 ### 2026-11-09 归档

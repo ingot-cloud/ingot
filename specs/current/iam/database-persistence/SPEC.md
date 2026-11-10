@@ -48,6 +48,10 @@
 
 其他关系表保留现有联合主键和反向索引。复合归属索引承担租户/应用外键校验时，即使单列ID全局唯一，也不能直接移除。键值非递增不等于已发生性能瓶颈，结构评估与实际负载测量分开记录。
 
+## 租户分配列表覆盖索引
+
+`iam_role_assignment.idx_iam_assignment_tenant_list` 按 `tenant_id, domain, id, role_id, subject_type, delegation_grant_id, tenant_member_id, tenant_group_id` 排列。新库由初始化脚本创建，已有库用 [037 在线迁移](../../../../databases/iam/migrations/037_tenant_assignment_list_index.sql) 补齐。列表按可见范围保留精确计数及页码跳转。深页先取本页分配 ID，再读取本页详情。
+
 ## 密码历史索引
 
 `fw_security_password_history`保留原自增id主键、`UNIQUE(user_id,sequence_number)`及`idx_created_at`；不再维护与联合唯一键左前缀重叠的`idx_user_id`。按用户读取、槽位覆盖、历史检查和删除的服务行为不变，最近历史仍按created_at倒序及limit查询。
