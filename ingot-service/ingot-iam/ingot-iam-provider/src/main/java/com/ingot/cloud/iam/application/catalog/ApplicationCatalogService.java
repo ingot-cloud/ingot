@@ -105,9 +105,7 @@ public class ApplicationCatalogService {
      */
     public CreatedResource createApplication(ApplicationDraft input) {
         ActiveIdentity actor = operationsContext.access().require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_CREATE);
-        if (input.domain() == AuthorizationDomain.PLATFORM && input.baseline()) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        }
+        CatalogOperations.requireBaselineDomain(input.domain(), input.baseline());
         return operationsContext.transaction().execute(status -> {
             long id = operationsContext.access().nextId();
             IamApplicationEntity entity = new IamApplicationEntity();
@@ -125,7 +123,7 @@ public class ApplicationCatalogService {
                 operationsContext.catalog().insertApplication(entity);
             }
             catch (DuplicateKeyException exception) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), CatalogOperations.DUPLICATE_APPLICATION_CODE);
             }
             operationsContext.audits().write(actor.context(), operationsContext.access().nextId(), CatalogOperations.APPLICATION, IamIds.text(id), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, input.name()), Map.of(CatalogOperations.APPLICATION, "0"));
@@ -145,9 +143,7 @@ public class ApplicationCatalogService {
         return operationsContext.transaction().execute(status -> {
             IamApplicationEntity current = CatalogOperations.requireLocked(operationsContext.catalog().lockApplication(applicationId));
             IamIds.requireVersion(input.expectedVersion(), CatalogOperations.version(current.getVersion()));
-            if (current.getDomain() == AuthorizationDomain.PLATFORM && input.baseline()) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-            }
+            CatalogOperations.requireBaselineDomain(current.getDomain(), input.baseline());
             operationsContext.access().require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_UPDATE);
             operationsContext.catalog().updateApplication(applicationId, input.name(), CatalogOperations.nullable(input.description()),
                     operationsContext.images().bind(actor.context(), ImageUploadPurpose.APPLICATION_UPDATE, IamIds.text(applicationId),

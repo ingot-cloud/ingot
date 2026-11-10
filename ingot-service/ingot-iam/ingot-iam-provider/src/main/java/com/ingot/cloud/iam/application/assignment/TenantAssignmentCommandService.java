@@ -52,7 +52,8 @@ public class TenantAssignmentCommandService {
     /** 调整完整当前分配，来源不能由受限管理员替换。 */
     public ResourceDetail<TenantAssignmentRecord> replace(String id,TenantAssignmentUpdateInput input) {
         var actor=operationsContext.access().require(AuthorizationDomain.TENANT,IamAction.TENANT_ASSIGNMENT_UPDATE);
-        return operationsContext.transactions().execute(tx->{lock(actor,IamAction.TENANT_ASSIGNMENT_UPDATE);lockRoles(actor,List.of(input.assignment().roleId()));var old=require(actor,id,true);
+        var assignmentId = BigInteger.valueOf(IamIds.require(id));
+        return operationsContext.transactions().execute(tx->{lock(actor,IamAction.TENANT_ASSIGNMENT_UPDATE);lockRoles(actor,List.of(input.assignment().roleId()));var old=require(actor,assignmentId);
             authorizeExisting(actor,old,IamAction.TENANT_ASSIGNMENT_UPDATE);IamIds.requireVersion(input.expectedVersion(),old.version().toString());
             if(!operationsContext.access().allows(AuthorizationDomain.TENANT,IamAction.TENANT_ASSIGNMENT_UPDATE,true)
                 && !Objects.equals(old.delegationGrantId()==null?null:old.delegationGrantId().toString(),input.assignment().delegationGrantId()))TenantAssignmentOperations.denied();
@@ -65,11 +66,16 @@ public class TenantAssignmentCommandService {
     /** 撤销分配并保留历史。 */
     public CreatedResource delete(String id) {
         var actor=operationsContext.access().require(AuthorizationDomain.TENANT,IamAction.TENANT_ASSIGNMENT_DELETE);
-        return operationsContext.transactions().execute(tx->{lock(actor,IamAction.TENANT_ASSIGNMENT_DELETE);var old=require(actor,id,true);
+        var assignmentId = BigInteger.valueOf(IamIds.require(id));
+        return operationsContext.transactions().execute(tx->{lock(actor,IamAction.TENANT_ASSIGNMENT_DELETE);var old=require(actor,assignmentId);
             authorizeExisting(actor,old,IamAction.TENANT_ASSIGNMENT_DELETE);applied(operationsContext.live().revokeAssignment(TenantAssignmentOperations.tenant(actor),old.id(),old.version()));
             audit(actor,old,old,AuditChangeType.REVOKE);operationsContext.changes().markAll();return new CreatedResource(id,old.version().add(BigInteger.ONE).toString());});
     }
-    private TenantAdministrationRows.Assignment require(ActiveIdentity actor,String id,boolean lock){var row=lock?operationsContext.live().lockAssignment(TenantAssignmentOperations.tenant(actor),new BigInteger(id)):operationsContext.live().assignment(TenantAssignmentOperations.tenant(actor),new BigInteger(id));if(row==null)TenantAssignmentOperations.missing();return row;}
+    private TenantAdministrationRows.Assignment require(ActiveIdentity actor, BigInteger id) {
+        var row = operationsContext.live().lockAssignment(TenantAssignmentOperations.tenant(actor), id);
+        if (row == null) TenantAssignmentOperations.missing();
+        return row;
+    }
     private void authorizeExisting(ActiveIdentity actor,TenantAdministrationRows.Assignment row,IamAction action){if(operationsContext.access().allows(AuthorizationDomain.TENANT,action,true))operationsContext.resources().requireVisibleObject(actor.context(),action,row.id().longValueExact());else operationsContext.source(actor,row.delegationGrantId()==null?null:row.delegationGrantId().toString(),action);}
     /** 锁定批次角色头，防止校验期间共享权限发生切换；统一按角色ID排序。 */
     private void lockRoles(ActiveIdentity actor,List<String> roleIds) {

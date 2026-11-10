@@ -606,6 +606,7 @@ CREATE TABLE iam_role_assignment (
     KEY idx_iam_assignment_platform_group (platform_group_id, status, valid_until),
     KEY idx_iam_assignment_tenant_member (tenant_id, tenant_member_id, status, valid_until),
     KEY idx_iam_assignment_tenant_group (tenant_id, tenant_group_id, status, valid_until),
+    KEY idx_iam_assignment_tenant_list (tenant_id, domain, id, role_id, subject_type, delegation_grant_id, tenant_member_id, tenant_group_id),
     KEY idx_iam_assignment_delegation (delegation_grant_id, status),
     CONSTRAINT fk_iam_assignment_platform_member FOREIGN KEY (platform_member_id) REFERENCES iam_platform_member (id),
     CONSTRAINT fk_iam_assignment_platform_group FOREIGN KEY (platform_group_id) REFERENCES iam_platform_group (id),

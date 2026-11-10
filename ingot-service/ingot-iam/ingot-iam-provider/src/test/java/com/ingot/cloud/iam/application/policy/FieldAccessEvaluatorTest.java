@@ -100,8 +100,17 @@ class FieldAccessEvaluatorTest {
             var snapshot=evaluator.snapshotFresh(10,com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
             assertEquals(com.ingot.framework.commons.model.iam.FieldVisibility.FULL,evaluator.memberAccess(snapshot,101,102).get("phone").visibility());
             assertEquals(com.ingot.framework.commons.model.iam.FieldVisibility.MASKED,evaluator.memberAccess(snapshot,102,101).get("phone").visibility());
+            var read = com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_READ;
+            var update = com.ingot.framework.commons.model.iam.IamAction.VALUE_TENANT_MEMBER_UPDATE;
+            var scope = com.ingot.cloud.iam.domain.authorization.ObjectScope.all();
+            var context = evaluator.context(snapshot, 101, List.of(read, update), java.util.Set.of(read), scope);
+            assertEquals(FieldVisibility.FULL, context.fieldVisibility().get(MemberFieldKey.VALUE_PHONE));
+            assertTrue(context.fieldOperations().get(update).values().stream()
+                    .noneMatch(com.ingot.framework.commons.model.iam.FieldOperations::editable));
             jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=1");
             assertEquals(com.ingot.framework.commons.model.iam.FieldVisibility.MASKED,evaluator.memberAccess(snapshot,101,102).get("phone").visibility());
+            assertEquals(FieldVisibility.MASKED, evaluator.context(snapshot, 101, List.of(read, update),
+                    java.util.Set.of(read), scope).fieldVisibility().get(MemberFieldKey.VALUE_PHONE));
         } finally {
             jdbc.update("DELETE FROM iam_tenant_member WHERE id=101");jdbc.update("DELETE FROM iam_tenant WHERE id=10");jdbc.update("DELETE FROM iam_account WHERE id=1");
         }

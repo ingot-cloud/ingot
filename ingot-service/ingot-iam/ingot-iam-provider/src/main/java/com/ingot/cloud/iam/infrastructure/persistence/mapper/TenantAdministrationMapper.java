@@ -6,12 +6,14 @@ import com.ingot.framework.commons.model.iam.RoleKind;
 import com.ingot.cloud.iam.domain.assignment.SubjectType;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMembershipSql;
 import com.ingot.cloud.iam.infrastructure.persistence.IamPersistence;
 import com.ingot.cloud.iam.infrastructure.persistence.TenantAdministrationSql;
+import com.ingot.cloud.iam.infrastructure.persistence.TenantAssignmentReadSql;
 import com.ingot.cloud.iam.infrastructure.persistence.projection.TenantAdministrationRows;
 import com.ingot.framework.commons.model.iam.*;
 import org.apache.ibatis.annotations.*;
@@ -195,6 +197,30 @@ public interface TenantAdministrationMapper {
     @Select("SELECT resource_id,scopes,scope_bindings FROM iam_delegation_resource_ceiling WHERE delegation_id=#{id} ORDER BY resource_id")
     List<TenantAdministrationRows.Ceiling> ceilings(@Param("id") BigInteger id);
 
+    /** 批量校验当前页委派分配的角色、时间和接收范围。 */
+    @Select(TenantAssignmentReadSql.ELIGIBLE_DELEGATED)
+    List<DelegatedAssignmentVersion> eligibleDelegatedAssignments(@Param("tenantId") BigInteger tenantId,
+            @Param("ids") List<BigInteger> ids, @Param("now") LocalDateTime now);
+
+    /**
+     * 批量校验通过的分配及其当前版本。
+     * @author jy
+     * @since 1.0.0
+     */
+    record DelegatedAssignmentVersion(BigInteger id, BigInteger version) { }
+
+    /** 按当前可信租户批量查当前页分配涉及的委派上限。 */
+    @Select(TenantAssignmentReadSql.CEILING_RESOURCES)
+    List<DelegationCeilingResource> assignmentCeilingResources(@Param("tenantId") BigInteger tenantId,
+            @Param("ids") List<BigInteger> ids);
+
+    /**
+     * 当前页来源及其允许的资源。
+     * @author jy
+     * @since 1.0.0
+     */
+    record DelegationCeilingResource(BigInteger delegationId, BigInteger resourceId) { }
+
     /** 检查当前接收成员在完整委派人群内。 */
     @Select(IamMembershipSql.DEPARTMENT_REACH + """
         SELECT COUNT(*) FROM iam_delegation_grant dl WHERE dl.id=#{id} AND dl.tenant_id=#{tenantId}
@@ -244,14 +270,14 @@ public interface TenantAdministrationMapper {
     @Select("SELECT " + TenantAdministrationSql.ASSIGNMENT_COLUMNS + TenantAdministrationSql.ASSIGNMENT_FROM + " WHERE ra.domain='TENANT' AND ra.tenant_id=#{tenantId} AND ra.id=#{id} FOR UPDATE")
     TenantAdministrationRows.Assignment lockAssignment(@Param("tenantId") BigInteger tenantId, @Param("id") BigInteger id);
 
-    /** 当前分配列表先过滤可见ID、来源和搜索，再分页。 */
-    @Select("<script>SELECT " + TenantAdministrationSql.ASSIGNMENT_COLUMNS + TenantAdministrationSql.ASSIGNMENT_FROM + TenantAdministrationSql.ASSIGNMENT_FILTER + " ORDER BY ra.id LIMIT #{limit} OFFSET #{offset}</script>")
+    /** 在当前范围内取分配 ID 页，再读取角色和主体名称。 */
+    @Select(TenantAssignmentReadSql.PAGE)
     List<TenantAdministrationRows.Assignment> assignments(@Param("tenantId") BigInteger tenantId, @Param("visible") List<BigInteger> visible,
         @Param("sources") List<BigInteger> sources, @Param("type") SubjectType type, @Param("keyword") String keyword,
         @Param("limit") int limit, @Param("offset") int offset);
 
-    /** 与列表使用同一可见条件计数。 */
-    @Select("<script>SELECT COUNT(*) " + TenantAdministrationSql.ASSIGNMENT_FROM + TenantAdministrationSql.ASSIGNMENT_FILTER + "</script>")
+    /** 按列表的同一可见范围及筛选条件计算精确总数。 */
+    @Select(TenantAssignmentReadSql.COUNT)
     long assignmentsCount(@Param("tenantId") BigInteger tenantId, @Param("visible") List<BigInteger> visible,
         @Param("sources") List<BigInteger> sources, @Param("type") SubjectType type, @Param("keyword") String keyword);
 

@@ -1,6 +1,8 @@
 package com.ingot.cloud.iam.infrastructure.persistence;
 
 import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.DepartmentSelection;
 import com.ingot.framework.commons.error.BizException;
 import java.util.stream.Collectors;
 import java.util.SortedSet;
@@ -305,6 +307,102 @@ public class GroupRepository {
                 .eq(IamTenantGroupEntity::getTenantId, BigInteger.valueOf(tenantId))
                 .eq(IamTenantGroupEntity::getId, BigInteger.valueOf(id)));
     }
+
+    /**
+     * 按当前页组 ID 读取直接关联与可见投影，限定租户及成员范围。
+     * @param domain 当前管理域
+     * @param tenantId 当前可信租户，平台域为零
+     * @param groupIds 当前页组 ID
+     * @param scope 成员读取范围
+     * @return 直接成员与可见直接成员，均按组和成员 ID 排序
+     */
+    public DirectGroupLinks directGroupLinks(AuthorizationDomain domain, long tenantId,
+            List<BigInteger> groupIds, ObjectScope scope) {
+        if (domain == AuthorizationDomain.PLATFORM) {
+            var all = platformMembers.selectList(Wrappers.<IamPlatformGroupMemberEntity>lambdaQuery()
+                    .in(IamPlatformGroupMemberEntity::getGroupId, groupIds)
+                    .orderByAsc(IamPlatformGroupMemberEntity::getGroupId, IamPlatformGroupMemberEntity::getMemberId));
+            var query = Wrappers.<IamPlatformMemberEntity>lambdaQuery()
+                    .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED);
+            ObjectScopeSql.restrictPlatformMembers(query, scope);
+            var visible = scope.coversNone() ? List.<IamPlatformGroupMemberEntity>of()
+                    : platformMembers.visibleGroupMembers(groupIds, query);
+            return new DirectGroupLinks(platformLinks(all), platformLinks(visible));
+        }
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        var all = tenantMembers.selectList(Wrappers.<IamTenantGroupMemberEntity>lambdaQuery()
+                .eq(IamTenantGroupMemberEntity::getTenantId, tenant)
+                .in(IamTenantGroupMemberEntity::getGroupId, groupIds)
+                .orderByAsc(IamTenantGroupMemberEntity::getGroupId, IamTenantGroupMemberEntity::getMemberId));
+        var query = Wrappers.<IamTenantMemberEntity>lambdaQuery()
+                .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED);
+        ObjectScopeSql.restrictTenantMembers(query, scope, tenant);
+        var visible = scope.coversNone() ? List.<IamTenantGroupMemberEntity>of()
+                : tenantMembers.visibleGroupMembers(groupIds, tenant, query);
+        return new DirectGroupLinks(tenantLinks(all), tenantLinks(visible));
+    }
+
+    /**
+     * 读取当前页组的部门来源及可见投影。
+     * @param tenantId 当前可信租户
+     * @param groupIds 当前页组 ID
+     * @param scope 部门读取范围，无资格时为空
+     * @return 全部与可见部门关系
+     */
+    public DepartmentGroupLinks departmentGroupLinks(long tenantId, List<BigInteger> groupIds, ObjectScope scope) {
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        var rows = departmentLinks.selectList(Wrappers.<IamTenantGroupDepartmentEntity>lambdaQuery()
+                .eq(IamTenantGroupDepartmentEntity::getTenantId, tenant)
+                .in(IamTenantGroupDepartmentEntity::getGroupId, groupIds)
+                .orderByAsc(IamTenantGroupDepartmentEntity::getGroupId,
+                        IamTenantGroupDepartmentEntity::getDepartmentId));
+        Set<BigInteger> visible = Set.of();
+        if (scope != null && !scope.coversNone() && !rows.isEmpty()) {
+            var query = Wrappers.<IamDepartmentEntity>lambdaQuery()
+                    .select(IamDepartmentEntity::getId)
+                    .eq(IamDepartmentEntity::getTenantId, tenant)
+                    .in(IamDepartmentEntity::getId,
+                            rows.stream().map(IamTenantGroupDepartmentEntity::getDepartmentId).distinct().toList());
+            ObjectScopeSql.restrictDepartments(query, scope);
+            visible = departments.selectList(query).stream().map(IamDepartmentEntity::getId)
+                    .collect(Collectors.toSet());
+        }
+        Map<BigInteger, List<DepartmentSelection>> projected = new LinkedHashMap<>();
+        Map<BigInteger, Long> totals = new LinkedHashMap<>();
+        for (var row : rows) {
+            totals.merge(row.getGroupId(), 1L, Long::sum);
+            if (visible.contains(row.getDepartmentId())) {
+                projected.computeIfAbsent(row.getGroupId(), ignored -> new java.util.ArrayList<>())
+                        .add(new DepartmentSelection(row.getDepartmentId().toString(), Boolean.TRUE.equals(row.getIncludeDescendants())));
+            }
+        }
+        return new DepartmentGroupLinks(totals, projected);
+    }
+
+    private static Map<BigInteger, List<String>> platformLinks(List<IamPlatformGroupMemberEntity> rows) {
+        return rows.stream().collect(Collectors.groupingBy(IamPlatformGroupMemberEntity::getGroupId,
+                Collectors.mapping(row -> row.getMemberId().toString(), Collectors.toList())));
+    }
+
+    private static Map<BigInteger, List<String>> tenantLinks(List<IamTenantGroupMemberEntity> rows) {
+        return rows.stream().collect(Collectors.groupingBy(IamTenantGroupMemberEntity::getGroupId,
+                Collectors.mapping(row -> row.getMemberId().toString(), Collectors.toList())));
+    }
+
+    /**
+     * 当前页组的直接成员投影。
+     * @author jy
+     * @since 1.0.0
+     */
+    public record DirectGroupLinks(Map<BigInteger, List<String>> all, Map<BigInteger, List<String>> visible) { }
+
+    /**
+     * 当前页组的部门来源投影。
+     * @author jy
+     * @since 1.0.0
+     */
+    public record DepartmentGroupLinks(Map<BigInteger, Long> totals,
+                                       Map<BigInteger, List<DepartmentSelection>> visible) { }
 
     /**
      * 按成员 ID 升序读取平台组成员。

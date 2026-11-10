@@ -141,12 +141,9 @@ public class MemberQueryService {
         var snapshot = fields.snapshot(tenantId, com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders.TENANT_MEMBER_RESOURCE);
         var scope = authorization.actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_READ)
                 ? scopes.memberRead(actor.context(), IamAction.TENANT_MEMBER_READ) : ObjectScope.none();
-        Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldOperations>> operations = new LinkedHashMap<>();
-        for (var action : List.of(IamAction.TENANT_MEMBER_READ, IamAction.TENANT_MEMBER_CREATE, IamAction.TENANT_MEMBER_UPDATE))
-            operations.put(action.getCode(), authorization.actionCodes().contains(action.getCode())
-                    ? fields.operations(snapshot, viewerId, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, action.getCode(), scope)
-                    : snapshot.baseline().keySet().stream().collect(java.util.stream.Collectors.toMap(key -> key, key -> com.ingot.framework.commons.model.iam.FieldOperations.NONE)));
-        return new com.ingot.framework.commons.model.iam.ResourceFieldContext(fields.contextVisibility(snapshot, viewerId), operations, snapshot.masks());
+        return fields.context(snapshot, viewerId, List.of(IamAction.VALUE_TENANT_MEMBER_READ,
+                IamAction.VALUE_TENANT_MEMBER_CREATE, IamAction.VALUE_TENANT_MEMBER_UPDATE),
+                java.util.Set.copyOf(authorization.actionCodes()), scope);
     }
 
     /**

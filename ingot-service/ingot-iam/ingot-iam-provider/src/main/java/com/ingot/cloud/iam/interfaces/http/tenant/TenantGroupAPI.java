@@ -16,6 +16,10 @@ import com.ingot.framework.commons.model.support.RShortcuts;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import com.ingot.cloud.iam.application.authorization.read.IamReadOnlyRequest;
+import com.ingot.cloud.iam.domain.catalog.CatalogRecordView;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,15 +51,26 @@ public class TenantGroupAPI implements RShortcuts {
      * @param page 页码
      * @param pageSize 页大小
      * @param name 组名包含匹配，可空
+     * @param view 用户组视图，默认完整记录
      * @return 组页
      */
     @Operation(summary = "用户组列表")
+    @IamReadOnlyRequest
     @GetMapping
-    public R<PageResponse<ResourceDetail<GroupRecord>>> list(
+    public R<?> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
-            @RequestParam(required = false) String name) {
-        return ok(groups.list(AuthorizationDomain.TENANT, page, pageSize, name));
+            @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = CatalogRecordView.VALUE_CATALOG) String view) {
+        CatalogRecordView recordView;
+        try {
+            recordView = CatalogRecordView.getEnum(view);
+        } catch (IllegalArgumentException exception) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        return recordView == CatalogRecordView.SUMMARY
+                ? ok(groups.listSummaries(AuthorizationDomain.TENANT, page, pageSize, name))
+                : ok(groups.list(AuthorizationDomain.TENANT, page, pageSize, name));
     }
 
     /** 按当前可披露范围分页读取直接成员，用于组织成员对话框已选栏。 */

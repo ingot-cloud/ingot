@@ -8,7 +8,8 @@ import com.ingot.cloud.iam.application.organization.DepartmentLeaderService;
 import com.ingot.cloud.iam.application.organization.model.DepartmentLeaderPage;
 import com.ingot.cloud.iam.application.organization.model.DepartmentLeaderUpdateInput;
 import org.springframework.web.bind.annotation.PatchMapping;
-import com.ingot.cloud.iam.domain.shared.IamPurposes;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.cloud.iam.application.shared.model.CreatedResource;
 import com.ingot.cloud.iam.application.organization.model.DepartmentDraft;
 import com.ingot.cloud.iam.application.organization.model.DepartmentRecord;
@@ -57,8 +58,14 @@ public class TenantDepartmentAPI implements RShortcuts {
     @Operation(summary = "部门树")
     @IamReadOnlyRequest
     @GetMapping
-    public R<List<DepartmentTreeNode>> list(@RequestParam SelectionPurpose purpose) {
-        IamPurposes.require(purpose, SelectionPurpose.MANAGED_DEPARTMENT);
+    public R<List<DepartmentTreeNode>> list(
+            @io.swagger.v3.oas.annotations.Parameter(required = true) @RequestParam(required = false) String purpose) {
+        if (purpose == null || purpose.isBlank()) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "请选择部门查询用途");
+        }
+        if (!SelectionPurpose.MANAGED_DEPARTMENT.getValue().equals(purpose.trim())) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "部门查询用途无效");
+        }
         return ok(departments.list());
     }
 

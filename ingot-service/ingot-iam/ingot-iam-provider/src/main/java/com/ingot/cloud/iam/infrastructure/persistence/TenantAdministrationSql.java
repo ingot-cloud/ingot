@@ -15,20 +15,14 @@ public final class TenantAdministrationSql {
     /** 当前分配及主体展示。 */
     public static final String ASSIGNMENT_COLUMNS = "ra.id,ra.tenant_id,ra.subject_type,ra.tenant_member_id AS member_id,ra.tenant_group_id AS group_id,ra.role_id,ra.role_kind,d.current_revision_id,ra.scope_bindings,ra.delegation_grant_id,ra.valid_from,ra.valid_until,ra.status,ra.source,ra.version,ra.created_at,COALESCE(m.display_name,g.name) AS subject_name,d.name AS role_name";
     /** 分配真实关联表。 */
-    public static final String ASSIGNMENT_FROM = " FROM iam_role_assignment ra JOIN iam_role_definition d ON d.id=ra.role_id LEFT JOIN iam_tenant_member m ON m.tenant_id=ra.tenant_id AND m.id=ra.tenant_member_id LEFT JOIN iam_tenant_group g ON g.tenant_id=ra.tenant_id AND g.id=ra.tenant_group_id ";
+    public static final String ASSIGNMENT_BASE = " FROM iam_role_assignment ra ";
+    /** 分配角色与主体显示名称。 */
+    public static final String ASSIGNMENT_JOINS = " JOIN iam_role_definition d ON d.id=ra.role_id LEFT JOIN iam_tenant_member m ON m.tenant_id=ra.tenant_id AND m.id=ra.tenant_member_id LEFT JOIN iam_tenant_group g ON g.tenant_id=ra.tenant_id AND g.id=ra.tenant_group_id ";
+    /** 按真实分配关联搜索或投影。 */
+    public static final String ASSIGNMENT_FROM = ASSIGNMENT_BASE + ASSIGNMENT_JOINS;
     /** 委派列。 */
     public static final String DELEGATION_COLUMNS = "dl.id,dl.tenant_id,dl.tenant_administrator_id AS administrator_member_id,dl.valid_from,dl.valid_until,dl.max_assignment_duration_seconds AS duration_seconds,dl.max_assignment_duration_nanos AS duration_nanos,dl.status,dl.version,m.display_name AS administrator_name,dl.created_at";
 
-    /** 当前分配可见范围和来源条件；空集合恒拒绝。 */
-    public static final String ASSIGNMENT_FILTER = """
-        WHERE ra.domain='TENANT' AND ra.tenant_id=#{tenantId}
-        <if test="visible != null"><choose><when test="visible.isEmpty()"> AND ra.id IN (NULL)</when><otherwise> AND ra.id IN
-         <foreach collection='visible' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
-        <if test="sources != null"><choose><when test="sources.isEmpty()"> AND ra.delegation_grant_id IN (NULL)</when><otherwise> AND ra.delegation_grant_id IN
-         <foreach collection='sources' item='v' open='(' close=')' separator=','>#{v}</foreach></otherwise></choose></if>
-        <if test="type != null"> AND ra.subject_type=#{type}</if>
-        <if test="keyword != null"> AND (m.display_name LIKE #{keyword} ESCAPE '!' OR g.name LIKE #{keyword} ESCAPE '!' OR d.name LIKE #{keyword} ESCAPE '!')</if>
-        """;
     /** 委派治理对象可见范围。 */
     public static final String DELEGATION_FILTER = """
         WHERE dl.domain='TENANT' AND dl.tenant_id=#{tenantId}

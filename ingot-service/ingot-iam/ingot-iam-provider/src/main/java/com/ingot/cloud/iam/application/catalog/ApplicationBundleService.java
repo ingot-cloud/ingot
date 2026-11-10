@@ -54,9 +54,7 @@ public class ApplicationBundleService {
         operationsContext.access().require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_CREATE);
         operationsContext.access().require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MENU_CREATE);
         ApplicationDraft application = input.application();
-        if (application.domain() == AuthorizationDomain.PLATFORM && application.baseline()) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        }
+        CatalogOperations.requireBaselineDomain(application.domain(), application.baseline());
         return operationsContext.transaction().execute(status -> {
             long appId = operationsContext.access().nextId();
             IamApplicationEntity entity = new IamApplicationEntity();
@@ -74,7 +72,7 @@ public class ApplicationBundleService {
                 operationsContext.catalog().insertApplication(entity);
             }
             catch (DuplicateKeyException exception) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), CatalogOperations.DUPLICATE_APPLICATION_CODE);
             }
             operationsContext.audits().write(actor.context(), operationsContext.access().nextId(), CatalogOperations.APPLICATION, IamIds.text(appId), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, application.name()), Map.of(CatalogOperations.APPLICATION, "0"));

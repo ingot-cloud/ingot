@@ -20,7 +20,7 @@ class IamErrorHandlerTest {
     @Test
     void iamReasonCodesUseDeclaredHttpStatus() {
         for (IamReasonCode reason : IamReasonCode.values()) {
-            var response = handler.bizException(new BizException(reason));
+            var response = handler.bizException(new BizException(reason), new org.springframework.mock.web.MockHttpServletRequest());
             assertEquals(reason.getHttpStatus(), response.getStatusCode().value());
             assertEquals(reason.getCode(), response.getBody().getCode());
             assertNull(response.getBody().getData());
@@ -36,7 +36,7 @@ class IamErrorHandlerTest {
 
     @Test
     void foreignBizCodesStayInternalServerError() {
-        var response = handler.bizException(new BizException("OtherServiceError", "其他服务错误"));
+        var response = handler.bizException(new BizException("OtherServiceError", "其他服务错误"), new org.springframework.mock.web.MockHttpServletRequest());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals("OtherServiceError", response.getBody().getCode());
     }

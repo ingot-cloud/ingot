@@ -1,7 +1,6 @@
 package com.ingot.framework.core.config;
 
 import com.ingot.framework.core.error.InErrorAttributes;
-import com.ingot.framework.core.utils.RuntimeEnvironment;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -20,8 +19,9 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class ErrorConfig {
 
+    /** 装配只返回公开文案的 Servlet 错误属性。 */
     @Bean
-    public ErrorAttributes errorAttributes(RuntimeEnvironment environment) {
-        return new InErrorAttributes(environment);
+    public ErrorAttributes errorAttributes() {
+        return new InErrorAttributes();
     }
 }

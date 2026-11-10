@@ -168,10 +168,10 @@ public class MenuCatalogService {
             IamIds.requireVersion(input.expectedVersion(), CatalogOperations.version(current.getVersion()));
             Long parentId = requireMenuParent(appId, input.menu().parentId());
             if (parentId != null && parentId == id) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "菜单不能选择自身作为上级菜单");
             }
             if (parentId != null && operationsContext.catalog().isMenuAncestor(appId, parentId, id)) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "菜单不能移到自己的下级菜单下");
             }
             MenuDraft draft = MenuConfiguration.normalize(input.menu(), current);
             operationsContext.catalog().updateMenu(appId, id, parentId, draft.name(), CatalogOperations.nullable(draft.path()), CatalogOperations.nullable(draft.viewPath()),
@@ -221,7 +221,7 @@ public class MenuCatalogService {
         }
         long id = IamIds.require(parentId);
         if (!operationsContext.catalog().existsMenu(applicationId, id)) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND.getCode(), "上级菜单不存在或不可访问，请重新选择上级菜单");
         }
         return id;
     }

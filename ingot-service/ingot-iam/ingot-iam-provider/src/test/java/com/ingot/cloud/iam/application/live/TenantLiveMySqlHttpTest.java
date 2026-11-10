@@ -1,5 +1,21 @@
 package com.ingot.cloud.iam.application.live;
 
+import com.ingot.cloud.iam.application.group.GroupService;
+import com.ingot.cloud.iam.application.organization.MemberFacade;
+import com.ingot.cloud.iam.application.organization.MemberQueryService;
+import com.ingot.cloud.iam.application.organization.OrganizationMemberDepartments;
+import com.ingot.cloud.iam.application.organization.OrganizationMemberQueryService;
+import com.ingot.cloud.iam.infrastructure.persistence.OrganizationMemberRepository;
+import com.ingot.cloud.iam.interfaces.http.platform.PlatformGroupAPI;
+import com.ingot.cloud.iam.interfaces.http.platform.PlatformMemberCommandAPI;
+import com.ingot.cloud.iam.interfaces.http.tenant.TenantMemberCommandAPI;
+import com.ingot.cloud.iam.interfaces.http.tenant.TenantGroupAPI;
+import com.ingot.cloud.iam.interfaces.http.tenant.TenantWorkbenchAPI;
+import com.ingot.cloud.iam.application.tenant.TenantWorkbenchService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.locks.LockSupport;
+
 import com.ingot.cloud.iam.application.authorization.scope.TenantScopeBindingService;
 import com.ingot.cloud.iam.application.role.TenantRoleLockService;
 import com.ingot.cloud.iam.application.role.TenantRoleDefinitionResolver;
@@ -173,6 +189,50 @@ class TenantLiveMySqlHttpTest {
         var entitlements = new EntitlementService(access, IamMybatisTestAccess.audits(source), changes,
                 catalogRepository, IamMybatisTestAccess.entitlements(source), IamMybatisTestAccess.tenants(source),
                 new EntitlementResolver(IamMybatisTestAccess.catalog(source), catalogRepository), transactions);
+        var groups = IamMybatisTestAccess.groups(source);
+        var members = IamMybatisTestAccess.memberQueries(source);
+        var organizationMembers = new OrganizationMemberRepository(IamMybatisTestAccess.mapper(source, IamTenantMemberMapper.class));
+        var departments = new DepartmentQueryRepository(IamMybatisTestAccess.mapper(source, IamDepartmentMapper.class),
+                IamMybatisTestAccess.mapper(source, IamMemberDepartmentMapper.class),
+                IamMybatisTestAccess.mapper(source, IamTenantMemberMapper.class));
+        var closure = new DepartmentClosure(IamMybatisTestAccess.mapper(source, IamDepartmentMapper.class));
+        var groupService = new GroupService(access, IamMybatisTestAccess.audits(source), changes, groups,
+                IamMybatisTestAccess.recipients(source), closure, resources, organizationMembers, transactions);
+        var manifests = com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.manifests();
+        var registry = new com.ingot.cloud.iam.application.authorization.extension.BuiltinResourceProviders(
+                IamMybatisTestAccess.mapper(source, AuthorizationCandidateMapper.class)).registry(List.of());
+        var metadata = new com.ingot.cloud.iam.application.authorization.extension.ResourceFieldMetadata(
+                IamMybatisTestAccess.mapper(source, IamApplicationMapper.class),
+                IamMybatisTestAccess.mapper(source, IamResourceMapper.class),
+                IamMybatisTestAccess.mapper(source, IamActionMapper.class), registry, manifests,
+                com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache());
+        var fields = Boolean.parseBoolean(System.getenv("IAM_TENANT_CONTEXT_BENCHMARK"))
+                ? com.ingot.cloud.iam.fixture.FieldAccessEvaluatorFixture.create(
+                        IamMybatisTestAccess.policies(source), IamMybatisTestAccess.mapper(source, IamMemberDepartmentMapper.class),
+                        closure, com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache(),
+                        com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.projection(), metadata,
+                        com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache())
+                : IamMybatisTestAccess.fields(source);
+        var platformFields = new com.ingot.cloud.iam.application.authorization.extension.RoleFieldPermissionService(
+                metadata, IamMybatisTestAccess.roles(source),
+                new com.ingot.cloud.iam.infrastructure.persistence.AuthorizationScopeTransportCompiler(closure,
+                        IamMybatisTestAccess.mapper(source, IamMemberDepartmentMapper.class)),
+                evaluator, manifests, com.ingot.cloud.iam.infrastructure.persistence.FieldTestSupport.noCache());
+        var memberQueries = new MemberQueryService(platformFields, access, resources,
+                new com.ingot.cloud.iam.application.authorization.evaluation.ObjectCapabilities(evaluator, resources),
+                fields, members, groups, null);
+        var organizationQueries = new OrganizationMemberQueryService(access, resources, organizationMembers,
+                new OrganizationMemberDepartments(access, resources, members, departments), fields, groups,
+                closure, departments, members);
+        var memberFacade = new MemberFacade(memberQueries, null);
+        web.registerBean(PlatformGroupAPI.class, () -> new PlatformGroupAPI(groupService, memberFacade));
+        web.registerBean(PlatformMemberCommandAPI.class, () -> new PlatformMemberCommandAPI(null, memberFacade, null));
+        web.registerBean(TenantMemberCommandAPI.class, () -> new TenantMemberCommandAPI(
+                null, memberFacade, null, null, null, null, organizationQueries));
+        web.registerBean(TenantGroupAPI.class, () -> new TenantGroupAPI(groupService, organizationQueries));
+        web.registerBean(TenantWorkbenchAPI.class, () -> new TenantWorkbenchAPI(
+                new TenantWorkbenchService(sessions, resources, IamMybatisTestAccess.tenants(source),
+                        members, departments, groups)));
         web.registerBean(CatalogFacade.class, () -> catalog);
         web.registerBean(PlatformApplicationAPI.class, () -> new PlatformApplicationAPI(catalog));
         web.registerBean(TenantApplicationAPI.class, () -> new TenantApplicationAPI(entitlements));
@@ -682,6 +742,545 @@ class TenantLiveMySqlHttpTest {
         assertEquals(assignmentsBefore,jdbc.queryForList("SELECT * FROM iam_role_assignment WHERE role_id=? ORDER BY id",role));
         return changed;
     }
+    @Test
+    @Order(50)
+    void groupSummaryRetainsPageAndPermissionsWithoutLoadingBindings() throws Exception {
+        jdbc.update("INSERT INTO iam_platform_group(id,name) VALUES (5101,'Group Platform'),(5102,'Group Platform 2')");
+        jdbc.update("INSERT INTO iam_platform_group_member(group_id,member_id) VALUES (5101,1001)");
+        jdbc.update("INSERT INTO iam_tenant_group(id,tenant_id,name) VALUES (5103,10,'Group Tenant'),(5104,10,'Group Tenant 2')");
+        jdbc.update("INSERT INTO iam_tenant_group_member(tenant_id,group_id,member_id) VALUES (10,5103,104)");
+        jdbc.update("INSERT INTO iam_tenant_group_department(tenant_id,group_id,department_id,include_descendants) VALUES (10,5103,11,TRUE)");
+        for (String domain : List.of("platform", "tenant")) {
+            String actor = domain.equals("platform") ? "platform" : "owner-a";
+            String path = "/v1/" + domain + "/groups";
+            var summaries = successfulGet(actor, path + "?name=Group&view=SUMMARY");
+            var full = successfulGet(actor, path + "?name=Group");
+            assertEquals(full.path("total"), summaries.path("total"));
+            assertEquals(2, summaries.path("items").size());
+            var summary = summaries.path("items").get(0);
+            var detail = full.path("items").get(0);
+            assertEquals(detail.path("record").path("id"), summary.path("record").path("id"));
+            assertEquals(detail.path("version"), summary.path("version"));
+            assertEquals(detail.path("capabilities"), summary.path("capabilities"));
+            assertFalse(summary.path("record").has("selection"));
+            assertEquals(1, detail.path("record").path("visibleMemberCount").asInt());
+            assertEquals(1, detail.path("record").path("selection").path("members").size());
+            long before = mysqlSelects();
+            successfulGet(actor, path + "?name=Group&pageSize=1");
+            long oneGroup = mysqlSelects() - before;
+            before = mysqlSelects();
+            successfulGet(actor, path + "?name=Group&pageSize=100");
+            assertEquals(oneGroup, mysqlSelects() - before);
+            assertTrue(successfulGet(actor, path + "?name=Absent&view=SUMMARY").path("items").isEmpty());
+        }
+        var otherTenant = successfulGet("owner-b", "/v1/tenant/groups?name=Group&view=SUMMARY");
+        assertTrue(otherTenant.path("items").isEmpty());
+    }
+
+    @Test
+    @Order(53)
+    void representativeReadRoutesOnSeededDirectories() throws Exception {
+        String platformApp = jdbc.queryForObject("SELECT id FROM iam_application WHERE code='iam-platform'", String.class);
+        String tenantApp = jdbc.queryForObject("SELECT id FROM iam_application WHERE code='iam-tenant'", String.class);
+        for (String path : List.of("/v1/me/bootstrap", "/v1/me/capabilities", "/v1/platform/shared-roles",
+                "/v1/platform/members", "/v1/platform/members/context",
+                "/v1/platform/applications?domain=PLATFORM",
+                "/v1/platform/applications/" + platformApp,
+                "/v1/platform/applications/" + platformApp + "/resources",
+                "/v1/platform/applications/" + platformApp + "/menus",
+                "/v1/platform/applications/" + platformApp + "/action-catalog")) {
+            measureReadRoute("platform", path);
+        }
+        for (String path : List.of("/v1/me/bootstrap", "/v1/me/capabilities", "/v1/tenant/workbench/statistics",
+                "/v1/tenant/roles", "/v1/tenant/assignments", "/v1/tenant/delegations",
+                "/v1/tenant/members", "/v1/tenant/members/context", "/v1/tenant/members/picker",
+                "/v1/tenant/applications", "/v1/tenant/applications/" + tenantApp + "/action-catalog",
+                "/v1/tenant/roles/grant-catalog?applicationId=" + tenantApp)) {
+            measureReadRoute("owner-a", path);
+        }
+    }
+
+    @Test
+    @Order(54)
+    void catalogAndAssignmentWritesReportTheBusinessFailure() throws Exception {
+        String apps = "/v1/platform/applications";
+        var input = Map.of("code", "message-fixture", "domain", "PLATFORM", "name", "提示验收应用");
+        String id = catalogResponse(first, "platform", "POST", apps, input).path("id").asText();
+        assertFailure(request(first, "platform", "POST", apps, input),
+                400, "InvalidArgument", "应用编码已存在");
+        String app = apps + "/" + id;
+        String menus = app + "/menus";
+        var folder = Map.of("name", "验收目录", "kind", "DIRECTORY",
+                "accessMode", "OPEN", "matchMode", "ANY", "actionIds", List.of());
+        String parent = catalogResponse(first, "platform", "POST", menus, folder).path("id").asText();
+        var invalidParent = new java.util.HashMap<String, Object>(folder);
+        invalidParent.put("parentId", parent);
+        assertFailure(request(first, "platform", "PUT", menus + "/" + parent,
+                        Map.of("expectedVersion", "0", "menu", invalidParent)),
+                400, "InvalidArgument", "菜单不能选择自身作为上级菜单");
+        String child = catalogResponse(first, "platform", "POST", menus, invalidParent).path("id").asText();
+        assertFailure(request(first, "platform", "DELETE", menus + "/" + parent, null),
+                400, "ObjectInUse", "下仍有子菜单");
+        assertFailure(request(first, "platform", "DELETE", app, null),
+                400, "ObjectInUse", "下仍有菜单");
+        catalogResponse(first, "platform", "DELETE", menus + "/" + child, null);
+        catalogResponse(first, "platform", "DELETE", menus + "/" + parent, null);
+        catalogResponse(first, "platform", "DELETE", app, null);
+        assertFailure(request(second, "platform", "GET", app, null), 404, "ObjectNotFound", "应用不存在或不可访问");
+        assertFailure(request(first, "owner-a", "DELETE", "/v1/tenant/assignments/invalid", null),
+                400, "InvalidArgument", "无法撤销角色分配");
+
+        String roles = "/v1/tenant/roles";
+        var roleDraft = Map.of("code", "message-role", "name", "提示验收角色",
+                "definition", definition(action(IamAction.VALUE_TENANT_MEMBER_READ)));
+        String role = catalogResponse(first, "owner-a", "POST", roles, roleDraft).path("id").asText();
+        assertFailure(request(first, "owner-a", "POST", roles, roleDraft),
+                400, "InvalidArgument", "角色编码已存在");
+        String assignments = "/v1/tenant/assignments";
+        var missingRecipient = Map.of("items", List.of(Map.of("subject", Map.of("type", "MEMBER", "id", "99999"),
+                "roleId", role, "scopeBindings", Map.of())));
+        assertFailure(request(first, "owner-a", "POST", assignments, missingRecipient),
+                404, "ObjectNotFound", "接收成员不存在或不可访问");
+        var validAssignment = Map.of("items", List.of(Map.of("subject", Map.of("type", "MEMBER", "id", "102"),
+                "roleId", role, "scopeBindings", Map.of())));
+        String assignment = catalogResponse(first, "owner-a", "POST", assignments, validAssignment).path("id").asText();
+        assertFailure(request(first, "owner-a", "DELETE", roles + "/" + role, null),
+                400, "ObjectInUse", "该角色仍有分配记录");
+        assertFailure(request(second, "owner-b", "GET", roles + "/" + role, null),
+                404, "ObjectNotFound", "角色不存在或不可访问");
+        catalogResponse(first, "owner-a", "DELETE", assignments + "/" + assignment, null);
+    }
+
+    private void assertFailure(HttpResponse<String> response, int status, String code, String message) throws Exception {
+        assertEquals(status, response.statusCode(), response.body());
+        var failure = json.readTree(response.body());
+        assertEquals(code, failure.path("code").asText(), response.body());
+        assertTrue(failure.path("message").asText().contains(message), response.body());
+    }
+
+    @Test
+    @Order(55)
+    @EnabledIfEnvironmentVariable(named = "IAM_TENANT_CONTEXT_BENCHMARK", matches = "true")
+    void tenantContextAndAssignmentReadBenchmark() throws Exception {
+        String permission = action(IamAction.VALUE_TENANT_MEMBER_READ);
+        String roleId = catalogResponse(first, "owner-a", "POST", "/v1/tenant/roles",
+                Map.of("code", "batch-probe", "name", "Batch probe", "definition", definition(permission))).path("id").asText();
+        String resource = jdbc.queryForObject("SELECT resource_id FROM iam_action WHERE id=?", String.class, permission);
+        String sourceId = catalogResponse(first, "owner-a", "POST", "/v1/tenant/delegations",
+                Map.of("administratorMemberId", "103", "allowedRoleIds", List.of(roleId),
+                        "recipientSelection", Map.of("members", List.of("102"), "departments", List.of()),
+                        "resourceScopeCeilings", List.of(Map.of("resourceId", resource,
+                                "scopes", List.of(Map.of("kind", "ALL")), "scopeBindings", Map.of())),
+                        "maxAssignmentDuration", "P7D")).path("id").asText();
+        jdbc.update("""
+                INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,tenant_member_id,role_id,
+                    role_kind,role_tenant_key,scope_bindings,valid_from,valid_until,delegation_grant_id,source,created_at)
+                WITH RECURSIVE seq(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM seq WHERE n<120)
+                SELECT 700000+n,'TENANT',10,'MEMBER',102,d.id,d.kind,10,'{}','2090-01-01','2090-01-02',
+                    IF(MOD(n,2)=0,CAST(? AS UNSIGNED),NULL),'MANUAL','2020-01-01'
+                FROM seq JOIN iam_role_definition d ON d.id=?
+                """, sourceId, roleId);
+        assertEquals(0, successfulGet("owner-b", "/v1/tenant/assignments").path("total").asInt());
+        for (String path : List.of("/v1/tenant/members/context", "/v1/tenant/assignments?pageSize=1",
+                "/v1/tenant/assignments?pageSize=20", "/v1/tenant/assignments?pageSize=100",
+                "/v1/tenant/assignments?pageSize=100&page=2")) {
+            var sample = successfulGet("owner-a", path);
+            for (int i = 0; i < 6; i++) successfulGet("owner-a", path);
+            var before = mysqlReadWorkload();
+            var statements = statementCounts();
+            List<Double> timings = new ArrayList<>();
+            for (int i = 0; i < 15; i++) {
+                long started = System.nanoTime();
+                assertEquals(sample, successfulGet("owner-a", path));
+                timings.add((System.nanoTime() - started) / 1_000_000.0);
+            }
+            timings.sort(Double::compareTo);
+            var after = mysqlReadWorkload();
+            System.out.println("IAM_CONTEXT_BENCH " + json.writeValueAsString(Map.of("path", path,
+                    "p50Ms", percentile(timings, .50), "p95Ms", percentile(timings, .95),
+                    "meanSelects", (after.selects() - before.selects()) / 15.0,
+                    "meanSqlMs", (after.sqlMs() - before.sqlMs()) / 15.0,
+                    "meanRows", (after.rows() - before.rows()) / 15.0, "sample", sample)));
+            if (path.endsWith("/context")) {
+                statementCounts().forEach((sql, count) -> {
+                    long delta = count - statements.getOrDefault(sql, 0L);
+                    if (delta > 0) System.out.println("IAM_CONTEXT_DIGEST " + delta + " " + sql);
+                });
+            }
+        }
+        if (Boolean.parseBoolean(System.getenv("IAM_ASSIGNMENT_VOLUME_BENCHMARK"))) {
+            jdbc.update("""
+                    INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,tenant_member_id,role_id,
+                        role_kind,role_tenant_key,scope_bindings,valid_from,valid_until,delegation_grant_id,source,created_at)
+                    WITH digits(n) AS (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL
+                        SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9),
+                    seq(n) AS (SELECT a.n+10*b.n+100*c.n+1000*d.n+10000*e.n
+                        FROM digits a CROSS JOIN digits b CROSS JOIN digits c CROSS JOIN digits d CROSS JOIN digits e)
+                    SELECT 800000+n,'TENANT',10,'MEMBER',102,d.id,d.kind,10,'{}','2090-01-01','2090-01-02',
+                        IF(MOD(n,2)=0,CAST(? AS UNSIGNED),NULL),'MANUAL','2020-01-01'
+                    FROM seq JOIN iam_role_definition d ON d.id=? WHERE n<99880
+                    """, sourceId, roleId);
+            measureAssignmentVolume("first", "", null, 0, 100_000);
+            measureAssignmentVolume("deep", "&page=4000", null, 79_980, 100_000);
+            measureAssignmentVolume("name-hit", "&keyword=atch%20prob", "%atch prob%", 0, 100_000);
+            measureAssignmentVolume("name-miss", "&keyword=missing-assignment", "%missing-assignment%", 0, 0);
+        }
+    }
+
+    private void measureAssignmentVolume(String scenario, String query, String keyword, int offset, int total) throws Exception {
+        var path = "/v1/tenant/assignments?pageSize=20" + query;
+        var sample = successfulGet("owner-a", path);
+        assertEquals(total, sample.path("total").asInt());
+        assertEquals(Math.min(20, total), sample.path("items").size());
+        if (total > 0) {
+            long firstId = offset == 0 ? 700_001 : 800_000 + offset - 120;
+            assertEquals(firstId, sample.path("items").get(0).path("record").path("id").asLong());
+        }
+        measureReadRoute("owner-a", path);
+        var params = new HashMap<String, Object>(Map.of("tenantId", 10, "offset", offset, "limit", 20));
+        params.put("keyword", keyword);
+        explainAssignment(scenario, "count", com.ingot.cloud.iam.infrastructure.persistence.TenantAssignmentReadSql.COUNT, params);
+        explainAssignment(scenario, "page", com.ingot.cloud.iam.infrastructure.persistence.TenantAssignmentReadSql.PAGE, params);
+    }
+
+    private void explainAssignment(String scenario, String statement, String script, Map<String, Object> params) throws Exception {
+        var config = new org.apache.ibatis.session.Configuration();
+        var sql = new org.apache.ibatis.scripting.xmltags.XMLLanguageDriver()
+                .createSqlSource(config, script, Map.class).getBoundSql(params);
+        var args = sql.getParameterMappings().stream().map(mapping -> params.get(mapping.getProperty())).toArray();
+        System.out.println("IAM_ASSIGNMENT_EXPLAIN " + json.writeValueAsString(Map.of(
+                "scenario", scenario, "statement", statement,
+                "plan", jdbc.queryForObject("EXPLAIN ANALYZE " + sql.getSql(), String.class, args))));
+    }
+
+    @Test
+    @Order(56)
+    void batchAssignmentReadsReevaluateGroupDelegationAndPreserveTenantBoundaries() throws Exception {
+        String rolePermission = action(IamAction.VALUE_TENANT_MEMBER_READ);
+        String role = catalogResponse(first, "owner-a", "POST", "/v1/tenant/roles",
+                Map.of("code", "batch-delegated-group", "name", "Batch delegated group",
+                        "definition", definition(rolePermission))).path("id").asText();
+        String resource = jdbc.queryForObject("SELECT resource_id FROM iam_action WHERE id=?", String.class, rolePermission);
+        String delegation = catalogResponse(first, "owner-a", "POST", "/v1/tenant/delegations",
+                Map.of("administratorMemberId", "103", "allowedRoleIds", List.of(role),
+                        "recipientSelection", Map.of("members", List.of(), "departments",
+                                List.of(Map.of("id", "11", "includeDescendants", true))),
+                        "resourceScopeCeilings", List.of(Map.of("resourceId", resource,
+                                "scopes", List.of(Map.of("kind", "ALL")), "scopeBindings", Map.of())),
+                        "maxAssignmentDuration", "P7D")).path("id").asText();
+        jdbc.update("INSERT INTO iam_tenant_group(id,tenant_id,name) VALUES(5110,10,'Batch inherited group')");
+        jdbc.update("INSERT INTO iam_tenant_group_department(tenant_id,group_id,department_id,include_descendants) VALUES(10,5110,11,TRUE)");
+        String path = "/v1/tenant/assignments";
+        String assigned = catalogResponse(first, "delegate-a", "POST", path, Map.of("items", List.of(
+                Map.of("subject", Map.of("type", "GROUP", "id", "5110"), "roleId", role, "scopeBindings", Map.of(),
+                        "delegationGrantId", delegation, "validUntil", Instant.now().plusSeconds(3600).toString()))))
+                .path("id").asText();
+        assertEquals("ACTIVE", assignmentState("owner-a", path, assigned));
+        assertEquals("ACTIVE", assignmentState("delegate-a", path, assigned));
+        assertEquals("", assignmentState("owner-b", path, assigned));
+
+        var groupSearch = path + "?keyword=Batch%20inherited&subjectType=";
+        assertEquals(assigned, successfulGet("delegate-a", groupSearch + "GROUP")
+                .path("items").get(0).path("record").path("id").asText());
+        assertEquals(0, successfulGet("owner-a", groupSearch + "MEMBER").path("total").asInt());
+        assertEquals(0, successfulGet("owner-b", groupSearch + "GROUP").path("total").asInt());
+        jdbc.update("UPDATE iam_tenant_group SET name='Batch delegated group 100%_!' WHERE tenant_id=10 AND id=5110");
+        assertEquals(1, successfulGet("owner-a", path + "?keyword=Batch%20delegated%20group").path("total").asInt());
+        assertEquals(1, successfulGet("owner-a", path + "?keyword=100%25_%21").path("total").asInt());
+
+        jdbc.update("INSERT INTO iam_tenant_group_member(tenant_id,group_id,member_id) VALUES(10,5110,102)");
+        assertEquals("SOURCE_INVALID", assignmentState("owner-a", path, assigned));
+        jdbc.update("DELETE FROM iam_tenant_group_member WHERE tenant_id=10 AND group_id=5110 AND member_id=102");
+        assertEquals("ACTIVE", assignmentState("owner-a", path, assigned));
+        catalogResponse(first, "owner-a", "DELETE", "/v1/tenant/delegations/" + delegation, null);
+        assertEquals("SOURCE_INVALID", assignmentState("owner-a", path, assigned));
+        jdbc.update("UPDATE iam_role_assignment SET valid_from='2020-01-01',valid_until='2020-01-02' WHERE tenant_id=10 AND id=?", assigned);
+        assertEquals("EXPIRED", assignmentState("owner-a", path, assigned));
+    }
+
+    private String assignmentState(String actor, String path, String id) throws Exception {
+        for (var item : successfulGet(actor, path + "?keyword=Batch%20delegated%20group").path("items")) {
+            var record = item.path("record");
+            if (id.equals(record.path("id").asText())) return record.path("effectiveStatus").asText();
+        }
+        return "";
+    }
+
+    private Map<String, Long> statementCounts() {
+        var counts = new java.util.HashMap<String, Long>();
+        jdbc.query("""
+                SELECT DIGEST_TEXT, COUNT_STAR
+                  FROM performance_schema.events_statements_summary_by_digest
+                 WHERE SCHEMA_NAME='ingot_iam' AND (DIGEST_TEXT LIKE 'SELECT %' OR DIGEST_TEXT LIKE 'WITH %')
+                   AND LOWER(DIGEST_TEXT) NOT LIKE '%events_statements_summary_by_digest%'
+                """, (org.springframework.jdbc.core.RowCallbackHandler) row ->
+                counts.put(row.getString(1), row.getLong(2)));
+        return counts;
+    }
+
+    private void measureReadRoute(String actor, String path) throws Exception {
+        long firstStarted = System.nanoTime();
+        successfulGet(actor, path);
+        double firstMs = (System.nanoTime() - firstStarted) / 1_000_000.0;
+        var before = mysqlReadWorkload();
+        List<Double> warm = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            long start = System.nanoTime();
+            successfulGet(actor, path);
+            warm.add((System.nanoTime() - start) / 1_000_000.0);
+        }
+        warm.sort(Double::compare);
+        var after = mysqlReadWorkload();
+        System.out.println("IAM_READ_SMOKE " + json.writeValueAsString(Map.of(
+                "actor", actor, "path", path, "firstMs", firstMs, "p95Ms", percentile(warm, .95),
+                "p99Ms", percentile(warm, .99), "meanSelects", (after.selects() - before.selects()) / 20.0,
+                "meanSqlMs", (after.sqlMs() - before.sqlMs()) / 20.0,
+                "meanRows", (after.rows() - before.rows()) / 20.0)));
+    }
+
+    @Test
+    @Order(52)
+    @EnabledIfEnvironmentVariable(named="IAM_GROUP_BROWSER_SCRIPT", matches=".+")
+    void groupWorkspaceBrowserAgainstMySql() throws Exception {
+        var command = new ProcessBuilder(System.getenv().getOrDefault("IAM_GROUP_NODE", "node"),
+                System.getenv("IAM_GROUP_BROWSER_SCRIPT")).redirectErrorStream(true);
+        command.environment().put("IAM_FIXTURE_URL", "http://127.0.0.1:" + first.getWebServer().getPort());
+        var process = command.start();
+        String output = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        System.out.println(output);
+        assertEquals(0, process.waitFor(), output);
+    }
+
+    @Test
+    @Order(51)
+    @EnabledIfEnvironmentVariable(named="IAM_GROUP_READ_BENCHMARK",matches="true")
+    void largeGroupReadBenchmark() throws Exception {
+        var small = mysqlWorkload();
+        successfulGet("owner-a", "/v1/me/capabilities");
+        var smallAfter = mysqlWorkload();
+        seedLargeUserAssociations();
+        var large = mysqlWorkload();
+        successfulGet("owner-a", "/v1/me/capabilities");
+        var largeAfter = mysqlWorkload();
+        System.out.println("IAM_GROUP_AUTH_SCALE " + json.writeValueAsString(Map.of(
+                "smallSelects", smallAfter.selects() - small.selects(),
+                "largeSelects", largeAfter.selects() - large.selects(),
+                "smallRows", smallAfter.rows() - small.rows(),
+                "largeRows", largeAfter.rows() - large.rows())));
+        for (String domain : List.of("platform", "tenant")) {
+            String actor = domain.equals("platform") ? "platform" : "owner-a";
+            String groups = "/v1/" + domain + "/groups?name=Perf&pageSize=20&view=SUMMARY";
+            String members = domain.equals("platform") ? "/v1/platform/groups/5200/members?pageSize=20"
+                    : "/v1/tenant/groups/5200/effective-members?pageSize=20";
+            for (int i = 0; i < 12; i++) successfulGet(actor, groups);
+            long before = mysqlSelects();
+            var page = successfulGet(actor, groups);
+            long selects = mysqlSelects() - before;
+            System.out.println("IAM_GROUP_PROBE " + json.writeValueAsString(Map.of(
+                    "domain", domain, "selects", selects, "items", page.path("items").size(),
+                    "responseBytes", json.writeValueAsBytes(page).length,
+                    "view", page.path("items").get(0).path("record").has("selection") ? "full" : "summary")));
+            successfulGet(actor, members);
+            int selectedRound = Integer.parseInt(System.getenv().getOrDefault("IAM_GROUP_BENCHMARK_ROUND", "0"));
+            for (int round = 1; round <= 3; round++) {
+                if (selectedRound != 0 && selectedRound != round) continue;
+                measureGroupReads(domain, actor, groups, null, 20, round);
+                measureGroupReads(domain, actor, groups, members, 20, round);
+            }
+            if (selectedRound <= 1) measureGroupReads(domain, actor, groups, null, 100, 1);
+        }
+        for (String path : List.of("/v1/me/bootstrap", "/v1/me/capabilities", "/v1/tenant/workbench/statistics",
+                "/v1/tenant/roles", "/v1/tenant/assignments", "/v1/tenant/delegations",
+                "/v1/tenant/applications", "/v1/tenant/members", "/v1/tenant/members/context",
+                "/v1/tenant/members/21000000/groups", "/v1/tenant/members/picker?pageSize=20",
+                "/v1/tenant/groups?page=2&pageSize=100",
+                "/v1/tenant/groups/5220/effective-members?page=400&pageSize=20")) {
+            long before = mysqlSelects();
+            long start = System.nanoTime();
+            var response = request(first, "owner-a", "GET", path, null);
+            System.out.println("IAM_GROUP_SCALE " + json.writeValueAsString(Map.of(
+                    "path", path, "status", response.statusCode(), "selects", mysqlSelects() - before,
+                    "ms", (System.nanoTime() - start) / 1_000_000.0)));
+            assertEquals(200, response.statusCode(), response.body());
+        }
+        var largeGroup = successfulGet("owner-a", "/v1/tenant/groups?name=Large%2020&pageSize=1");
+        var largeRecord = largeGroup.path("items").get(0).path("record");
+        assertEquals(12250, largeRecord.path("selection").path("members").size());
+        assertEquals(100000L, largeRecord.path("visibleMemberCount").asLong());
+        if ("3".equals(System.getenv("IAM_GROUP_BENCHMARK_ROUND"))) {
+            verifyRoleMemberPaginationAtScale();
+        }
+        for (String sql : List.of(
+                "SELECT id FROM iam_tenant_group WHERE tenant_id=10 AND name LIKE '%Perf%' ORDER BY id LIMIT 20",
+                "SELECT COUNT(*),SUM(version),MAX(id) FROM iam_tenant_member WHERE tenant_id=10",
+                "SELECT id FROM iam_tenant_member WHERE tenant_id=10 AND status='ACTIVE' ORDER BY id LIMIT 20 OFFSET 80000",
+                "SELECT member_id FROM iam_tenant_group_member WHERE tenant_id=10 AND group_id=5220 ORDER BY member_id LIMIT 20 OFFSET 8000")) {
+            System.out.println("IAM_GROUP_EXPLAIN " + json.writeValueAsString(
+                    Map.of("sql", sql, "plan", jdbc.queryForObject("EXPLAIN ANALYZE " + sql, String.class))));
+        }
+    }
+
+    private void verifyRoleMemberPaginationAtScale() throws Exception {
+        String permission = action(IamAction.VALUE_TENANT_MEMBER_READ);
+        var created = request(first, "owner-a", "POST", "/v1/tenant/roles",
+                Map.of("code", "scale-members", "name", "Scale members", "definition", definition(permission)));
+        assertEquals(200, created.statusCode(), created.body());
+        String roleId = data(created).path("id").asText();
+        var grant = request(first, "owner-a", "POST", "/v1/tenant/assignments", Map.of("items", List.of(
+                Map.of("subject", Map.of("type", "GROUP", "id", "5220"), "roleId", roleId, "scopeBindings", Map.of()))));
+        assertEquals(200, grant.statusCode(), grant.body());
+        String path = "/v1/tenant/roles/" + roleId + "/members";
+        var before = mysqlWorkload();
+        long start = System.nanoTime();
+        var page = successfulGet("owner-a", path + "?page=4000&pageSize=20");
+        var after = mysqlWorkload();
+        assertEquals(20, page.path("items").size());
+        assertEquals(100000L, page.path("total").asLong());
+        System.out.println("IAM_GROUP_ROLE_MEMBERS " + json.writeValueAsString(Map.of(
+                "total", page.path("total").asLong(), "selects", after.selects() - before.selects(),
+                "rowsExamined", after.rows() - before.rows(), "ms", (System.nanoTime() - start) / 1_000_000.0)));
+        assertEquals(404, request(second, "owner-b", "GET", path, null).statusCode());
+    }
+
+    private void seedLargeUserAssociations() {
+        jdbc.execute("CREATE TABLE fixture_sequence (n INT NOT NULL PRIMARY KEY)");
+        jdbc.execute("""
+                INSERT INTO fixture_sequence (n)
+                WITH digits AS (SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3
+                  UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9)
+                SELECT a.n+10*b.n+100*c.n+1000*d.n+10000*e.n
+                  FROM digits a CROSS JOIN digits b CROSS JOIN digits c CROSS JOIN digits d CROSS JOIN digits e
+                """);
+        jdbc.execute("""
+                INSERT INTO iam_account (id, username, password_hash)
+                SELECT n+20000000, CONCAT('scale-fixture-',n), 'not-a-credential' FROM fixture_sequence
+                """);
+        jdbc.execute("""
+                INSERT INTO iam_tenant_member (id, tenant_id, account_id, display_name)
+                SELECT n+21000000,10,n+20000000,CONCAT('Member ',n) FROM fixture_sequence
+                """);
+        jdbc.execute("""
+                INSERT INTO iam_platform_member (id, account_id, display_name)
+                SELECT n+22000000,n+20000000,CONCAT('Platform member ',n) FROM fixture_sequence WHERE n < 10000
+                """);
+        jdbc.execute("INSERT INTO iam_tenant_group (id,tenant_id,name) SELECT 5200+n,10,CONCAT(IF(n < 20,'Perf ','Large '),n) FROM fixture_sequence WHERE n < 28");
+        jdbc.execute("INSERT INTO iam_platform_group (id,name) SELECT 5200+n,CONCAT(IF(n < 20,'Perf ','Large '),n) FROM fixture_sequence WHERE n < 30");
+        jdbc.execute("INSERT INTO iam_department (id,tenant_id,parent_id,name) SELECT 5300+n,10,IF(n=0,12,5299+n),CONCAT('Dept ',n) FROM fixture_sequence WHERE n < 9 ORDER BY n");
+        jdbc.execute("""
+                INSERT INTO iam_member_department (tenant_id,member_id,department_id,is_primary)
+                SELECT 10,21000000+member.n,5300+dept.n,dept.n=0
+                  FROM fixture_sequence member JOIN fixture_sequence dept ON dept.n < 9
+                """);
+        jdbc.execute("""
+                INSERT INTO iam_tenant_group_member (tenant_id,group_id,member_id)
+                SELECT 10,IF(n < 2000, 5200+(n DIV 100), 5220+((n-2000) DIV 12250)),21000000+n
+                  FROM fixture_sequence
+                """);
+        jdbc.execute("""
+                INSERT INTO iam_platform_group_member (group_id,member_id)
+                SELECT 5200+grp.n,22000000+member.n
+                  FROM fixture_sequence member
+                  JOIN fixture_sequence grp ON grp.n < 30
+                 WHERE (grp.n < 20 AND member.n < 100)
+                    OR (grp.n >= 20 AND member.n < 9800)
+                """);
+        jdbc.execute("INSERT INTO iam_tenant_group_department (tenant_id,group_id,department_id,include_descendants) VALUES (10,5220,5307,TRUE)");
+        jdbc.execute("DROP TABLE fixture_sequence");
+        assertEquals(100000L, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant_member WHERE id >= 21000000", Long.class));
+        assertEquals(900000L, jdbc.queryForObject("SELECT COUNT(*) FROM iam_member_department WHERE member_id >= 21000000", Long.class));
+        assertEquals(100000L, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant_group_member WHERE member_id >= 21000000", Long.class));
+        assertEquals(100000L, jdbc.queryForObject("SELECT COUNT(*) FROM iam_platform_group_member WHERE member_id >= 22000000", Long.class));
+    }
+
+    private com.fasterxml.jackson.databind.JsonNode successfulGet(String actor, String path) throws Exception {
+        var response = request(first, actor, "GET", path, null);
+        assertEquals(200, response.statusCode(), () -> path + " " + response.body());
+        return data(response);
+    }
+
+    private void measureGroupReads(String domain, String actor, String groups, String members, int qps, int round)
+            throws Exception {
+        int durationSeconds = 4;
+        long spacing = 1_000_000_000L / qps;
+        long deadline = System.nanoTime() + spacing;
+        long firstSend = deadline;
+        var before = mysqlWorkload();
+        int waiting = 0;
+        List<Future<ReadTiming>> requests = new ArrayList<>();
+        try (var workers = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (int i = 0; i < qps * durationSeconds; i++) {
+                long planned = deadline;
+                while (planned > System.nanoTime()) LockSupport.parkNanos(planned - System.nanoTime());
+                waiting = Math.max(waiting, pool.getHikariPoolMXBean().getThreadsAwaitingConnection());
+                requests.add(workers.submit(() -> {
+                    long sent = System.nanoTime();
+                    var response = request(first, actor, "GET", groups, null);
+                    int bytes = response.body().getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+                    if (response.statusCode() != 200) return new ReadTiming(sent, 0, bytes, false);
+                    if (members != null) {
+                        response = request(first, actor, "GET", members, null);
+                        bytes += response.body().getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+                    }
+                    return new ReadTiming(sent, (System.nanoTime() - planned) / 1_000_000.0,
+                            bytes, response.statusCode() == 200);
+                }));
+                deadline += spacing;
+            }
+            var samples = new ArrayList<ReadTiming>();
+            for (var result : requests) samples.add(result.get());
+            var durations = samples.stream().filter(ReadTiming::ok).map(ReadTiming::ms).sorted().toList();
+            long errors = samples.size() - durations.size();
+            var report = new java.util.LinkedHashMap<String, Object>();
+            report.put("domain", domain);
+            report.put("case", members == null ? "groups" : "groups-and-first-members");
+            report.put("round", round);
+            report.put("qps", qps);
+            report.put("actualQps", samples.size() * 1e9 / Math.max(spacing * samples.size(),
+                    samples.stream().mapToLong(ReadTiming::sent).max().orElseThrow() - firstSend + spacing));
+            report.put("completedQps", samples.size() * 1e9 / (System.nanoTime() - firstSend + spacing));
+            report.put("errors", errors);
+            report.put("p50Ms", percentile(durations, .5));
+            report.put("p95Ms", percentile(durations, .95));
+            report.put("p99Ms", percentile(durations, .99));
+            var after = mysqlWorkload();
+            report.put("meanSelects", (after.selects() - before.selects()) / (double) samples.size());
+            report.put("meanSelectMs", (after.sqlMs() - before.sqlMs()) / samples.size());
+            report.put("meanRowsExamined", (after.rows() - before.rows()) / (double) samples.size());
+            report.put("meanBytes", samples.stream().mapToInt(ReadTiming::bytes).average().orElseThrow());
+            report.put("peakConnectionWaiters", waiting);
+            System.out.println("IAM_GROUP_PERFORMANCE " + json.writeValueAsString(report));
+            if (qps == 20) assertEquals(0L, errors, report.toString());
+        }
+    }
+
+    private SqlWorkload mysqlReadWorkload() {
+        return mysqlWorkload(true);
+    }
+
+    private SqlWorkload mysqlWorkload() {
+        return mysqlWorkload(false);
+    }
+
+    private SqlWorkload mysqlWorkload(boolean includeCtes) {
+        return jdbc.queryForObject("""
+                SELECT COALESCE(SUM(COUNT_STAR),0) AS queries,
+                       COALESCE(SUM(SUM_TIMER_WAIT),0)/1000000000 AS milliseconds,
+                       COALESCE(SUM(SUM_ROWS_EXAMINED),0) AS inspected
+                  FROM performance_schema.events_statements_summary_by_digest
+                 WHERE SCHEMA_NAME='ingot_iam' AND (DIGEST_TEXT LIKE 'SELECT %' OR (? AND DIGEST_TEXT LIKE 'WITH %'))
+                   AND LOWER(DIGEST_TEXT) NOT LIKE '%events_statements_summary_by_digest%'
+                """, (row, index) -> new SqlWorkload(row.getLong("queries"),
+                row.getDouble("milliseconds"), row.getLong("inspected")), includeCtes);
+    }
+
+    private record SqlWorkload(long selects, double sqlMs, long rows) { }
+
+    private static double percentile(List<Double> values, double quantile) {
+        return values.isEmpty() ? -1 : values.get((int) Math.ceil(values.size() * quantile) - 1);
+    }
+
+    private record ReadTiming(long sent, double ms, int bytes, boolean ok) { }
+
     private long mysqlDml() {
         return mysqlCounter("Com_insert")+mysqlCounter("Com_update")+mysqlCounter("Com_delete");
     }

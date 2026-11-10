@@ -80,11 +80,19 @@ public class PlatformApplicationAPI implements RShortcuts {
     public R<?> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
-            @RequestParam String domain,
+            @io.swagger.v3.oas.annotations.Parameter(required = true) @RequestParam(required = false) String domain,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Boolean baseline,
             @RequestParam(required = false, defaultValue = CatalogRecordView.VALUE_CATALOG) String view) {
+        if (domain == null || domain.isBlank()) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "请选择应用所属域");
+        }
+        try {
+            com.ingot.cloud.iam.domain.shared.IamFilters.requireDomain(domain);
+        } catch (BizException failure) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "应用所属域无效");
+        }
         CatalogRecordView recordView = requireRecordView(view);
         if (recordView == CatalogRecordView.SUMMARY) {
             return ok(catalog.listApplicationSummaries(page, pageSize, domain, name, status, baseline));

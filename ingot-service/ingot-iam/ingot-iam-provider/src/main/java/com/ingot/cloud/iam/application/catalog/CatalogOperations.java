@@ -44,6 +44,7 @@ public class CatalogOperations {
     };
 
     static final String APPLICATION = "application";
+    static final String DUPLICATE_APPLICATION_CODE = "应用编码已存在，请更换应用编码";
 
     static final String RESOURCE = "resource";
 
@@ -121,6 +122,12 @@ public class CatalogOperations {
         }
     }
 
+    static void requireBaselineDomain(AuthorizationDomain domain, boolean baseline) {
+        if (domain == AuthorizationDomain.PLATFORM && baseline) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "平台应用不能设置为租户默认开通应用");
+        }
+    }
+
     static void requireResourceScopes(AuthorizationDomain domain, List<ScopeKind> scopes) {
         if (domain == AuthorizationDomain.PLATFORM && scopes != null && scopes.stream()
             .anyMatch(scope -> scope == ScopeKind.MEMBER_DEPARTMENTS || scope == ScopeKind.MANAGED_DEPARTMENTS)) {
@@ -156,7 +163,7 @@ public class CatalogOperations {
             for (String actionId : actionIds) {
                 long id = IamIds.require(actionId);
                 if (!catalog.existsAction(applicationId, id)) {
-                    throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+                    throw new BizException(IamReasonCode.OBJECT_NOT_FOUND.getCode(), "菜单绑定的操作不存在或不可访问，请重新选择操作");
                 }
                 ids.add(id);
             }

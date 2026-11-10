@@ -5,9 +5,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
@@ -24,8 +22,8 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -45,26 +43,30 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class GlobalExceptionHandlerResolver {
 
+    private static final String INVALID_FORMAT = "请检查请求参数的格式或选项";
+    private static final String INVALID_TIME = "时间格式不正确，请使用带时区的时间";
+
+    /** 记录意外异常，对外仅返回固定的服务错误。 */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public R<?> exception(Exception e) {
         log.error("[GlobalExceptionHandlerResolver] - Exception - message={}",
                 e.getLocalizedMessage(), e);
-        return R.error(BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(),
-                e.getLocalizedMessage());
+        return R.error500();
     }
 
+    /** 保留已声明的业务原因，通用内部错误只返回固定提示。 */
     @ExceptionHandler(BizException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public R<?> baseExceptionHandler(BizException e) {
         log.error("[GlobalExceptionHandlerResolver] - BizException - message={}",
                 e.getLocalizedMessage(), e);
-        return R.error(e.getCode(), e.getLocalizedMessage());
+        return businessResponse(e);
     }
 
-    /** 请求体时间点格式错误返回 400；业务解码异常和其他 JSON 错误保留既有错误契约。 */
+    /** 无法读取的请求体返回参数错误；业务解码异常保留原协议。 */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseBody
     public R<?> httpMessageNotReadableException(HttpMessageNotReadableException e, HttpServletResponse response) {
@@ -75,29 +77,28 @@ public class GlobalExceptionHandlerResolver {
         if (biz != null) {
             log.error("[GlobalExceptionHandlerResolver] - HttpMessageNotReadableException - biz={}",
                     biz.getLocalizedMessage());
-            return R.error(biz.getCode(), biz.getLocalizedMessage());
+            return businessResponse(biz);
         }
         for (Throwable cause = e; cause != null; cause = cause.getCause()) {
             if (cause instanceof MismatchedInputException input && isTimePoint(input.getTargetType())) {
                 response.setStatus(HttpStatus.BAD_REQUEST.value());
-                return R.error(BaseErrorCode.ILLEGAL_REQUEST_PARAMS.getCode(), input.getOriginalMessage());
+                return R.errorF(BaseErrorCode.ILLEGAL_REQUEST_PARAMS, INVALID_TIME);
             }
         }
         log.error("[GlobalExceptionHandlerResolver] - HttpMessageNotReadableException - message={}",
                 e.getLocalizedMessage(), e);
-        return R.error(BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(), e.getLocalizedMessage());
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        return R.errorF(BaseErrorCode.ILLEGAL_REQUEST_PARAMS, "请求内容格式不正确，请检查后重试");
     }
 
-    /** 时间点 query/path 转换失败返回 400，其他参数沿用既有异常语义。 */
+    /** 参数类型转换失败按请求错误处理，时间点使用专用提示。 */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public R<?> timePointParameterMismatch(MethodArgumentTypeMismatchException exception,
+    public R<?> parameterTypeMismatch(MethodArgumentTypeMismatchException exception,
                                            HttpServletResponse response) {
-        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        if (isTimePoint(exception.getRequiredType()) || hasTimePointConversionFailure(exception)) {
-            response.setStatus(HttpStatus.BAD_REQUEST.value());
-            return R.error(BaseErrorCode.ILLEGAL_REQUEST_PARAMS.getCode(), exception.getLocalizedMessage());
-        }
-        return exception(exception);
+        log.warn("请求参数类型错误", exception);
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        boolean time = isTimePoint(exception.getRequiredType()) || hasTimePointConversionFailure(exception);
+        return R.errorF(BaseErrorCode.ILLEGAL_REQUEST_PARAMS, time ? INVALID_TIME : INVALID_FORMAT);
     }
 
     private static boolean isTimePoint(Class<?> type) {
@@ -126,14 +127,14 @@ public class GlobalExceptionHandlerResolver {
         return null;
     }
 
+    /** 参数非法时返回稳定业务码和可操作提示。 */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public R<?> illegalArgumentException(IllegalArgumentException e) {
         log.error("[GlobalExceptionHandlerResolver] - IllegalArgumentException - message={}",
                 e.getLocalizedMessage(), e);
-        return R.error(BaseErrorCode.ILLEGAL_REQUEST_PARAMS.getCode(),
-                e.getLocalizedMessage());
+        return R.errorF(BaseErrorCode.ILLEGAL_REQUEST_PARAMS, INVALID_FORMAT);
     }
 
     @ExceptionHandler(BindException.class)
@@ -143,7 +144,7 @@ public class GlobalExceptionHandlerResolver {
         log.error("[GlobalExceptionHandlerResolver] - BindException - message={}",
                 e.getLocalizedMessage(), e);
         List<ObjectError> list = e.getBindingResult().getAllErrors();
-        String message = list.stream().map(ObjectError::getDefaultMessage)
+        String message = list.stream().map(GlobalExceptionHandlerResolver::validationMessage)
                 .reduce((l, r) -> l + ";" + r)
                 .orElse("");
         return R.errorF(BaseErrorCode.ILLEGAL_REQUEST_PARAMS, message);
@@ -156,7 +157,7 @@ public class GlobalExceptionHandlerResolver {
         log.error("[GlobalExceptionHandlerResolver] - MethodArgumentNotValidException - message={}",
                 e.getLocalizedMessage(), e);
         List<ObjectError> list = e.getBindingResult().getAllErrors();
-        String message = list.stream().map(ObjectError::getDefaultMessage)
+        String message = list.stream().map(GlobalExceptionHandlerResolver::validationMessage)
                 .reduce((l, r) -> l + ";" + r)
                 .orElse("");
         return R.errorF(BaseErrorCode.ILLEGAL_REQUEST_PARAMS, message);
@@ -182,7 +183,7 @@ public class GlobalExceptionHandlerResolver {
     public R<?> httpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.error("[GlobalExceptionHandlerResolver] - HttpRequestMethodNotSupportedException - message={}",
                 e.getLocalizedMessage(), e);
-        return R.errorF(BaseErrorCode.METHOD_NOT_ALLOWED, e.getLocalizedMessage());
+        return R.error(BaseErrorCode.METHOD_NOT_ALLOWED);
     }
 
     /**
@@ -193,7 +194,7 @@ public class GlobalExceptionHandlerResolver {
     @DeleteMapping("/error")
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public R<?> noHandlerFoundException() {
-        return R.error(BaseErrorCode.NOT_FOUND.getCode(), HttpStatus.NOT_FOUND.getReasonPhrase());
+        return R.error(BaseErrorCode.NOT_FOUND);
     }
 
     /**
@@ -209,14 +210,24 @@ public class GlobalExceptionHandlerResolver {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public R<?> noResourceFoundException(NoResourceFoundException exception) {
         log.error("[GlobalExceptionHandlerResolver] - noResourceFoundException 404 {}", exception.getLocalizedMessage());
-        return R.error(BaseErrorCode.NOT_FOUND.getCode(), exception.getLocalizedMessage());
+        return R.error(BaseErrorCode.NOT_FOUND);
     }
 
-    @ExceptionHandler(AuthorizationDeniedException.class)
+    /** 拒绝访问时保留 403，不返回授权实现细节。 */
+    @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public R<?> handleAccessDenied(AccessDeniedException ex) {
-        Map<String, String> data = new HashMap<>();
-        data.put("raw", ex.getLocalizedMessage());
-        return R.error(data, BaseErrorCode.FORBIDDEN);
+    public R<?> handleAccessDenied(AccessDeniedException exception) {
+        log.warn("请求被权限检查拒绝", exception);
+        return R.error(BaseErrorCode.FORBIDDEN);
+    }
+
+    private static R<?> businessResponse(BizException exception) {
+        return BaseErrorCode.INTERNAL_SERVER_ERROR.getCode().equals(exception.getCode())
+                ? R.error500() : R.error(exception.getCode(), exception.getLocalizedMessage());
+    }
+
+    private static String validationMessage(ObjectError error) {
+        return error instanceof FieldError field && field.isBindingFailure()
+                ? INVALID_FORMAT : error.getDefaultMessage();
     }
 }

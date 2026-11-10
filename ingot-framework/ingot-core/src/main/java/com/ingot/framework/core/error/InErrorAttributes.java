@@ -1,167 +1,78 @@
 package com.ingot.framework.core.error;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cn.hutool.core.util.ObjectUtil;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.core.utils.RuntimeEnvironment;
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.validation.BindingResult;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 
-
 /**
- * <p>Description  : Custom ErrorAttributes.</p>
+ * <p>将 Servlet 错误分发统一为安全响应，诊断细节只保留在服务端日志。</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019/1/10.</p>
  * <p>Time         : 5:24 PM.</p>
  */
 @Slf4j
-@RequiredArgsConstructor
 public class InErrorAttributes implements ErrorAttributes, Ordered {
     private static final String ERROR_ATTRIBUTE = InErrorAttributes.class.getName() + ".ERROR";
 
-    private final RuntimeEnvironment environment;
-
+    /** 错误分发只输出受控的代码与提示。 */
     @Override
     public Map<String, Object> getErrorAttributes(WebRequest webRequest, ErrorAttributeOptions options) {
         Throwable error = getError(webRequest);
-
-        Map<String, Object> errorAttributes = new LinkedHashMap<>();
-        errorAttributes.put("timestamp", new Date());
-        addStatus(errorAttributes, webRequest);
-        addErrorDetails(errorAttributes, error, webRequest, options.isIncluded(ErrorAttributeOptions.Include.STACK_TRACE));
-        addPath(errorAttributes, webRequest);
-
-        Map<String, Object> finalAttributes = new LinkedHashMap<>();
-        if (environment.isDev()) {
-            finalAttributes.put(R.DATA, errorAttributes);
-        }
-
-        log.error("[{}] error={}, attributes={}", ERROR_ATTRIBUTE, error, errorAttributes);
-
-        // 获取真实 exception
+        Object status = webRequest.getAttribute(RequestDispatcher.ERROR_STATUS_CODE, RequestAttributes.SCOPE_REQUEST);
+        log.error("Servlet 错误分发 status={}", status, error);
         while (error instanceof ServletException && error.getCause() != null) {
             error = error.getCause();
         }
 
-        if (error instanceof BizException bizError) {
-            finalAttributes.put(R.CODE, bizError.getCode());
-            finalAttributes.put(R.MESSAGE, error.getMessage());
-        } else if (error instanceof OAuth2AuthenticationException oauthError) {
-            finalAttributes.put(R.CODE, oauthError.getError().getErrorCode());
-            finalAttributes.put(R.MESSAGE, oauthError.getError().getDescription());
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (error instanceof BizException business) {
+            result.put(R.CODE, business.getCode());
+            result.put(R.MESSAGE, BaseErrorCode.INTERNAL_SERVER_ERROR.getCode().equals(business.getCode())
+                    ? BaseErrorCode.INTERNAL_SERVER_ERROR.getText() : business.getMessage());
+        } else if (error instanceof OAuth2AuthenticationException authentication) {
+            var oauth = authentication.getError();
+            result.put(R.CODE, oauth.getErrorCode());
+            String description = oauth.getDescription();
+            if (OAuth2ErrorCodes.SERVER_ERROR.equals(oauth.getErrorCode())) {
+                description = BaseErrorCode.INTERNAL_SERVER_ERROR.getText();
+            } else if (description == null || description.isBlank() || description.equals(oauth.getErrorCode())) {
+                description = "认证未通过，请重新登录后重试";
+            }
+            result.put(R.MESSAGE, description);
         } else {
-            finalAttributes.put(R.CODE, BaseErrorCode.INTERNAL_SERVER_ERROR.getCode());
-            finalAttributes.put(R.MESSAGE, BaseErrorCode.INTERNAL_SERVER_ERROR.getText());
+            result.put(R.CODE, BaseErrorCode.INTERNAL_SERVER_ERROR.getCode());
+            result.put(R.MESSAGE, BaseErrorCode.INTERNAL_SERVER_ERROR.getText());
         }
-
-
-        return finalAttributes;
+        return result;
     }
 
+    /** 优先读取统一属性，再回退到 Servlet 错误分发属性。 */
     @Override
     public Throwable getError(WebRequest webRequest) {
         Throwable exception = getAttribute(webRequest, ERROR_ATTRIBUTE);
         if (exception == null) {
-            exception = getAttribute(webRequest, "jakarta.servlet.error.exception");
+            exception = getAttribute(webRequest, RequestDispatcher.ERROR_EXCEPTION);
         }
         return exception;
     }
 
+    /** 在默认属性处理器之前应用受控响应。 */
     @Override
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE;
-    }
-
-    private void addStatus(Map<String, Object> errorAttributes,
-                           RequestAttributes requestAttributes) {
-        Integer status = getAttribute(requestAttributes,
-                "jakarta.servlet.error.status_code");
-        if (status == null) {
-            errorAttributes.put("status", 999);
-            errorAttributes.put("error", "None");
-            return;
-        }
-        errorAttributes.put("status", status);
-        try {
-            errorAttributes.put("error", HttpStatus.valueOf(status).getReasonPhrase());
-        } catch (Exception ex) {
-            // Unable to obtain a reason
-            errorAttributes.put("error", "Http Status " + status);
-        }
-    }
-
-    private void addErrorDetails(Map<String, Object> errorAttributes, Throwable error,
-                                 WebRequest webRequest, boolean includeStackTrace) {
-        if (error != null) {
-            while (error instanceof ServletException && error.getCause() != null) {
-                error = error.getCause();
-            }
-            errorAttributes.put("exception", error.getClass().getName());
-            addErrorMessage(errorAttributes, error);
-            if (includeStackTrace) {
-                addStackTrace(errorAttributes, error);
-            }
-        }
-        Object message = getAttribute(webRequest, "jakarta.servlet.error.message");
-        if ((!ObjectUtil.isEmpty(message) || errorAttributes.get("message") == null)
-                && !(error instanceof BindingResult)) {
-            errorAttributes.put("message",
-                    ObjectUtil.isEmpty(message) ? "No message available" : message);
-        }
-    }
-
-    private void addErrorMessage(Map<String, Object> errorAttributes, Throwable error) {
-        BindingResult result = extractBindingResult(error);
-        if (result == null) {
-            errorAttributes.put("message", error.getMessage());
-            return;
-        }
-        if (result.getErrorCount() > 0) {
-            errorAttributes.put("errors", result.getAllErrors());
-            errorAttributes.put("message",
-                    "Validation failed for object='" + result.getObjectName()
-                            + "'. Error count: " + result.getErrorCount());
-        } else {
-            errorAttributes.put("message", "No errors");
-        }
-    }
-
-    private BindingResult extractBindingResult(Throwable error) {
-        if (error instanceof BindingResult) {
-            return (BindingResult) error;
-        }
-        return null;
-    }
-
-    private void addStackTrace(Map<String, Object> errorAttributes, Throwable error) {
-        StringWriter stackTrace = new StringWriter();
-        error.printStackTrace(new PrintWriter(stackTrace));
-        stackTrace.flush();
-        errorAttributes.put("trace", stackTrace.toString());
-    }
-
-    private void addPath(Map<String, Object> errorAttributes,
-                         RequestAttributes requestAttributes) {
-        String path = getAttribute(requestAttributes, "jakarta.servlet.error.request_uri");
-        if (path != null) {
-            errorAttributes.put("path", path);
-        }
     }
 
     @SuppressWarnings("unchecked")

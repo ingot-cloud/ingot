@@ -4,6 +4,9 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
+import com.ingot.cloud.iam.infrastructure.persistence.entity.IamTenantMemberEntity;
 import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.ingot.cloud.iam.infrastructure.persistence.IamMembershipSql;
 import com.ingot.cloud.iam.infrastructure.persistence.IamPersistence;
@@ -86,4 +89,27 @@ public interface IamTenantGroupMemberMapper extends BaseMapper<IamTenantGroupMem
                                                   @Param("memberId") BigInteger memberId,
                                                   @Param("groupIds") Set<BigInteger> groupIds,
                                                   @Param("limit") int limit, @Param("offset") int offset);
+    /**
+     * 查询当前页各组内符合成员读取范围的直接关联。
+     *
+     * @param groupIds 已分页的组 ID
+     * @param tenantId 当前可信租户
+     * @param scope 按成员表编译的读取范围
+     * @return 组与可见直接成员关联
+     */
+    @Select("""
+            <script>
+            SELECT link.group_id, link.member_id FROM iam_tenant_group_member link
+            JOIN iam_tenant_member ON iam_tenant_member.id=link.member_id
+              AND iam_tenant_member.tenant_id=link.tenant_id AND link.tenant_id=#{tenantId}
+              AND link.group_id IN
+              <foreach collection="pageGroupIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            ${ew.customSqlSegment}
+            ORDER BY link.group_id, link.member_id
+            </script>
+            """)
+    List<IamTenantGroupMemberEntity> visibleGroupMembers(
+            @Param("pageGroupIds") List<BigInteger> groupIds,
+            @Param("tenantId") BigInteger tenantId,
+            @Param(Constants.WRAPPER) Wrapper<IamTenantMemberEntity> scope);
 }

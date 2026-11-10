@@ -237,6 +237,9 @@ class IamSqlWallCompatibilityTest {
 
     private static Object sample(Type type) {
         if (type instanceof ParameterizedType generic) {
+            if (generic.getRawType() == com.baomidou.mybatisplus.core.conditions.Wrapper.class) {
+                return new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>().ne("status", "REMOVED");
+            }
             Type item = generic.getActualTypeArguments()[0];
             List<Object> values = List.of(sample(item), sample(item));
             return generic.getRawType() == Set.class ? Set.copyOf(values) : values;

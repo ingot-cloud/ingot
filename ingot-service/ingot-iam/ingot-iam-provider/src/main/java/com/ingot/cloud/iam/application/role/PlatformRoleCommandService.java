@@ -93,7 +93,7 @@ public class PlatformRoleCommandService {
             operationsContext.roles().lockAuthorization(domain);
             PlatformRoleOperations.RoleRow current = operationsContext.lock(domain, shared, actor, roleId);
             if (current.kind() == RoleKind.SYSTEM) {
-                throw new BizException(IamReasonCode.ACTION_DENIED);
+                throw new BizException(IamReasonCode.ACTION_DENIED.getCode(), "系统角色的启停状态不可修改");
             }
             IamIds.requireVersion(input.expectedVersion(), PlatformRoleOperations.version(current.version()));
             boolean enabled = input.status() == ConfigurationStatus.ENABLED;
@@ -123,7 +123,7 @@ public class PlatformRoleCommandService {
             operationsContext.roles().lockAuthorization(domain);
             PlatformRoleOperations.RoleRow current = operationsContext.lock(domain, shared, actor, roleId);
             if (current.kind() == RoleKind.SYSTEM) {
-                throw new BizException(IamReasonCode.ACTION_DENIED);
+                throw new BizException(IamReasonCode.ACTION_DENIED.getCode(), "系统角色的基本信息不可修改");
             }
             IamIds.requireVersion(input.expectedVersion(), PlatformRoleOperations.version(current.version()));
             boolean enabled = input.status() == ConfigurationStatus.ENABLED;
@@ -154,10 +154,13 @@ public class PlatformRoleCommandService {
             operationsContext.roles().lockAuthorization(domain);
             PlatformRoleOperations.RoleRow current = operationsContext.lock(domain, shared, actor, roleId);
             if (current.kind() == RoleKind.SYSTEM) {
-                throw new BizException(IamReasonCode.ACTION_DENIED);
+                throw new BizException(IamReasonCode.ACTION_DENIED.getCode(), "系统角色不可删除");
             }
-            if (operationsContext.roles().countAssignments(roleId) > 0 || current.kind() == RoleKind.PLATFORM_CUSTOM && operationsContext.roles().countApplications(roleId) > 0) {
-                throw new BizException(IamReasonCode.OBJECT_IN_USE);
+            if (operationsContext.roles().countAssignments(roleId) > 0) {
+                throw new BizException(IamReasonCode.OBJECT_IN_USE.getCode(), "该角色仍有分配记录，无法删除");
+            }
+            if (current.kind() == RoleKind.PLATFORM_CUSTOM && operationsContext.roles().countApplications(roleId) > 0) {
+                throw new BizException(IamReasonCode.OBJECT_IN_USE.getCode(), "该角色仍被版本应用记录引用，无法删除");
             }
             operationsContext.roles().deleteRevisions(roleId);
             operationsContext.roles().deleteDefinition(roleId);

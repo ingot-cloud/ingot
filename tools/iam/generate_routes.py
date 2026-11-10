@@ -39,6 +39,7 @@ NAME_STATUS = PAGE + [
     {'name': 'status', 'required': False, 'schema': {'type': 'string', 'enum': ['ENABLED', 'DISABLED']}},
 ]
 APPLICATION_LIST = NAME_STATUS + [
+    {'name': 'domain', 'required': True, 'schema': {'type': 'string', 'enum': ['PLATFORM', 'TENANT']}},
     {'name': 'baseline', 'required': False, 'schema': {'type': 'boolean'}},
 ]
 PHONE_EMAIL = [
@@ -78,7 +79,11 @@ def group_routes(domain, prefix, ns):
     preview = 'RPreviewReferenceImpactPreview'
     execution = '可信当前域；组修改重验委派派生授权；平台组不得引用部门'
     return [
-        route(f'{prefix}/groups', 'get', f'{domain.lower()}ListGroups', '用户组列表', domain, f'{ns}:group:read', None, page, execution, query=PAGE),
+        route(f'{prefix}/groups', 'get', f'{domain.lower()}ListGroups', '用户组列表', domain,
+              f'{ns}:group:read', None, page, execution, query=PAGE + [
+                  {'name': 'name', 'schema': {'type': 'string'}},
+                  {'name': 'view', 'schema': {'type': 'string', 'enum': ['CATALOG', 'SUMMARY'], 'default': 'CATALOG'}},
+              ]),
         route(f'{prefix}/groups', 'post', f'{domain.lower()}CreateGroup', '创建用户组', domain, f'{ns}:group:create', 'GroupDraft', created, execution),
         route(f'{prefix}/groups/{{id}}', 'get', f'{domain.lower()}GetGroup', '用户组详情', domain, f'{ns}:group:read', None, detail, execution),
         route(f'{prefix}/groups/{{id}}', 'put', f'{domain.lower()}PutGroup', '替换用户组', domain, f'{ns}:group:update', 'GroupUpdateInput', detail, execution),

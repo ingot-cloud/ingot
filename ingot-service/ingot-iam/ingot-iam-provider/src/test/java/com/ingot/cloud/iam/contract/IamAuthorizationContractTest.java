@@ -69,6 +69,7 @@ import com.ingot.cloud.iam.application.download.model.ExportTask;
 import com.ingot.cloud.iam.application.group.model.GroupDraft;
 import com.ingot.cloud.iam.application.group.model.GroupEffectiveMemberRecord;
 import com.ingot.cloud.iam.application.group.model.GroupRecord;
+import com.ingot.cloud.iam.application.group.model.GroupSummary;
 import com.ingot.cloud.iam.application.group.model.GroupUpdateInput;
 import com.ingot.cloud.iam.application.organization.model.DepartmentDraft;
 import com.ingot.cloud.iam.application.organization.model.DepartmentEditInput;
@@ -474,7 +475,7 @@ class IamAuthorizationContractTest {
                 RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class, FieldAccess.class,
                 FieldRule.class, CreatedResource.class, ObjectCapability.class, Bootstrap.class,
                 CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class, DepartmentTreeNode.class,
-                GroupRecord.class, GroupEffectiveMemberRecord.class, GroupMembership.class, GroupMembershipDepartment.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
+                GroupRecord.class, GroupSummary.class, GroupEffectiveMemberRecord.class, GroupMembership.class, GroupMembershipDepartment.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
                 EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
                 DepartmentWorkbookExportInput.class, MemberWorkbookExportInput.class,
                 TenantWorkbenchStatistics.class, DownloadTask.class, DownloadLink.class,
@@ -595,6 +596,8 @@ class IamAuthorizationContractTest {
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantRecord>>>>() {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<GroupRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<GroupSummary>>>>() {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DepartmentRecord>>>>() {
                     }.getType(),

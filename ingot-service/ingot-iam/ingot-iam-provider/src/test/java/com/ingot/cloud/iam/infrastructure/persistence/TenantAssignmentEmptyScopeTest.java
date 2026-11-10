@@ -32,15 +32,16 @@ class TenantAssignmentEmptyScopeTest {
     void database() {
         source = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
         jdbc = new JdbcTemplate(source);
-        jdbc.execute("CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY,name VARCHAR(64))");
+        jdbc.execute("CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY,domain VARCHAR(16),tenant_key BIGINT,name VARCHAR(64))");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT,tenant_id BIGINT,display_name VARCHAR(64))");
         jdbc.execute("CREATE TABLE iam_tenant_group(id BIGINT,tenant_id BIGINT,name VARCHAR(64))");
         jdbc.execute("CREATE TABLE iam_role_assignment(id BIGINT PRIMARY KEY,tenant_id BIGINT,domain VARCHAR(16),"
                 + "role_id BIGINT,tenant_member_id BIGINT,tenant_group_id BIGINT,subject_type VARCHAR(16),delegation_grant_id BIGINT)");
-        jdbc.update("INSERT INTO iam_role_definition VALUES(1,'测试角色')");
+        jdbc.update("INSERT INTO iam_role_definition VALUES(1,'TENANT',0,'测试角色')");
+        jdbc.update("INSERT INTO iam_tenant_member VALUES(1001,10,'测试角色成员'),(1002,10,'普通成员'),(2001,20,'其他租户成员')");
         jdbc.update("INSERT INTO iam_role_assignment VALUES(101,10,'TENANT',1,1001,NULL,'MEMBER',NULL),"
                 + "(102,10,'TENANT',1,1002,NULL,'MEMBER',501),(201,20,'TENANT',1,2001,NULL,'MEMBER',501),"
-                + "(301,NULL,'PLATFORM',1,NULL,NULL,'MEMBER',NULL)");
+                + "(301,NULL,'PLATFORM',1,NULL,NULL,'MEMBER',NULL),(103,10,'TENANT',NULL,1001,NULL,'MEMBER',NULL)");
         configuration = new Configuration();
         configuration.addMapper(TenantAdministrationMapper.class);
     }
@@ -63,13 +64,27 @@ class TenantAssignmentEmptyScopeTest {
                 + "AND (delegation_grant_id IN (NULL) OR id=101)", Integer.class));
     }
 
+    @Test
+    void searchCountsEachVisibleAssignmentOnceAndIgnoresLegacyRowsAndForeignNames() throws Exception {
+        assertEquals(2, count(null, null, "%测试角色%"));
+        assertEquals(1, count(null, null, "%角色成员%"));
+        assertEquals(0, count(null, List.of(BigInteger.valueOf(501)), "%角色成员%"));
+        assertEquals(1, count(null, List.of(BigInteger.valueOf(501)), "%普通成员%"));
+        assertEquals(0, count(List.of(), null, "%测试角色%"));
+        assertEquals(0, count(null, null, "%其他租户成员%"));
+    }
+
     private long count(List<BigInteger> visible, List<BigInteger> sources) throws Exception {
+        return count(visible, sources, null);
+    }
+
+    private long count(List<BigInteger> visible, List<BigInteger> sources, String keyword) throws Exception {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("tenantId", BigInteger.TEN);
         parameters.put("visible", visible);
         parameters.put("sources", sources);
         parameters.put("type", null);
-        parameters.put("keyword", null);
+        parameters.put("keyword", keyword);
         var mapped = configuration.getMappedStatement(TenantAdministrationMapper.class.getName() + ".assignmentsCount");
         var bound = mapped.getBoundSql(parameters);
         var wall = IamSqlWallTestInterceptor.provider().check(bound.getSql());

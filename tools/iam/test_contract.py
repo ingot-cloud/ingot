@@ -130,11 +130,12 @@ class ContractTest(unittest.TestCase):
                 for status in ['400', '401', '403', '404', '409', '503']:
                     self.assertIn(status, responses)
                 schema = responses['200']['content']['application/json']['schema']
-                name = schema['$ref'].split('/')[-1]
-                envelope = envelopes[name]
-                data = envelope['properties']['data']
-                if name not in UNTYPED_ENVELOPES:
-                    self.assertIn('$ref', data['items'] if data.get('type') == 'array' else data)
+                for alternative in schema.get('anyOf', [schema]):
+                    name = alternative['$ref'].split('/')[-1]
+                    envelope = envelopes[name]
+                    data = envelope['properties']['data']
+                    if name not in UNTYPED_ENVELOPES:
+                        self.assertIn('$ref', data['items'] if data.get('type') == 'array' else data)
         error = self.document['components']['schemas']['IamErrorEnvelope']
         self.assertEqual([None], error['properties']['data']['enum'])
         self.assertEqual([False], error['properties']['success']['enum'])
@@ -158,7 +159,8 @@ class ContractTest(unittest.TestCase):
         self.assertEqual({'page', 'pageSize', 'name', 'status'}, set(tenant_list))
         self.assertEqual(['ENABLED', 'DISABLED'], tenant_list['status']['schema']['enum'])
         application_list = {item['name']: item for item in self.by_id['platformListApplications']['query']}
-        self.assertEqual({'page', 'pageSize', 'name', 'status', 'baseline'}, set(application_list))
+        self.assertEqual({'page', 'pageSize', 'name', 'status', 'baseline', 'domain'}, set(application_list))
+        self.assertTrue(application_list['domain']['required'])
         self.assertEqual(['ENABLED', 'DISABLED'], application_list['status']['schema']['enum'])
         self.assertEqual('boolean', application_list['baseline']['schema']['type'])
         export_status = self.by_id['tenantGetMemberExportStatus']

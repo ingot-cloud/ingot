@@ -60,30 +60,30 @@ public final class MenuConfiguration {
         }
         boolean directory = draft.kind() == MenuKind.DIRECTORY;
         if (directory && (cache || props || !params.isEmpty())) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            throw invalid("目录菜单不支持页面缓存或路由参数透传");
         }
         if (props) {
             if (params.isEmpty() || !hidden || draft.path() == null || draft.path().isBlank()
                     || !draft.path().startsWith(PATH_ROOT) || draft.path().contains(DYNAMIC_MARKER)
                     || draft.path().contains(QUERY_MARKER) || draft.path().contains(HASH_MARKER)) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                throw invalid("路由参数透传仅支持隐藏菜单，需填写静态站内路径并至少配置一个参数");
             }
         } else if (!params.isEmpty()) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            throw invalid("请开启路由参数透传，或清空菜单的路由参数");
         }
         Set<String> names = new HashSet<>();
         for (MenuRouteParam param : params) {
             if (param == null || param.name() == null || !PARAMETER_NAME.matcher(param.name()).matches()
                     || !names.add(param.name())) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                throw invalid("菜单路由参数名称格式不正确或重复");
             }
         }
         List<String> actions = draft.actionIds() == null ? List.of() : draft.actionIds();
         if (!directory && draft.accessMode() == MenuAccessMode.ACTION && actions.isEmpty()) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            throw invalid("按权限开放的菜单至少需要绑定一个操作");
         }
         if ((directory || draft.accessMode() == MenuAccessMode.OPEN) && !actions.isEmpty()) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            throw invalid("目录菜单或直接开放的菜单不能绑定权限操作");
         }
         return new MenuDraft(draft.parentId(), draft.name(), draft.kind(), draft.path(), draft.viewPath(),
                 draft.routeName(), draft.icon(), directory ? MenuAccessMode.OPEN : draft.accessMode(),
@@ -93,5 +93,9 @@ public final class MenuConfiguration {
 
     private static boolean value(Boolean requested, Boolean previous) {
         return Boolean.TRUE.equals(requested == null ? previous : requested);
+    }
+
+    private static BizException invalid(String message) {
+        return new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), message);
     }
 }

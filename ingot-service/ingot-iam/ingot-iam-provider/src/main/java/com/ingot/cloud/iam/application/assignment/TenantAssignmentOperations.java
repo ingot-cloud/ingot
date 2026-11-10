@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.application.assignment;
 
+import com.ingot.cloud.iam.domain.shared.IamIds;
+
 import com.ingot.cloud.iam.application.authorization.scope.TenantScopeBindingService;
 import com.ingot.cloud.iam.application.role.TenantRoleLockService;
 import com.ingot.cloud.iam.application.role.TenantRoleDefinitionResolver;
@@ -29,6 +31,7 @@ import com.ingot.cloud.iam.application.catalog.model.ResourceDetail;
 import com.ingot.cloud.iam.application.role.model.ScopeIssue;
 import com.ingot.cloud.iam.application.shared.model.ObjectCapability;
 import com.ingot.cloud.iam.domain.assignment.AssignmentEffectiveStatus;
+import com.ingot.cloud.iam.domain.authorization.ObjectScope;
 import com.ingot.cloud.iam.domain.assignment.GrantStatus;
 import com.ingot.cloud.iam.domain.assignment.SubjectType;
 import com.ingot.cloud.iam.domain.assignment.TenantAssignmentOptionKind;
@@ -108,17 +111,35 @@ public class TenantAssignmentOperations {
         var role=role(actor,input.roleId()); if(!Boolean.TRUE.equals(role.enabled()))throw new BizException(IamReasonCode.ROLE_UNAVAILABLE); var definition=activeDefinition(actor,role);
         var grant=source(actor,input.delegationGrantId(),action);
         if(grant==null&&action==IamAction.TENANT_ASSIGNMENT_CREATE&&!resources.objects(actor.context(),action).coversAll())denied();
-        if(grant!=null&&!live.delegatedRoles(grant.id()).contains(role.id()))exceeded();
-        if(input.subject().type()==SubjectType.MEMBER){if(live.members(tenant(actor),List.of(new BigInteger(input.subject().id())))!=1)missing();}
-        else if(live.groupExists(tenant(actor),new BigInteger(input.subject().id()))!=1)missing();
+        if (grant != null && !live.delegatedRoles(grant.id()).contains(role.id())) {
+            throw exceeded("所选角色不在当前委派允许的范围内，请重新选择角色");
+        }
+        boolean memberSubject = input.subject().type() == SubjectType.MEMBER;
+        String subjectType = memberSubject ? "成员" : "用户组";
+        BigInteger subjectId;
+        try {
+            subjectId = BigInteger.valueOf(IamIds.require(input.subject().id()));
+        } catch (BizException exception) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "接收" + subjectType + "标识无效，请重新选择接收对象");
+        }
+        boolean subjectExists = memberSubject ? live.members(tenant(actor), List.of(subjectId)) == 1
+                : live.groupExists(tenant(actor), subjectId) == 1;
+        if (!subjectExists) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND.getCode(), "接收" + subjectType + "不存在或不可访问，请重新选择接收对象");
+        }
         validateBindings(actor,definition.parameterDefinitions(),input.scopeBindings());
-        if(grant!=null){var recipients=input.subject().type()==SubjectType.MEMBER?List.of(new BigInteger(input.subject().id())):live.groupMembers(tenant(actor),new BigInteger(input.subject().id()));
-            if(input.subject().type()==SubjectType.GROUP
-                ? !live.groupWithinSource(new TenantAuthorizationOptionSql.Query(tenant(actor),grant.administratorMemberId(),grant.id(),TenantAssignmentOptionKind.GROUP,"%",List.of(),1,0),new BigInteger(input.subject().id()))
-                : recipients.isEmpty()||recipients.stream().anyMatch(id->id.equals(member(actor))||live.recipient(tenant(actor),grant.id(),id)==0))exceeded();
+        if(grant!=null){
+            if (memberSubject
+                    ? subjectId.equals(member(actor)) || live.recipient(tenant(actor), grant.id(), subjectId) == 0
+                    : !live.groupWithinSource(new TenantAuthorizationOptionSql.Query(tenant(actor), grant.administratorMemberId(),
+                            grant.id(), TenantAssignmentOptionKind.GROUP, "%", List.of(), 1, 0), subjectId)) {
+                throw exceeded("接收" + subjectType + "不在当前委派允许的范围内，请重新选择接收对象");
+            }
             Instant from=input.validFrom()==null?Instant.now():input.validFrom(),until=input.validUntil();
             if(until==null||!until.isAfter(from)||Duration.between(from,until).compareTo(Duration.ofSeconds(grant.durationSeconds().longValueExact(),grant.durationNanos()))>0
-                ||grant.validFrom()!=null&&from.isBefore(instant(grant.validFrom()))||grant.validUntil()!=null&&until.isAfter(instant(grant.validUntil())))exceeded();
+                ||grant.validFrom()!=null&&from.isBefore(instant(grant.validFrom()))||grant.validUntil()!=null&&until.isAfter(instant(grant.validUntil()))) {
+                throw exceeded("分配的生效时间或截止时间超出当前委派允许的期限");
+            }
             var limits=live.ceilings(grant.id());var actions=definition.grants().isEmpty()?List.<TenantAdministrationRows.Action>of():live.actions(definition.grants().stream().map(g->new BigInteger(g.actionId())).toList());
             for(var g:definition.grants()){var a=actions.stream().filter(v->v.actionId().toString().equals(g.actionId())).findFirst().orElseThrow(()->new BizException(IamReasonCode.INVALID_ARGUMENT));
                 var limit=limits.stream().filter(c->c.resourceId().equals(a.resourceId())).findFirst().orElse(null);if(limit==null)exceeded();
@@ -148,11 +169,42 @@ public class TenantAssignmentOperations {
 
     /** 计算当前定义待补参数或资源上限，旧有效资源持续可用。 */
     List<ScopeIssue> issues(ActiveIdentity actor,TenantAdministrationRows.Role role,Map<String,ScopeBinding> bindings,BigInteger source) {
-        var definition=activeDefinition(actor,role);List<ScopeIssue> issues=new ArrayList<>();
-        for(var p:definition.parameterDefinitions()){var b=bindings.get(p.key());if(b==null||b.kind()!=p.kind())issues.add(new ScopeIssue(p.resourceId(),
-            definition.grants().stream().filter(g->g.scopes().stream().anyMatch(s->p.key().equals(s.parameterKey()))).map(ActionGrant::actionId).toList(),p.key(),b==null?ScopeIssueReason.MISSING_BINDING:ScopeIssueReason.INVALID_BINDING));}
-        if(source!=null&&!definition.grants().isEmpty()){var limits=live.ceilings(source).stream().map(TenantAdministrationRows.Ceiling::resourceId).collect(java.util.stream.Collectors.toSet());
-            for(var a:live.actions(definition.grants().stream().map(g->new BigInteger(g.actionId())).toList()))if(!limits.contains(a.resourceId()))issues.add(new ScopeIssue(a.resourceId().toString(),List.of(a.actionId().toString()),null,ScopeIssueReason.MISSING_RESOURCE_CEILING));}
+        var definition = activeDefinition(actor, role);
+        if (source == null || definition.grants().isEmpty()) {
+            return issues(definition, bindings, null, Map.of());
+        }
+        var ceilings = live.ceilings(source).stream().map(TenantAdministrationRows.Ceiling::resourceId)
+                .collect(java.util.stream.Collectors.toSet());
+        var actionIds = definition.grants().stream().map(grant -> new BigInteger(grant.actionId())).toList();
+        Map<String, BigInteger> actionResources = new LinkedHashMap<>();
+        for (var action : live.actions(actionIds)) {
+            actionResources.put(action.actionId().toString(), action.resourceId());
+        }
+        return issues(definition, bindings, ceilings, actionResources);
+    }
+
+    private static List<ScopeIssue> issues(CurrentRoleDefinition definition, Map<String, ScopeBinding> bindings,
+            Set<BigInteger> ceilings, Map<String, BigInteger> actionResources) {
+        List<ScopeIssue> issues = new ArrayList<>();
+        for (var parameter : definition.parameterDefinitions()) {
+            var binding = bindings.get(parameter.key());
+            if (binding == null || binding.kind() != parameter.kind()) {
+                var actions = definition.grants().stream().filter(grant -> grant.scopes().stream()
+                        .anyMatch(scope -> parameter.key().equals(scope.parameterKey()))).map(ActionGrant::actionId).toList();
+                issues.add(new ScopeIssue(parameter.resourceId(), actions, parameter.key(),
+                        binding == null ? ScopeIssueReason.MISSING_BINDING : ScopeIssueReason.INVALID_BINDING));
+            }
+        }
+        if (ceilings != null) {
+            definition.grants().stream().map(grant -> new BigInteger(grant.actionId())).distinct().sorted()
+                    .map(BigInteger::toString).forEach(id -> {
+                        var resource = actionResources.get(id);
+                        if (resource != null && !ceilings.contains(resource)) {
+                            issues.add(new ScopeIssue(resource.toString(), List.of(id), null,
+                                    ScopeIssueReason.MISSING_RESOURCE_CEILING));
+                        }
+                    });
+        }
         return List.copyOf(issues);
     }
 
@@ -161,25 +213,121 @@ public class TenantAssignmentOperations {
         return roleDefinitions.activeDefinition(actor, role);
     }
 
-    ResourceDetail<TenantAssignmentRecord> detail(ActiveIdentity actor,TenantAdministrationRows.Assignment row) {
-        var input=new TenantAssignmentInput(new SubjectRef(row.subjectType(),(row.subjectType()==SubjectType.MEMBER?row.memberId():row.groupId()).toString()),row.roleId().toString(),IamJsonCodec.read(row.scopeBindings(),BINDINGS),instant(row.validFrom()),instant(row.validUntil()),row.delegationGrantId()==null?null:row.delegationGrantId().toString());
-        var role=role(actor,row.roleId().toString());var state=row.status()==GrantStatus.REVOKED?AssignmentEffectiveStatus.REVOKED:
-            row.validFrom().isAfter(LocalDateTime.now(ZoneOffset.UTC))?AssignmentEffectiveStatus.PENDING:row.validUntil()!=null&&!row.validUntil().isAfter(LocalDateTime.now(ZoneOffset.UTC))?AssignmentEffectiveStatus.EXPIRED:AssignmentEffectiveStatus.ACTIVE;
-        if((state==AssignmentEffectiveStatus.ACTIVE||state==AssignmentEffectiveStatus.PENDING)&&(!Boolean.TRUE.equals(role.enabled())||row.delegationGrantId()!=null&&sourceInvalid(actor,row)))state=AssignmentEffectiveStatus.SOURCE_INVALID;
-        var record=new TenantAssignmentRecord(row.id().toString(),input,row.status(),row.source(),row.subjectName(),row.roleName(),row.roleKind(),row.delegationGrantId()==null?null:row.delegationGrantId().toString(),instant(row.createdAt()),null,state,issues(actor,role,input.scopeBindings(),row.delegationGrantId()));
-        Map<String,ObjectCapability> capabilities=new LinkedHashMap<>();
-        var available=access.capabilities(actor,List.of(IamAction.TENANT_ASSIGNMENT_UPDATE,IamAction.TENANT_ASSIGNMENT_DELETE));
-        var ownSources=live.mine(tenant(actor),member(actor)).stream().map(TenantAdministrationRows.Delegation::id).collect(java.util.stream.Collectors.toSet());
-        for(var operation:List.of(IamAction.TENANT_ASSIGNMENT_UPDATE,IamAction.TENANT_ASSIGNMENT_DELETE)) {
-            boolean allowed=available.allows(operation,false);
-            if(allowed) allowed=available.allows(operation,true)
-                ? ObjectScopeSql.matches(resources.objects(actor.context(),operation),row.id().longValueExact())
-                : row.delegationGrantId()!=null && ownSources.contains(row.delegationGrantId());
-            if(operation==IamAction.TENANT_ASSIGNMENT_UPDATE && row.status()!=GrantStatus.ACTIVE)allowed=false;
-            capabilities.put(operation.getCode(),new ObjectCapability(allowed,allowed?null:IamReasonCode.ACTION_DENIED,allowed?null:"当前来源或对象范围不允许"));
+    private static final List<IamAction> WRITE_ACTIONS = List.of(
+            IamAction.TENANT_ASSIGNMENT_UPDATE, IamAction.TENANT_ASSIGNMENT_DELETE);
+
+    ResourceDetail<TenantAssignmentRecord> detail(ActiveIdentity actor, TenantAdministrationRows.Assignment row) {
+        var role = role(actor, row.roleId().toString());
+        var state = state(row, LocalDateTime.now(ZoneOffset.UTC));
+        if (needsSourceCheck(state) && (!Boolean.TRUE.equals(role.enabled())
+                || row.delegationGrantId() != null && sourceInvalid(actor, row))) {
+            state = AssignmentEffectiveStatus.SOURCE_INVALID;
         }
-        return ResourceDetailFactory.of(record,capabilities,row.version().toString());
+        var input = input(row);
+        return project(row, input, state, issues(actor, role, input.scopeBindings(), row.delegationGrantId()),
+                readAccess(actor, null));
     }
+
+    /** 在已通过范围过滤的分页结果内批量加载展示所需的当前事实。 */
+    List<ResourceDetail<TenantAssignmentRecord>> details(ActiveIdentity actor,
+            List<TenantAdministrationRows.Assignment> rows, List<BigInteger> ownSources) {
+        if (rows.isEmpty()) return List.of();
+        var tenant = tenant(actor);
+        var roleIds = rows.stream().map(TenantAdministrationRows.Assignment::roleId).distinct().toList();
+        var heads = live.roleHeads(tenant, roleIds);
+        if (heads.size() != roleIds.size()) missing();
+        var enabled = heads.stream().filter(role -> Boolean.TRUE.equals(role.enabled()))
+                .map(TenantAdministrationRows.Role::id).collect(java.util.stream.Collectors.toSet());
+        var active = roleDefinitions.activeDefinitions(actor, heads);
+        var now = LocalDateTime.now(ZoneOffset.UTC);
+        var delegated = rows.stream().filter(row -> row.delegationGrantId() != null
+                        && enabled.contains(row.roleId()) && needsSourceCheck(state(row, now)))
+                .map(TenantAdministrationRows.Assignment::id).toList();
+        Map<BigInteger, BigInteger> eligible = delegated.isEmpty() ? Map.of()
+                : live.eligibleDelegatedAssignments(tenant, delegated, now).stream().collect(
+                        java.util.stream.Collectors.toMap(TenantAdministrationMapper.DelegatedAssignmentVersion::id,
+                                TenantAdministrationMapper.DelegatedAssignmentVersion::version));
+        var sourceIds = rows.stream().filter(row -> row.delegationGrantId() != null
+                        && !active.definitions().get(row.roleId()).grants().isEmpty())
+                .map(TenantAdministrationRows.Assignment::delegationGrantId).distinct().toList();
+        Map<BigInteger, Set<BigInteger>> ceilings = new HashMap<>();
+        if (!sourceIds.isEmpty()) {
+            for (var ceiling : live.assignmentCeilingResources(tenant, sourceIds)) {
+                ceilings.computeIfAbsent(ceiling.delegationId(), ignored -> new HashSet<>()).add(ceiling.resourceId());
+            }
+        }
+        var access = readAccess(actor, ownSources);
+        return rows.stream().map(row -> {
+            var state = state(row, now);
+            if (needsSourceCheck(state) && (!enabled.contains(row.roleId())
+                    || row.delegationGrantId() != null && !row.version().equals(eligible.get(row.id())))) {
+                state = AssignmentEffectiveStatus.SOURCE_INVALID;
+            }
+            var input = input(row);
+            var limits = row.delegationGrantId() == null ? null
+                    : ceilings.getOrDefault(row.delegationGrantId(), Set.of());
+            return project(row, input, state, issues(active.definitions().get(row.roleId()), input.scopeBindings(),
+                    limits, active.actionResources()), access);
+        }).toList();
+    }
+
+    private static TenantAssignmentInput input(TenantAdministrationRows.Assignment row) {
+        var subjectId = row.subjectType() == SubjectType.MEMBER ? row.memberId() : row.groupId();
+        var source = row.delegationGrantId();
+        return new TenantAssignmentInput(new SubjectRef(row.subjectType(), subjectId.toString()),
+                row.roleId().toString(), IamJsonCodec.read(row.scopeBindings(), BINDINGS),
+                instant(row.validFrom()), instant(row.validUntil()), source == null ? null : source.toString());
+    }
+
+    private static AssignmentEffectiveStatus state(TenantAdministrationRows.Assignment row, LocalDateTime now) {
+        if (row.status() == GrantStatus.REVOKED) return AssignmentEffectiveStatus.REVOKED;
+        if (row.validFrom().isAfter(now)) return AssignmentEffectiveStatus.PENDING;
+        if (row.validUntil() != null && !row.validUntil().isAfter(now)) return AssignmentEffectiveStatus.EXPIRED;
+        return AssignmentEffectiveStatus.ACTIVE;
+    }
+
+    private static boolean needsSourceCheck(AssignmentEffectiveStatus state) {
+        return state == AssignmentEffectiveStatus.ACTIVE || state == AssignmentEffectiveStatus.PENDING;
+    }
+
+    private DetailAccess readAccess(ActiveIdentity actor, List<BigInteger> knownSources) {
+        var rights = access.capabilities(actor, WRITE_ACTIONS);
+        Map<IamAction, ObjectScope> scopes = new EnumMap<>(IamAction.class);
+        Set<IamAction> delegated = EnumSet.noneOf(IamAction.class);
+        for (var operation : WRITE_ACTIONS) {
+            if (!rights.allows(operation, false)) continue;
+            if (rights.allows(operation, true)) scopes.put(operation, resources.objects(actor.context(), operation));
+            else delegated.add(operation);
+        }
+        Set<BigInteger> ownSources = Set.of();
+        if (!delegated.isEmpty()) {
+            ownSources = knownSources != null ? Set.copyOf(knownSources) : live.mine(tenant(actor), member(actor))
+                    .stream().map(TenantAdministrationRows.Delegation::id).collect(java.util.stream.Collectors.toSet());
+        }
+        return new DetailAccess(scopes, delegated, ownSources);
+    }
+
+    private record DetailAccess(Map<IamAction, ObjectScope> scopes, Set<IamAction> delegated,
+                                Set<BigInteger> ownSources) { }
+
+    private static ResourceDetail<TenantAssignmentRecord> project(TenantAdministrationRows.Assignment row,
+            TenantAssignmentInput input, AssignmentEffectiveStatus state, List<ScopeIssue> issues, DetailAccess access) {
+        var source = row.delegationGrantId();
+        var record = new TenantAssignmentRecord(row.id().toString(), input, row.status(), row.source(),
+                row.subjectName(), row.roleName(), row.roleKind(), source == null ? null : source.toString(),
+                instant(row.createdAt()), null, state, issues);
+        Map<String, ObjectCapability> capabilities = new LinkedHashMap<>();
+        for (var operation : WRITE_ACTIONS) {
+            var scope = access.scopes().get(operation);
+            boolean allowed = scope != null ? ObjectScopeSql.matches(scope, row.id().longValueExact())
+                    : access.delegated().contains(operation) && source != null && access.ownSources().contains(source);
+            if (operation == IamAction.TENANT_ASSIGNMENT_UPDATE && row.status() != GrantStatus.ACTIVE) allowed = false;
+            capabilities.put(operation.getCode(), new ObjectCapability(allowed, allowed ? null : IamReasonCode.ACTION_DENIED,
+                    allowed ? null : "当前来源或对象范围不允许"));
+        }
+        return ResourceDetailFactory.of(record, capabilities, row.version().toString());
+    }
+
     boolean sourceInvalid(ActiveIdentity actor,TenantAdministrationRows.Assignment row) {
         var source=live.delegation(tenant(actor),row.delegationGrantId());var now=LocalDateTime.now(ZoneOffset.UTC);
         if(source==null||source.status()!=GrantStatus.ACTIVE||!live.delegatedRoles(source.id()).contains(row.roleId())
@@ -204,4 +352,8 @@ public class TenantAssignmentOperations {
     static void missing(){throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);}
     static void denied(){throw new BizException(IamReasonCode.ACTION_DENIED);}
     static void exceeded(){throw new BizException(IamReasonCode.DELEGATION_EXCEEDED);}
+
+    private static BizException exceeded(String message) {
+        return new BizException(IamReasonCode.DELEGATION_EXCEEDED.getCode(), message);
+    }
 }

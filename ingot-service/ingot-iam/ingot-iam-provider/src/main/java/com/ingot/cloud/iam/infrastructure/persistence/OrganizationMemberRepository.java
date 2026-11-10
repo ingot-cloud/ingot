@@ -2,6 +2,8 @@ package com.ingot.cloud.iam.infrastructure.persistence;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -91,6 +93,25 @@ public class OrganizationMemberRepository {
      */
     public long countEffective(long tenantId, ObjectScope scope, long groupId) {
         return members.selectCount(effectiveQuery(tenantId, scope, groupId));
+    }
+
+    /**
+     * 按当前页组 ID 聚合与有效成员分页一致的可见人数。
+     * @param tenantId 当前可信租户
+     * @param scope 成员读取范围
+     * @param groupIds 当前页组 ID
+     * @return 组 ID 与人数，空组由调用方补零
+     */
+    public Map<BigInteger, Long> countEffectiveGroups(long tenantId, ObjectScope scope, List<BigInteger> groupIds) {
+        if (groupIds.isEmpty() || scope.coversNone()) {
+            return Map.of();
+        }
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        var query = Wrappers.<IamTenantMemberEntity>lambdaQuery();
+        ObjectScopeSql.restrictTenantMembers(query, scope, tenant);
+        return members.countEffectiveGroups(tenant, groupIds, query).stream()
+                .collect(Collectors.toMap(IamTenantMemberMapper.EffectiveGroupCount::groupId,
+                        IamTenantMemberMapper.EffectiveGroupCount::memberCount));
     }
 
     private LambdaQueryWrapper<IamTenantMemberEntity> effectiveQuery(long tenantId, ObjectScope scope, long groupId) {

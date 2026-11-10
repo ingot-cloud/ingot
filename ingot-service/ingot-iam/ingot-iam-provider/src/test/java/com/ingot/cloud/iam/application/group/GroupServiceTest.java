@@ -168,6 +168,31 @@ class GroupServiceTest {
     }
 
     @Test
+    void summaryAndFullPageKeepScopeWhileCountingOverlappingSourcesOnce() {
+        jdbc.update("UPDATE iam_tenant_group_department SET include_descendants=TRUE WHERE group_id=502");
+        jdbc.update("INSERT INTO iam_tenant_group_member VALUES (10,502,102),(10,502,103)");
+        var summary = service.listSummaries(AuthorizationDomain.TENANT, 1, 1, "客服");
+        assertEquals(1, summary.total());
+        var item = summary.items().getFirst();
+        assertEquals("502", item.record().id());
+
+        var detail = service.list(AuthorizationDomain.TENANT, 1, 1, "客服").items().getFirst();
+        assertEquals(item.capabilities(), detail.capabilities());
+        assertEquals(item.version(), detail.version());
+        assertEquals(List.of("102", "103"), detail.record().selection().members());
+        assertEquals(2L, detail.record().visibleMemberCount());
+        assertTrue(detail.record().selectionEditable());
+
+        var limited = ObjectScope.of(List.of(new com.ingot.cloud.iam.domain.authorization.ObjectScopeClause(
+                java.util.Set.of(BigInteger.valueOf(102)), List.of())));
+        when(scopes.memberRead(any(), any())).thenReturn(limited);
+        var visible = service.list(AuthorizationDomain.TENANT, 1, 1, "客服").items().getFirst().record();
+        assertEquals(List.of("102"), visible.selection().members());
+        assertEquals(1L, visible.visibleMemberCount());
+        assertFalse(visible.selectionEditable());
+    }
+
+    @Test
     void scopedGroupReadAndWriteCheckTheActualTarget() {
         var selected = ObjectScope.of(List.of(new com.ingot.cloud.iam.domain.authorization.ObjectScopeClause(
                 java.util.Set.of(BigInteger.valueOf(502)), List.of())));

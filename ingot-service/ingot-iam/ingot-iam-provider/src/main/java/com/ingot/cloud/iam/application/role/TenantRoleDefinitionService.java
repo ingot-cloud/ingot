@@ -129,7 +129,9 @@ public class TenantRoleDefinitionService {
         if(!resources.objects(actor.context(),createAction(shared)).coversAll())throw new BizException(IamReasonCode.ACTION_DENIED);
         return transactions.execute(tx -> {
             lockActor(actor, shared, createAction(shared));
-            if(live.roleCodeExists(shared?null:tenant(actor,false),input.code().trim())>0)invalid();
+            if (live.roleCodeExists(shared ? null : tenant(actor, false), input.code().trim()) > 0) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "角色编码已存在，请更换角色编码");
+            }
             requireValid(validate(actor, shared, null, frozen(shared, input.definition())));
             long id = access.nextId();
             try {
@@ -185,7 +187,9 @@ public class TenantRoleDefinitionService {
             lockActor(actor, shared, statusAction(shared));
             var row = writable(actor, shared, id, true);
             IamIds.requireVersion(input.expectedVersion(), row.version().toString());
-            if (input.name() != null && input.name().isBlank()) invalid();
+            if (input.name() != null && input.name().isBlank()) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "请输入角色名称");
+            }
             if (live.profile(row.id(), row.version(), input.name() == null ? row.name() : input.name().trim(),
                     input.description() == null ? row.description() : input.description(),
                     input.groupName() == null ? row.groupName() : input.groupName(), input.status() == ConfigurationStatus.ENABLED) != 1) conflict();
@@ -204,10 +208,16 @@ public class TenantRoleDefinitionService {
         return transactions.execute(tx -> {
             lockActor(actor, shared, deleteAction(shared));
             var row = writable(actor, shared, id, true);
-            if (live.roleAssignments(row.id()) > 0 || live.roleDelegations(row.id()) > 0)
-                throw new BizException(IamReasonCode.OBJECT_IN_USE);
+            if (live.roleAssignments(row.id()) > 0) {
+                throw new BizException(IamReasonCode.OBJECT_IN_USE.getCode(), "该角色仍有分配记录，无法删除");
+            }
+            if (live.roleDelegations(row.id()) > 0) {
+                throw new BizException(IamReasonCode.OBJECT_IN_USE.getCode(), "该角色仍被委派记录引用，无法删除");
+            }
             try { roles.delete(row); }
-            catch (DataIntegrityViolationException failure) { throw new BizException(IamReasonCode.OBJECT_IN_USE); }
+            catch (DataIntegrityViolationException failure) {
+                throw new BizException(IamReasonCode.OBJECT_IN_USE.getCode(), "该角色仍被历史记录引用，无法删除");
+            }
             audits.write(actor.context(), access.nextId(), ROLE_TARGET, id, AuditChangeType.REMOVE,
                     Map.of(AuditField.NAME, row.name()), Map.of(), Map.of(ROLE_TARGET, row.version().toString()));
             changes.markAll();

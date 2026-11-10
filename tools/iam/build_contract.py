@@ -87,6 +87,11 @@ def build(schemas):
             'responses': {'200': {'description': '成功；使用既有 R 信封',
                                   'content': {MEDIA_TYPE: {'schema': ref(route['response'])}}}},
         }
+        if route['method'] == 'get' and route['path'] in ('/v1/platform/groups', '/v1/tenant/groups'):
+            operation['responses']['200']['content'][MEDIA_TYPE]['schema'] = {
+                'anyOf': [ref(route['response']), ref('RPageResponseResourceDetailGroupSummary')],
+                'description': '默认返回完整记录，view=SUMMARY 返回组摘要',
+            }
         if route.get('deprecated'):
             operation['deprecated'] = True
         if route['path'] == '/v1/assets/uploads':

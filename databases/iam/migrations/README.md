@@ -16,6 +16,7 @@
 | 034_resource_field_policy.sql | 已有库的字段策略仍是一租户一行并带场景列；按租户成员回填资源、去掉场景，并把菜单改为字段策略。可重复执行。新建库使用002/004/006，不执行本补丁。 | 002/004/006 |
 | 035_tenant_workbench_first.sql | 租户工作台仍在一级导航末尾；仅将工作台根目录排序设为0并递增版本，可重复执行。完成后重新加载菜单；回退时恢复留存的原sort_order并递增当前version。 | 006 |
 | 036_member_platform_application.sql | 新增 App 用户管理应用、三资源、二十操作及菜单。停写备份并在执行脚本的连接中选中 IAM 库，见 [036 执行方式](#036-app-用户管理应用)。完成后同批发布 IAM、Member 和平台前端并刷新授权与路由缓存。回退执行对应 rollback SQL，保留授权引用。 | 006 |
+| 037_tenant_assignment_list_index.sql | 执行脚本的连接选中 IAM 库。在发布分配列表后端前在线添加覆盖索引，支持重复执行。回退用 037_tenant_assignment_list_index.rollback.sql，保留分配数据。 | 003 |
 | 011_delegation_duration_mode.sql | 委派表仍是旧LIMITED结构、尚无assignment_duration_mode列；一次ALTER。 | 003 |
 | 015_menu_advanced_configuration.sql | iam_menu 尚无 hidden/is_cache/props/route_params 列；一次 ALTER，保留现有数据。 | 002 |
 | 014_platform_member_contacts.sql | 平台成员尚无phone/email列；停IAM写入后一次增加并从账号回填，后续不再同步。 | 001 |

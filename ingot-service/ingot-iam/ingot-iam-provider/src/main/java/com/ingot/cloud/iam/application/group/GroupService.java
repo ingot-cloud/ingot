@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ingot.cloud.iam.application.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.iam.infrastructure.persistence.DepartmentClosure;
 import com.ingot.cloud.iam.domain.authorization.ObjectScope;
@@ -38,6 +38,7 @@ import com.ingot.cloud.iam.application.shared.model.CreatedResource;
 import com.ingot.framework.commons.model.iam.DepartmentSelection;
 import com.ingot.cloud.iam.application.group.model.GroupDraft;
 import com.ingot.cloud.iam.application.group.model.GroupRecord;
+import com.ingot.cloud.iam.application.group.model.GroupSummary;
 import com.ingot.cloud.iam.application.group.model.GroupUpdateInput;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
@@ -114,25 +115,79 @@ public class GroupService {
     public PageResponse<ResourceDetail<GroupRecord>> list(AuthorizationDomain domain, int page, int pageSize,
                                                          String name) {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.READ));
+        var rows = groupPage(domain, actor, page, pageSize, name);
+        if (rows.getRecords().isEmpty()) {
+            return IamPages.details(List.of(), rows.getTotal(), page, pageSize);
+        }
+
+        var visibility = visibility(domain, actor);
+        var ids = rows.getRecords().stream().map(GroupRow::id).toList();
+        long tenant = domain == AuthorizationDomain.TENANT ? tenantId(actor) : 0;
+        var direct = visibility.members() == null
+                ? new GroupRepository.DirectGroupLinks(Map.of(), Map.of())
+                : groups.directGroupLinks(domain, tenant, ids, visibility.members());
+        var departments = domain == AuthorizationDomain.TENANT && visibility.members() != null
+                ? groups.departmentGroupLinks(tenant, ids, visibility.departments())
+                : new GroupRepository.DepartmentGroupLinks(Map.of(), Map.of());
+        Map<BigInteger, Long> effectiveCounts = domain == AuthorizationDomain.TENANT && visibility.members() != null
+                ? memberQueries.countEffectiveGroups(tenant, visibility.members(), ids) : Map.of();
+
+        var items = rows.getRecords().stream().map(row -> {
+            var capabilities = groupCapabilities(domain, row.id().longValueExact(), visibility.writes());
+            var members = direct.visible().getOrDefault(row.id(), List.of());
+            var visibleDepartments = departments.visible().getOrDefault(row.id(), List.of());
+            boolean editable = visibility.members() != null
+                    && capabilities.get(action(domain, AccessKind.UPDATE).getCode()).allowed()
+                    && members.equals(direct.all().getOrDefault(row.id(), List.of()))
+                    && visibleDepartments.size() == departments.totals().getOrDefault(row.id(), 0L);
+            Long count = null;
+            if (visibility.members() != null) {
+                count = domain == AuthorizationDomain.PLATFORM ? (long) members.size()
+                        : effectiveCounts.getOrDefault(row.id(), 0L);
+            }
+            var record = new GroupRecord(row.id().toString(), row.name(), row.description(),
+                    new Selection(members, visibleDepartments), count, editable);
+            return ResourceDetailFactory.of(record, capabilities, row.version());
+        }).toList();
+        return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    /**
+     * 读取当前域用户组的分页摘要。
+     * @param domain 接口管理域
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param name 组名包含匹配，可空
+     * @return 用户组摘要页
+     */
+    public PageResponse<ResourceDetail<GroupSummary>> listSummaries(AuthorizationDomain domain, int page,
+            int pageSize, String name) {
+        var actor = access.require(domain, action(domain, AccessKind.READ));
+        var rows = groupPage(domain, actor, page, pageSize, name);
+        if (rows.getRecords().isEmpty()) {
+            return IamPages.details(List.of(), rows.getTotal(), page, pageSize);
+        }
+        var writes = writeScopes(domain, actor);
+        var items = rows.getRecords().stream().map(row -> ResourceDetailFactory.of(
+                new GroupSummary(row.id().toString(), row.name(), row.description()),
+                groupCapabilities(domain, row.id().longValueExact(), writes), row.version())).toList();
+        return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    private IPage<GroupRow> groupPage(AuthorizationDomain domain, ActiveIdentity actor, int page, int pageSize,
+            String name) {
         IamPages.require(page, pageSize);
         String keyword = IamFilters.containsName(name);
         var scope = scopes.objects(actor.context(), action(domain, AccessKind.READ));
-        Visibility visibility = visibility(domain, actor);
         if (domain == AuthorizationDomain.PLATFORM) {
-            Page<IamPlatformGroupEntity> rows = groups.pagePlatform(page, pageSize, keyword, scope);
-            List<ResourceDetail<GroupRecord>> items = rows.getRecords().stream()
-                    .map(row -> detail(domain, actor, row.getId().longValue(), row.getName(), row.getDescription(),
-                            version(row.getVersion()), visibility))
-                    .toList();
-            return IamPages.details(items, rows.getTotal(), page, pageSize);
+            return groups.pagePlatform(page, pageSize, keyword, scope).convert(row ->
+                    new GroupRow(row.getId(), row.getName(), row.getDescription(), version(row.getVersion())));
         }
-        Page<IamTenantGroupEntity> rows = groups.pageTenant(tenantId(actor), page, pageSize, keyword, scope);
-        List<ResourceDetail<GroupRecord>> items = rows.getRecords().stream()
-                .map(row -> detail(domain, actor, row.getId().longValue(), row.getName(), row.getDescription(),
-                        version(row.getVersion()), visibility))
-                .toList();
-        return IamPages.details(items, rows.getTotal(), page, pageSize);
+        return groups.pageTenant(tenantId(actor), page, pageSize, keyword, scope).convert(row ->
+                new GroupRow(row.getId(), row.getName(), row.getDescription(), version(row.getVersion())));
     }
+
+    private record GroupRow(BigInteger id, String name, String description, String version) { }
 
     /**
      * 把平台成员加入指定用户组；已在组内的项跳过。
@@ -367,7 +422,7 @@ public class GroupService {
         return detail(domain, actor, id, name, description, version, visibility(domain, actor));
     }
 
-    private Visibility visibility(AuthorizationDomain domain, ActiveIdentity actor) {
+    private Map<IamAction, ObjectScope> writeScopes(AuthorizationDomain domain, ActiveIdentity actor) {
         Map<IamAction, ObjectScope> writes = new EnumMap<>(IamAction.class);
         for (AccessKind kind : List.of(AccessKind.UPDATE, AccessKind.DELETE, AccessKind.PREVIEW)) {
             IamAction operation = action(domain, kind);
@@ -375,6 +430,11 @@ public class GroupService {
                 writes.put(operation, scopes.objects(actor.context(), operation));
             }
         }
+        return writes;
+    }
+
+    private Visibility visibility(AuthorizationDomain domain, ActiveIdentity actor) {
+        var writes = writeScopes(domain, actor);
         IamAction memberRead = memberRead(domain);
         ObjectScope memberScope = access.allows(domain, memberRead, false)
                 ? scopes.memberRead(actor.context(), memberRead) : null;
@@ -387,14 +447,7 @@ public class GroupService {
     private ResourceDetail<GroupRecord> detail(AuthorizationDomain domain, ActiveIdentity actor, long id, String name,
                                                String description, String version, Visibility visibility) {
         Selection selection = new Selection(List.of(), List.of());
-        Map<String, ObjectCapability> capabilities = new LinkedHashMap<>();
-        for (AccessKind kind : List.of(AccessKind.UPDATE, AccessKind.DELETE, AccessKind.PREVIEW)) {
-            IamAction operation = action(domain, kind);
-            ObjectScope scope = visibility.writes().get(operation);
-            boolean allowed = scope != null && ObjectScopeSql.matches(scope, id);
-            var reason = allowed ? null : scope == null ? IamReasonCode.ACTION_DENIED : IamReasonCode.OBJECT_NOT_FOUND;
-            capabilities.put(operation.getCode(), new ObjectCapability(allowed, reason, null));
-        }
+        var capabilities = groupCapabilities(domain, id, visibility.writes());
         boolean selectionEditable = false;
         Long count = null;
         if (visibility.members() != null) {
@@ -413,6 +466,19 @@ public class GroupService {
         }
         return ResourceDetailFactory.of(new GroupRecord(IamIds.text(id), name, description, selection, count, selectionEditable),
                 capabilities, version);
+    }
+
+    private Map<String, ObjectCapability> groupCapabilities(AuthorizationDomain domain, long id,
+            Map<IamAction, ObjectScope> writes) {
+        Map<String, ObjectCapability> capabilities = new LinkedHashMap<>();
+        for (AccessKind kind : List.of(AccessKind.UPDATE, AccessKind.DELETE, AccessKind.PREVIEW)) {
+            IamAction operation = action(domain, kind);
+            ObjectScope scope = writes.get(operation);
+            boolean allowed = scope != null && ObjectScopeSql.matches(scope, id);
+            var reason = allowed ? null : scope == null ? IamReasonCode.ACTION_DENIED : IamReasonCode.OBJECT_NOT_FOUND;
+            capabilities.put(operation.getCode(), new ObjectCapability(allowed, reason, null));
+        }
+        return capabilities;
     }
 
     private void requireWriteScope(AuthorizationDomain domain, ActiveIdentity actor, AccessKind kind, long id) {

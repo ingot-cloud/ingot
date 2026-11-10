@@ -210,6 +210,23 @@
           "maximum": 200,
           "default": 20
         }
+      },
+      {
+        "name": "name",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "view",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CATALOG",
+            "SUMMARY"
+          ],
+          "default": "CATALOG"
+        }
       }
     ]
   },
@@ -476,6 +493,17 @@
           "enum": [
             "ENABLED",
             "DISABLED"
+          ]
+        }
+      },
+      {
+        "name": "domain",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "PLATFORM",
+            "TENANT"
           ]
         }
       },
@@ -2451,6 +2479,23 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "view",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CATALOG",
+            "SUMMARY"
+          ],
+          "default": "CATALOG"
         }
       }
     ]

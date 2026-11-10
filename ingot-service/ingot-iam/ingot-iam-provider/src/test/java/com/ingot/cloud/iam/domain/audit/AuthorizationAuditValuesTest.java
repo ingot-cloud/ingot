@@ -73,6 +73,6 @@ class AuthorizationAuditValuesTest {
                 () -> AuthorizationAuditValues.readRevisions("9", "{\"role\":[]} "));
         assertEquals(BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(), error.getCode());
         assertEquals(Map.of("role", "1"), AuthorizationAuditValues.readRevisions("9", "{\"role\":\"1\"}"));
-        assertEquals(500, new com.ingot.cloud.iam.interfaces.http.IamErrorHandler().bizException(error).getStatusCode().value());
+        assertEquals(500, new com.ingot.cloud.iam.interfaces.http.IamErrorHandler().bizException(error, new org.springframework.mock.web.MockHttpServletRequest()).getStatusCode().value());
     }
 }

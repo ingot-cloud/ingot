@@ -33,6 +33,7 @@ import reactor.core.publisher.Mono;
 public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler {
     private final ObjectMapper objectMapper;
 
+    /** 保留已知状态与业务码，异常实现细节只写入日志。 */
     @NonNull
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, @NonNull Throwable ex) {
@@ -44,16 +45,26 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
         }
 
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        R<?> r = R.error500(ex.getMessage());
-        if (ex instanceof BizException) {
-            r = R.error(((BizException) ex).getCode(), ex.getMessage());
-        } else if (ex instanceof ResponseStatusException) {
-            HttpStatusCode statusCode = ((ResponseStatusException) ex).getStatusCode();
+        R<?> r;
+        if (ex instanceof BizException business
+                && !BaseErrorCode.INTERNAL_SERVER_ERROR.getCode().equals(business.getCode())) {
+            r = R.error(business.getCode(), business.getMessage());
+        } else if (ex instanceof ResponseStatusException status) {
+            HttpStatusCode statusCode = status.getStatusCode();
             response.setStatusCode(statusCode);
-            if (statusCode == HttpStatus.SERVICE_UNAVAILABLE) {
-                log.debug("[GatewayErrorWebExceptionHandler] - SERVICE_UNAVAILABLE={}", ex.getMessage());
-                r = R.error(BaseErrorCode.REQUEST_FALLBACK);
-            }
+            r = R.error(switch (statusCode.value()) {
+                case 400 -> BaseErrorCode.BAD_REQUEST;
+                case 401 -> BaseErrorCode.UNAUTHORIZED;
+                case 403 -> BaseErrorCode.FORBIDDEN;
+                case 404 -> BaseErrorCode.NOT_FOUND;
+                case 405 -> BaseErrorCode.METHOD_NOT_ALLOWED;
+                case 503 -> BaseErrorCode.REQUEST_FALLBACK;
+                default -> BaseErrorCode.INTERNAL_SERVER_ERROR;
+            });
+        } else {
+            log.error("网关处理请求失败", ex);
+            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            r = R.error500();
         }
 
         R<?> finalResponse = r;

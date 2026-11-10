@@ -59,8 +59,11 @@ public class TenantAssignmentQueryService {
         var actor=admission.actor(); IamPages.require(page,size);
         List<BigInteger> visible=admission.governed()?visible(actor,IamAction.TENANT_ASSIGNMENT_READ):null;
         List<BigInteger> sources=admission.governed()?null:operationsContext.live().mine(TenantAssignmentOperations.tenant(actor),TenantAssignmentOperations.member(actor)).stream().map(TenantAdministrationRows.Delegation::id).toList();
-        var items=operationsContext.live().assignments(TenantAssignmentOperations.tenant(actor),visible,sources,type,search(keyword),size,IamPages.offset(page,size)).stream().map(row->operationsContext.detail(actor,row)).toList();
-        return IamPages.details(items,operationsContext.live().assignmentsCount(TenantAssignmentOperations.tenant(actor),visible,sources,type,search(keyword)),page,size);
+        String pattern = keyword == null || keyword.isBlank() ? null : search(keyword);
+        var tenant = TenantAssignmentOperations.tenant(actor);
+        var rows = operationsContext.live().assignments(tenant, visible, sources, type, pattern, size, IamPages.offset(page, size));
+        var items=operationsContext.details(actor, rows, sources);
+        return IamPages.details(items, operationsContext.live().assignmentsCount(tenant, visible, sources, type, pattern), page, size);
     }
 
     /**
@@ -106,7 +109,7 @@ public class TenantAssignmentQueryService {
         IamPages.require(page, size);
         var actor = admission.actor();
         var query = workspaceQuery(actor, admission, roleId, SubjectType.MEMBER, memberId, null, page, size, visibleGroups(actor));
-        return IamPages.details(operationsContext.workspace().sources(query).stream().map(row -> operationsContext.detail(actor, row)).toList(),
+        return IamPages.details(operationsContext.details(actor, operationsContext.workspace().sources(query), null),
                 operationsContext.workspace().sourceCount(query), page, size);
     }
 

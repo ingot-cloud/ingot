@@ -3,6 +3,7 @@ package com.ingot.cloud.iam.application.policy;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,6 +27,7 @@ import com.ingot.framework.commons.model.iam.DepartmentSelection;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.cloud.iam.application.policy.model.FieldPolicyDraft;
 import com.ingot.framework.commons.model.iam.FieldOperations;
+import com.ingot.framework.commons.model.iam.ResourceFieldContext;
 import com.ingot.framework.commons.model.iam.IamActionOperation;
 import com.ingot.framework.commons.model.iam.extension.ResourceKey;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
@@ -198,7 +200,12 @@ public class FieldAccessEvaluator {
      * @return 不含敏感原值的执行批次
      */
     public FieldBatch prepare(FieldPolicySnapshot sourceSnapshot, long viewerId, java.util.Collection<Long> targetIds) {
-        final var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
+        var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
+        return prepareResolved(snapshot, viewerId, targetIds, new HashMap<>(), true);
+    }
+
+    private FieldBatch prepareResolved(FieldPolicySnapshot snapshot, long viewerId, java.util.Collection<Long> targetIds,
+            Map<Selection, Boolean> viewers, boolean includeRowOperations) {
         Set<BigInteger> ids = targetIds.stream().map(BigInteger::valueOf).collect(Collectors.toSet());
         ids.add(BigInteger.valueOf(viewerId));
         Map<Long, List<String>> departments = new LinkedHashMap<>();
@@ -207,7 +214,6 @@ public class FieldAccessEvaluator {
                 .eq(IamMemberDepartmentEntity::getTenantId, BigInteger.valueOf(snapshot.tenantId()))
                 .in(IamMemberDepartmentEntity::getMemberId, ids)).forEach(row -> departments
                     .computeIfAbsent(row.getMemberId().longValueExact(), ignored -> new ArrayList<>()).add(row.getDepartmentId().toString()));
-        Map<Selection, Boolean> viewers = new java.util.HashMap<>();
         List<CompiledRule> rules = new ArrayList<>();
         for (var rule : snapshot.rules()) {
             if (!viewers.computeIfAbsent(rule.viewer(), selection -> matchesViewer(snapshot.tenantId(), viewerId, selection)))
@@ -232,25 +238,22 @@ public class FieldAccessEvaluator {
             }
             rules.add(new CompiledRule(rule.fieldKey(), rule.visibility(), scopes));
         }
+        Map<String, FieldOperations> operations = includeRowOperations
+                ? rowOperations(snapshot, viewerId, viewers) : Map.of();
+        return new FieldBatch(snapshot, rules, departments, operations);
+    }
+
+    private Map<String, FieldOperations> rowOperations(FieldPolicySnapshot snapshot, long viewerId,
+            Map<Selection, Boolean> viewers) {
         Map<String, FieldOperations> operations = new LinkedHashMap<>();
-        // 选择器按请求内值缓存，字段数量不产生重复关系查询。
+        String update = snapshot.baseline().isEmpty() ? "" : updateAction(snapshot.resource());
         for (var field : snapshot.baseline().keySet()) {
-            FieldOperations matched = null;
-            String update = updateAction(snapshot.resource());
-            for (var rule : snapshot.operationRules()) {
-                if (!update.equals(rule.actionCode()) || !field.equals(rule.fieldKey())
-                        || !viewers.computeIfAbsent(rule.viewerSelection(), selection -> matchesViewer(snapshot.tenantId(), viewerId, selection)))
-                    continue;
-                matched = matched == null ? rule.operations() : new FieldOperations(matched.editable() && rule.operations().editable(),
-                        matched.filterable() && rule.operations().filterable());
-            }
+            var matched = matchedOperations(snapshot, viewerId, update, field, viewers);
             var baseline = matched == null ? snapshot.operationDefaults().getOrDefault(field, FieldOperations.NONE) : matched;
             var upper = snapshot.operationCeiling().getOrDefault(field, FieldOperations.NONE);
             operations.put(field, new FieldOperations(baseline.editable() && upper.editable(), false));
         }
-        Map<Long, List<String>> immutable = new LinkedHashMap<>();
-        departments.forEach((id, values) -> immutable.put(id, List.copyOf(values)));
-        return new FieldBatch(snapshot, List.copyOf(rules), Map.copyOf(immutable), Map.copyOf(operations));
+        return operations;
     }
 
     /** 从已预载批次计算行级字段，调用期间 SQL/RPC 为零。 */
@@ -368,8 +371,12 @@ public class FieldAccessEvaluator {
 
     /** 当前查看者可能看到的列；行值仍由真实对象独立判断，不用列表样本推断能力。 */
     public Map<String, FieldVisibility> contextVisibility(FieldPolicySnapshot sourceSnapshot, long viewerId) {
-        final var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
-        var batch = prepare(snapshot, viewerId, List.of());
+        var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
+        return contextVisibility(prepareResolved(snapshot, viewerId, List.of(), new HashMap<>(), false));
+    }
+
+    private Map<String, FieldVisibility> contextVisibility(FieldBatch batch) {
+        var snapshot = batch.snapshot();
         Map<String, FieldVisibility> result = new LinkedHashMap<>();
         snapshot.baseline().forEach((key, baseline) -> {
             var candidates = batch.rules().stream().filter(rule -> key.equals(rule.fieldKey())).toList();
@@ -406,26 +413,69 @@ public class FieldAccessEvaluator {
     /** 整份查询范围的可用筛选能力，不能使用当前页样本判断。 */
     public Map<String, FieldOperations> operations(FieldPolicySnapshot sourceSnapshot, long viewerId, ResourceKey resource,
             String action, ObjectScope scope) {
-        final var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
+        var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
+        var viewers = new HashMap<Selection, Boolean>();
+        var batch = prepareResolved(snapshot, viewerId, requiredIds(scope), viewers, false);
+        return contextOperations(batch, viewerId, action, scope, viewers);
+    }
+
+    /**
+     * 用同一份当前字段策略和查看者事实计算列可见性及每项操作能力。
+     * @param sourceSnapshot 本次请求新鲜读取的策略快照
+     * @param viewerId 可信查看者
+     * @param actions 需要输出能力的操作
+     * @param allowed 当前授权允许的操作码
+     * @param scope 成员读取范围
+     * @return 可见列、操作能力与脱敏配置
+     */
+    public ResourceFieldContext context(FieldPolicySnapshot sourceSnapshot, long viewerId, List<String> actions,
+            Set<String> allowed, ObjectScope scope) {
+        var snapshot = ownerSnapshot(sourceSnapshot, viewerId);
+        var viewers = new HashMap<Selection, Boolean>();
+        var batch = prepareResolved(snapshot, viewerId, requiredIds(scope), viewers, false);
+        Map<String, Map<String, FieldOperations>> operations = new LinkedHashMap<>();
+        for (String action : actions) {
+            operations.put(action, allowed.contains(action) ? contextOperations(batch, viewerId, action, scope, viewers)
+                    : snapshot.baseline().keySet().stream().collect(Collectors.toMap(key -> key, key -> FieldOperations.NONE)));
+        }
+        return new ResourceFieldContext(contextVisibility(batch), operations, snapshot.masks());
+    }
+
+    private static Set<Long> requiredIds(ObjectScope scope) {
         Set<Long> ids = new LinkedHashSet<>();
         scope.clauses().forEach(clause -> clause.requiredIds().forEach(id -> ids.add(id.longValueExact())));
-        var batch = prepare(snapshot, viewerId, ids);
-        Map<Selection, Boolean> viewers = new java.util.HashMap<>();
+        return ids;
+    }
+
+    private Map<String, FieldOperations> contextOperations(FieldBatch batch, long viewerId, String action,
+            ObjectScope scope, Map<Selection, Boolean> viewers) {
+        var snapshot = batch.snapshot();
         Map<String, FieldOperations> result = new LinkedHashMap<>();
+        boolean write = writes(action);
         for (var field : snapshot.baseline().keySet()) {
-            FieldOperations matched = null;
-            for (var rule : snapshot.operationRules()) {
-                if (!action.equals(rule.actionCode()) || !field.equals(rule.fieldKey())
-                        || !viewers.computeIfAbsent(rule.viewerSelection(), selection -> matchesViewer(snapshot.tenantId(), viewerId, selection))) continue;
-                matched = matched == null ? rule.operations() : new FieldOperations(matched.editable() && rule.operations().editable(), matched.filterable() && rule.operations().filterable());
-            }
+            var matched = matchedOperations(snapshot, viewerId, action, field, viewers);
             var value = matched == null ? snapshot.operationDefaults().getOrDefault(field, FieldOperations.NONE) : matched;
             var upper = snapshot.operationCeiling().getOrDefault(field, FieldOperations.NONE);
-            boolean write = writes(action);
             result.put(field, new FieldOperations(write && value.editable() && upper.editable(),
                     !write && value.filterable() && upper.filterable() && universallyFull(batch, field, scope)));
         }
         return Map.copyOf(result);
+    }
+
+    private FieldOperations matchedOperations(FieldPolicySnapshot snapshot, long viewerId, String action,
+            String field, Map<Selection, Boolean> viewers) {
+        FieldOperations matched = null;
+        for (var rule : snapshot.operationRules()) {
+            if (!action.equals(rule.actionCode()) || !field.equals(rule.fieldKey())
+                    || !viewers.computeIfAbsent(rule.viewerSelection(),
+                            selection -> matchesViewer(snapshot.tenantId(), viewerId, selection))) {
+                continue;
+            }
+            matched = matched == null ? rule.operations()
+                    : new FieldOperations(matched.editable() && rule.operations().editable(),
+                            matched.filterable() && rule.operations().filterable());
+        }
+        return matched;
     }
 
     /** 一次验证实际筛选键，SQL/count 之前执行。 */

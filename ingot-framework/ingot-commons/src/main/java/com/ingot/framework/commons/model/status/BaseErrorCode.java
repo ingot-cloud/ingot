@@ -19,7 +19,7 @@ public enum BaseErrorCode implements ErrorCode {
     FORBIDDEN("S0403", "无权访问"),
     NOT_FOUND("S0404", "找不到指定资源"),
     METHOD_NOT_ALLOWED("S0405", "请求方法不允许"),
-    INTERNAL_SERVER_ERROR("S0500", "未知错误"),
+    INTERNAL_SERVER_ERROR("S0500", "服务暂时无法处理请求，请稍后重试"),
 
     REQUEST_FALLBACK("S0001", "服务不在线, 或者网络超时"),
     ILLEGAL_OPERATION("S0002", "操作异常, %s"),

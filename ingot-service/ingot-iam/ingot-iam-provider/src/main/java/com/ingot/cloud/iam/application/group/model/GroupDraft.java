@@ -18,7 +18,7 @@ import jakarta.validation.constraints.*;
  */
 @Schema(description = "声明当前域静态组内容，修改后必须重验委派派生授权")
 public record GroupDraft(
-        @NotBlank @Schema(description = "组名称", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotBlank(message = "请输入用户组名称") @Schema(description = "组名称", requiredMode = Schema.RequiredMode.REQUIRED)
         String name,
         @Valid @Schema(description = "可选说明")
         String description,

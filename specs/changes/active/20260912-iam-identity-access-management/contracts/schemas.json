@@ -4026,6 +4026,20 @@
         },
         "description": "返回用户组元数据和可见成员来源，实际权限由分配与委派引擎另行计算"
       },
+      "GroupSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
       "GroupUpdateInput": {
         "required": [
           "expectedVersion",
@@ -5605,6 +5619,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ResourceDetailGroupRecord"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PageResponseResourceDetailGroupSummary": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceDetailGroupSummary"
             }
           },
           "total": {
@@ -7446,6 +7489,23 @@
           }
         }
       },
+      "RPageResponseResourceDetailGroupSummary": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResponseResourceDetailGroupSummary"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RPageResponseResourceDetailMemberRecord": {
         "type": "object",
         "properties": {
@@ -8818,6 +8878,35 @@
         "properties": {
           "record": {
             "$ref": "#/components/schemas/GroupRecord"
+          },
+          "fieldAccess": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldAccess"
+            }
+          },
+          "capabilities": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ObjectCapability"
+            }
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "ResourceDetailGroupSummary": {
+        "required": [
+          "capabilities",
+          "fieldAccess",
+          "record",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/GroupSummary"
           },
           "fieldAccess": {
             "type": "object",
