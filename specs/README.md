@@ -207,6 +207,7 @@ current/<domain>/<capability>/
 
 ### 2026-11-10 归档
 
+- [IAM SQL 防火墙兼容性检查与修复](./changes/archive/2026/20261107-iam-member-groups-wall-filter/README.md)（completed，本机真实会话复测通过）
 - [IAM 登录后接口现场与发布验收](./changes/archive/2026/20261110-iam-post-login-release-acceptance/README.md)（completed，两端首批成员 P95 对照、缓存分层和真实受限会话通过）
 - [IAM 登录后接口提速与场景提示](./changes/archive/2026/20261109-iam-post-login-read-performance/README.md)（completed，实现及隔离验证完成）
 
@@ -324,5 +325,3 @@ current/<domain>/<capability>/
 - [内部后台同源登录与双入口部署](./changes/archive/2026/20261031-security-same-origin-login/README.md)（completed，2026-10-31用户确认两端核心流程本地验收）；[当前能力](./current/security/same-origin-login/README.md)。
 
 - [IAM帮助内容方案（已取消）](./changes/archive/2026/20261103-iam-help-center/README.md)（cancelled；2026-11-03 用户改用前端静态帮助，保留历史）
-
-- [IAM SQL 防火墙兼容性检查与修复](./changes/active/20261107-iam-member-groups-wall-filter/README.md)（validating，187 条自定义 SQL 检查、完整回归及隔离 MySQL/HTTP 回归通过，待实际环境复测）

@@ -52,6 +52,12 @@
 
 `iam_role_assignment.idx_iam_assignment_tenant_list` 按 `tenant_id, domain, id, role_id, subject_type, delegation_grant_id, tenant_member_id, tenant_group_id` 排列。新库由初始化脚本创建，已有库用 [037 在线迁移](../../../../databases/iam/migrations/037_tenant_assignment_list_index.sql) 补齐。列表按可见范围保留精确计数及页码跳转。深页先取本页分配 ID，再读取本页详情。
 
+## 动态范围与 SQL 防火墙
+
+成员所属组的计数和分页使用同一套直接绑定、部门展开与去重逻辑。全范围计数省略可选的组条件，受限范围用绑定参数生成组 ID 的 `IN` 条件。组范围为空时仓库直接返回空页。租户与成员约束在来源查询中生效。
+
+授权候选、角色、分配、委派及负责人等查询中需要在 SQL 内表达的空对象范围，使用目标列的 `IN (NULL)`，使该范围匹配不到任何行。该谓词保持所在分支的空范围语义，其他合法 `OR` 分支仍按自身条件求值。负责人查询按实际范围组合条件。查询兼容现行 Druid MySQL Wall 规则，沿用现有防护配置和数据库结构。
+
 ## 密码历史索引
 
 `fw_security_password_history`保留原自增id主键、`UNIQUE(user_id,sequence_number)`及`idx_created_at`；不再维护与联合唯一键左前缀重叠的`idx_user_id`。按用户读取、槽位覆盖、历史检查和删除的服务行为不变，最近历史仍按created_at倒序及limit查询。
