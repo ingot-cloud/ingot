@@ -55,10 +55,10 @@ public class AssignmentRepository {
             + "WHERE m.id=platform_member_id AND m.display_name LIKE {0} ESCAPE '!')";
     private static final String PLATFORM_GROUP_NAME_FILTER = "EXISTS (SELECT 1 FROM iam_platform_group g "
             + "WHERE g.id=platform_group_id AND g.name LIKE {0} ESCAPE '!')";
-    private static final String EXPIRED_TIME_FILTER = "valid_until<=CURRENT_TIMESTAMP";
-    private static final String UNEXPIRED_TIME_FILTER = "(valid_until IS NULL OR valid_until>CURRENT_TIMESTAMP)";
-    private static final String FUTURE_TIME_FILTER = "valid_from>CURRENT_TIMESTAMP";
-    private static final String STARTED_TIME_FILTER = "(valid_from IS NULL OR valid_from<=CURRENT_TIMESTAMP)";
+    private static final String EXPIRED_TIME_FILTER = "valid_until<=CURRENT_TIMESTAMP(6)";
+    private static final String UNEXPIRED_TIME_FILTER = "(valid_until IS NULL OR valid_until>CURRENT_TIMESTAMP(6))";
+    private static final String FUTURE_TIME_FILTER = "valid_from>CURRENT_TIMESTAMP(6)";
+    private static final String STARTED_TIME_FILTER = "(valid_from IS NULL OR valid_from<=CURRENT_TIMESTAMP(6))";
     private final IamRoleAssignmentMapper assignments;
     private final IamDelegationGrantMapper delegations;
     private final IamDelegationRoleRevisionMapper delegationRevisions;

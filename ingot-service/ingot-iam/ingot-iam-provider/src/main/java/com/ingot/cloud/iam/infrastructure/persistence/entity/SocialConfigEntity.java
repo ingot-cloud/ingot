@@ -3,7 +3,9 @@ package com.ingot.cloud.iam.infrastructure.persistence.entity;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -17,9 +19,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * <p>
- *
- * </p>
+ * <p>持久化平台全局及已有租户的社交渠道配置。</p>
  *
  * @author magician
  * @since 2020-11-20
@@ -40,8 +40,9 @@ public class SocialConfigEntity extends BaseModel<SocialConfigEntity> {
     private Long id;
 
     /**
-     * 租户ID
+     * 已有配置的租户归属，平台全局配置为空，普通配置更新不改归属。
      */
+    @TableField(updateStrategy = FieldStrategy.NEVER)
     private Long tenantId;
 
     /**

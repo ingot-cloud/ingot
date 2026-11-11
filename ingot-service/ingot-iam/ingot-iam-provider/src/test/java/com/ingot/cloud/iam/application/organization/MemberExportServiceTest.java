@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.ingot.cloud.iam.domain.authorization.ObjectScope;
 import com.ingot.cloud.iam.application.authorization.evaluation.ResourceScopeAccessService;
@@ -35,14 +37,19 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -131,6 +138,32 @@ class MemberExportServiceTest {
         CreatedResource created = service.create(new VersionInput("0"));
         BizException failure = assertThrows(BizException.class, () -> service.download(created.id()));
         assertEquals(IamReasonCode.AUTHORIZATION_UNAVAILABLE.getCode(), failure.getCode());
+    }
+
+    @Test
+    void workerRestoresSubmittingIdentityAndChecksRevocationBeforeSnapshot() {
+        var command = new AtomicReference<Runnable>();
+        var authentication = new TestingAuthenticationToken("exporter", null, "ROLE_TEST");
+        MemberExportService service = service(command::set, 2);
+        CreatedResource created;
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            created = service.create(new VersionInput("0"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+
+        when(access.require(AuthorizationDomain.TENANT, IamAction.TENANT_MEMBER_EXPORT)).thenAnswer(invocation -> {
+            assertSame(authentication, SecurityContextHolder.getContext().getAuthentication());
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        });
+        CompletableFuture.runAsync(command.get()).join();
+
+        verify(members, never()).listProjected(any(), any(), any(Integer.class), any(Integer.class), any(), any());
+        assertEquals(ExportTaskStatus.FAILED.getValue(),
+                jdbc.queryForObject("SELECT status FROM iam_member_export WHERE id=?", String.class, created.id()));
+        assertEquals("IDENTITY_INVALID", jdbc.queryForObject(
+                "SELECT failure_reason FROM iam_member_export WHERE id=?", String.class, created.id()));
     }
 
     @Test

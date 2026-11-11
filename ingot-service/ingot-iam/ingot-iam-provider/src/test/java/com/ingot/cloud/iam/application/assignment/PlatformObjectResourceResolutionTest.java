@@ -89,7 +89,9 @@ class PlatformObjectResourceResolutionTest {
         parameter.setBindingKind(ScopeBindingKind.OBJECTS);
         when(roleStore.listParameters(31)).thenReturn(List.of(parameter));
         when(candidates.count(any(AuthorizationCandidateSql.Query.class))).thenReturn(1L);
-        assertTrue(bindingValidator().validateBindings(input(null)).isEmpty());
+        clearInvocations(access);
+        assertTrue(bindingValidator().validateBindings(actor.context(), input(null)).isEmpty());
+        verifyNoInteractions(access);
         assertTrue(bindingValidator().validCeilingObjects(ceiling("331")));
         prepareDiagnosis();
         assertTrue(editor.diagnose(AuthorizationCandidateKind.OBJECT, "331", "10", "", List.of(), 1, 20).supported());

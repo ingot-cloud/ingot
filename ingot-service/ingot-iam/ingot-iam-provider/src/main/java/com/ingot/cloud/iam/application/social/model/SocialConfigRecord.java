@@ -24,7 +24,7 @@ public class SocialConfigRecord implements Serializable {
     private Long id;
 
     /**
-     * 租户ID
+     * 配置的租户归属，平台全局配置为空。
      */
     private Long tenantId;
 

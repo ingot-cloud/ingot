@@ -15,9 +15,14 @@ import com.ingot.cloud.iam.interfaces.http.tenant.TenantMemberCommandAPI;
 import com.ingot.cloud.iam.interfaces.http.tenant.TenantGroupAPI;
 import com.ingot.cloud.iam.interfaces.http.tenant.TenantWorkbenchAPI;
 import com.ingot.cloud.iam.application.tenant.TenantWorkbenchService;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.LongConsumer;
 
 import com.ingot.cloud.iam.application.authorization.scope.TenantScopeBindingService;
 import com.ingot.cloud.iam.application.role.TenantRoleLockService;
@@ -114,6 +119,7 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.*;
@@ -524,16 +530,17 @@ class TenantLiveMySqlHttpTest {
     @Order(6)
     void batchedAudienceAndEntitlementChangesApplyOnTheNextRequest() throws Exception {
         long application = 910001;
+        long resource = 910012;
         long action = 910003;
         String actionCode = "audience-fixture:items:read";
         jdbc.update("INSERT INTO iam_application(id,code,domain,name) VALUES(?,'audience-fixture','TENANT','Audience')",
                 application);
         jdbc.update("""
                 INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities)
-                VALUES(910002,?,'items','Items','["ALL"]','[]')
-                """, application);
-        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name) VALUES(?,?,910002,?,'Read')",
-                action, application, actionCode);
+                VALUES(?,?,'items','Items','["ALL"]','[]')
+                """, resource, application);
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name) VALUES(?,?,?,?,'Read')",
+                action, application, resource, actionCode);
         jdbc.update("""
                 INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id,enabled,source)
                 VALUES(910004,10,?,TRUE,'INITIALIZATION')
@@ -892,6 +899,7 @@ class TenantLiveMySqlHttpTest {
     @Order(55)
     @EnabledIfEnvironmentVariable(named = "IAM_TENANT_CONTEXT_BENCHMARK", matches = "true")
     void tenantContextAndAssignmentReadBenchmark() throws Exception {
+        long otherTenantAssignments = successfulGet("owner-b", "/v1/tenant/assignments").path("total").asLong();
         String permission = action(IamAction.VALUE_TENANT_MEMBER_READ);
         String roleId = catalogResponse(first, "owner-a", "POST", "/v1/tenant/roles",
                 Map.of("code", "batch-probe", "name", "Batch probe", "definition", definition(permission))).path("id").asText();
@@ -910,7 +918,7 @@ class TenantLiveMySqlHttpTest {
                     IF(MOD(n,2)=0,CAST(? AS UNSIGNED),NULL),'MANUAL','2020-01-01'
                 FROM seq JOIN iam_role_definition d ON d.id=?
                 """, sourceId, roleId);
-        assertEquals(0, successfulGet("owner-b", "/v1/tenant/assignments").path("total").asInt());
+        assertEquals(otherTenantAssignments, successfulGet("owner-b", "/v1/tenant/assignments").path("total").asLong());
         for (String path : List.of("/v1/tenant/members/context", "/v1/tenant/assignments?pageSize=1",
                 "/v1/tenant/assignments?pageSize=20", "/v1/tenant/assignments?pageSize=100",
                 "/v1/tenant/assignments?pageSize=100&page=2")) {
@@ -1026,6 +1034,117 @@ class TenantLiveMySqlHttpTest {
         assertEquals("SOURCE_INVALID", assignmentState("owner-a", path, assigned));
         jdbc.update("UPDATE iam_role_assignment SET valid_from='2020-01-01',valid_until='2020-01-02' WHERE tenant_id=10 AND id=?", assigned);
         assertEquals("EXPIRED", assignmentState("owner-a", path, assigned));
+    }
+
+    @Test
+    @Order(59)
+    void platformAssignmentFiltersPreserveMicrosecondsAndHalfOpenBoundaries() throws Exception {
+        try (var connection = pool.getConnection()) {
+            var source = new org.springframework.jdbc.datasource.SingleConnectionDataSource(connection, true);
+            var clock = new JdbcTemplate(source);
+            clock.execute("SET timestamp=2077488000.500000");
+            try {
+                new org.springframework.transaction.support.TransactionTemplate(
+                        new org.springframework.jdbc.datasource.DataSourceTransactionManager(source)).execute(status -> {
+                    status.setRollbackOnly();
+                    var now = clock.queryForObject("SELECT CURRENT_TIMESTAMP(6)", LocalDateTime.class);
+                    assertEquals(500_000_000, now.getNano());
+                    clock.update("INSERT INTO iam_account(id,username,password_hash) VALUES(8420,'fractional-clock','not-a-credential')");
+                    clock.update("INSERT INTO iam_platform_member(id,account_id,display_name) VALUES(8420,8420,'微秒边界')");
+                    var revision = clock.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=900", Long.class);
+                    for (int offset = 1; offset <= 6; offset++) {
+                        var from = switch (offset) {
+                            case 1 -> now.minusNanos(1_000);
+                            case 2 -> now.plusNanos(1_000);
+                            case 5 -> now;
+                            default -> now.minusHours(1);
+                        };
+                        var until = switch (offset) {
+                            case 3 -> now.minusNanos(1_000);
+                            case 4 -> now.plusNanos(1_000);
+                            case 6 -> now;
+                            default -> null;
+                        };
+                        clock.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,valid_from,valid_until,source) VALUES(?,'PLATFORM','MEMBER',8420,?,'SYSTEM','{}',?,?,'MANUAL')",
+                                8420 + offset, revision, from, until);
+                    }
+                    var repository = IamMybatisTestAccess.assignments(source);
+                    var expected = Map.of(
+                            com.ingot.cloud.iam.domain.assignment.AssignmentEffectiveStatus.ACTIVE, List.of(8421L, 8424L, 8425L),
+                            com.ingot.cloud.iam.domain.assignment.AssignmentEffectiveStatus.PENDING, List.of(8422L),
+                            com.ingot.cloud.iam.domain.assignment.AssignmentEffectiveStatus.EXPIRED, List.of(8423L, 8426L));
+                    expected.forEach((state, ids) -> {
+                        var page = repository.pagePlatform(1, 20, null, null, 8420L, state, true);
+                        assertEquals(ids.size(), page.getTotal(), state.name());
+                        assertEquals(ids.stream().map(BigInteger::valueOf).toList(),
+                                page.getRecords().stream().map(row -> row.getId()).toList(), state.name());
+                    });
+                    var bound = repository.memberBoundRoles(8420, 1, 20);
+                    assertEquals(1, bound.getTotal());
+                    assertEquals(3, bound.getRecords().getFirst().getDirectCount());
+                    var roleId = clock.queryForObject("SELECT role_id FROM iam_role_revision WHERE id=?", Long.class, revision);
+                    assertEquals(4, IamMybatisTestAccess.mapper(source,
+                            com.ingot.cloud.iam.infrastructure.persistence.mapper.IamRoleAssignmentMapper.class)
+                            .applicationDistribution(BigInteger.valueOf(roleId), false,
+                                    List.of(8421L, 8422L, 8423L, 8424L, 8425L, 8426L).stream()
+                                            .map(BigInteger::valueOf).toList()).getFirst().count());
+                    clock.update("INSERT INTO iam_delegation_grant(id,domain,platform_administrator_id,valid_from,assignment_duration_mode) VALUES(8427,'PLATFORM',1001,?,'UNLIMITED')",
+                            now.minusNanos(1_000));
+                    clock.update("INSERT INTO iam_delegation_role_revision(delegation_id,revision_id,revision_kind) VALUES(8427,?,'SYSTEM')", revision);
+                    clock.update("INSERT INTO iam_delegation_recipient_member(id,delegation_id,domain,platform_member_id) VALUES(8428,8427,'PLATFORM',8420)");
+                    clock.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,valid_from,delegation_grant_id,source) VALUES(8429,'PLATFORM','MEMBER',8420,?,'SYSTEM','{}',?,8427,'MANUAL')",
+                            revision, now.plusNanos(2_000));
+                    assertTrue(repository.presentation(List.of(BigInteger.valueOf(8429)))
+                            .get(BigInteger.valueOf(8429)).sourceValid());
+                    var candidateQuery = new com.ingot.cloud.iam.infrastructure.persistence.mapper.AuthorizationCandidateSql.Query(
+                            com.ingot.cloud.iam.domain.shared.AuthorizationCandidateKind.DELEGATION,
+                            BigInteger.valueOf(1001), null, null, null, "%", List.of(BigInteger.valueOf(8427)),
+                            null, 0, 20);
+                    var candidates = IamMybatisTestAccess.mapper(source, AuthorizationCandidateMapper.class);
+                    assertEquals(1, candidates.count(candidateQuery));
+                    assertEquals(1, candidates.page(candidateQuery).size());
+                    var changedSource = new com.ingot.cloud.iam.infrastructure.persistence.entity.IamDelegationGrantEntity();
+                    changedSource.setId(BigInteger.valueOf(8427));
+                    changedSource.setValidFrom(now.minusDays(1));
+                    changedSource.setValidUntil(now.minusNanos(1_000));
+                    IamMybatisTestAccess.mapper(source,
+                            com.ingot.cloud.iam.infrastructure.persistence.mapper.IamDelegationGrantMapper.class)
+                            .updateById(changedSource);
+                    clock.update("UPDATE iam_role_assignment SET valid_from=?,valid_until=? WHERE id=8429",
+                            now.minusHours(1), now.minusNanos(2_000));
+                    assertFalse(repository.presentation(List.of(BigInteger.valueOf(8429)))
+                            .get(BigInteger.valueOf(8429)).sourceValid());
+                    assertEquals(0, candidates.count(candidateQuery));
+                    assertTrue(candidates.page(candidateQuery).isEmpty());
+                    return null;
+                });
+            } finally {
+                clock.execute("SET timestamp=DEFAULT");
+            }
+        }
+    }
+
+    @Test
+    @Order(60)
+    void invalidApplicationBundleReturns400WithoutPartialCatalogAcrossNodes() throws Exception {
+        String code = "invalid-bundle-http";
+        long applicationsBefore = jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Long.class);
+        long menusBefore = jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu", Long.class);
+        var menu = Map.of("tempId", "leaf", "parentTempId", "missing-root", "name", "无效父目录",
+                "kind", "PAGE", "path", "/invalid-bundle", "viewPath", "platform.develop.qrcode",
+                "accessMode", "OPEN", "matchMode", "ANY", "actionTempIds", List.of(), "sortOrder", 0);
+        var body = Map.of("application", Map.of("code", code, "domain", "PLATFORM", "name", code,
+                "sortOrder", 99, "baseline", false), "resources", List.of(), "menus", List.of(menu));
+        var rejected = request(first, "platform", "POST", "/v1/platform/applications/bundles", body);
+        assertEquals(400, rejected.statusCode(), rejected.body());
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), json.readTree(rejected.body()).path("code").asText());
+        var readback = catalogResponse(second, "platform", "GET",
+                "/v1/platform/applications?domain=PLATFORM&name=" + code, null);
+        assertEquals(0, readback.path("total").asLong());
+        assertTrue(readback.path("items").isEmpty());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application WHERE code=?", Long.class, code));
+        assertEquals(applicationsBefore, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Long.class));
+        assertEquals(menusBefore, jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu", Long.class));
     }
 
     private String assignmentState(String actor, String path, String id) throws Exception {
@@ -1324,6 +1443,53 @@ class TenantLiveMySqlHttpTest {
     private long mysqlSelects() {
         return jdbc.queryForObject("SHOW GLOBAL STATUS LIKE 'Com_select'",(row,index)->Long.parseLong(row.getString("Value")));
     }
+    @Test
+    @Order(58)
+    void concurrentMemberTaskRegistrationDoesNotLockTheInsertGap() throws Exception {
+        long tenantId = 20;
+        long actorMemberId = 201;
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        var exports = IamMybatisTestAccess.exports(pool);
+        var workbooks = IamMybatisTestAccess.workbooks(pool);
+
+        registerTasksAfterAnEmptyExpirySweep(() -> exports.expireDue(tenantId, now), id -> assertEquals(1,
+                jdbc.update("""
+                        INSERT INTO iam_member_export
+                            (id,tenant_id,actor_member_id,tenant_version,status,created_at,expires_at)
+                        VALUES (?,?,?,'1','PENDING',?,?)
+                        """, id, tenantId, actorMemberId, now, now.plusDays(1))));
+        registerTasksAfterAnEmptyExpirySweep(() -> workbooks.expireDue(tenantId, now), id -> assertEquals(1,
+                jdbc.update("""
+                        INSERT INTO iam_member_workbook
+                            (id,tenant_id,actor_member_id,tenant_version,kind,mode,status,created_at,expires_at)
+                        VALUES (?,?,?,'1','IMPORT','CREATE','PENDING',?,?)
+                        """, id, tenantId, actorMemberId, now, now.plusDays(1))));
+    }
+
+    private void registerTasksAfterAnEmptyExpirySweep(Runnable expireDue, LongConsumer insert) throws Exception {
+        var transaction = new TransactionTemplate(new DataSourceTransactionManager(pool));
+        var readyToInsert = new CyclicBarrier(2);
+        Runnable register = () -> transaction.executeWithoutResult(status -> {
+            expireDue.run();
+            // 两个事务都完成清理后才登记，稳定覆盖原本的间隙锁竞争。
+            try {
+                readyToInsert.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(exception);
+            } catch (BrokenBarrierException | TimeoutException exception) {
+                throw new IllegalStateException(exception);
+            }
+            insert.accept(ids.incrementAndGet());
+        });
+        try (var workers = Executors.newFixedThreadPool(2)) {
+            Future<?> firstRegistration = workers.submit(register);
+            Future<?> secondRegistration = workers.submit(register);
+            firstRegistration.get(10, TimeUnit.SECONDS);
+            secondRegistration.get(10, TimeUnit.SECONDS);
+        }
+    }
+
     @Test
     @Order(57)
     void tenantMemberEditHintsMatchTheScopedFieldWriteDecision() throws Exception {

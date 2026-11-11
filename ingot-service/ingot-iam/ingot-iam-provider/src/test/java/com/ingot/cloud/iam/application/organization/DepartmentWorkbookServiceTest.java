@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -56,18 +57,23 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -140,6 +146,10 @@ class DepartmentWorkbookServiceTest {
             return null;
         });
         when(oss.getObjectBytes(any(), any())).thenAnswer(invocation -> objects.get(invocation.getArgument(1)));
+        doAnswer(invocation -> {
+            objects.remove(invocation.getArgument(1));
+            return null;
+        }).when(oss).removeFile(any(), any());
         jdbc.update("DELETE FROM iam_department_workbook");
         jdbc.update("DELETE FROM iam_download_task");
         jdbc.update("DELETE FROM iam_authorization_audit");
@@ -324,6 +334,73 @@ class DepartmentWorkbookServiceTest {
         repository.insert(row);
         BizException exception = assertThrows(BizException.class, () -> service().status("88"));
         assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), exception.getCode());
+    }
+
+    @Test
+    void expiredArtifactRemainsUnavailableAndRetriesDeletionAfterCommit() {
+        DepartmentWorkbookService service = service(command -> {});
+        String id = service.importWorkbook(departmentImportFile(), MemberWorkbookMode.CREATE).id();
+        String original = objects.keySet().iterator().next();
+        ageTask(id);
+        AtomicBoolean objectStoreUnavailable = new AtomicBoolean(true);
+        doAnswer(invocation -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(ExportTaskStatus.EXPIRED.name(), storedStatus(id));
+            if (objectStoreUnavailable.get()) {
+                throw new IllegalStateException("temporary test storage failure");
+            }
+            objects.remove(invocation.getArgument(1));
+            return null;
+        }).when(oss).removeFile(any(), any());
+
+        BizException unavailable = assertThrows(BizException.class,
+                () -> service.file(id, MemberWorkbookArtifact.WORKBOOK));
+        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), unavailable.getCode());
+        assertTrue(objects.containsKey(original));
+        assertTrue(storedWorkbookPath(id).endsWith(original));
+
+        objectStoreUnavailable.set(false);
+        assertEquals(ExportTaskStatus.EXPIRED, service.status(id).status());
+        assertFalse(objects.containsKey(original));
+        assertNull(storedWorkbookPath(id));
+    }
+
+    @Test
+    void auditRollbackKeepsExistingArtifactAndRemovesUnregisteredUpload() {
+        DepartmentWorkbookService service = service(command -> {});
+        String existingId = service.importWorkbook(departmentImportFile(), MemberWorkbookMode.CREATE).id();
+        String original = objects.keySet().iterator().next();
+        ageTask(existingId);
+        when(access.nextId()).thenReturn(8001L, 7002L);
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> service.importWorkbook(departmentImportFile(), MemberWorkbookMode.CREATE));
+        assertEquals(ExportTaskStatus.PENDING.name(), storedStatus(existingId));
+        assertTrue(storedWorkbookPath(existingId).endsWith(original));
+        assertEquals(List.of(original), List.copyOf(objects.keySet()));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_department_workbook", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit", Integer.class));
+    }
+
+    private static MockMultipartFile departmentImportFile() {
+        return file(DepartmentWorkbookExcel.writeDepartments(
+                List.of(DepartmentWorkbookColumns.NAME, DepartmentWorkbookColumns.PARENT),
+                List.of(Map.of(DepartmentWorkbookColumns.NAME, "新产品",
+                        DepartmentWorkbookColumns.PARENT, "英格特云")),
+                false));
+    }
+
+    private void ageTask(String id) {
+        jdbc.update("UPDATE iam_department_workbook SET expires_at=? WHERE id=?",
+                LocalDateTime.now(ZoneOffset.UTC).minusMinutes(1), id);
+    }
+
+    private String storedStatus(String id) {
+        return jdbc.queryForObject("SELECT status FROM iam_department_workbook WHERE id=?", String.class, id);
+    }
+
+    private String storedWorkbookPath(String id) {
+        return jdbc.queryForObject("SELECT workbook_path FROM iam_department_workbook WHERE id=?", String.class, id);
     }
 
     @Test

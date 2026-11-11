@@ -15,8 +15,8 @@ public final class PlatformAssignmentStateSql {
             CASE WHEN d.enabled=FALSE THEN FALSE WHEN ra.delegation_grant_id IS NULL THEN TRUE
             ELSE EXISTS(SELECT 1 FROM iam_delegation_grant dg
               WHERE dg.id=ra.delegation_grant_id AND dg.status='ACTIVE'
-                AND (dg.valid_from IS NULL OR dg.valid_from&lt;=CURRENT_TIMESTAMP)
-                AND (dg.valid_until IS NULL OR dg.valid_until&gt;CURRENT_TIMESTAMP)
+                AND (dg.valid_from IS NULL OR dg.valid_from&lt;=CURRENT_TIMESTAMP(6))
+                AND (dg.valid_until IS NULL OR dg.valid_until&gt;CURRENT_TIMESTAMP(6))
                 AND (dg.valid_from IS NULL OR ra.valid_from&gt;=dg.valid_from)
                 AND (dg.valid_until IS NULL OR ra.valid_until&lt;=dg.valid_until OR (ra.valid_until IS NULL AND dg.assignment_duration_mode='UNLIMITED'))
                 AND (dg.assignment_duration_mode='UNLIMITED' OR (ra.valid_until IS NOT NULL AND TIMESTAMPDIFF(MICROSECOND,ra.valid_from,ra.valid_until)&lt;=dg.max_assignment_duration_seconds*1000000+FLOOR(dg.max_assignment_duration_nanos/1000)))

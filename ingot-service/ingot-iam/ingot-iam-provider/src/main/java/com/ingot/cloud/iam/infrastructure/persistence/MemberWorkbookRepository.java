@@ -22,6 +22,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class MemberWorkbookRepository {
+    private static final List<ExportTaskStatus> EXPIRABLE_STATUSES = List.of(
+            ExportTaskStatus.PENDING, ExportTaskStatus.RUNNING, ExportTaskStatus.SUCCEEDED);
     private final IamMemberWorkbookMapper mapper;
 
     /**
@@ -133,22 +135,31 @@ public class MemberWorkbookRepository {
     }
 
     /**
-     * 把已到期且仍可下载的任务标为过期并清除产物。
+     * 按主键顺序标记到期任务并清除产物，避免登记事务锁住新任务的插入区间。
      *
      * @param tenantId 已授权租户
      * @param now UTC 当前时间
      */
     public void expireDue(long tenantId, LocalDateTime now) {
-        mapper.update(Wrappers.<IamMemberWorkbookEntity>lambdaUpdate()
-                .eq(IamMemberWorkbookEntity::getTenantId, BigInteger.valueOf(tenantId))
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        List<IamMemberWorkbookEntity> due = mapper.selectList(Wrappers.<IamMemberWorkbookEntity>lambdaQuery()
+                .select(IamMemberWorkbookEntity::getId)
+                .eq(IamMemberWorkbookEntity::getTenantId, tenant)
                 .le(IamMemberWorkbookEntity::getExpiresAt, now)
-                .in(IamMemberWorkbookEntity::getStatus, ExportTaskStatus.PENDING, ExportTaskStatus.RUNNING,
-                        ExportTaskStatus.SUCCEEDED)
-                .set(IamMemberWorkbookEntity::getStatus, ExportTaskStatus.EXPIRED)
-                .set(IamMemberWorkbookEntity::getWorkbook, null)
-                .set(IamMemberWorkbookEntity::getErrorReport, null)
-                .set(IamMemberWorkbookEntity::getPasswordFile, null)
-                .set(IamMemberWorkbookEntity::getFailureReason, null));
+                .in(IamMemberWorkbookEntity::getStatus, EXPIRABLE_STATUSES)
+                .orderByAsc(IamMemberWorkbookEntity::getId));
+        for (IamMemberWorkbookEntity candidate : due) {
+            mapper.update(Wrappers.<IamMemberWorkbookEntity>lambdaUpdate()
+                    .eq(IamMemberWorkbookEntity::getId, candidate.getId())
+                    .eq(IamMemberWorkbookEntity::getTenantId, tenant)
+                    .le(IamMemberWorkbookEntity::getExpiresAt, now)
+                    .in(IamMemberWorkbookEntity::getStatus, EXPIRABLE_STATUSES)
+                    .set(IamMemberWorkbookEntity::getStatus, ExportTaskStatus.EXPIRED)
+                    .set(IamMemberWorkbookEntity::getWorkbook, null)
+                    .set(IamMemberWorkbookEntity::getErrorReport, null)
+                    .set(IamMemberWorkbookEntity::getPasswordFile, null)
+                    .set(IamMemberWorkbookEntity::getFailureReason, null));
+        }
     }
 
     /**

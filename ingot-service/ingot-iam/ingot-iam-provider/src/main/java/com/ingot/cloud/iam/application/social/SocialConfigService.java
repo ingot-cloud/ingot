@@ -17,7 +17,6 @@ import com.ingot.cloud.iam.application.social.model.SocialConfigRecord;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.config.impl.WxMaDefaultConfigImpl;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.ingot.framework.tenant.TenantContextHolder;
 
 /**
  * <p>编排社交渠道配置维护，保留事务、密钥处理及配置刷新顺序。</p>
@@ -39,12 +38,12 @@ public class SocialConfigService {
                 .convert(SocialConfigTransfer::toRecord);
     }
 
-    /** 按精确操作资格创建配置。 */
+    /** 按精确操作资格创建平台全局配置，不从请求或线程继承租户归属。 */
     @Transactional(rollbackFor = Exception.class)
     public void create(SocialConfigInput input) {
         SocialConfigEntity params = SocialConfigTransfer.toEntity(input);
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_SOCIAL_CONFIG_CREATE);
-        params.setTenantId(TenantContextHolder.get());
+        params.setTenantId(null);
         params.setCreatedAt(DateUtil.utc());
         params.setUpdatedAt(DateUtil.utc());
         socials.save(params);
@@ -54,7 +53,7 @@ public class SocialConfigService {
         wxMaService.addConfig(params.getAppId(), config);
     }
 
-    /** 按路径标识更新配置并保留原副作用顺序。 */
+    /** 按路径标识更新配置，保留原归属及副作用顺序。 */
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, SocialConfigInput input) {
         SocialConfigEntity params = SocialConfigTransfer.toEntity(input);

@@ -173,8 +173,8 @@ public final class AuthorizationCandidateSql {
         return switch (q.kind()) {
             case DELEGATION -> "SELECT id,CAST(id AS CHAR) AS name,NULL AS kind,NULL AS revision FROM iam_delegation_grant "
                     + "WHERE domain='PLATFORM' AND tenant_id IS NULL AND platform_administrator_id=#{q.memberId} "
-                    + "AND status='ACTIVE' AND (valid_from IS NULL OR valid_from&lt;=CURRENT_TIMESTAMP) "
-                    + "AND (valid_until IS NULL OR valid_until&gt;CURRENT_TIMESTAMP)";
+                    + "AND status='ACTIVE' AND (valid_from IS NULL OR valid_from&lt;=CURRENT_TIMESTAMP(6)) "
+                    + "AND (valid_until IS NULL OR valid_until&gt;CURRENT_TIMESTAMP(6))";
             case ROLE_REVISION -> "SELECT r.id,d.name,r.kind,r.revision FROM iam_role_revision r "
                     + "JOIN iam_role_definition d ON d.id=r.role_id WHERE d.domain='PLATFORM' AND d.tenant_id IS NULL "
                     + (q.selectedAssignmentId() == null ? "AND d.enabled=TRUE " : "")

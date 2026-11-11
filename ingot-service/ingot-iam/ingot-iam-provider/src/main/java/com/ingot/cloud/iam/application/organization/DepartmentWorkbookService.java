@@ -60,6 +60,7 @@ import com.ingot.framework.download.DownloadRequest;
 import com.ingot.framework.download.config.DownloadProperties;
 import com.ingot.framework.oss.common.OssObjectInfo;
 import com.ingot.framework.oss.common.OssPathParser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
@@ -67,6 +68,8 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -77,6 +80,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @since 1.0.0
  */
 @Service
+@Slf4j
 public class DepartmentWorkbookService {
     private static final String TARGET = "department-workbook";
     private static final String OBJECT_PREFIX = "department-workbook";
@@ -291,10 +295,20 @@ public class DepartmentWorkbookService {
         long tenantId = IamIds.require(actor.context().tenantId());
         long actorId = IamIds.require(actor.context().memberId());
         CreatedResource created = transaction.execute(status -> {
-            expireDue(tenantId);
             String version = tenantVersion(tenantId);
             long id = access.nextId();
-            String workbookPath = storeObject(tenantId, actorId, id, DepartmentWorkbookColumns.TEMPLATE_FILENAME, workbook);
+            String workbookPath = objectPath(tenantId, actorId, id, DepartmentWorkbookColumns.TEMPLATE_FILENAME);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int completionStatus) {
+                    if (completionStatus == STATUS_ROLLED_BACK) {
+                        removeObject(workbookPath);
+                    }
+                }
+            });
+            uploadObject(workbookPath, workbook);
+            LocalDateTime now = utcNow();
+            workbooks.expireDue(tenantId, now);
             IamDepartmentWorkbookEntity row = new IamDepartmentWorkbookEntity();
             row.setId(BigInteger.valueOf(id));
             row.setTenantId(BigInteger.valueOf(tenantId));
@@ -304,8 +318,8 @@ public class DepartmentWorkbookService {
             row.setStatus(ExportTaskStatus.PENDING);
             row.setTenantVersion(version);
             row.setWorkbookPath(workbookPath);
-            row.setCreatedAt(utcNow());
-            row.setExpiresAt(utcNow().plus(DepartmentWorkbookLimits.RETENTION));
+            row.setCreatedAt(now);
+            row.setExpiresAt(now.plus(DepartmentWorkbookLimits.RETENTION));
             workbooks.insert(row);
             audits.write(actor.context(), access.nextId(), TARGET, IamIds.text(id), AuditChangeType.CREATE,
                     Map.of(), Map.of(), Map.of("tenant", version));
@@ -315,6 +329,7 @@ public class DepartmentWorkbookService {
             throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
         }
         executor.execute(() -> process(actor, IamIds.require(created.id())));
+        purgeExpiredArtifacts(tenantId);
         return created;
     }
 
@@ -394,6 +409,7 @@ public class DepartmentWorkbookService {
         if (!workbooks.markSucceeded(tenantId, workbookId,
                 IamJsonCodec.object(new DepartmentWorkbookOutcome(success, errors.size(), errors)),
                 row.getWorkbookPath(), errorPath, utcNow())) {
+            removeObject(errorPath);
             workbooks.markFailed(tenantId, workbookId, DepartmentWorkbookReasons.FAILURE_PROCESS, utcNow());
         }
     }
@@ -558,17 +574,38 @@ public class DepartmentWorkbookService {
     }
 
     private void expireDue(long tenantId) {
-        for (IamDepartmentWorkbookEntity row : workbooks.expireDue(tenantId, utcNow())) {
-            removeObject(row.getWorkbookPath());
-            removeObject(row.getErrorReportPath());
+        transaction.executeWithoutResult(status -> workbooks.expireDue(tenantId, utcNow()));
+        purgeExpiredArtifacts(tenantId);
+    }
+
+    private void purgeExpiredArtifacts(long tenantId) {
+        try {
+            for (IamDepartmentWorkbookEntity row : workbooks.listExpiredArtifacts(tenantId)) {
+                boolean workbookRemoved = removeObject(row.getWorkbookPath());
+                boolean errorsRemoved = removeObject(row.getErrorReportPath());
+                if (workbookRemoved && errorsRemoved) {
+                    workbooks.clearExpiredArtifacts(tenantId, row.getId());
+                }
+            }
+        } catch (RuntimeException exception) {
+            log.warn("[DepartmentWorkbook] 保存过期产物清理结果失败 tenantId={}", tenantId, exception);
         }
     }
 
     private String storeObject(long tenantId, long actorId, long taskId, String filename, byte[] content) {
-        String objectName = OBJECT_PREFIX + "/" + tenantId + "/" + actorId + "/" + taskId + "/" + filename;
-        String bucket = downloadProperties.getBucket();
-        oss.uploadFile(bucket, objectName, new ByteArrayInputStream(content));
-        return bucket + "/" + objectName;
+        String path = objectPath(tenantId, actorId, taskId, filename);
+        uploadObject(path, content);
+        return path;
+    }
+
+    private String objectPath(long tenantId, long actorId, long taskId, String filename) {
+        return downloadProperties.getBucket() + "/" + OBJECT_PREFIX + "/" + tenantId + "/" + actorId + "/"
+                + taskId + "/" + filename;
+    }
+
+    private void uploadObject(String path, byte[] content) {
+        OssObjectInfo object = OssPathParser.parse(path);
+        oss.uploadFile(object.bucket(), object.objectName(), new ByteArrayInputStream(content));
     }
 
     private byte[] readObject(String objectPath) {
@@ -583,14 +620,17 @@ public class DepartmentWorkbookService {
         }
     }
 
-    private void removeObject(String objectPath) {
+    private boolean removeObject(String objectPath) {
         if (objectPath == null || objectPath.isBlank()) {
-            return;
+            return true;
         }
         try {
             OssObjectInfo object = OssPathParser.parse(objectPath);
             oss.removeFile(object.bucket(), object.objectName());
-        } catch (RuntimeException ignored) {
+            return true;
+        } catch (RuntimeException exception) {
+            log.warn("[DepartmentWorkbook] 删除工作簿产物失败", exception);
+            return false;
         }
     }
 

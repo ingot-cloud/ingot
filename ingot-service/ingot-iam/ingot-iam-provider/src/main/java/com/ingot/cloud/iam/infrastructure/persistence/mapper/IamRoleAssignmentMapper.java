@@ -57,7 +57,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
         JOIN iam_role_revision r ON r.id=ra.revision_id AND r.kind=ra.revision_kind
         JOIN iam_role_definition d ON d.id=r.role_id AND d.domain='PLATFORM' AND d.tenant_id IS NULL
         WHERE ra.domain='PLATFORM' AND ra.tenant_id IS NULL AND ra.status='ACTIVE'
-          AND ra.valid_from&lt;=CURRENT_TIMESTAMP AND (ra.valid_until IS NULL OR ra.valid_until&gt;CURRENT_TIMESTAMP)
+          AND ra.valid_from&lt;=CURRENT_TIMESTAMP(6) AND (ra.valid_until IS NULL OR ra.valid_until&gt;CURRENT_TIMESTAMP(6))
           AND EXISTS(SELECT 1 FROM iam_platform_member m WHERE m.id=#{memberId} AND m.status='ACTIVE')
           AND ((ra.subject_type='MEMBER' AND ra.platform_member_id=#{memberId})
             OR (ra.subject_type='GROUP' AND EXISTS(SELECT 1 FROM iam_platform_group_member gm
@@ -89,7 +89,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
 
     /**
      * 读取平台成员当前有效的直接分配。
-     * <p>来源委派的分配持续核对委派状态、有效期、角色版本白名单与接收成员名单，任一不再成立即不返回。</p>
+     * <p>以微秒精度核对分配及委派期限。来源委派还须满足状态、角色版本白名单和接收成员名单。</p>
      *
      * @param domain 授权域
      * @param status 分配状态
@@ -105,13 +105,13 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
               FROM iam_role_assignment ra
              WHERE ra.domain=#{domain} AND ra.status=#{status} AND ra.subject_type=#{subjectType}
                AND ra.platform_member_id=#{memberId} AND ra.tenant_id IS NULL
-               AND ra.valid_from<=CURRENT_TIMESTAMP
-               AND (ra.valid_until IS NULL OR ra.valid_until>CURRENT_TIMESTAMP)
+               AND ra.valid_from<=CURRENT_TIMESTAMP(6)
+               AND (ra.valid_until IS NULL OR ra.valid_until>CURRENT_TIMESTAMP(6))
                AND (ra.delegation_grant_id IS NULL OR EXISTS (
                     SELECT 1 FROM iam_delegation_grant d
                      WHERE d.id=ra.delegation_grant_id AND d.status=#{status}
-                       AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP)
-                       AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP)
+                       AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP(6))
+                       AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP(6))
             """ + IamMembershipSql.AND_REVISION_STILL_ALLOWED + IamMembershipSql.AND_PLATFORM_DURATION_ALLOWED + IamMembershipSql.AND_PLATFORM_RECIPIENT_REACHED + """
                        ))
             """)
@@ -174,13 +174,13 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
               JOIN iam_platform_group_member gm ON gm.group_id=ra.platform_group_id
              WHERE ra.domain=#{domain} AND ra.status=#{status} AND ra.subject_type=#{subjectType}
                AND gm.member_id=#{memberId} AND ra.tenant_id IS NULL
-               AND ra.valid_from<=CURRENT_TIMESTAMP
-               AND (ra.valid_until IS NULL OR ra.valid_until>CURRENT_TIMESTAMP)
+               AND ra.valid_from<=CURRENT_TIMESTAMP(6)
+               AND (ra.valid_until IS NULL OR ra.valid_until>CURRENT_TIMESTAMP(6))
                AND (ra.delegation_grant_id IS NULL OR EXISTS (
                     SELECT 1 FROM iam_delegation_grant d
                      WHERE d.id=ra.delegation_grant_id AND d.status=#{status}
-                       AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP)
-                       AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP)
+                       AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP(6))
+                       AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP(6))
             """ + IamMembershipSql.AND_REVISION_STILL_ALLOWED + IamMembershipSql.AND_PLATFORM_DURATION_ALLOWED + IamMembershipSql.AND_PLATFORM_GROUP_RECIPIENTS_REACHED + """
                        ))
             """)
@@ -291,8 +291,8 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
             SELECT d.* FROM iam_delegation_grant d
              WHERE d.domain='PLATFORM' AND d.tenant_id IS NULL AND d.status='ACTIVE'
                AND d.platform_administrator_id=#{memberId}
-               AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP)
-               AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP)
+               AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP(6))
+               AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP(6))
              ORDER BY d.id
             """)
     List<com.ingot.cloud.iam.infrastructure.persistence.entity.IamDelegationGrantEntity> effectivePlatformDelegations(
@@ -333,9 +333,9 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
              WHERE ra.domain='PLATFORM' AND ra.tenant_id IS NULL AND ra.status='ACTIVE'
                AND ra.subject_type='MEMBER' AND ra.delegation_grant_id IS NULL AND ra.revision_kind='SYSTEM'
                AND r.code=#{code} AND r.enabled=TRUE AND r.tenant_id IS NULL AND ra.platform_member_id=#{memberId}
-               AND ra.valid_from<=CURRENT_TIMESTAMP AND (ra.valid_until IS NULL OR ra.valid_until>CURRENT_TIMESTAMP)
+               AND ra.valid_from<=CURRENT_TIMESTAMP(6) AND (ra.valid_until IS NULL OR ra.valid_until>CURRENT_TIMESTAMP(6))
                AND NOT EXISTS (SELECT 1 FROM fw_security_account_lock_state ls WHERE ls.user_id=ac.id AND ls.user_type='0'
-                 AND ls.locked=TRUE AND (ls.locked_until IS NULL OR ls.locked_until>CURRENT_TIMESTAMP))
+                 AND ls.locked=TRUE AND (ls.locked_until IS NULL OR ls.locked_until>CURRENT_TIMESTAMP(6)))
              ORDER BY ra.id
             """)
     List<AuthorizationEvalRows.Assignment> platformAdministratorAssignments(@Param("memberId") BigInteger memberId,
@@ -372,7 +372,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
         SELECT CAST(r.id AS CHAR) AS revision_id,CAST(r.revision AS CHAR) AS revision,r.version_name,COUNT(*) AS count
         FROM iam_role_assignment a JOIN iam_role_revision r ON r.id=a.revision_id
         WHERE a.domain='PLATFORM' AND a.tenant_id IS NULL AND r.role_id=#{roleId}
-          AND a.status='ACTIVE' AND (a.valid_until IS NULL OR a.valid_until&gt;CURRENT_TIMESTAMP)
+          AND a.status='ACTIVE' AND (a.valid_until IS NULL OR a.valid_until&gt;CURRENT_TIMESTAMP(6))
           <if test="!all">
             <choose><when test="ids.size()>0">
               AND a.id IN <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>

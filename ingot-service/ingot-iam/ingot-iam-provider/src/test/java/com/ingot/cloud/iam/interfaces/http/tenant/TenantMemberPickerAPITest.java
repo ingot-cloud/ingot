@@ -111,6 +111,13 @@ class TenantMemberPickerAPITest {
     }
 
     @Test
+    void missingRequiredWorkbookArtifactUsesIamBadRequestEnvelope() throws Exception {
+        mvc.perform(get("/v1/tenant/members/workbook/1001300/file"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("InvalidArgument"));
+    }
+
+    @Test
     void allScenesKeepNavigationSearchAndIndependentPages() throws Exception {
         for (var scene : OrganizationMemberPickerScene.values()) {
             var request = get(BROWSE).param("scene", scene.getValue()).param("departmentId", "1001103")

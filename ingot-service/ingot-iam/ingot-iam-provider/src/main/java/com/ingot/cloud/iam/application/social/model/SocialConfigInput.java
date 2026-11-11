@@ -28,7 +28,7 @@ public class SocialConfigInput implements Serializable {
     private Long id;
 
     /**
-     * 租户ID
+     * 现有列表的租户筛选条件，平台新增和普通编辑不使用该字段设置归属。
      */
     private Long tenantId;
 

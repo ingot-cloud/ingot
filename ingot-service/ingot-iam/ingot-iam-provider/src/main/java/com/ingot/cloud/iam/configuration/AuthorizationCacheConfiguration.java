@@ -8,12 +8,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.cache.config.LayeredCacheBuilder;
 import com.ingot.framework.cache.config.LayeredCacheSettings;
-import com.ingot.framework.cache.coordinator.LayeredCacheCoordinator;
 import com.ingot.framework.cache.registry.LayeredCacheRegistry;
 import com.ingot.framework.cache.source.CacheSourceHolder;
 import com.ingot.framework.cache.spi.LayeredCache;
-import com.ingot.framework.data.mybatis.scope.authorization.AuthorizationInvalidationEvent;
-import com.ingot.framework.eventbus.InvalidationBus;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -41,7 +38,6 @@ public class AuthorizationCacheConfiguration {
     public static final String SOURCE_HOLDER_BEAN_NAME = "iamAuthorizationSourceHolder";
     private static final String AUTHORIZATION_RULE_VERSION = "platform-super-admin-v3:";
     private static final String CACHE_NAME = "iam-authorization";
-    private static final String ALL_DOMAIN = "all";
     private static final TypeReference<AuthorizationView> VIEW_TYPE = new TypeReference<>() {
     };
 
@@ -95,22 +91,4 @@ public class AuthorizationCacheConfiguration {
                 .build();
     }
 
-    /**
-     * 订阅跨节点授权失效并清理本缓存；发布方仍须先清本地。
-     *
-     * @param bus 失效总线
-     * @param cache 授权视图缓存
-     * @return 协调器
-     */
-    @Bean
-    @ConditionalOnBean({InvalidationBus.class, AuthorizationEvaluator.class})
-    public LayeredCacheCoordinator<AuthorizationInvalidationEvent, String> iamAuthorizationCacheCoordinator(
-            InvalidationBus bus,
-            @Qualifier(CACHE_BEAN_NAME) LayeredCache<String, AuthorizationView> cache) {
-        LayeredCacheCoordinator<AuthorizationInvalidationEvent, String> coordinator =
-                new LayeredCacheCoordinator<>(bus, AuthorizationInvalidationEvent.class,
-                        event -> ALL_DOMAIN, ALL_DOMAIN);
-        coordinator.register(ALL_DOMAIN, cache::evictAll);
-        return coordinator;
-    }
 }

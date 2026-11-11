@@ -22,6 +22,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class MemberExportRepository {
+    private static final List<ExportTaskStatus> EXPIRABLE_STATUSES = List.of(
+            ExportTaskStatus.PENDING, ExportTaskStatus.RUNNING, ExportTaskStatus.SUCCEEDED);
     private static final TypeReference<List<String>> MEMBER_IDS = new TypeReference<>() {
     };
     private final IamMemberExportMapper mapper;
@@ -103,20 +105,29 @@ public class MemberExportRepository {
     }
 
     /**
-     * 把已到期且仍可下载的任务标为过期并清除快照。
+     * 按主键顺序标记到期任务并清除快照，避免登记事务锁住新任务的插入区间。
      *
      * @param tenantId 已授权租户
      * @param now UTC 当前时间
      */
     public void expireDue(long tenantId, LocalDateTime now) {
-        mapper.update(Wrappers.<IamMemberExportEntity>lambdaUpdate()
-                .eq(IamMemberExportEntity::getTenantId, BigInteger.valueOf(tenantId))
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        List<IamMemberExportEntity> due = mapper.selectList(Wrappers.<IamMemberExportEntity>lambdaQuery()
+                .select(IamMemberExportEntity::getId)
+                .eq(IamMemberExportEntity::getTenantId, tenant)
                 .le(IamMemberExportEntity::getExpiresAt, now)
-                .in(IamMemberExportEntity::getStatus, ExportTaskStatus.PENDING, ExportTaskStatus.RUNNING,
-                        ExportTaskStatus.SUCCEEDED)
-                .set(IamMemberExportEntity::getStatus, ExportTaskStatus.EXPIRED)
-                .set(IamMemberExportEntity::getMemberIds, null)
-                .set(IamMemberExportEntity::getFailureReason, null));
+                .in(IamMemberExportEntity::getStatus, EXPIRABLE_STATUSES)
+                .orderByAsc(IamMemberExportEntity::getId));
+        for (IamMemberExportEntity candidate : due) {
+            mapper.update(Wrappers.<IamMemberExportEntity>lambdaUpdate()
+                    .eq(IamMemberExportEntity::getId, candidate.getId())
+                    .eq(IamMemberExportEntity::getTenantId, tenant)
+                    .le(IamMemberExportEntity::getExpiresAt, now)
+                    .in(IamMemberExportEntity::getStatus, EXPIRABLE_STATUSES)
+                    .set(IamMemberExportEntity::getStatus, ExportTaskStatus.EXPIRED)
+                    .set(IamMemberExportEntity::getMemberIds, null)
+                    .set(IamMemberExportEntity::getFailureReason, null));
+        }
     }
 
     /**

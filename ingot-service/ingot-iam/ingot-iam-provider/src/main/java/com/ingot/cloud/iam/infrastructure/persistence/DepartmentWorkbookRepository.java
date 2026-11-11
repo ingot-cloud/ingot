@@ -2,7 +2,6 @@ package com.ingot.cloud.iam.infrastructure.persistence;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -23,6 +22,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class DepartmentWorkbookRepository {
+    private static final List<ExportTaskStatus> EXPIRABLE_STATUSES = List.of(
+            ExportTaskStatus.PENDING, ExportTaskStatus.RUNNING, ExportTaskStatus.SUCCEEDED);
     private final IamDepartmentWorkbookMapper mapper;
 
     /**
@@ -127,41 +128,59 @@ public class DepartmentWorkbookRepository {
     }
 
     /**
-     * 列出已到期且仍可下载的任务，供清理对象后再标过期。
+     * 按主键顺序标记到期任务，保留对象路径供事务提交后删除。
      *
      * @param tenantId 已授权租户
      * @param now UTC 当前时间
-     * @return 到期任务
      */
-    public List<IamDepartmentWorkbookEntity> listDue(long tenantId, LocalDateTime now) {
-        return mapper.selectList(Wrappers.<IamDepartmentWorkbookEntity>lambdaQuery()
-                .eq(IamDepartmentWorkbookEntity::getTenantId, BigInteger.valueOf(tenantId))
+    public void expireDue(long tenantId, LocalDateTime now) {
+        BigInteger tenant = BigInteger.valueOf(tenantId);
+        List<IamDepartmentWorkbookEntity> due = mapper.selectList(
+                Wrappers.<IamDepartmentWorkbookEntity>lambdaQuery()
+                .select(IamDepartmentWorkbookEntity::getId)
+                .eq(IamDepartmentWorkbookEntity::getTenantId, tenant)
                 .le(IamDepartmentWorkbookEntity::getExpiresAt, now)
-                .in(IamDepartmentWorkbookEntity::getStatus, ExportTaskStatus.PENDING, ExportTaskStatus.RUNNING,
-                        ExportTaskStatus.SUCCEEDED));
+                .in(IamDepartmentWorkbookEntity::getStatus, EXPIRABLE_STATUSES)
+                .orderByAsc(IamDepartmentWorkbookEntity::getId));
+        for (IamDepartmentWorkbookEntity candidate : due) {
+            mapper.update(Wrappers.<IamDepartmentWorkbookEntity>lambdaUpdate()
+                    .eq(IamDepartmentWorkbookEntity::getId, candidate.getId())
+                    .eq(IamDepartmentWorkbookEntity::getTenantId, tenant)
+                    .le(IamDepartmentWorkbookEntity::getExpiresAt, now)
+                    .in(IamDepartmentWorkbookEntity::getStatus, EXPIRABLE_STATUSES)
+                    .set(IamDepartmentWorkbookEntity::getStatus, ExportTaskStatus.EXPIRED)
+                    .set(IamDepartmentWorkbookEntity::getFailureReason, null));
+        }
     }
 
     /**
-     * 把已到期且仍可下载的任务标为过期并清空路径。
+     * 读取已过期且仍保留待删对象路径的任务。
      *
      * @param tenantId 已授权租户
-     * @param now UTC 当前时间
-     * @return 被标过期的任务，便于删除对象
+     * @return 含任务 ID 和对象路径的记录
      */
-    public List<IamDepartmentWorkbookEntity> expireDue(long tenantId, LocalDateTime now) {
-        List<IamDepartmentWorkbookEntity> due = new ArrayList<>(listDue(tenantId, now));
-        if (due.isEmpty()) {
-            return List.of();
-        }
-        mapper.update(Wrappers.<IamDepartmentWorkbookEntity>lambdaUpdate()
+    public List<IamDepartmentWorkbookEntity> listExpiredArtifacts(long tenantId) {
+        return mapper.selectList(Wrappers.<IamDepartmentWorkbookEntity>lambdaQuery()
+                .select(IamDepartmentWorkbookEntity::getId, IamDepartmentWorkbookEntity::getWorkbookPath,
+                        IamDepartmentWorkbookEntity::getErrorReportPath)
                 .eq(IamDepartmentWorkbookEntity::getTenantId, BigInteger.valueOf(tenantId))
-                .le(IamDepartmentWorkbookEntity::getExpiresAt, now)
-                .in(IamDepartmentWorkbookEntity::getStatus, ExportTaskStatus.PENDING, ExportTaskStatus.RUNNING,
-                        ExportTaskStatus.SUCCEEDED)
-                .set(IamDepartmentWorkbookEntity::getStatus, ExportTaskStatus.EXPIRED)
+                .eq(IamDepartmentWorkbookEntity::getStatus, ExportTaskStatus.EXPIRED)
+                .and(paths -> paths.isNotNull(IamDepartmentWorkbookEntity::getWorkbookPath)
+                        .or().isNotNull(IamDepartmentWorkbookEntity::getErrorReportPath)));
+    }
+
+    /**
+     * 两个产物均删除成功后清空已过期任务的对象路径。
+     *
+     * @param tenantId 已授权租户
+     * @param workbookId 任务 ID
+     */
+    public void clearExpiredArtifacts(long tenantId, BigInteger workbookId) {
+        mapper.update(Wrappers.<IamDepartmentWorkbookEntity>lambdaUpdate()
+                .eq(IamDepartmentWorkbookEntity::getId, workbookId)
+                .eq(IamDepartmentWorkbookEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .eq(IamDepartmentWorkbookEntity::getStatus, ExportTaskStatus.EXPIRED)
                 .set(IamDepartmentWorkbookEntity::getWorkbookPath, null)
-                .set(IamDepartmentWorkbookEntity::getErrorReportPath, null)
-                .set(IamDepartmentWorkbookEntity::getFailureReason, null));
-        return due;
+                .set(IamDepartmentWorkbookEntity::getErrorReportPath, null));
     }
 }

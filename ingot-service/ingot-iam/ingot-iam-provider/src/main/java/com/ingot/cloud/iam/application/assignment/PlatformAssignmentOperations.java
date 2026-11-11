@@ -334,7 +334,7 @@ public class PlatformAssignmentOperations {
                     "只有有效超级管理员可以直接向平台成员分配系统超管，不允许用户组或委派"));
         }
         if (domain == AuthorizationDomain.PLATFORM && revisionUsable && !administrator) {
-            errors.addAll(bindingValidator.validateBindings(item));
+            errors.addAll(bindingValidator.validateBindings(actor.context(), item));
         } else if (domain == AuthorizationDomain.TENANT && revisionUsable) {
             errors.addAll(tenantScopeCandidates.validate(actor, item));
         }

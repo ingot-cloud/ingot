@@ -36,6 +36,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -108,7 +109,7 @@ public class MemberExportService {
         this.audits = audits;
         this.tenants = tenants;
         this.transaction = new TransactionTemplate(transactionManager);
-        this.executor = executor == null ? Runnable::run : executor;
+        this.executor = new DelegatingSecurityContextExecutor(executor == null ? Runnable::run : executor);
         this.snapshotPageSize = snapshotPageSize < 1 || snapshotPageSize > IamPages.MAX_SIZE
                 ? IamPages.MAX_SIZE : snapshotPageSize;
     }

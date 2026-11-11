@@ -31,10 +31,11 @@ public class PlatformScopeBindingValidator {
 
     /**
      * 提交路径验证固定角色参数类型、资源归属及对象真实存在，不能信任前端候选筛选。
+     * @param context 当前命令准入校验过的操作者身份
      * @param input 分配定义
      * @return 问题集合
      */
-    public List<ValidationIssue> validateBindings(AssignmentInput input) {
+    public List<ValidationIssue> validateBindings(AuthorizationContext context, AssignmentInput input) {
         long revisionId = IamIds.require(input.roleRevisionRef().id());
         var definitions = roleStore.listParameters(revisionId);
         var bindings = input.scopeBindings();
@@ -44,7 +45,6 @@ public class PlatformScopeBindingValidator {
             return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT,
                     "固定角色版本的范围参数必须全部配置"));
         }
-        var context=bindings.isEmpty()?null:access.requireCurrent().context();
         for (var entry : bindings.entrySet()) {
             var parameter = definitions.stream().filter(value -> value.getParameterKey().equals(entry.getKey())).findFirst().orElse(null);
             if (parameter == null || entry.getValue().kind() != parameter.getBindingKind()) {
