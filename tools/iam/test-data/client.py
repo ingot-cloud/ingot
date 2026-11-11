@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
-from base64 import b64encode
+import re
+import secrets
+from base64 import b64decode, b64encode
+from time import time_ns
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -20,7 +23,11 @@ class TransportError(RuntimeError):
 
 
 class HttpTransport:
-    """基于 urllib 的 JSON/表单传输。"""
+    """基于 urllib 的 JSON/表单传输，敏感 IAM 接口使用当前 HYBRID 信封。"""
+
+    def __init__(self, gateway: str):
+        self.gateway = gateway
+        self.key_url = f"{gateway}/crypto/public-keys"
 
     def request(
         self,
@@ -33,6 +40,62 @@ class HttpTransport:
         basic: tuple[str, str] | None = None,
         timeout: int = 30,
     ) -> dict:
+        path = urlparse(url.removeprefix(self.gateway)).path
+        encrypted_response = method == "POST" and bool(re.fullmatch(
+            r"/iam/v1/(?:platform/accounts(?:/[^/]+/reset-password)?|tenant/members)", path
+        ))
+        encrypted_request = method == "PUT" and path == "/iam/v1/me/password"
+        if encrypted_response or encrypted_request:
+            parsed = self._hybrid(method, url, headers, json_body, timeout, encrypted_request)
+        else:
+            parsed = self._send(method, url, headers, json_body, form, basic, timeout)
+        if not isinstance(parsed, dict):
+            raise TransportError(0, url, "响应不是 JSON 对象")
+        return parsed
+
+    def _hybrid(self, method, url, headers, json_body, timeout, encrypted_request):
+        try:
+            from cryptography.exceptions import InvalidTag
+            from cryptography.hazmat.primitives import hashes, serialization
+            from cryptography.hazmat.primitives.asymmetric import padding
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        except ImportError as exc:
+            raise TransportError(0, url, "IAM 凭证接口需要 Python cryptography 依赖") from exc
+
+        keys = self.request("GET", self.key_url, timeout=timeout).get("data")
+        key = next((item for item in keys if item.get("active")), None) if isinstance(keys, list) else None
+        if not key or key.get("alg") != "RSA-OAEP-256":
+            raise TransportError(0, self.key_url, "未返回可用的 HYBRID 活跃公钥")
+        cek = secrets.token_bytes(32)
+        nonce = b64encode(secrets.token_bytes(16)).decode()
+        timestamp = str(time_ns() // 1_000_000)
+        kid = key["kid"]
+        aad = f"h1|{kid}|{nonce}|{timestamp}".encode()
+        public_key = serialization.load_der_public_key(b64decode(key["publicKey"], validate=True))
+        wrapped = public_key.encrypt(cek, padding.OAEP(
+            mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=None
+        ))
+        crypto_headers = dict(headers or {}) | {
+            "In-Crypto-Md": "h1", "In-Crypto-Kv": kid, "In-Crypto-Sk": b64encode(wrapped).decode(),
+            "In-Crypto-No": nonce, "In-Crypto-Ts": timestamp,
+        }
+        aes = AESGCM(cek)
+        if encrypted_request:
+            iv = secrets.token_bytes(12)
+            encoded = iv + aes.encrypt(iv, json.dumps(json_body).encode(), aad)
+            json_body = {"data": b64encode(encoded).decode()}
+        result = self._send(method, url, crypto_headers, json_body, None, None, timeout)
+        if encrypted_request or (isinstance(result, dict) and result.get("success") is False):
+            return result
+        try:
+            ciphertext = result["data"] if isinstance(result, dict) else result
+            encoded = b64decode(ciphertext, validate=True)
+            decoded = json.loads(aes.decrypt(encoded[:12], encoded[12:], aad))
+        except (InvalidTag, KeyError, TypeError, ValueError) as exc:
+            raise TransportError(0, url, "HYBRID 响应解密或解析失败") from exc
+        return result | {"data": decoded} if isinstance(result, dict) else decoded
+
+    def _send(self, method, url, headers, json_body, form, basic, timeout):
         payload = None
         request_headers = dict(headers or {})
         if form is not None:
@@ -59,8 +122,6 @@ class HttpTransport:
             parsed = json.loads(raw)
         except json.JSONDecodeError as exc:
             raise TransportError(0, url, raw) from exc
-        if not isinstance(parsed, dict):
-            raise TransportError(0, url, "响应不是 JSON 对象")
         return parsed
 
 

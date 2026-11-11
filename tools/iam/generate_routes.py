@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-CONTRACT = Path(__file__).resolve().parents[2] / 'specs/changes/active/20260912-iam-identity-access-management/contracts'
+CONTRACT = Path(__file__).resolve().parents[2] / 'specs/changes/archive/2026/20260912-iam-identity-access-management/contracts'
 
 
 def route(path, method, operation_id, summary, domain, action, request, response, execution, example=None, implemented=False, query=None):
@@ -41,6 +41,7 @@ NAME_STATUS = PAGE + [
 APPLICATION_LIST = NAME_STATUS + [
     {'name': 'domain', 'required': True, 'schema': {'type': 'string', 'enum': ['PLATFORM', 'TENANT']}},
     {'name': 'baseline', 'required': False, 'schema': {'type': 'boolean'}},
+    {'name': 'view', 'schema': {'type': 'string', 'enum': ['CATALOG', 'SUMMARY'], 'default': 'CATALOG'}},
 ]
 PHONE_EMAIL = [
     {'name': 'phone', 'required': False, 'schema': {'type': 'string'}},
@@ -60,11 +61,15 @@ def member_routes(domain, prefix, ns, list_query=None):
     detail = 'RResourceDetailMemberRecord'
     page = 'RPageResponseResourceDetailMemberRecord'
     created = 'RCreatedResource'
+    create_request, create_response = (
+        ('TenantMemberCreateInput', 'RTenantMemberCreated') if domain == 'TENANT'
+        else ('MemberCreateInput', created)
+    )
     exec_member = '可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计'
     query = PAGE if list_query is None else list_query
     return [
         route(f'{prefix}/members', 'get', f'{domain.lower()}ListMembers', '成员列表', domain, f'{ns}:member:read', None, page, exec_member, query=query),
-        route(f'{prefix}/members', 'post', f'{domain.lower()}CreateMember', '创建成员资格', domain, f'{ns}:member:create', 'MemberCreateInput', created, exec_member),
+        route(f'{prefix}/members', 'post', f'{domain.lower()}CreateMember', '创建成员资格', domain, f'{ns}:member:create', create_request, create_response, exec_member),
         route(f'{prefix}/members/{{id}}', 'get', f'{domain.lower()}GetMember', '成员详情', domain, f'{ns}:member:read', None, detail, exec_member),
         route(f'{prefix}/members/{{id}}', 'patch', f'{domain.lower()}PatchMember', '更新成员资料', domain, f'{ns}:member:update', 'MemberProfileInput', detail, exec_member),
         route(f'{prefix}/members/{{id}}/status', 'patch', f'{domain.lower()}PatchMemberStatus', '暂停或恢复成员', domain, f'{ns}:member:change-status', 'MemberStatusInput', created, exec_member),
@@ -244,7 +249,7 @@ def build():
               'iam-platform:application-entitlement:preview', 'EntitlementReplaceInput', 'RPreviewEntitlementPreviewResult', '无写入'),
         route('/v1/platform/applications', 'get', 'platformListApplications', '应用目录', 'PLATFORM', 'iam-platform:application:read', None,
               'RPageResponseResourceDetailApplicationRecord',
-              '启用状态不等于业务授权；可选 name 包含匹配、status=ENABLED|DISABLED、baseline',
+              '启用状态不等于业务授权；按域查询，支持筛选及摘要视图',
               query=APPLICATION_LIST),
         route('/v1/platform/applications', 'post', 'platformCreateApplication', '创建应用', 'PLATFORM', 'iam-platform:application:create',
               'ApplicationDraft', 'RCreatedResource', '租户域才可标记基础开通'),
@@ -340,7 +345,10 @@ def build():
               'iam-platform:authorization-audit:read', None, 'RAuditCursorPage',
               '可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
     ]
-    routes += member_routes('TENANT', '/v1/tenant', 'iam-tenant', PAGE + PHONE_EMAIL)
+    routes += member_routes('TENANT', '/v1/tenant', 'iam-tenant', PAGE + PHONE_EMAIL + [
+        {'name': 'departmentId', 'schema': {'type': 'string'}},
+        {'name': 'status', 'schema': {'type': 'string', 'enum': ['ACTIVE', 'SUSPENDED', 'REMOVED']}},
+    ])
     routes += [
         route('/v1/tenant/members/{id}/groups', 'get', 'tenantMemberGroups', '成员所在用户组', 'TENANT',
               'iam-tenant:member:read', None, 'RPageResponseResourceDetailGroupRecord',
@@ -358,8 +366,8 @@ def build():
               'iam-tenant:member:export', None, 'RPageResponseResourceDetailMemberRecord',
               '再次校验导出操作、对象范围与字段策略；PENDING/RUNNING 返回 503；失败或过期视为对象不可访问'),
         route('/v1/tenant/departments', 'get', 'tenantListDepartments', '部门树', 'TENANT', 'iam-tenant:department:read', None,
-              'RPageResponseResourceDetailDepartmentRecord', '禁止跨租户；循环由服务拒绝',
-              query=[purpose('MANAGED_DEPARTMENT')] + PAGE),
+              'RListDepartmentTreeNode', '按可管理范围返回树及子节点',
+              query=[purpose('MANAGED_DEPARTMENT')]),
         route('/v1/tenant/departments', 'post', 'tenantCreateDepartment', '创建部门', 'TENANT', 'iam-tenant:department:create',
               'DepartmentDraft', 'RCreatedResource', '校验父节点归属'),
         route('/v1/tenant/departments/{id}', 'get', 'tenantGetDepartment', '部门详情', 'TENANT', 'iam-tenant:department:read', None,
@@ -679,8 +687,10 @@ def build():
         ('/{id}/file', 'get', 'File', '下载成员表格产物', None, None, 'RMemberWorkbookFile',
          '仅发起人并复核任务来源权限，初始密码只允许下载一次'),
     ]:
+        query = [{'name': 'artifact', 'required': True,
+                  'schema': {'type': 'string', 'enum': ['WORKBOOK', 'ERRORS', 'PASSWORDS']}}] if identifier == 'File' else None
         routes.append(route('/v1/tenant/members/workbook' + tail, method, 'tenantMemberWorkbook' + identifier,
-                            title, 'TENANT', action, request, response, rule))
+                            title, 'TENANT', action, request, response, rule, query=query))
     for item in routes:
         item['implemented'] = True
     seen = set()

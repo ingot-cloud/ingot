@@ -148,21 +148,37 @@ class ContractTest(unittest.TestCase):
             purpose = next(item for item in self.by_id[operation_id]['query'] if item['name'] == 'purpose')
             self.assertTrue(purpose['required'])
             self.assertEqual([expected], purpose['schema']['enum'])
+        department_tree = self.by_id['tenantListDepartments']
+        self.assertEqual(['purpose'], [item['name'] for item in department_tree['query']])
+        self.assertEqual('RListDepartmentTreeNode', department_tree['response'])
+        member_create = self.by_id['tenantCreateMember']
+        self.assertEqual('TenantMemberCreateInput', member_create['request'])
+        self.assertEqual('RTenantMemberCreated', member_create['response'])
+        self.assertIn('phone', self.schemas[member_create['request']]['required'])
         tenant_filters = {item['name']: item for item in self.by_id['tenantListMembers']['query']}
         self.assertEqual(200, tenant_filters['pageSize']['schema']['maximum'])
         self.assertEqual(20, tenant_filters['pageSize']['schema']['default'])
         self.assertIn('phone', tenant_filters)
         self.assertIn('email', tenant_filters)
+        self.assertEqual('string', tenant_filters['departmentId']['schema']['type'])
+        self.assertEqual(['ACTIVE', 'SUSPENDED', 'REMOVED'], tenant_filters['status']['schema']['enum'])
         platform_filters = {item['name'] for item in self.by_id['platformListMembers']['query']}
         self.assertEqual({'page', 'pageSize', 'name', 'status', 'ids'}, platform_filters)
         tenant_list = {item['name']: item for item in self.by_id['platformListTenants']['query']}
         self.assertEqual({'page', 'pageSize', 'name', 'status'}, set(tenant_list))
         self.assertEqual(['ENABLED', 'DISABLED'], tenant_list['status']['schema']['enum'])
         application_list = {item['name']: item for item in self.by_id['platformListApplications']['query']}
-        self.assertEqual({'page', 'pageSize', 'name', 'status', 'baseline', 'domain'}, set(application_list))
+        self.assertEqual({'page', 'pageSize', 'name', 'status', 'baseline', 'domain', 'view'}, set(application_list))
         self.assertTrue(application_list['domain']['required'])
         self.assertEqual(['ENABLED', 'DISABLED'], application_list['status']['schema']['enum'])
         self.assertEqual('boolean', application_list['baseline']['schema']['type'])
+        self.assertEqual({'type': 'string', 'enum': ['CATALOG', 'SUMMARY'], 'default': 'CATALOG'},
+                         application_list['view']['schema'])
+        application_response = self.document['paths']['/v1/platform/applications']['get']['responses']['200']
+        self.assertEqual(
+            ['#/components/schemas/RPageResponseResourceDetailApplicationRecord',
+             '#/components/schemas/RPageResponseResourceDetailApplicationSummary'],
+            [item['$ref'] for item in application_response['content']['application/json']['schema']['anyOf']])
         export_status = self.by_id['tenantGetMemberExportStatus']
         self.assertEqual('/v1/tenant/members/export/{id}/status', export_status['path'])
         self.assertEqual('RExportTask', export_status['response'])

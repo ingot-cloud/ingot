@@ -7,7 +7,7 @@ from pathlib import Path
 from build_contract import validate_references
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTRACT = ROOT / 'specs/changes/active/20260912-iam-identity-access-management/contracts'
+CONTRACT = ROOT / 'specs/changes/archive/2026/20260912-iam-identity-access-management/contracts'
 
 
 def build():

@@ -45,12 +45,8 @@ def sample_config(state_dir: Path, **overrides) -> dict:
 
 
 class TestDataToolTest(unittest.TestCase):
-    def test_initialization_uses_the_manifest_without_existing_database_patches(self):
-        files = lib.ddl_files()
-        self.assertEqual(11, len(files))
-        self.assertEqual('006_bootstrap.sql', files[-1].name)
-        self.assertFalse(any('migrations' in file.parts for file in files))
-        self.assertNotIn('011_delegation_duration_mode.sql', [file.name for file in files])
+    def test_initialization_uses_the_first_deployment_bundle(self):
+        self.assertEqual([lib.ROOT / "databases/ingot_iam.sql"], lib.ddl_files())
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -170,6 +166,25 @@ class TestDataToolTest(unittest.TestCase):
         self.assertEqual(len(items), 45)
         self.assertEqual([query["page"] for query in session.queries], [["1"], ["2"], ["3"]])
         self.assertTrue(all(query["delegationGrantId"] == ["700"] for query in session.queries))
+
+    def test_platform_fixture_completes_initial_password_once(self):
+        transport = FakeGateway()
+        identity = "refine-limited"
+        transport._put_account(build.username_of(identity), "1")
+        passwords = {identity: "once-password"}
+        saved = []
+        session = build.IamSession(self.config, transport, lambda name: None)
+
+        for _ in range(2):
+            build._login_fixture(session, identity, passwords, lambda: saved.append(passwords.copy()),
+                                 domain="PLATFORM")
+
+        self.assertEqual(len(saved), 1)
+        self.assertNotEqual(saved[0][identity], "once-password")
+        logins = [call["form"] for call in transport.calls if call["path"] == "/oauth2/token"]
+        self.assertEqual(len(logins), 3)
+        self.assertTrue(all(form["domain"] == "PLATFORM" and "tenant" not in form for form in logins))
+        self.assertEqual(logins[-1]["password"], saved[0][identity])
 
     def test_build_reuses_inventory_and_hides_passwords(self):
         lib.prepare(self.config, "run-e", state_override=self.state)
@@ -365,6 +380,62 @@ class TestDataToolTest(unittest.TestCase):
         self.assertEqual({item["actionId"] for item in grants}, {"act-read", "act-update"})
         for grant in grants:
             self.assertEqual(grant["scopes"], [{"kind": "ALL"}])
+        assignment = next(item["json"]["items"][0] for item in transport.calls
+                          if item["method"] == "POST" and item["path"] == "/v1/tenant/assignments")
+        inventory = lib.read_inventory(lib.inventory_path(self.config, "run-j", self.state))
+        self.assertEqual(inventory["objects"]["role:shared"]["id"], assignment["roleId"])
+        self.assertEqual({"id": "member-resource", "version": "1"}, inventory["objects"]["policy:a:field"])
+
+    def test_transport_uses_hybrid_for_credential_endpoints(self):
+        try:
+            from cryptography.hazmat.primitives import hashes, serialization
+            from cryptography.hazmat.primitives.asymmetric import padding, rsa
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        except ImportError:
+            self.skipTest("需要 cryptography")
+        from base64 import b64decode, b64encode
+        from unittest.mock import patch
+
+        gateway = "http://localhost:7980"
+        transport = client.HttpTransport(gateway)
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        public_key = private_key.public_key().public_bytes(
+            serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        checked = []
+
+        def send(method, url, headers, body, form, basic, timeout):
+            if url == gateway + "/crypto/public-keys":
+                return {"data": [{"kid": "fixture", "active": True, "alg": "RSA-OAEP-256",
+                                  "publicKey": b64encode(public_key).decode()}]}
+            self.assertEqual("Bearer test", headers["Authorization"])
+            self.assertEqual("h1", headers["In-Crypto-Md"])
+            aad = "|".join(headers[f"In-Crypto-{part}"] for part in ("Md", "Kv", "No", "Ts")).encode()
+            cek = private_key.decrypt(b64decode(headers["In-Crypto-Sk"]), padding.OAEP(
+                mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=None
+            ))
+            aes = AESGCM(cek)
+            if method == "PUT":
+                encoded = b64decode(body["data"])
+                self.assertEqual({"newPassword": "fixture"}, json.loads(aes.decrypt(
+                    encoded[:12], encoded[12:], aad
+                )))
+                checked.append("encrypted request")
+                return {"success": True}
+            self.assertEqual({"username": "fixture"}, body)
+            iv = bytes(12)
+            encrypted = aes.encrypt(iv, b'{"password":"fixture"}', aad)
+            checked.append("encrypted response")
+            return {"success": True, "data": b64encode(iv + encrypted).decode()}
+
+        with patch.object(transport, "_send", side_effect=send):
+            headers = {"Authorization": "Bearer test"}
+            created = transport.request("POST", gateway + "/iam/v1/platform/accounts", headers=headers,
+                                        json_body={"username": "fixture"})
+            self.assertEqual({"password": "fixture"}, created["data"])
+            transport.request("PUT", gateway + "/iam/v1/me/password", headers=headers,
+                              json_body={"newPassword": "fixture"})
+        self.assertEqual(["encrypted response", "encrypted request"], checked)
 
 
 class FakeGateway:
@@ -429,6 +500,7 @@ class FakeGateway:
         return {
             "id": account["id"],
             "username": account["username"],
+            "phone": account.get("phone"),
             "enabled": account.get("enabled", True),
             "locked": False,
             "mustChangePassword": True,
@@ -488,7 +560,14 @@ class FakeGateway:
         path = path[path.find("/oauth2") :] if "/oauth2" in path else path[path.find("/iam") + 4 :]
         self.calls.append({"method": method, "path": path, "json": json_body, "form": form})
         if path.endswith("/oauth2/token"):
-            return {"data": {"accessToken": "token"}}
+            return {"data": {"accessToken": f"fixture:{form['username']}"}}
+        if path == "/v1/me/password":
+            username = (headers or {})["Authorization"].split("fixture:", 1)[1]
+            account = self._account_by_username(username)
+            if method == "GET":
+                return {"data": {"mustChangePassword": not account.get("changed", False)}}
+            account["changed"] = True
+            return {"success": True}
         if method == "POST" and path.endswith("/accounts/lookup"):
             username = (json_body or {}).get("username")
             account = self._account_by_username(username)
@@ -518,6 +597,7 @@ class FakeGateway:
                     409, url, '{"code":"RevisionConflict","message":"配置已变化，请重新预览后提交"}'
                 )
             account["version"] = self._bump(account["version"])
+            account["changed"] = False
             return {"data": {"password": "once-password"}}
         if method == "POST" and path.endswith("/disable"):
             account_id = path.rsplit("/", 2)[-2]
@@ -542,7 +622,15 @@ class FakeGateway:
                     400, url, '{"code":"InvalidArgument","message":"登录名已存在"}'
                 )
             account = self._put_account(username, "0")
-            return {"data": {"id": account["id"], "version": account["version"]}}
+            account["phone"] = json_body.get("phone")
+            return {"data": {"password": "once-password"}}
+        if method == "PATCH" and "/platform/accounts/" in path:
+            account = self.accounts[path.rsplit("/", 1)[-1]]
+            if str(json_body["expectedVersion"]) != account["version"]:
+                raise client.TransportError(409, url, "RevisionConflict")
+            account["phone"] = json_body["phone"]
+            account["version"] = self._bump(account["version"])
+            return {"data": {"record": self._account_record(account), "version": account["version"]}}
         if method == "GET" and "/platform/accounts/" in path:
             account_id = path.rsplit("/", 1)[-1]
             account = self.accounts.get(account_id)
@@ -573,33 +661,33 @@ class FakeGateway:
             member["status"] = (json_body or {}).get("status")
             return {"data": {"id": member["id"], "version": member["version"]}}
         if method == "GET" and path.endswith("/applications"):
+            if parse_qs(urlparse(url).query).get("domain") != ["TENANT"]:
+                raise client.TransportError(400, url, "请选择应用所属域")
             return self._page(
                 [
-                    {"id": "app-platform", "code": "iam-platform", "domain": "PLATFORM"},
                     {"id": "app-tenant", "code": "iam-tenant", "domain": "TENANT"},
                 ]
             )
-        if method == "GET" and path.endswith("/actions"):
-            app_id = path.rsplit("/", 2)[-2]
-            if app_id == "app-platform":
-                return self._page(
-                    [
-                        {"id": "plat-read", "code": "iam-platform:account:read"},
-                        {"id": "plat-update", "code": "iam-platform:account:update"},
-                    ]
-                )
-            return self._page(
-                [
+        if method == "GET" and path == "/v1/platform/applications/app-tenant/action-catalog":
+            return {"data": {"resources": [
+                {"id": "member-resource", "code": "member", "actions": [
                     {"id": "act-read", "code": "iam-tenant:member:read"},
                     {"id": "act-update", "code": "iam-tenant:member:update"},
-                ]
-            )
+                ]},
+            ]}}
         if method == "GET" and path.endswith("/departments"):
             tenant = (headers or {}).get("Tenant") or ""
             items = self.departments.get(tenant) or [{"id": "root", "name": "根部门"}]
             if tenant and tenant not in self.departments:
                 self.departments[tenant] = list(items)
-            return self._page(items)
+            self.assert_department_query(url)
+            nodes = {item["id"]: {"record": item, "version": item.get("version", "0"), "children": []}
+                     for item in items}
+            roots = []
+            for item in items:
+                parent = nodes.get(item.get("parentId"))
+                (parent["children"] if parent else roots).append(nodes[item["id"]])
+            return {"data": roots}
         if method == "POST" and path.endswith("/departments"):
             tenant = (headers or {}).get("Tenant") or ""
             name = (json_body or {}).get("name")
@@ -617,19 +705,8 @@ class FakeGateway:
             }
             bucket.append(created)
             return {"data": {"id": created["id"], "version": "1"}}
-        if method == "GET" and "revisions" in path:
-            return self._page(
-                [
-                    {
-                        "id": "rev1",
-                        "revision": "1",
-                        "kind": "SHARED",
-                        "grants": [],
-                        "deltas": [],
-                        "parameterDefinitions": [],
-                    }
-                ]
-            )
+        if path.startswith("/v1/platform/shared-roles/") and "/revisions" in path:
+            raise client.TransportError(410, url, "共享角色版本入口已退出")
         if method == "GET" and path.endswith("/shared-roles"):
             return self._page(list(self.roles.values()))
         if method == "GET" and path.endswith("/groups"):
@@ -684,6 +761,10 @@ class FakeGateway:
             self.departments[tenant_id] = [{"id": "root-" + tenant_id, "name": "根部门"}]
             return {"data": {"id": tenant_id, "version": "1"}}
         if method == "POST" and path.endswith("/members"):
+            if path == "/v1/tenant/members" and ("accountId" in json_body or not any(
+                    row.get("phone") == json_body.get("phone") for row in self.accounts.values()
+            )):
+                raise client.TransportError(400, url, "租户成员按已有账号的手机号添加")
             display = (json_body or {}).get("displayName")
             bucket = self._member_bucket(path, headers)
             if display in bucket:
@@ -704,6 +785,11 @@ class FakeGateway:
             bucket[name] = group
             return {"data": {"id": group["id"], "version": "1"}}
         if method == "POST" and path.endswith("/shared-roles"):
+            if "kind" in json_body or "deltas" in json_body["definition"]:
+                raise client.TransportError(400, url, "共享角色使用当前权限定义")
+            fields = json_body["definition"]["resourceFieldPermissions"]["member-resource"]["operations"]
+            if fields["phone"]["filterable"] or fields["email"]["filterable"]:
+                raise client.TransportError(400, url, "脱敏字段禁止原值筛选")
             code = (json_body or {}).get("code")
             if code in {item.get("code") for item in self.roles.values()}:
                 raise client.TransportError(
@@ -718,9 +804,27 @@ class FakeGateway:
             }
             self.roles[role["id"]] = role
             return {"data": {"id": role["id"], "version": "1"}}
+        if method == "POST" and path == "/v1/tenant/assignments":
+            item = json_body["items"][0]
+            if "roleRevisionRef" in item or item.get("roleId") not in self.roles:
+                raise client.TransportError(400, url, "租户分配需要当前角色 ID")
+            return {"data": {"id": self._next_id(), "version": "1"}}
+        if method == "GET" and path == "/v1/tenant/policies/field-resources":
+            return {"data": [
+                {"resourceId": "other-resource", "resource": {"applicationCode": "iam-tenant",
+                                                             "resourceCode": "department"}},
+                {"resourceId": "member-resource", "resource": {"applicationCode": "iam-tenant",
+                                                              "resourceCode": "member"}},
+            ]}
+        if method == "GET" and path == "/v1/tenant/policies/fields/member-resource":
+            return {"data": {"record": {"rules": []}, "version": "1"}}
         if method == "GET":
             return {"data": {"id": "policy", "version": "1"}}
         return {"data": {"id": self._next_id(), "version": "1", "password": "once-password"}}
+
+    def assert_department_query(self, url):
+        if parse_qs(urlparse(url).query) != {"purpose": ["MANAGED_DEPARTMENT"]}:
+            raise client.TransportError(400, url, "部门树仅使用当前查询用途")
 
 
 if __name__ == "__main__":

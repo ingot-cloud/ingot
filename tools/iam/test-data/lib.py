@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT))
-from tools.iam.database_sources import initialization_files
 
 REQUIRED_CONFIG = (
     "environmentId",
@@ -35,8 +32,8 @@ class ConfigError(ValueError):
 
 
 def ddl_files():
-    """测试环境的权威清单顺序：001–005 → 框架DDL → 006。"""
-    return initialization_files(seed_platform_account=False)
+    """返回首次部署使用的正式单文件。工具只核对工件。"""
+    return [ROOT / "databases/ingot_iam.sql"]
 
 
 def load_config(path: Path) -> dict:
@@ -96,7 +93,8 @@ def fingerprint(config: dict) -> str:
         },
         "redisNamespace": config["redisNamespace"],
         "sites": config["sites"],
-        "ddl": [str(path.relative_to(ROOT)) for path in ddl_files()],
+        "ddl": {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in ddl_files()},
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(encoded).hexdigest()

@@ -16,8 +16,7 @@ class ServiceNamingTest(unittest.TestCase):
                 if not path.is_file() or any(part in {'build', 'bin', '.gradle'} for part in path.parts) or path.suffix not in {'.java', '.gradle', '.yml', '.xml', '.sh', '.env', '.template'}:
                     continue
                 self.assertIsNone(stale.search(path.read_text()), str(path.relative_to(ROOT)))
-        for name in ['settings.gradle', '.gitlab-ci.yml']:
-            self.assertIsNone(stale.search((ROOT / name).read_text()), name)
+        self.assertIsNone(stale.search((ROOT / 'settings.gradle').read_text()), 'settings.gradle')
 
     def test_feign_targets_use_iam_service(self):
         directory = ROOT / 'ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/rpc'
@@ -45,23 +44,14 @@ class ServiceNamingTest(unittest.TestCase):
             content = (ROOT / 'deploy/services' / filename).read_text()
             self.assertIn('IAM_DATABASE=${IAM_DATABASE:?', content)
 
-    def test_iam_ci_does_not_build_or_remove_auth_service(self):
-        content = (ROOT / '.gitlab-ci.yml').read_text()
-        deploy = content.split('iam-docker-run:', 1)[1].split('gateway-docker-run:', 1)[0]
-        self.assertIn('MODULE_NAME: ${IAM_MODULE_NAME}', deploy)
-        self.assertIn('INNER_VERSION: ${IAM_VERSION}', deploy)
-        self.assertNotIn('${AUTH_MODULE_NAME}', deploy)
-        self.assertIn('IMAGE_NAME: ${IAM_IMAGE_NAME}:${INNER_VERSION}', deploy)
-        assemble = content.split('iam-assemble:', 1)[1].split('gateway-assemble:', 1)[0]
-        self.assertIn('gradle:8.12.1-jdk21', assemble)
-        self.assertIn('shiftDockerfileProd', assemble)
-        self.assertNotIn('shiftDockerfileIngotAuth', assemble)
-        self.assertIn('output/ingot-iam-provider/', assemble)
-        build = content.split('iam-docker-build:', 1)[1].split('gateway-docker-build:', 1)[0]
-        self.assertIn('cd ./output/ingot-iam-provider', build)
-        self.assertIn('job: iam-assemble', build)
-        self.assertIn('job: iam-docker-build', deploy)
-        self.assertIn('cache: []', build)
+    def test_iam_gradle_image_and_launcher_target_the_same_module(self):
+        module = ROOT / 'ingot-service/ingot-iam/ingot-iam-provider'
+        assembly = (module / 'ingot-assemble.gradle').read_text()
+        self.assertEqual(['dev', 'test', 'prod'], re.findall(r'env\("([^"]+)"\)', assembly))
+        self.assertEqual(['ingot/iam'] * 3, re.findall(r'\bname\s*=\s*"([^"]+)"', assembly))
+        launcher = (ROOT / 'deploy/services/run-iam.sh').read_text()
+        self.assertIn('SERVICE_NAME=ingot-iam', launcher)
+        self.assertNotIn('ingot-auth', launcher)
 
     def test_deployment_image_and_version_are_iam_owned(self):
         for filename in ['docker-compose.yml', 'docker-compose.standalone.yml']:

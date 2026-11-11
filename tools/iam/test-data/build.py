@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import secrets as random_secrets
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Callable
 
 from client import (
@@ -52,6 +54,13 @@ TENANT_B_MEMBERS = ("owner-b", "dual")
 TENANT_OWNERS = {"a": "owner-a", "b": "owner-b"}
 PLATFORM_MEMBERS = ("platform-reader", "dual", "suspended")
 ALL_SCOPE = [{"kind": "ALL"}]
+TENANT_APP_CODE = "iam-tenant"
+MEMBER_RESOURCE_CODE = "member"
+MEMBER_ACTION_CODES = ("iam-tenant:member:read", "iam-tenant:member:update")
+SHARED_ROLES_PATH = "/v1/platform/shared-roles"
+FIXTURE_PHONES = {identity: f"19900000{index:03d}"
+                  for index, identity in enumerate(CREATED_IDENTITIES, start=1)}
+PASSWORD_STATE_PATH = "/v1/me/password"
 
 
 class IamSession:
@@ -59,10 +68,10 @@ class IamSession:
 
     def __init__(self, config: dict, transport, getenv: Callable[[str], str | None]):
         self.config = config
-        self.transport = transport
         self.getenv = getenv
         self.gateway = str(config["gatewayBaseUrl"]).rstrip("/")
         self.auth = str(config["authBaseUrl"]).rstrip("/")
+        self.transport = transport if transport is not None else HttpTransport(self.gateway)
 
     def _oauth_client(self) -> tuple[str, str]:
         names = self.config.get("oauth") or {}
@@ -136,11 +145,14 @@ def _read_secrets(path: Path) -> dict[str, str]:
 
 def _write_secrets(path: Path, secrets: dict[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(secrets, ensure_ascii=False, indent=2) + "\n")
+    with NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as temp:
+        temp_path = Path(temp.name)
+        json.dump(secrets, temp, ensure_ascii=False, indent=2)
+        temp.write("\n")
     try:
-        os.chmod(path, 0o600)
-    except OSError:
-        pass
+        temp_path.replace(path)
+    finally:
+        temp_path.unlink(missing_ok=True)
 
 
 def _ensure_object(objects: dict, key: str, factory) -> str:
@@ -202,6 +214,7 @@ def _account_detail(body: dict) -> dict | None:
             found["username"] = record["username"]
         if "enabled" in record:
             found["enabled"] = record["enabled"]
+        found["phone"] = record.get("phone")
     return found
 
 
@@ -218,6 +231,7 @@ def _refresh_account(session: IamSession, token: str, account: dict) -> dict:
         account["username"] = found["username"]
     if "enabled" in found:
         account["enabled"] = found["enabled"]
+    account["phone"] = found.get("phone")
     return account
 
 
@@ -334,6 +348,7 @@ def _ensure_account(
     current = objects.get(key)
     if isinstance(current, dict) and current.get("id"):
         _reset_secret(session, token, current, identity, secrets)
+        _ensure_fixture_phone(session, token, current, identity)
         checkpoint()
         return "reused"
     username = username_of(identity)
@@ -341,31 +356,58 @@ def _ensure_account(
     if existing:
         objects[key] = existing
         _reset_secret(session, token, existing, identity, secrets)
+        _ensure_fixture_phone(session, token, existing, identity)
         checkpoint()
         return "reused"
     try:
-        created = created_resource(
-            session.iam(
-                "POST",
-                "/v1/platform/accounts",
-                token,
-                json_body={"username": username, "phone": None, "email": None},
-            )
+        response = session.iam(
+            "POST",
+            "/v1/platform/accounts",
+            token,
+            json_body={"username": username, "phone": FIXTURE_PHONES.get(identity), "email": None},
         )
     except TransportError as exc:
         raise ConfigError(f"创建账号 {username} 失败：{exc}") from exc
-    objects[key] = {"id": created["id"], "username": username, "version": created["version"]}
-    checkpoint()
-    _reset_secret(session, token, objects[key], identity, secrets)
+    created = _lookup_account(session, token, username)
+    if created is None:
+        raise ConfigError(f"创建后无法按登录名读取账号 {username}")
+    password = payload_data(response).get("password")
+    if not isinstance(password, str) or not password:
+        raise ConfigError(f"创建账号 {username} 未返回初始口令")
+    objects[key] = created
+    secrets[identity] = password
+    _refresh_account(session, token, created)
     checkpoint()
     return "created"
 
 
-def _list_or_empty(session: IamSession, path: str, token: str, tenant: str | None = None) -> list:
-    try:
-        return page_records(session.iam("GET", path, token, tenant=tenant))
-    except TransportError:
-        return []
+def _ensure_fixture_phone(session, token, account, identity):
+    phone = FIXTURE_PHONES.get(identity)
+    if phone and not account.get("phone"):
+        session.iam("PATCH", f"/v1/platform/accounts/{account['id']}", token,
+                    json_body={"expectedVersion": account["version"], "phone": phone})
+        _refresh_account(session, token, account)
+
+
+def _login_fixture(session, identity, secrets, checkpoint, *, domain, tenant=None):
+    username = username_of(identity)
+    password = _password(session.getenv, session.config, identity, secrets)
+    token = session.login(domain, username, password, org=tenant)
+    state = payload_data(session.iam("GET", PASSWORD_STATE_PATH, token, tenant=tenant))
+    if state.get("mustChangePassword") is False:
+        return token
+    if state.get("mustChangePassword") is not True:
+        raise ConfigError(f"测试身份 {identity} 的改密状态响应无效")
+    if secrets.get(identity) != password:
+        raise ConfigError(f"测试身份 {identity} 须先完成外部提供口令的首次改密")
+    password = f"Aa1!{random_secrets.token_hex(12)}"
+    changed = session.iam("PUT", PASSWORD_STATE_PATH, token, tenant=tenant,
+                          json_body={"newPassword": password, "confirmPassword": password})
+    if changed.get("success") is not True:
+        raise ConfigError(f"测试身份 {identity} 首次改密未成功")
+    secrets[identity] = password
+    checkpoint()
+    return session.login(domain, username, password, org=tenant)
 
 
 def _unwrap_item(item: dict) -> dict | None:
@@ -504,33 +546,58 @@ def _ensure_tenant(
     return "created"
 
 
-def _pick_actions(session: IamSession, token: str) -> tuple[str, str]:
-    apps = _list_or_empty(session, "/v1/platform/applications?page=1&pageSize=100", token)
-    app = next((item for item in apps if item.get("code") == "iam-tenant"), None)
-    if app is None:
-        app = next((item for item in apps if item.get("domain") == "TENANT"), None)
+def _member_role_definition(session: IamSession, token: str) -> dict:
+    apps = page_records(session.iam(
+        "GET", "/v1/platform/applications?domain=TENANT&page=1&pageSize=200", token
+    ))
+    app = _named(apps, TENANT_APP_CODE, "code")
     if app is None:
         raise ConfigError("没有租户域应用 iam-tenant，无法创建共享角色")
-    actions = _list_or_empty(
-        session, f"/v1/platform/applications/{app['id']}/actions?page=1&pageSize=100", token
-    )
-    if not actions:
-        raise ConfigError("租户域应用没有可用操作，无法创建共享角色")
-    by_code = {str(item.get("code") or ""): item for item in actions}
-    picked: list[str] = []
-    for code in ("iam-tenant:member:read", "iam-tenant:member:update"):
-        item = by_code.get(code)
-        if item and item.get("id"):
-            picked.append(str(item["id"]))
-    for item in actions:
-        action_id = str(item.get("id") or "")
-        if action_id and action_id not in picked:
-            picked.append(action_id)
-        if len(picked) >= 2:
-            break
-    if not picked:
-        raise ConfigError("租户域应用没有可用操作，无法创建共享角色")
-    return picked[0], picked[1] if len(picked) > 1 else picked[0]
+    catalog = payload_data(session.iam(
+        "GET", f"/v1/platform/applications/{app['id']}/action-catalog", token
+    ))
+    resource = _named(catalog.get("resources") or [], MEMBER_RESOURCE_CODE, "code")
+    if resource is None:
+        raise ConfigError("iam-tenant 缺少正式成员资源")
+    ids = {item["code"]: str(item["id"]) for item in resource["actions"] if item.get("id")}
+    read_code, update_code = MEMBER_ACTION_CODES
+    if read_code not in ids or update_code not in ids:
+        raise ConfigError("iam-tenant 缺少正式成员读取或更新操作，无法创建共享角色")
+    return {
+        "grants": [{"actionId": ids[code], "scopes": ALL_SCOPE} for code in MEMBER_ACTION_CODES],
+        "parameterDefinitions": [],
+        "resourceFieldPermissions": {
+            str(resource["id"]): {
+                "visibility": {},
+                "operations": {field: {"editable": False, "filterable": False} for field in ("phone", "email")},
+            }
+        },
+    }
+
+
+def _ensure_shared_role(session: IamSession, token: str, objects: dict, run_id: str) -> str:
+    key = "role:shared"
+    if isinstance(objects.get(key), dict) and objects[key].get("id"):
+        return "reused"
+    role_code = f"iam-test-shared-{run_id}"
+    role_list = f"{SHARED_ROLES_PATH}?page=1&pageSize=200"
+    role = _named(_page_details(session, role_list, token), role_code, "code")
+    status = "reused"
+    if role is None:
+        definition = _member_role_definition(session, token)
+        try:
+            role = created_resource(session.iam("POST", SHARED_ROLES_PATH, token, json_body={
+                "code": role_code,
+                "name": "测试共享成员读写",
+                "definition": definition,
+            }))
+            status = "created"
+        except TransportError as exc:
+            role = _named(_page_details(session, role_list, token), role_code, "code")
+            if role is None:
+                raise ConfigError(f"创建共享角色失败：{exc}") from exc
+    objects[key] = {"id": role["id"], "kind": "SHARED"}
+    return status
 
 
 def _ensure_departments(
@@ -540,15 +607,22 @@ def _ensure_departments(
     tenant_key: str,
     tenant_id: str,
 ) -> str:
-    records = _page_details(
-        session,
-        "/v1/tenant/departments?purpose=MANAGED_DEPARTMENT&page=1&pageSize=100",
-        token,
-        tenant=tenant_id,
-    )
+    tree = session.iam("GET", "/v1/tenant/departments?purpose=MANAGED_DEPARTMENT",
+                       token, tenant=tenant_id).get("data")
+    if not isinstance(tree, list):
+        raise ConfigError(f"组织 {tenant_key} 的部门响应缺少 data 树")
+    records = []
+    pending = list(reversed(tree))
+    while pending:
+        node = pending.pop()
+        parsed = _unwrap_item(node)
+        if parsed:
+            records.append(parsed)
+        pending.extend(reversed(node.get("children") or []))
     root_key = f"dept:{tenant_key}:root"
     if not (isinstance(objects.get(root_key), dict) and objects[root_key].get("id")):
-        root = _named(records, "根部门") or (records[0] if records else None)
+        roots = [parsed for node in tree if (parsed := _unwrap_item(node))]
+        root = _named(roots, "根部门") or (roots[0] if roots else None)
         if not root:
             raise ConfigError(f"组织 {tenant_key} 没有根部门")
         objects[root_key] = {"id": str(root["id"]), "name": root.get("name") or "根部门"}
@@ -642,6 +716,7 @@ def _ensure_member(
     key = f"member:{domain}:{identity}"
     if isinstance(objects.get(key), dict) and objects[key].get("id"):
         return "reused"
+    domain = domain.lower()
     if owner_identity and identity == owner_identity:
         tenant = _require(objects, f"tenant:{domain}")
         owner_member_id = tenant.get("ownerMemberId")
@@ -659,6 +734,9 @@ def _ensure_member(
         return "reused"
     account = _require(objects, f"account:{identity}")
     path = _member_list_path(domain)
+    recipient = {"accountId": account["id"]} if domain == "platform" else {"phone": account.get("phone")}
+    if domain == "tenant" and not recipient["phone"]:
+        raise ConfigError(f"测试账号 {identity} 缺少可用于加入租户的手机号")
     try:
         created = created_resource(
             session.iam(
@@ -666,7 +744,7 @@ def _ensure_member(
                 path,
                 token,
                 json_body={
-                    "accountId": account["id"],
+                    **recipient,
                     "displayName": identity,
                     "departments": departments,
                 },
@@ -740,7 +818,7 @@ def build(
         _write_secrets(secrets_path(inventory_file), secrets)
         write_inventory(inventory_file, inventory)
 
-    session = IamSession(config, transport or HttpTransport(), getenv)
+    session = IamSession(config, transport, getenv)
     governor_user = str(config.get("bootstrapUsername") or "platform")
     try:
         platform_token = session.login(
@@ -766,18 +844,8 @@ def build(
     tenant_a = _require(objects, "tenant:a")["id"]
     tenant_b = _require(objects, "tenant:b")["id"]
     try:
-        owner_a_token = session.login(
-            "TENANT",
-            username_of("owner-a"),
-            _password(getenv, config, "owner-a", secrets),
-            org=tenant_a,
-        )
-        owner_b_token = session.login(
-            "TENANT",
-            username_of("owner-b"),
-            _password(getenv, config, "owner-b", secrets),
-            org=tenant_b,
-        )
+        owner_a_token = _login_fixture(session, "owner-a", secrets, checkpoint, domain="TENANT", tenant=tenant_a)
+        owner_b_token = _login_fixture(session, "owner-b", secrets, checkpoint, domain="TENANT", tenant=tenant_b)
     except TransportError as exc:
         raise ConfigError(f"组织所有者登录失败：{exc}") from exc
     mark("dept:a", _ensure_departments(session, owner_a_token, objects, "a", tenant_a))
@@ -906,93 +974,8 @@ def build(
         ),
     )
 
-    if not (isinstance(objects.get("role:shared"), dict) and objects["role:shared"].get("id")):
-        role_code = f"iam-test-shared-{run_id}"
-        existing_role = _named(
-            _page_details(session, "/v1/platform/shared-roles?page=1&pageSize=100", platform_token),
-            role_code,
-            "code",
-        )
-        if existing_role:
-            objects["role:shared"] = {
-                "id": existing_role["id"],
-                "revisionId": existing_role["id"],
-                "kind": "SHARED",
-            }
-            revisions = page_records(
-                session.iam(
-                    "GET",
-                    f"/v1/platform/shared-roles/{existing_role['id']}/revisions?page=1&pageSize=20",
-                    platform_token,
-                )
-            )
-            if revisions:
-                objects["role:shared"]["revisionId"] = str(revisions[0]["id"])
-            mark("role:shared", "reused")
-        else:
-            read_id, update_id = _pick_actions(session, platform_token)
-            try:
-                created_role = created_resource(
-                    session.iam(
-                        "POST",
-                        "/v1/platform/shared-roles",
-                        platform_token,
-                        json_body={
-                            "code": role_code,
-                            "name": "测试共享成员读写",
-                            "kind": "SHARED",
-                            "definition": {
-                                "grants": [
-                                    {"actionId": read_id, "scopes": ALL_SCOPE},
-                                    {"actionId": update_id, "scopes": ALL_SCOPE},
-                                ],
-                                "deltas": [],
-                                "parameterDefinitions": [],
-                            },
-                        },
-                    )
-                )
-            except TransportError as exc:
-                existing_role = _named(
-                    _page_details(session, "/v1/platform/shared-roles?page=1&pageSize=100", platform_token),
-                    role_code,
-                    "code",
-                )
-                if existing_role:
-                    objects["role:shared"] = {
-                        "id": existing_role["id"],
-                        "revisionId": existing_role["id"],
-                        "kind": "SHARED",
-                    }
-                    revisions = page_records(
-                        session.iam(
-                            "GET",
-                            f"/v1/platform/shared-roles/{existing_role['id']}/revisions?page=1&pageSize=20",
-                            platform_token,
-                        )
-                    )
-                    if revisions:
-                        objects["role:shared"]["revisionId"] = str(revisions[0]["id"])
-                    mark("role:shared", "reused")
-                else:
-                    raise ConfigError(f"创建共享角色失败：{exc}") from exc
-            else:
-                revisions = page_records(
-                    session.iam(
-                        "GET",
-                        f"/v1/platform/shared-roles/{created_role['id']}/revisions?page=1&pageSize=20",
-                        platform_token,
-                    )
-                )
-                revision_id = str(revisions[0]["id"]) if revisions else created_role["id"]
-                objects["role:shared"] = {
-                    "id": created_role["id"],
-                    "revisionId": revision_id,
-                    "kind": "SHARED",
-                }
-                mark("role:shared", "created")
-    else:
-        mark("role:shared", "reused")
+    mark("role:shared", _ensure_shared_role(session, platform_token, objects, run_id))
+    checkpoint()
 
     if not (isinstance(objects.get("assignment:a:ordinary-a"), dict) and objects["assignment:a:ordinary-a"].get("id")):
         shared = _require(objects, "role:shared")
@@ -1006,7 +989,7 @@ def build(
                     "items": [
                         {
                             "subject": {"type": "MEMBER", "id": member["id"]},
-                            "roleRevisionRef": {"kind": "SHARED", "id": shared.get("revisionId") or shared["id"]},
+                            "roleId": shared["id"],
                             "scopeBindings": {},
                             "validFrom": None,
                             "validUntil": None,
@@ -1018,29 +1001,29 @@ def build(
             )
         )
         objects["assignment:a:ordinary-a"] = {"id": created_assignment["id"]}
+        checkpoint()
         mark("assignment:a:ordinary-a", "created")
     else:
         mark("assignment:a:ordinary-a", "reused")
 
-    resources = payload_data(
-        session.iam("GET", "/v1/tenant/policies/field-resources", owner_a_token, tenant=tenant_a)
-    )
-    policy = payload_data(
-        session.iam(
-            "GET",
-            f"/v1/tenant/policies/fields/{resources[0]['resourceId']}",
-            owner_a_token,
-            tenant=tenant_a,
-        )
-    )
-    objects["policy:a:field"] = {
-        "id": str(policy.get("id") or "field"),
-        "version": str(policy.get("version") or "read"),
-    }
-    mark("policy:a:field", "created")
+    response = session.iam("GET", "/v1/tenant/policies/field-resources", owner_a_token, tenant=tenant_a)
+    resources = response.get("data")
+    if not isinstance(resources, list):
+        raise ConfigError("字段策略资源响应缺少 data 列表")
+    resource_id = next((item["resourceId"] for item in resources
+                        if item["resource"]["applicationCode"] == TENANT_APP_CODE
+                        and item["resource"]["resourceCode"] == MEMBER_RESOURCE_CODE), None)
+    if not resource_id:
+        raise ConfigError("租户成员资源未接入字段策略")
+    policy = payload_data(session.iam(
+        "GET", f"/v1/tenant/policies/fields/{resource_id}", owner_a_token, tenant=tenant_a
+    ))
+    if not policy.get("version"):
+        raise ConfigError("租户成员字段策略响应缺少 data.version")
+    objects["policy:a:field"] = {"id": str(resource_id), "version": str(policy["version"])}
+    mark("policy:a:field", "reused")
 
-    _write_secrets(secrets_path(inventory_file), secrets)
-    write_inventory(inventory_file, inventory)
+    checkpoint()
     dumped = json.dumps(inventory)
     if any(value and value in dumped for value in secrets.values()):
         raise ConfigError("口令不得写入运行清单")

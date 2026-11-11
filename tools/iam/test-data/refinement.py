@@ -7,13 +7,14 @@ import os
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
-from build import (IamSession, _ensure_account, _ensure_group, _ensure_member, _password,
+from build import (IamSession, _ensure_account, _ensure_group, _ensure_member, _login_fixture, _password,
                    _read_secrets, _write_secrets, secrets_path, username_of)
-from client import HttpTransport, TransportError, created_resource, payload_data
+from client import TransportError, created_resource, payload_data
 from lib import ConfigError, inventory_path, prepare, write_inventory
 
 ACTORS = ("refine-governor", "refine-limited", "refine-both", "refine-recipient-a",
           "refine-recipient-b", "refine-outsider", "refine-overlap", "refine-partial", "refine-disjoint")
+VERIFY_ACTORS = ("governor", "limited", "both", "overlap", "partial", "disjoint")
 PREFIX = "/v1/platform"
 SCOPE = [{"kind": "OBJECT_SET", "parameterKey": "members"}]
 ENTRY_CODES = {"iam-platform:role-assignment:" + operation for operation in ("read", "create", "update", "revoke")}
@@ -44,7 +45,7 @@ def refinement_build(config, run_id, *, state_override=None, transport=None, get
     file = inventory_path(config, run_id, state_override)
     secrets = _read_secrets(secrets_path(file))
     objects = inventory.setdefault("objects", {})
-    session = IamSession(config, transport or HttpTransport(), getenv)
+    session = IamSession(config, transport, getenv)
     token = session.login("PLATFORM", config.get("bootstrapUsername") or "platform",
                           _password(getenv, config, "platform-governor", secrets))
     # Fail before creating data when the server has not been refreshed to the new contract.
@@ -113,10 +114,11 @@ def refinement_build(config, run_id, *, state_override=None, transport=None, get
                   {"name": "测试-允许接收组", "selection": {"members": [a, b], "departments": []}})
     _ensure_group(session, token, objects, "refinement:group:outside", PREFIX + "/groups", "测试-越界接收组",
                   {"name": "测试-越界接收组", "selection": {"members": [a, member("outsider")], "departments": []}})
-    limited = session.login("PLATFORM", username_of("refine-limited"), secrets["refine-limited"])
+    tokens = {name: _login_fixture(session, "refine-" + name, secrets, checkpoint, domain="PLATFORM")
+              for name in VERIFY_ACTORS}
     create_payload = {"items": [assignment(a, ref, [a], start, end, objects["refinement:delegation:limited"]["id"])]}
     if not objects.get("refinement:derived"):
-        objects["refinement:derived"] = created_resource(session.iam("POST", PREFIX + "/assignments", limited,
+        objects["refinement:derived"] = created_resource(session.iam("POST", PREFIX + "/assignments", tokens["limited"],
                                                                     json_body=create_payload))
     inventory["refinement"] = {"roleRevisionRef": ref, "action": read, "assignment": create_payload["items"][0]}
     checkpoint()
@@ -133,7 +135,7 @@ def refinement_verify(config, run_id, *, state_override=None, transport=None, ge
         raise ConfigError("请先执行 refinement-build")
     objects = inventory["objects"]
     secrets = _read_secrets(secrets_path(file))
-    session = IamSession(config, transport or HttpTransport(), getenv)
+    session = IamSession(config, transport, getenv)
     checked = []
 
     def check(name, condition):
@@ -150,7 +152,7 @@ def refinement_verify(config, run_id, *, state_override=None, transport=None, ge
             check(name, False)
 
     tokens = {name: session.login("PLATFORM", username_of("refine-" + name), secrets["refine-" + name])
-              for name in ("governor", "limited", "both", "overlap", "partial", "disjoint")}
+              for name in VERIFY_ACTORS}
     for name in ("governor", "limited", "both"):
         context = payload_data(session.iam("GET", PREFIX + "/assignments/context", tokens[name]))
         check(name + " 分配资格独立", bool(context["directCreate"]) == (name != "limited"))

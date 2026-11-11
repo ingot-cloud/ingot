@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-CHANGE = ROOT / 'specs/changes/active/20260912-iam-identity-access-management'
+CHANGE = ROOT / 'specs/changes/archive/2026/20260912-iam-identity-access-management'
 ROUTES = CHANGE / 'contracts/routes.json'
 TARGET = ROOT / 'databases/iam/006_bootstrap.sql'
 

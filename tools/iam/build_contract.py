@@ -6,10 +6,15 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTRACT = ROOT / 'specs/changes/active/20260912-iam-identity-access-management/contracts'
+CONTRACT = ROOT / 'specs/changes/archive/2026/20260912-iam-identity-access-management/contracts'
 GENERATED = ROOT / 'ingot-service/ingot-iam/ingot-iam-provider/build/iam-contract/schemas.json'
 REF_PREFIX = '#/components/schemas/'
 MEDIA_TYPE = 'application/json'
+SUMMARY_RESPONSES = {
+    '/v1/platform/applications': ('RPageResponseResourceDetailApplicationSummary', '应用摘要'),
+    '/v1/platform/groups': ('RPageResponseResourceDetailGroupSummary', '组摘要'),
+    '/v1/tenant/groups': ('RPageResponseResourceDetailGroupSummary', '组摘要'),
+}
 
 
 def ref(name):
@@ -87,10 +92,11 @@ def build(schemas):
             'responses': {'200': {'description': '成功；使用既有 R 信封',
                                   'content': {MEDIA_TYPE: {'schema': ref(route['response'])}}}},
         }
-        if route['method'] == 'get' and route['path'] in ('/v1/platform/groups', '/v1/tenant/groups'):
+        if route['method'] == 'get' and route['path'] in SUMMARY_RESPONSES:
+            summary, label = SUMMARY_RESPONSES[route['path']]
             operation['responses']['200']['content'][MEDIA_TYPE]['schema'] = {
-                'anyOf': [ref(route['response']), ref('RPageResponseResourceDetailGroupSummary')],
-                'description': '默认返回完整记录，view=SUMMARY 返回组摘要',
+                'anyOf': [ref(route['response']), ref(summary)],
+                'description': f'默认返回完整记录，view=SUMMARY 返回{label}',
             }
         if route.get('deprecated'):
             operation['deprecated'] = True
