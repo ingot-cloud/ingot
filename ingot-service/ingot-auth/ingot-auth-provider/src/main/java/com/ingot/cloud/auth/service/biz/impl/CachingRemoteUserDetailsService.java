@@ -7,10 +7,11 @@ import com.ingot.framework.security.account.domain.port.outbound.AccountLockSign
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.util.StringUtils;
 
 /**
- * <p>RemoteUserDetails 装饰器：name key 命中锁定信号时直接返回 locked，跳过 Feign。</p>
+ * <p>RemoteUserDetails 装饰器：按登录名命中锁定信号时拒绝认证，跳过 Feign。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -27,6 +28,13 @@ public class CachingRemoteUserDetailsService implements RemoteUserDetailsService
         return delegate.supports(params);
     }
 
+    /**
+     * 加载远程登录身份。已锁定账号直接进入框架认证失败处理。
+     *
+     * @param params 登录身份查询
+     * @return 远程身份结果
+     * @throws LockedException 登录名命中账号锁定信号
+     */
     @Override
     public R<UserDetailsResponse> fetchUserDetails(UserDetailsRequest params) {
         if (params != null
@@ -34,12 +42,7 @@ public class CachingRemoteUserDetailsService implements RemoteUserDetailsService
                 && StringUtils.hasText(params.getUsername())
                 && accountLockSignalPort.isLockedByUsername(params.getUserType(), params.getUsername())) {
             log.info("[AccountLockSignal] Auth cache hit username={}, skip Feign", params.getUsername());
-            UserDetailsResponse response = new UserDetailsResponse();
-            response.setUsername(params.getUsername());
-            response.setUserType(params.getUserType().getValue());
-            response.setLocked(true);
-            response.setEnabled(true);
-            return R.ok(response);
+            throw new LockedException("Account is locked");
         }
         return delegate.fetchUserDetails(params);
     }

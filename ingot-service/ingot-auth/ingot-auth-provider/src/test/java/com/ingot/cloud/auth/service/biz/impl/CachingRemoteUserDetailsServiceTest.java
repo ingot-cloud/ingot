@@ -7,9 +7,10 @@ import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.security.account.domain.port.outbound.AccountLockSignalPort;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.LockedException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -36,9 +37,7 @@ class CachingRemoteUserDetailsServiceTest {
         request.setUsername("admin");
         request.setUserType(UserTypeEnum.ADMIN);
 
-        R<UserDetailsResponse> result = service.fetchUserDetails(request);
-
-        assertTrue(Boolean.TRUE.equals(result.getData().getLocked()));
+        assertThrows(LockedException.class, () -> service.fetchUserDetails(request));
         verify(delegate, never()).fetchUserDetails(any());
     }
 

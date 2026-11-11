@@ -90,18 +90,21 @@ public class DefaultLockStatePortAdapter implements LockStatePort {
                                   boolean locked, LocalDateTime lockedUntil,
                                   String reasonCode, LockType lockType,
                                   Long operatorId, String operatorName) {
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         AccountLockStateEntity entity = lockStateMapper.selectOne(
                 buildUserQuery(userId, userType));
         if (entity == null) {
             entity = new AccountLockStateEntity();
             entity.setUserId(userId);
             entity.setUserType(userType != null ? userType.getValue() : null);
+            entity.setCreatedAt(now);
         }
 
+        entity.setUpdatedAt(now);
         entity.setLocked(locked);
         entity.setLockType(lockType != null ? lockType.getCode() : null);
         entity.setLockReasonCode(reasonCode);
-        entity.setLockedAt(locked ? LocalDateTime.now(ZoneOffset.UTC) : null);
+        entity.setLockedAt(locked ? now : null);
         entity.setLockedUntil(lockedUntil);
         entity.setOperatorId(operatorId);
         entity.setOperatorName(operatorName);
