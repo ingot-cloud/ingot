@@ -189,7 +189,7 @@ current/<domain>/<capability>/
 ## 7. 当前活动变更
 
 
-- [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
+- [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；双域首次部署，复用已有验收，CA/真实休眠与目标发布恢复待验）
 
 已归档（2026）：
 

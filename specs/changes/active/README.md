@@ -13,7 +13,7 @@
 当前变更：
 
 
-- [同源双入口目标环境发布验收](./20261031-security-same-origin-release-acceptance/README.md)（draft；原实现已本地验收归档，实际环境证据单列）
+- [同源双入口目标环境发布验收](./20261031-security-same-origin-release-acceptance/README.md)（draft；双域首次部署，复用已有验收，目标环境与失败恢复单列）
 
 已完成的[部门负责人独立维护](../archive/2026/20261019-iam-department-leaders/README.md)于2026-10-20按用户验收确认移入archive。
 
