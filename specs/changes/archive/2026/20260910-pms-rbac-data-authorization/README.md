@@ -19,7 +19,7 @@
 
 - 包含 PMS 数据模型及管理接口、安全框架授权解析与缓存、MyBatis 数据权限、示例和一次性迁移。
 - 不批量为 PMS 用户、部门、角色管理接口增加行级过滤；独立前端仓库的实现不在本仓库修改范围，但客户端契约联调是发布门禁。
-- 超大 `IN` / `OR` 的谓词升级不在本 change 交付，见 [`20260912-mybatis-data-scope-predicate-scale`](../../active/20260912-mybatis-data-scope-predicate-scale/)（draft）。
+- 超大 `IN` / `OR` 的谓词升级不在本 change 交付，见 [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/)（draft）。
 - 不引入角色继承、租户拒绝平台默认权限、复杂布尔权限表达式、租户自定义业务应用设计器。
 - 本变更仅有一个对外发布单元。实施批次和阶段验收写入 TASKS，不建立独立发布的 phases 工件。
 
@@ -36,7 +36,7 @@
 - [数据授权基线](../../../current/pms/data-authorization/SPEC.md)
 - [会话安全基线](../../../current/security/session-safety/SPEC.md)
 - [分层缓存基线](../../../current/framework/layered-cache/SPEC.md)
-- 后续规模谓词：[`20260912-mybatis-data-scope-predicate-scale`](../../active/20260912-mybatis-data-scope-predicate-scale/)，状态 draft。
+- 后续规模谓词：[`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/)，状态 draft。
 
 ## 审批及完成记录
 

@@ -55,7 +55,7 @@
 - 2026-11-06 [租户即时授权](../20261014-iam-tenant-live-authorization/README.md)完成产品验收并归档，接管 R01/R03/R04/R05 中的拥有者、租户当前角色和资源委派。
 - 2026-11-10 用户确认按新库首次部署，无数据迁移。[旧库迁移发布验收](../20261106-iam-tenant-live-authorization-release/README.md)已取消归档，空库初始化及联调仍按本主变更验收。
 - 现行基线见[平台能力](../../../../current/iam/platform-capabilities/SPEC.md)、[租户即时授权](../../../../current/iam/tenant-live-authorization/SPEC.md)、[平台角色版本](../../../../current/iam/role-version-application/SPEC.md)、[持久化](../../../../current/iam/database-persistence/SPEC.md)及[同源登录](../../../../current/security/same-origin-login/SPEC.md)。两份 `current/pms` 是前代基线，结项时核对仍被框架消费者使用的部分并迁移引用。
-- [SQL 规模优化 draft](../../../active/20260912-mybatis-data-scope-predicate-scale/README.md) 以旧快照及规则模型为前提。本 change 不直接实施其闭包表或 UNION 改写，不修改其状态；后续须按新模型重新评估。
+- [SQL 规模优化 draft](../20260912-mybatis-data-scope-predicate-scale/README.md) 以旧快照及规则模型为前提。本 change 不直接实施其闭包表或 UNION 改写，不修改其状态；后续须按新模型重新评估。
 - 立项时发现权限与范围跨角色合并、PMS 业务范围接入、全局账号与成员混用及初始化操作目录等问题。原评估见 [REMEDIATION](./REMEDIATION.md)，现行实现和验证边界见[条款对齐](./REQUIREMENTS.md#现行条款与实现)。
 - 本次不等待实际旧库快照；以空库初始化及必要既有功能的完整链路验收。历史迁移方案不得作为恢复运行时旧表依赖的理由。
 

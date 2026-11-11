@@ -51,7 +51,7 @@
 - [角色版本基线](../../../../current/iam/role-version-application/SPEC.md)：平台自有角色继续遵守；租户及共享角色的业务版本行为在本变更验收后调整基线，当前不得提前改写。
 - [平台读取基线](../../../../current/iam/platform-read-performance/SPEC.md)：平台性能和只读请求复用必须回归。
 - [统一分层缓存](../../../../current/framework/layered-cache/SPEC.md)：复用框架，不引入自建 L1/L2/LKG 放行。
-- [SQL 规模升级 draft](../../../active/20260912-mybatis-data-scope-predicate-scale/README.md)：不合并实施，保留后续重新评估责任。
+- [SQL 规模升级 draft](../20260912-mybatis-data-scope-predicate-scale/README.md)：不合并实施，保留后续重新评估责任。
 
 本变更是已有 IAM 数据的目标模型演进，不重新启用主变更已退出范围的旧 PMS 迁移工具。评审期间新旧规则的冲突只作记录；批准后本目录是本次实施的依据。
 

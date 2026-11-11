@@ -18,9 +18,9 @@
 | 权限遗留列 | 删除 `type`/`managed`/`source_type`/`source_id`，`node_type` 仅 GROUP/ACTION；应用根用 `platform_app.permission_id` | 用户确认不再保留兼容列 |
 | 角色级范围列 | 删除 `platform_role` / `tenant_role_private` 的 `scope_type`/`scopes`；范围只配 data-rules | 用户确认避免误导配置 |
 | 注解职责 | 功能准入只走 `HasAnyAuthority` 一类；`@DataScope` 只取 `(resource, permission)` 范围改 SQL，不再扫 `permissionCodes` 抛 403 | 用户确认职责划分 |
-| SQL 谓词 | 本 change 交付行过滤下推与默认 `IN` / `OR`；禁止内存过滤。闭包表 / `UNION ALL` 拆至 [`20260912-mybatis-data-scope-predicate-scale`](../../active/20260912-mybatis-data-scope-predicate-scale/) | 规模升级不再纳入本 change |
+| SQL 谓词 | 本 change 交付行过滤下推与默认 `IN` / `OR`；禁止内存过滤。闭包表 / `UNION ALL` 拆至 [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/) | 规模升级不再纳入本 change |
 
-本 change 状态为 completed。T0–T9 已落地；规模谓词见 [`20260912-mybatis-data-scope-predicate-scale`](../../active/20260912-mybatis-data-scope-predicate-scale/)。V1–V3 为发布窗口操作，不阻塞 current 更新。
+本 change 状态为 completed。T0–T9 已落地；规模谓词见 [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/)。V1–V3 为发布窗口操作，不阻塞 current 更新。
 
 ## 评审任务
 
@@ -73,7 +73,7 @@
 
 - [x] T9：注解职责与 SQL 谓词对齐 DESIGN §4.6 / §4.6.1
   - 依赖：T5、用户确认职责划分。
-  - 内容：`DataScopeAOP` / `DataScopeGuard` 不再因快照缺少权限码抛 `AuthorizationDenied`；无匹配规则仍 fail-closed（读 `1=2`、写 `ds_forbidden`）。示例与业务接口保持功能注解 + DataScope/Guard。文档化默认谓词与索引要求。闭包表 / `UNION ALL` 不在本任务实现，见 [`20260912-mybatis-data-scope-predicate-scale`](../../active/20260912-mybatis-data-scope-predicate-scale/)。
+  - 内容：`DataScopeAOP` / `DataScopeGuard` 不再因快照缺少权限码抛 `AuthorizationDenied`；无匹配规则仍 fail-closed（读 `1=2`、写 `ds_forbidden`）。示例与业务接口保持功能注解 + DataScope/Guard。文档化默认谓词与索引要求。闭包表 / `UNION ALL` 不在本任务实现，见 [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/)。
   - 验收：漏功能注解时读空写拒绝，不误报功能 403；有功能无规则与无功能权 HTTP 语义可区分；对应 A08、A09。
 
 ## 验证与发布任务

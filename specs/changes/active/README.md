@@ -14,7 +14,6 @@
 
 
 - [同源双入口目标环境发布验收](./20261031-security-same-origin-release-acceptance/README.md)（draft；原实现已本地验收归档，实际环境证据单列）
-- [DataScope SQL 谓词规模升级](./20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
 已完成的[部门负责人独立维护](../archive/2026/20261019-iam-department-leaders/README.md)于2026-10-20按用户验收确认移入archive。
 
@@ -39,6 +38,8 @@
 - [同源登录已验收实现](../archive/2026/20261031-security-same-origin-login/README.md)（completed，2026-10-31）。
 
 已取消归档：
+
+- [DataScope SQL 谓词规模升级](../archive/2026/20260912-mybatis-data-scope-predicate-scale/README.md)（cancelled，2026-11-11 用户确认取消；旧 PMS 授权模型已被 IAM 替代，原规模策略未实施）
 
 - [租户即时授权实际库发布验收](../archive/2026/20261106-iam-tenant-live-authorization-release/README.md)（cancelled，2026-11-10 确认按新库首次部署，无数据迁移）
 - [IAM帮助内容方案（已取消）](../archive/2026/20261103-iam-help-center/README.md)（cancelled；2026-11-03 用户改用前端静态帮助，保留历史）
