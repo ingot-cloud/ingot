@@ -40,4 +40,29 @@ class IamErrorHandlerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals("OtherServiceError", response.getBody().getCode());
     }
+
+    @Test
+    void actualV2ControllerUsesContractStatusesAndEmptyErrorData() throws Exception {
+        var client = org.mockito.Mockito.mock(com.ingot.framework.authorization.AuthorizationClient.class);
+        var controller = new com.ingot.cloud.iam.interfaces.inner.InnerResourceAuthorizationAPI(client);
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller)
+            .setControllerAdvice(handler).build();
+        String body = """
+            {"resource":{"domain":"PLATFORM","applicationCode":"iam-ops","resourceCode":"incident"},
+             "actionCodes":["iam-ops:incident:read"]}
+            """;
+        for (var reason : java.util.List.of(IamReasonCode.INVALID_ARGUMENT, IamReasonCode.ACTION_DENIED,
+                IamReasonCode.AUTHORIZATION_UNAVAILABLE)) {
+            org.mockito.Mockito.doThrow(new BizException(reason)).when(client)
+                .evaluate(org.mockito.ArgumentMatchers.any());
+            mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                    .post("/inner/authorization/v2/evaluate").contentType("application/json").content(body))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status()
+                    .is(reason.getHttpStatus()))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.code")
+                    .value(reason.getCode()))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data")
+                    .doesNotExist());
+        }
+    }
 }

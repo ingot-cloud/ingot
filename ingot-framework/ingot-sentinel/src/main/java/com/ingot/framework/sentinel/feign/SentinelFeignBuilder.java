@@ -56,6 +56,10 @@ public final class SentinelFeignBuilder extends Feign.Builder implements Applica
 
                 // 查找 FeignClient 上的 降级策略
                 FeignClient feignClient = AnnotationUtils.findAnnotation(target.type(), FeignClient.class);
+                // 动态白名单客户端没有注解，仍保留 Sentinel 调用与默认故障处理。
+                if (feignClient == null) {
+                    return new InSentinelInvocationHandler(target, dispatch);
+                }
                 Class<?> fallback = feignClient.fallback();
                 Class<?> fallbackFactory = feignClient.fallbackFactory();
 

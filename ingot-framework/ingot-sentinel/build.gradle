@@ -10,4 +10,10 @@ dependencies {
     compileOnly project(ingot.framework_commons)
     compileOnly project(ingot.framework_feign)
     compileOnly project(ingot.framework_core)
+
+    testImplementation(deps.junit.jupiter)
+    testImplementation project(ingot.framework_feign)
+    testRuntimeOnly(deps.junit.platform_launcher)
 }
+
+test { useJUnitPlatform() }

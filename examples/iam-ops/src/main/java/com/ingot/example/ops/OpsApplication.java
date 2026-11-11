@@ -1,9 +1,8 @@
 package com.ingot.example.ops;
 
-import com.ingot.cloud.iam.api.rpc.RemoteIamAuthorizationService;
+import com.ingot.framework.security.config.annotation.web.configuration.EnableInWebSecurity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
  * <p>独立服务启动样板，鉴权与在线会话沿用框架配置。</p>
@@ -12,7 +11,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @since 1.0.0
  */
 @SpringBootApplication
-@EnableFeignClients(clients = RemoteIamAuthorizationService.class)
+@EnableInWebSecurity
 public class OpsApplication {
 
     /**

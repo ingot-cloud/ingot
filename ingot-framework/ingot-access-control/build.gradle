@@ -6,6 +6,7 @@ dependencies {
     implementation project(ingot.framework_cache)
     implementation project(ingot.framework_event_bus)
     implementation project(ingot.iam_api)
+    implementation project(ingot.framework_feign)
     implementation project(ingot.framework_data_mybatis_scope)
     implementation(deps.jackson.data_bind)
     compileOnly(deps.spring.spring_boot.data_redis_starter)
@@ -16,6 +17,8 @@ dependencies {
     compileOnly(deps.jakarta_servlet_api)
     testRuntimeOnly(deps.jakarta_servlet_api)
     testImplementation(deps.junit.jupiter)
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.spring_boot.data_redis_starter)
     testRuntimeOnly(deps.junit.platform_launcher)
 }
 test { useJUnitPlatform() }

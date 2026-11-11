@@ -15,8 +15,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "ingot.iam.resource-rpc")
+@ConfigurationProperties(prefix = ResourceRpcProperties.PREFIX)
 public class ResourceRpcProperties {
+
+    /** 服务器资源 RPC 的既有配置前缀。 */
+    public static final String PREFIX = "ingot.iam.resource-rpc";
 
     /**
      * 本资源服务验签密钥；未设置时不发布内部对象端点。

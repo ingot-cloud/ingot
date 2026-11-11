@@ -14,6 +14,7 @@ import com.ingot.framework.cache.spi.RemoteUnavailableException;
 import com.ingot.framework.commons.model.iam.extension.AuthorizationDecision;
 import com.ingot.framework.data.mybatis.scope.authorization.AuthorizationInvalidationEvent;
 import com.ingot.framework.eventbus.InvalidationBus;
+import com.ingot.framework.eventbus.config.EventBusAutoConfiguration;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -30,7 +31,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  * @author jy
  * @since 1.0.0
  */
-@AutoConfiguration
+@AutoConfiguration(after = EventBusAutoConfiguration.class)
 @EnableConfigurationProperties(AuthorizationSdkProperties.class)
 public class AuthorizationSdkConfiguration {
 

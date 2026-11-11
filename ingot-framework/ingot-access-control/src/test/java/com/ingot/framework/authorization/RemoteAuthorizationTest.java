@@ -266,6 +266,25 @@ class RemoteAuthorizationTest {
                     .getCode());
     }
 
+    @Test
+    void projectFeignDecoderPreservesKnownRefusalsAndFailsClosedForUnknownErrors() {
+        var actor = authenticate("1", "101");
+        var request = new AuthorizationRequest(KEY, List.of(READ));
+        for (var reason : List.of(IamReasonCode.INVALID_ARGUMENT, IamReasonCode.ACTION_DENIED,
+                IamReasonCode.AUTHORIZATION_UNAVAILABLE)) {
+            var remote = remote(input -> {
+                throw new com.ingot.framework.feign.exception.InFeignException(reason.getCode(), "test refusal");
+            });
+            assertEquals(reason.getCode(), assertThrows(BizException.class,
+                () -> RemoteAuthorizationClient.load(remote, request, actor)).getCode());
+        }
+        var unknown = remote(input -> {
+            throw new com.ingot.framework.feign.exception.InFeignException("UnknownFailure", "test failure");
+        });
+        assertEquals(IamReasonCode.AUTHORIZATION_UNAVAILABLE.getCode(), assertThrows(BizException.class,
+            () -> RemoteAuthorizationClient.load(unknown, request, actor)).getCode());
+    }
+
     private static AuthorizationContext authenticate(String account, String member) {
         var context = new AuthorizationContext(AuthorizationDomain.PLATFORM, null, account, member);
         var user = InUser

@@ -11,6 +11,7 @@ import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.extension.AuthorizationDecision;
 import com.ingot.framework.commons.model.iam.extension.AuthorizationRequest;
 import com.ingot.framework.commons.model.iam.extension.ExecutionMode;
+import com.ingot.framework.feign.exception.InFeignException;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import feign.FeignException;
 
@@ -117,6 +118,10 @@ public final class RemoteAuthorizationClient implements AuthorizationClient {
             }
             validate(response.getData(), request, actor);
             return response.getData();
+        }
+        catch (InFeignException exception) {
+            var reason = IamReasonCode.find(exception.getCode());
+            throw new SdkAuthorizationException(reason == null ? IamReasonCode.AUTHORIZATION_UNAVAILABLE : reason);
         }
         catch (FeignException exception) {
             throw new SdkAuthorizationException(switch (exception.status()) {

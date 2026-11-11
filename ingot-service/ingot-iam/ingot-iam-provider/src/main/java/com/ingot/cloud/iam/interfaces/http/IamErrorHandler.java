@@ -13,6 +13,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.HandlerMapping;
@@ -20,9 +21,9 @@ import org.springframework.web.servlet.HandlerMapping;
 /**
  * <p>把 IAM 对外管理面的稳定业务错误码映射为契约约定的 HTTP 状态，不改变其他服务的错误协议。</p>
  *
- * <p>只作用于 {@code /v1} 管理面控制器：命中 {@link IamReasonCode} 时按其声明的状态返回，
+ * <p>作用于 {@code /v1} 管理面及 v2 资源求值控制器：命中 {@link IamReasonCode} 时按其声明的状态返回，
  * 其余业务错误码沿用框架全局处理器的既有 500 行为，避免为 IAM 改写全仓库 {@link BizException} 语义。
- * 内部 RPC 不在范围内，仍以 R 信封回传错误码供调用方解析。</p>
+ * 其他内部 RPC 不在范围内，仍以 R 信封回传错误码供调用方解析。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -30,7 +31,8 @@ import org.springframework.web.servlet.HandlerMapping;
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice(basePackages = "com.ingot.cloud.iam.interfaces.http")
+@RestControllerAdvice(basePackages = "com.ingot.cloud.iam.interfaces.http",
+        assignableTypes = com.ingot.cloud.iam.interfaces.inner.InnerResourceAuthorizationAPI.class)
 public class IamErrorHandler {
     private static final Map<String, String> DETAIL_OBJECTS = Map.ofEntries(
             Map.entry("/v1/platform/applications/{id}", "应用"),
@@ -104,6 +106,17 @@ public class IamErrorHandler {
             message = withContext(reason, pattern.toString(), request.getMethod());
         }
         return ResponseEntity.status(reason.getHttpStatus()).body(R.error(reason.getCode(), message));
+    }
+
+    /**
+     * 缺少必填查询参数时返回 IAM 的稳定参数错误。
+     *
+     * @return HTTP 400 及参数错误信封
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<R<?>> missingRequestParameter() {
+        var reason = IamReasonCode.INVALID_ARGUMENT;
+        return ResponseEntity.status(reason.getHttpStatus()).body(R.error(reason.getCode(), reason.getText()));
     }
 
     private static String withContext(IamReasonCode reason, String pattern, String method) {

@@ -30,13 +30,13 @@ public record ResourceDescriptor(@NotNull @Valid ResourceKey key, @NotNull List<
         @NotNull Map<String, FieldAccess> defaults, @NotBlank String readAction, boolean hierarchical,
         boolean fieldPolicyEligible) {
     /**
-     * 防御复制；默认值必须覆盖已登记字段。
+     * 防御复制；默认值必须覆盖已登记字段。零字段资源兼容配置绑定器省略空 Map。
      */
     public ResourceDescriptor {
         actions = List.copyOf(actions);
         scopeCapabilities = List.copyOf(scopeCapabilities);
         fields = List.copyOf(fields);
-        defaults = Map.copyOf(defaults);
+        defaults = defaults == null && fields.isEmpty() ? Map.of() : Map.copyOf(defaults);
         if (actions.stream().map(ActionDescriptor::code).distinct().count() != actions.size()
                 || actions.stream().noneMatch(action -> action.code().equals(readAction))) {
             throw new IllegalArgumentException("注册操作必须唯一且包含资源读取操作");

@@ -42,8 +42,10 @@ ingot:
       l1-enabled: true
       l2-enabled: true
 spring:
+  application:
+    name: iam-ops
   cloud:
     openfeign:
       client:
         config:
-          in-service-iam: {connectTimeout: 1500, readTimeout: 3000}
+          iamAuthorizationService: {connectTimeout: 1500, readTimeout: 3000}

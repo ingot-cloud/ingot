@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 1.0.0
  */
 @RestController @Permit(mode = PermitMode.INNER) @RequiredArgsConstructor
-public final class FieldManifestEndpoint implements RShortcuts {
+public class FieldManifestEndpoint implements RShortcuts {
     private final FieldBindingRegistry fields;
     private final ResourceRegistry resources;
     private final ObjectMapper mapper;
