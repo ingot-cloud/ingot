@@ -1,0 +1,267 @@
+{
+  "date": "2026-11-11",
+  "environment": {
+    "isolatedMySql": true,
+    "twoFinalIamJvms": true,
+    "realGatewayAndAuth": true,
+    "productionBothFrontends": true,
+    "controlledBffSession": true,
+    "isolatedChromeContexts": true,
+    "externalIntegrationBoundaryUnchanged": true
+  },
+  "results": {
+    "navigationRecovery": {
+      "firstLoad": {
+        "readableError": true,
+        "noPartialIdentityOrActions": true,
+        "noBusinessRequests": true,
+        "deepLinkQueryHashPreserved": true,
+        "repeatedRetryStillRejects": true,
+        "narrowNoOverflow": true
+      },
+      "pathRecovery": {
+        "configFixedOnNodeB": true,
+        "retryRevalidatesBeforeBusiness": true,
+        "originalDeepLinkRestored": true
+      },
+      "refreshConflict": {
+        "realMenuSave200": true,
+        "routeNameConflictStillRejected": true,
+        "oldBusinessRoutesRemoved": true,
+        "browserBackBlocked": true,
+        "errorInsteadOfStalePage": true
+      },
+      "refreshRecovery": {
+        "fixedOtherNode": true,
+        "businessRestoredAfterFreshBootstrap": true
+      },
+      "tenantRecovery": {
+        "realTenantOnNodeB": true,
+        "readableConflict": true,
+        "configFixedOnNodeB": true,
+        "queryHashRestored": true
+      },
+      "isolation": {
+        "otherTenantUnaffected": true,
+        "platformDirectoryStill403": true
+      },
+      "relogin": {
+        "explicitLoginForm": true,
+        "noBusinessFallback": true
+      }
+    },
+    "administrator": {
+      "lastAdministrator": [
+        {
+          "case": "revoke",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "finite",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "future",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "suspend-member",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "remove-member",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "disable-account",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "lock-account",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        }
+      ],
+      "unusableBackups": [
+        {
+          "case": "finite-backup",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "future-backup",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "suspended-backup",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "disabled-backup",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        },
+        {
+          "case": "locked-backup",
+          "status": 400,
+          "code": "ObjectInUse",
+          "versionsAndAuditUnchanged": true
+        }
+      ],
+      "concurrentRevocation": {
+        "nodes": 2,
+        "successes": 1,
+        "lastAdministratorDenied": 1,
+        "oneUsableAdministratorPreserved": true,
+        "initialThreeActorsRestored": true
+      },
+      "lockTimestampReadback": {
+        "newLockRowCreatedWithUtcTimes": true,
+        "unlockedAfterRestore": true,
+        "createdAndUpdatedNonNull": true,
+        "updateNotBeforeCreation": true
+      }
+    },
+    "systemBoundaries": {
+      "ordinaryCandidatesExcludeSystem": true,
+      "ordinaryDirectEligibility": true,
+      "ordinaryCannotGrantSystem": {
+        "status": 400,
+        "code": "InvalidArgument",
+        "noAssignmentOrAuditWrite": true
+      },
+      "limitedCannotGrantSystem": {
+        "status": 400,
+        "code": "InvalidArgument",
+        "noAssignmentOrAuditWrite": true
+      },
+      "systemCannotBeGrantedToGroup": {
+        "status": 400,
+        "code": "InvalidArgument",
+        "noAssignmentOrAuditWrite": true
+      },
+      "systemCannotBeDelegated": {
+        "status": 403,
+        "code": "RoleRevisionUnavailable",
+        "noAssignmentOrAuditWrite": true
+      },
+      "systemRoleReadonly": {
+        "status": 403,
+        "code": "ActionDenied",
+        "noAssignmentOrAuditWrite": true
+      },
+      "reservedCodeRejected": {
+        "status": 400,
+        "code": "InvalidArgument",
+        "noAssignmentOrAuditWrite": true
+      }
+    },
+    "initialDrawer": {
+      "390": {
+        "drawerWidth": 390,
+        "left": 0,
+        "menuTabActionable": true,
+        "menuTreeLoaded": true
+      },
+      "1440": {
+        "drawerWidth": 720,
+        "left": 720,
+        "menuTabActionable": true,
+        "menuTreeLoaded": true
+      }
+    },
+    "toolbarLayout": {
+      "controlledLayoutFixture": true,
+      "realProductionComponents": true,
+      "cases": [
+        {
+          "width": 390,
+          "createAllowed": true,
+          "noOverlap": true,
+          "controlsInsideViewport": true,
+          "searchWorks": true,
+          "filterOpens": true,
+          "createOpens": true
+        },
+        {
+          "width": 1440,
+          "createAllowed": true,
+          "noOverlap": true,
+          "controlsInsideViewport": true,
+          "searchWorks": true,
+          "filterOpens": true,
+          "createOpens": true
+        },
+        {
+          "width": 390,
+          "createAllowed": false,
+          "noOverlap": true,
+          "controlsInsideViewport": true,
+          "searchWorks": true,
+          "filterOpens": true,
+          "createHidden": true
+        }
+      ]
+    }
+  },
+  "checks": {
+    "coreFiles": 126,
+    "coreTests": 560,
+    "drawerFiles": 3,
+    "drawerTests": 23,
+    "securityAccountCoreTests": 26,
+    "securityAccountAdapterTests": 17,
+    "contractTests": 8,
+    "coreAndBothHostsTypeChecks": true,
+    "readOnlyLint": true,
+    "coreAndBothProductionBuilds": true,
+    "iamFinalBootJar": true,
+    "sameOriginStaticFallbackCompatible": true,
+    "noPublicApiOrDdlChange": true,
+    "userBrowserStorageUntouched": true,
+    "ownedRuntimeAndSecretsCleaned": true,
+    "applicationDrawerTests": 3,
+    "changedFilesFormat": true,
+    "commonAndPlatformPluginTypeChecks": true,
+    "ownedSupplementalPreviewCleaned": true
+  },
+  "remaining": [
+    "RF08/RE09 independent iam-ops remote object and outage/recovery boundaries",
+    "current cross-service performance and remaining upgrade combinations",
+    "specified user subjective acceptance"
+  ],
+  "frontendSha256": {
+    "packages/admin-core/src/router/navigationError.ts": "d63d71ff583096c8666ff96634319ab8282df9d09588ec47e43957d1624cbbab",
+    "packages/admin-core/src/router/helper/menus.ts": "64b677923e43fe9f69e126dd5dc4220206bce39eca2665e0bec6a65bccf84b73",
+    "packages/admin-core/src/stores/modules/router.ts": "1d5bb3fc1b6608ce6bdea394ace39262422d9a8bb07e27d85063e9e629986976",
+    "packages/admin-core/src/stores/modules/auth.ts": "71125026530f335c34be5f7989d89516e5dd86406397d345ab6b8a8ded683499",
+    "packages/admin-core/src/router/guard/userGuard.ts": "f9c1c33420fcb96754d10f10c2ac53039c914e6abd31adcabfd7cd1c655862cf",
+    "packages/admin-core/src/router/guard/dynamicGuard.ts": "f6a3f5472c31ee62da28ea08217d1cefa8f15f48844e41b6286517933dcf9312",
+    "packages/admin-core/src/router/routes/common.ts": "86d31bdb6abc72981fdacba2b0d7950c490b30cf105f8f690d463c4dcda60d15",
+    "packages/admin-core/src/pages/auth/navigation-error/IndexPage.vue": "4758450ba59bf293812df354132928c8d5d327ba25508a98b64cec1dc8f0643d",
+    "packages/admin-core/src/components/drawer/InDrawer.vue": "69527f9948808833045b289cd9c24dd5aa99f93af341fcb79c2954367f69054e",
+    "plugins/platform/src/pages/iam/applications/components/DetailDrawer.vue": "26693c72d03f4dd763be10a15e737a2446cb075be03214601ee203223298615d"
+  },
+  "backendSha256": {
+    "ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/java/com/ingot/framework/security/account/adapter/port/DefaultLockStatePortAdapter.java": "3a0faa1f254cfd93ed581c88553a6996f900e269dd73620002fb0f433f9ce709"
+  }
+}

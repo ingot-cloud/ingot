@@ -1,0 +1,185 @@
+{
+  "date": "2026-11-11",
+  "scope": "仅验收对账/结项准备及文档站检查修复；不声称本轮重新运行所有历史业务测试",
+  "backendChecks": [
+    {
+      "command": [
+        "python3",
+        "tools/iam/build_contract.py",
+        "--check"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "175 paths, 246 operations verified"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "tools/iam/build_internal_contract.py",
+        "--check"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "5 internal operations verified"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/iam",
+        "-p",
+        "test_contract.py"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "----------------------------------------------------------------------",
+        "Ran 8 tests in 0.032s",
+        "",
+        "OK"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/iam/test-data",
+        "-p",
+        "test_iam_test_data.py"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "----------------------------------------------------------------------",
+        "Ran 22 tests in 0.197s",
+        "",
+        "OK"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "tools/iam/test_service_naming.py"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "----------------------------------------------------------------------",
+        "Ran 6 tests in 0.962s",
+        "",
+        "OK"
+      ]
+    }
+  ],
+  "frontendChecks": [
+    {
+      "command": "pnpm lint:check",
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 119
+    },
+    {
+      "command": "pnpm --filter @ingot/dev-portal type-check",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm --filter @ingot/dev-portal build",
+      "exitCode": 0,
+      "deadLinkCheckEnabled": true
+    },
+    {
+      "command": "pnpm check:boundaries",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm check:docs",
+      "exitCode": 0
+    }
+  ],
+  "fixes": [
+    "开发文档站脚本 ESLint 确定根目录，异步 vueConfig 解析后组合",
+    "DevPortalLayout 显式组件名",
+    "站点映射补齐同源部署和表单指南，3 个历史 Spec 链接固定到已验证存在的仓库版本"
+  ],
+  "logs": {
+    "lint-final.log": {
+      "sha256": "de1704ca218a6b4a0f5ae315cdbe5de6e15f09f4acf3e09e888530efcaa18187",
+      "lastLines": [
+        "",
+        "✖ 119 problems (0 errors, 119 warnings)",
+        "  0 errors and 2 warnings potentially fixable with the `--fix` option.",
+        ""
+      ]
+    },
+    "portal-typecheck.log": {
+      "sha256": "1a99415185a5a9fba8ab89fc629ccd4a12717b63d586a461e8f6a0879c4d184a",
+      "lastLines": [
+        "",
+        "> @ingot/dev-portal@0.1.0 type-check /Users/jy/Repositories/Github/ingot-cloud/ingot-admin/apps/dev-portal",
+        "> vue-tsc --noEmit",
+        ""
+      ]
+    },
+    "portal-build.log": {
+      "sha256": "137d9ee085cb6d00bcd37a6860d4a3182f26db5a7c71cf08b3674fbfcc835fe0",
+      "lastLines": [
+        "- Using dynamic import() to code-split the application",
+        "- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks",
+        "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.",
+        "✓ built in 2.63s"
+      ]
+    },
+    "boundaries.log": {
+      "sha256": "ffdb487416aa5fc64d357d9df4088d90a480d47564b0fc6d77e89b8a1f58f93b",
+      "lastLines": [
+        "> @ingot/workspace@1.0.0 check:boundaries /Users/jy/Repositories/Github/ingot-cloud/ingot-admin",
+        "> node scripts/check-boundaries.mjs",
+        "",
+        "✓ 分层边界检查通过"
+      ]
+    },
+    "docs-check.log": {
+      "sha256": "a7578cb186717dd21c134a19b036a30c376231ec3998e8353922461ab75e3eb6",
+      "lastLines": [
+        "> @ingot/workspace@1.0.0 check:docs /Users/jy/Repositories/Github/ingot-cloud/ingot-admin",
+        "> node scripts/check-docs.mjs",
+        "",
+        "✓ 文档检查通过"
+      ]
+    }
+  },
+  "invariants": {
+    "noCurrentApplied": true,
+    "noCommitCreated": true,
+    "noUserLocalStorageAccessed": true,
+    "noExternalProviderRequired": true
+  },
+  "userReview": [
+    "H01",
+    "H02",
+    "H03",
+    "H04"
+  ],
+  "postAcceptanceAgentWork": [
+    "应用25份候选并核对前置指纹",
+    "更新current和引用",
+    "记录实际验收结论后归档两仓主变更"
+  ],
+  "integrity": {
+    "counts": {
+      "candidates": 25,
+      "dispositionRecords": 218,
+      "manifestFiles": 185,
+      "localLinks": 171,
+      "sourceCopies": 47,
+      "remoteSourceFingerprints": 11
+    },
+    "errors": [],
+    "passed": true
+  }
+}

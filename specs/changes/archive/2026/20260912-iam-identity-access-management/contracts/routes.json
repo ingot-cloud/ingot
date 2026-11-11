@@ -1,0 +1,5397 @@
+[
+  {
+    "path": "/v1/me/bootstrap",
+    "method": "get",
+    "operationId": "currentBootstrap",
+    "summary": "当前身份一致授权视图",
+    "domain": "CURRENT",
+    "action": null,
+    "request": null,
+    "response": "RBootstrap",
+    "execution": "认证当前身份；身份及账号同时有效；固定域；一致快照",
+    "implemented": true
+  },
+  {
+    "path": "/v1/me/capabilities",
+    "method": "get",
+    "operationId": "currentCapabilities",
+    "summary": "当前身份操作能力",
+    "domain": "CURRENT",
+    "action": null,
+    "request": null,
+    "response": "RCurrentCapabilities",
+    "execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503",
+    "implemented": true
+  },
+  {
+    "path": "/v1/me/profile",
+    "method": "get",
+    "operationId": "currentGetProfile",
+    "summary": "当前账号资料",
+    "domain": "CURRENT",
+    "action": null,
+    "request": null,
+    "response": "RAccountSelfProfile",
+    "execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份",
+    "implemented": true
+  },
+  {
+    "path": "/v1/me/profile",
+    "method": "patch",
+    "operationId": "currentPatchProfile",
+    "summary": "更新当前账号资料",
+    "domain": "CURRENT",
+    "action": null,
+    "request": "AccountSelfProfileInput",
+    "response": "RAccountSelfProfile",
+    "execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段",
+    "implemented": true
+  },
+  {
+    "path": "/v1/me/password",
+    "method": "put",
+    "operationId": "currentPutPassword",
+    "summary": "当前账号改密",
+    "domain": "CURRENT",
+    "action": null,
+    "request": "CurrentPasswordInput",
+    "response": "RVoid",
+    "execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members",
+    "method": "get",
+    "operationId": "platformListMembers",
+    "summary": "成员列表",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailMemberRecord",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "显示名包含匹配，要求有效查询范围完整可见"
+      },
+      {
+        "name": "status",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "SUSPENDED",
+            "REMOVED"
+          ]
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "少量已选成员ID回显，不替代关联列表"
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/members",
+    "method": "post",
+    "operationId": "platformCreateMember",
+    "summary": "创建成员资格",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:create",
+    "request": "MemberCreateInput",
+    "response": "RCreatedResource",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}",
+    "method": "get",
+    "operationId": "platformGetMember",
+    "summary": "成员详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RResourceDetailMemberRecord",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}",
+    "method": "patch",
+    "operationId": "platformPatchMember",
+    "summary": "更新成员资料",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:update",
+    "request": "MemberProfileInput",
+    "response": "RResourceDetailMemberRecord",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}/status",
+    "method": "patch",
+    "operationId": "platformPatchMemberStatus",
+    "summary": "暂停或恢复成员",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:change-status",
+    "request": "MemberStatusInput",
+    "response": "RCreatedResource",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}/remove",
+    "method": "post",
+    "operationId": "platformRemoveMember",
+    "summary": "移出当前域",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:remove",
+    "request": "VersionInput",
+    "response": "RCreatedResource",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/groups",
+    "method": "get",
+    "operationId": "platformListGroups",
+    "summary": "用户组列表",
+    "domain": "PLATFORM",
+    "action": "iam-platform:group:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailGroupRecord",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "view",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CATALOG",
+            "SUMMARY"
+          ],
+          "default": "CATALOG"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/groups",
+    "method": "post",
+    "operationId": "platformCreateGroup",
+    "summary": "创建用户组",
+    "domain": "PLATFORM",
+    "action": "iam-platform:group:create",
+    "request": "GroupDraft",
+    "response": "RCreatedResource",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/groups/{id}",
+    "method": "get",
+    "operationId": "platformGetGroup",
+    "summary": "用户组详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:group:read",
+    "request": null,
+    "response": "RResourceDetailGroupRecord",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/groups/{id}",
+    "method": "put",
+    "operationId": "platformPutGroup",
+    "summary": "替换用户组",
+    "domain": "PLATFORM",
+    "action": "iam-platform:group:update",
+    "request": "GroupUpdateInput",
+    "response": "RResourceDetailGroupRecord",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/groups/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteGroup",
+    "summary": "删除未引用用户组",
+    "domain": "PLATFORM",
+    "action": "iam-platform:group:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/groups/{id}/preview",
+    "method": "post",
+    "operationId": "platformPreviewGroup",
+    "summary": "预览组引用影响",
+    "domain": "PLATFORM",
+    "action": "iam-platform:group:preview",
+    "request": "GroupUpdateInput",
+    "response": "RPreviewReferenceImpactPreview",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/tenants",
+    "method": "get",
+    "operationId": "platformListTenants",
+    "summary": "组织列表",
+    "domain": "PLATFORM",
+    "action": "iam-platform:tenant:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailTenantRecord",
+    "execution": "平台管理组织实体，不返回租户业务数据；可选 name 包含匹配、status=ENABLED|DISABLED",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "status",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/tenants",
+    "method": "post",
+    "operationId": "platformCreateTenant",
+    "summary": "原子创建组织",
+    "domain": "PLATFORM",
+    "action": "iam-platform:tenant:create",
+    "request": "TenantCreateInput",
+    "response": "RCreatedResource",
+    "execution": "先校验创建 ACTION；目录生成计划；同事务初始化",
+    "implemented": true,
+    "example": "tenant-create"
+  },
+  {
+    "path": "/v1/platform/tenants/preview",
+    "method": "post",
+    "operationId": "platformPreviewTenant",
+    "summary": "预览组织初始化",
+    "domain": "PLATFORM",
+    "action": "iam-platform:tenant:preview",
+    "request": "TenantCreateInput",
+    "response": "RPreviewTenantPreviewResult",
+    "execution": "无写入；结果由服务器目录解析，不接受客户端治理版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/tenants/{id}",
+    "method": "get",
+    "operationId": "platformGetTenant",
+    "summary": "组织实体",
+    "domain": "PLATFORM",
+    "action": "iam-platform:tenant:read",
+    "request": null,
+    "response": "RResourceDetailTenantRecord",
+    "execution": "不返回租户业务成员或授权快照",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/tenants/{id}",
+    "method": "patch",
+    "operationId": "platformPatchTenant",
+    "summary": "更新组织实体",
+    "domain": "PLATFORM",
+    "action": "iam-platform:tenant:update",
+    "request": "TenantUpdateInput",
+    "response": "RResourceDetailTenantRecord",
+    "execution": "不修改租户业务资料",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/tenants/{id}/entitlements",
+    "method": "get",
+    "operationId": "platformListEntitlements",
+    "summary": "组织开通",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application-entitlement:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailEntitlementRecord",
+    "execution": "开通不等于业务授权",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/tenants/{id}/entitlements",
+    "method": "put",
+    "operationId": "platformPutEntitlements",
+    "summary": "替换组织开通",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application-entitlement:update",
+    "request": "EntitlementReplaceInput",
+    "response": "RPageResponseResourceDetailEntitlementRecord",
+    "execution": "重验版本、应用域与期限；基础治理入口不可关闭",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/tenants/{id}/entitlements/preview",
+    "method": "post",
+    "operationId": "platformPreviewEntitlements",
+    "summary": "预览开通影响",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application-entitlement:preview",
+    "request": "EntitlementReplaceInput",
+    "response": "RPreviewEntitlementPreviewResult",
+    "execution": "无写入",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications",
+    "method": "get",
+    "operationId": "platformListApplications",
+    "summary": "应用目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailApplicationRecord",
+    "execution": "启用状态不等于业务授权；按域查询，支持筛选及摘要视图",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "status",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
+        }
+      },
+      {
+        "name": "domain",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "PLATFORM",
+            "TENANT"
+          ]
+        }
+      },
+      {
+        "name": "baseline",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "view",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CATALOG",
+            "SUMMARY"
+          ],
+          "default": "CATALOG"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/applications",
+    "method": "post",
+    "operationId": "platformCreateApplication",
+    "summary": "创建应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:create",
+    "request": "ApplicationDraft",
+    "response": "RCreatedResource",
+    "execution": "租户域才可标记基础开通",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}",
+    "method": "get",
+    "operationId": "platformGetApplication",
+    "summary": "应用详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:read",
+    "request": null,
+    "response": "RResourceDetailApplicationRecord",
+    "execution": "不把启用状态等同于业务操作授权",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}",
+    "method": "put",
+    "operationId": "platformPutApplication",
+    "summary": "更新应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:update",
+    "request": "ApplicationUpdateInput",
+    "response": "RResourceDetailApplicationRecord",
+    "execution": "不能改写命名空间或管理域",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}",
+    "method": "patch",
+    "operationId": "platformPatchApplicationStatus",
+    "summary": "启停应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:change-status",
+    "request": "ConfigurationStatusInput",
+    "response": "RCreatedResource",
+    "execution": "全局停用约束所有旧版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteApplication",
+    "summary": "删除未引用应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "被引用拒绝物理删除",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/purge",
+    "method": "post",
+    "operationId": "platformPurgeApplication",
+    "summary": "强制清除应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:purge",
+    "request": "ApplicationPurgeInput",
+    "response": "RCreatedResource",
+    "execution": "确认内嵌写请求；同一事务清全部关联；治理应用不可清除",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/resources",
+    "method": "get",
+    "operationId": "platformListResources",
+    "summary": "应用资源",
+    "domain": "PLATFORM",
+    "action": "iam-platform:resource:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailResourceRecord",
+    "execution": "不暴露 SQL 或适配器",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/applications/{id}/resources",
+    "method": "post",
+    "operationId": "platformCreateResource",
+    "summary": "创建资源",
+    "domain": "PLATFORM",
+    "action": "iam-platform:resource:create",
+    "request": "ResourceDraft",
+    "response": "RCreatedResource",
+    "execution": "范围与字段能力由资源声明",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/resources/{resourceId}",
+    "method": "put",
+    "operationId": "platformPutResource",
+    "summary": "更新资源",
+    "domain": "PLATFORM",
+    "action": "iam-platform:resource:update",
+    "request": "ResourceUpdateInput",
+    "response": "RResourceDetailResourceRecord",
+    "execution": "不能改写所属应用或编码",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/resources/{resourceId}",
+    "method": "delete",
+    "operationId": "platformDeleteResource",
+    "summary": "删除未引用资源",
+    "domain": "PLATFORM",
+    "action": "iam-platform:resource:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "被引用拒绝物理删除",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/actions",
+    "method": "get",
+    "operationId": "platformListActions",
+    "summary": "应用操作",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailActionRecord",
+    "execution": "精确操作码，禁止通配",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/applications/{id}/actions",
+    "method": "post",
+    "operationId": "platformCreateAction",
+    "summary": "创建操作",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:create",
+    "request": "ActionDraft",
+    "response": "RCreatedResource",
+    "execution": "操作码全局唯一且不得含通配符",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/actions/{actionId}",
+    "method": "put",
+    "operationId": "platformPutAction",
+    "summary": "更新操作",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:update",
+    "request": "ActionUpdateInput",
+    "response": "RResourceDetailActionRecord",
+    "execution": "不能改写操作码或所属资源",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/actions/{actionId}",
+    "method": "patch",
+    "operationId": "platformPatchActionStatus",
+    "summary": "启停操作",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:change-status",
+    "request": "ConfigurationStatusInput",
+    "response": "RCreatedResource",
+    "execution": "全局停用约束所有旧版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/actions/{actionId}",
+    "method": "delete",
+    "operationId": "platformDeleteAction",
+    "summary": "删除未引用操作",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "被引用拒绝物理删除",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/menus",
+    "method": "get",
+    "operationId": "platformListMenus",
+    "summary": "应用菜单",
+    "domain": "PLATFORM",
+    "action": "iam-platform:menu:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailMenuRecord",
+    "execution": "导航关联独立操作",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/applications/{id}/menus",
+    "method": "post",
+    "operationId": "platformCreateMenu",
+    "summary": "创建菜单",
+    "domain": "PLATFORM",
+    "action": "iam-platform:menu:create",
+    "request": "MenuDraft",
+    "response": "RCreatedResource",
+    "execution": "按钮权限仍由操作目录表达",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/menus/{menuId}",
+    "method": "put",
+    "operationId": "platformPutMenu",
+    "summary": "更新菜单",
+    "domain": "PLATFORM",
+    "action": "iam-platform:menu:update",
+    "request": "MenuUpdateInput",
+    "response": "RResourceDetailMenuRecord",
+    "execution": "重验本应用操作引用",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/menus/{menuId}",
+    "method": "delete",
+    "operationId": "platformDeleteMenu",
+    "summary": "删除菜单",
+    "domain": "PLATFORM",
+    "action": "iam-platform:menu:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "子菜单存在时拒绝",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/plans",
+    "method": "get",
+    "operationId": "platformListPlans",
+    "summary": "套餐列表",
+    "domain": "PLATFORM",
+    "action": "iam-platform:plan:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailPlanRecord",
+    "execution": "修改套餐不自动改变既有开通",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/plans",
+    "method": "post",
+    "operationId": "platformCreatePlan",
+    "summary": "创建套餐",
+    "domain": "PLATFORM",
+    "action": "iam-platform:plan:create",
+    "request": "PlanDraft",
+    "response": "RCreatedResource",
+    "execution": "应用到租户须预览并显式提交",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/plans/{id}",
+    "method": "get",
+    "operationId": "platformGetPlan",
+    "summary": "套餐详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:plan:read",
+    "request": null,
+    "response": "RResourceDetailPlanRecord",
+    "execution": "修改套餐不自动改变既有开通",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/plans/{id}",
+    "method": "put",
+    "operationId": "platformPutPlan",
+    "summary": "更新套餐",
+    "domain": "PLATFORM",
+    "action": "iam-platform:plan:update",
+    "request": "PlanUpdateInput",
+    "response": "RResourceDetailPlanRecord",
+    "execution": "不影响已开通租户",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}/groups",
+    "method": "get",
+    "operationId": "platformMemberGroups",
+    "summary": "成员所在用户组",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailGroupRecord",
+    "execution": "成员可见范围与平台组边界",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/members/{id}/roles",
+    "method": "get",
+    "operationId": "platformMemberRoles",
+    "summary": "成员直接角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RListMemberRoleView",
+    "execution": "仅返回简单直接分配；成员对象范围",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}/assignments",
+    "method": "get",
+    "operationId": "platformMemberAssignments",
+    "summary": "成员角色分配",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailAssignmentRecord",
+    "execution": "成员对象可见且沿用分配来源边界；按关联表分页，返回逐条能力",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/members/{id}/roles",
+    "method": "put",
+    "operationId": "platformReplaceMemberRoles",
+    "summary": "替换成员直接角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:update",
+    "request": "MemberRoleReplaceInput",
+    "response": "RListMemberRoleView",
+    "execution": "成员对象边界；同时要求非委派的 role-assignment:create/revoke；新增和移除同事务审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/groups/{id}/members",
+    "method": "get",
+    "operationId": "platformGroupMembers",
+    "summary": "用户组成员分页",
+    "domain": "PLATFORM",
+    "action": "iam-platform:group:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailMemberRecord",
+    "execution": "可信平台组与成员可见范围",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/applications/bundles",
+    "method": "post",
+    "operationId": "platformCreateApplicationBundle",
+    "summary": "整包创建应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:create",
+    "request": "ApplicationBundleDraft",
+    "response": "RCreatedResource",
+    "execution": "同时校验 resource/action/menu:create；整单事务",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/resources/{resourceId}/actions",
+    "method": "get",
+    "operationId": "platformResourceActions",
+    "summary": "资源操作目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": null,
+    "response": "RListActionRecord",
+    "execution": "本应用本资源操作",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/action-catalog",
+    "method": "get",
+    "operationId": "platformActionCatalog",
+    "summary": "应用操作目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": null,
+    "response": "RActionCatalogView",
+    "execution": "本应用资源及操作目录",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/grant-catalog",
+    "method": "get",
+    "operationId": "platformGrantCatalog",
+    "summary": "授权选择目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": null,
+    "response": "RListGrantCatalogResource",
+    "execution": "一次返回该应用全部启用资源及其启用操作",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/menus/{menuId}/actions",
+    "method": "get",
+    "operationId": "platformMenuActions",
+    "summary": "菜单关联操作",
+    "domain": "PLATFORM",
+    "action": "iam-platform:menu:read",
+    "request": null,
+    "response": "RListMenuActionRecord",
+    "execution": "本应用本菜单操作关联",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/actions/lookup",
+    "method": "post",
+    "operationId": "platformLookupActions",
+    "summary": "解析操作标识",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": "ActionLookupInput",
+    "response": "RListActionLookupRecord",
+    "execution": "已发布操作最小展示信息",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles",
+    "method": "get",
+    "operationId": "platformListRoles",
+    "summary": "角色目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailRoleSummary",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles",
+    "method": "post",
+    "operationId": "platformCreateRole",
+    "summary": "创建角色并发布首个版本",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:create",
+    "request": "RoleCreateInput",
+    "response": "RCreatedResource",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}",
+    "method": "get",
+    "operationId": "platformGetRole",
+    "summary": "角色元数据",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RResourceDetailRoleSummary",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}/grants",
+    "method": "get",
+    "operationId": "platformListRoleGrants",
+    "summary": "角色当前绑定权限",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RRoleGrantList",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}",
+    "method": "patch",
+    "operationId": "platformPatchRoleStatus",
+    "summary": "启停角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:change-status",
+    "request": "ConfigurationStatusInput",
+    "response": "RCreatedResource",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteRole",
+    "summary": "删除未引用角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}/revisions",
+    "method": "get",
+    "operationId": "platformListRoleRevisions",
+    "summary": "角色版本",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailRoleRevision",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{id}/revisions/{revisionId}",
+    "method": "get",
+    "operationId": "platformGetRoleRevision",
+    "summary": "固定版本详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RResourceDetailRoleRevision",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}/revisions/{revisionId}/grants",
+    "method": "get",
+    "operationId": "platformListRevisionGrants",
+    "summary": "固定版本完整授权",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RRoleGrantList",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}/revisions/{revisionId}/metadata",
+    "method": "patch",
+    "operationId": "platformPatchRevisionMetadata",
+    "summary": "独立修改版本名称及备注",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:change-status",
+    "request": "RoleRevisionMetadataInput",
+    "response": "RCreatedResource",
+    "execution": "仅改展示元数据及独立乐观锁；系统角色只读；不改变权限内容、引用或授权缓存",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}/revisions",
+    "method": "post",
+    "operationId": "platformPublishRoleRevision",
+    "summary": "发布新版本",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:publish-version",
+    "request": "RolePublishInput",
+    "response": "RCreatedResource",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true,
+    "example": "role-publish"
+  },
+  {
+    "path": "/v1/platform/roles/{id}/preview",
+    "method": "post",
+    "operationId": "platformPreviewRole",
+    "summary": "预览待发布定义",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:preview",
+    "request": "RoleDefinitionDraft",
+    "response": "RPreviewEffectiveRole",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "sourceRevisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/assignments",
+    "method": "get",
+    "operationId": "platformListAssignments",
+    "summary": "授权列表",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailAssignmentRecord",
+    "execution": "原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "subjectType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "GROUP"
+          ]
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      {
+        "name": "effectiveStatus",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "PENDING",
+            "ACTIVE",
+            "EXPIRED",
+            "REVOKED",
+            "SOURCE_INVALID"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/assignments",
+    "method": "post",
+    "operationId": "platformCreateAssignments",
+    "summary": "原子批量分配",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:create",
+    "request": "AssignmentBatchInput",
+    "response": "RCreatedResource",
+    "execution": "原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/{id}",
+    "method": "put",
+    "operationId": "platformPutAssignment",
+    "summary": "调整授权",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:update",
+    "request": "AssignmentUpdateInput",
+    "response": "RResourceDetailAssignmentRecord",
+    "execution": "原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteAssignment",
+    "summary": "撤销授权并保留审计",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:revoke",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/preview",
+    "method": "post",
+    "operationId": "platformPreviewAssignments",
+    "summary": "预览原子分配批次",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:create",
+    "request": "AssignmentBatchInput",
+    "response": "RPreviewAssignmentPreviewResult",
+    "execution": "无写入；逐接收者检查角色、范围、委派和时间；平台不得使用部门；同一请求全量重验",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/delegations",
+    "method": "get",
+    "operationId": "platformListDelegations",
+    "summary": "委派列表",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailDelegationRecord",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "administratorName",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/delegations",
+    "method": "post",
+    "operationId": "platformCreateDelegation",
+    "summary": "创建委派",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:create",
+    "request": "DelegationInput",
+    "response": "RCreatedResource",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true,
+    "example": "delegation"
+  },
+  {
+    "path": "/v1/platform/delegations/{id}",
+    "method": "get",
+    "operationId": "platformGetDelegation",
+    "summary": "委派详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:read",
+    "request": null,
+    "response": "RResourceDetailDelegationRecord",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/delegations/{id}",
+    "method": "put",
+    "operationId": "platformPutDelegation",
+    "summary": "调整委派",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:update",
+    "request": "DelegationUpdateInput",
+    "response": "RResourceDetailDelegationRecord",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/delegations/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteDelegation",
+    "summary": "撤销委派",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:revoke",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/delegations/{id}/preview",
+    "method": "post",
+    "operationId": "platformPreviewDelegation",
+    "summary": "预览委派收缩影响",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:preview",
+    "request": "DelegationUpdateInput",
+    "response": "RPreviewReferenceImpactPreview",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/authorization/diagnose",
+    "method": "post",
+    "operationId": "platformDiagnose",
+    "summary": "受限授权诊断",
+    "domain": "PLATFORM",
+    "action": "iam-platform:authorization-diagnosis:run",
+    "request": "DiagnoseInput",
+    "response": "RDecision",
+    "execution": "可信当前域解析身份；精确应用操作；限制对象及来源披露；无实际操作",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/authorization/audits",
+    "method": "get",
+    "operationId": "platformListAudits",
+    "summary": "平台审计",
+    "domain": "PLATFORM",
+    "action": "iam-platform:authorization-audit:read",
+    "request": null,
+    "response": "RAuditCursorPage",
+    "execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值",
+    "implemented": true,
+    "query": [
+      {
+        "name": "limit",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      {
+        "name": "cursor",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      {
+        "name": "actorMemberId",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      {
+        "name": "targetType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      {
+        "name": "targetId",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      {
+        "name": "changeType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CREATE",
+            "UPDATE",
+            "ENABLE",
+            "DISABLE",
+            "REMOVE",
+            "REVOKE",
+            "PUBLISH",
+            "UPGRADE",
+            "OWNER_TRANSFER"
+          ]
+        }
+      },
+      {
+        "name": "from",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      {
+        "name": "until",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/members",
+    "method": "get",
+    "operationId": "tenantListMembers",
+    "summary": "成员列表",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailMemberRecord",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "phone",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "email",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "departmentId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "status",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "SUSPENDED",
+            "REMOVED"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/members",
+    "method": "post",
+    "operationId": "tenantCreateMember",
+    "summary": "创建成员资格",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:create",
+    "request": "TenantMemberCreateInput",
+    "response": "RTenantMemberCreated",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/{id}",
+    "method": "get",
+    "operationId": "tenantGetMember",
+    "summary": "成员详情",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:read",
+    "request": null,
+    "response": "RResourceDetailMemberRecord",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/{id}",
+    "method": "patch",
+    "operationId": "tenantPatchMember",
+    "summary": "更新成员资料",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:update",
+    "request": "MemberProfileInput",
+    "response": "RResourceDetailMemberRecord",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/{id}/status",
+    "method": "patch",
+    "operationId": "tenantPatchMemberStatus",
+    "summary": "暂停或恢复成员",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:change-status",
+    "request": "MemberStatusInput",
+    "response": "RCreatedResource",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/{id}/remove",
+    "method": "post",
+    "operationId": "tenantRemoveMember",
+    "summary": "移出当前域",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:remove",
+    "request": "VersionInput",
+    "response": "RCreatedResource",
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/{id}/groups",
+    "method": "get",
+    "operationId": "tenantMemberGroups",
+    "summary": "成员所在用户组",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailGroupRecord",
+    "execution": "成员可见范围；显式成员并入部门来源",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/members/{id}/departments",
+    "method": "put",
+    "operationId": "tenantReplaceMemberDepartments",
+    "summary": "调整成员任职",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:set-departments",
+    "request": "MemberDepartmentInput",
+    "response": "RResourceDetailMemberRecord",
+    "execution": "只校验受影响原/目标关系；覆盖全部部门写入审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/export",
+    "method": "post",
+    "operationId": "tenantExportMembers",
+    "summary": "导出成员",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:export",
+    "request": "VersionInput",
+    "response": "RCreatedResource",
+    "execution": "独立导出操作；登记共享任务后异步快照；字段策略与异步重验",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/export/{id}/status",
+    "method": "get",
+    "operationId": "tenantGetMemberExportStatus",
+    "summary": "查询成员导出任务",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:export",
+    "request": null,
+    "response": "RExportTask",
+    "execution": "多实例可读同一任务状态；PENDING/RUNNING 可轮询；失败与过期不把快照当成功",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/export/{id}",
+    "method": "get",
+    "operationId": "tenantDownloadMemberExport",
+    "summary": "下载成员导出",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:export",
+    "request": null,
+    "response": "RPageResponseResourceDetailMemberRecord",
+    "execution": "再次校验导出操作、对象范围与字段策略；PENDING/RUNNING 返回 503；失败或过期视为对象不可访问",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments",
+    "method": "get",
+    "operationId": "tenantListDepartments",
+    "summary": "部门树",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:read",
+    "request": null,
+    "response": "RListDepartmentTreeNode",
+    "execution": "按可管理范围返回树及子节点",
+    "implemented": true,
+    "query": [
+      {
+        "name": "purpose",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MANAGED_DEPARTMENT"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments",
+    "method": "post",
+    "operationId": "tenantCreateDepartment",
+    "summary": "创建部门",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": "DepartmentDraft",
+    "response": "RCreatedResource",
+    "execution": "校验父节点归属",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/{id}",
+    "method": "get",
+    "operationId": "tenantGetDepartment",
+    "summary": "部门详情",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:read",
+    "request": null,
+    "response": "RResourceDetailDepartmentRecord",
+    "execution": "聚合当前读取范围内的父部门名称及负责人首屏20条；不携带成员计数",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/{id}",
+    "method": "put",
+    "operationId": "tenantPutDepartment",
+    "summary": "更新部门",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:update",
+    "request": "DepartmentUpdateInput",
+    "response": "RResourceDetailDepartmentRecord",
+    "execution": "移动校验子树和新父节点",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/{id}",
+    "method": "delete",
+    "operationId": "tenantDeleteDepartment",
+    "summary": "删除空部门",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "非空部门拒绝删除",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/{id}",
+    "method": "patch",
+    "operationId": "tenantEditDepartment",
+    "summary": "统一编辑部门",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:read",
+    "request": "DepartmentEditInput",
+    "response": "RResourceDetailDepartmentRecord",
+    "execution": "按实际资料/负责人变化分别校验update/leaders操作及范围；同事务只递增一次版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/member-picker/browse",
+    "method": "get",
+    "operationId": "tenantMemberPickerBrowse",
+    "summary": "组织成员选择器浏览",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "ROrganizationMemberPickerPage",
+    "execution": "按scene复用原成员读取/负责人维护/直接或委派分配资格；根成员仅显式根关系或真实零任职；部门及成员独立分页",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "scene",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "DEPARTMENT_LEADER",
+            "ASSIGNMENT"
+          ]
+        }
+      },
+      {
+        "name": "departmentId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "targetDepartmentId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "delegationGrantId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "departmentPage",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "departmentPageSize",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments/member-picker-navigation",
+    "method": "get",
+    "operationId": "tenantMemberPickerNavigation",
+    "summary": "组织成员部门导航",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:read",
+    "request": null,
+    "response": "RDepartmentNavigationPage",
+    "execution": "只读部门分支，部门不可作为人员选择；不连续范围只披露可见入口",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "parentId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/groups/{id}/members",
+    "method": "get",
+    "operationId": "tenantGroupMemberPickerBound",
+    "summary": "组织组直接成员",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:read",
+    "request": null,
+    "response": "RPageResponseMemberRecord",
+    "execution": "关联表过滤分页；同时应用成员读取范围与字段投影；不回查全量ID",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/groups/{id}/effective-members",
+    "method": "get",
+    "operationId": "tenantGroupEffectiveMembers",
+    "summary": "组织组有效成员",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:read",
+    "request": null,
+    "response": "RPageResponseGroupEffectiveMemberRecord",
+    "execution": "有效成员按任职实时展开后分页；同时应用成员读取范围与字段投影；返回直接与部门来源标记；不回查全量ID",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/members/picker",
+    "method": "get",
+    "operationId": "tenantMemberPickerCandidates",
+    "summary": "组织成员选择候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:read",
+    "request": null,
+    "response": "RPageResponseMemberRecord",
+    "execution": "同成员范围、字段投影及有效资格；部门过滤只收窄，关键词跨部门；不返回联系方式",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "departmentId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments/{id}/leaders",
+    "method": "get",
+    "operationId": "tenantListDepartmentLeaders",
+    "summary": "部门负责人列表",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:read",
+    "request": null,
+    "response": "RDepartmentLeaderPage",
+    "execution": "部门读取和成员读取范围交集；独立关联分页；字段投影；不扩大权限",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments/{id}/leader-candidates",
+    "method": "get",
+    "operationId": "tenantDepartmentLeaderCandidates",
+    "summary": "部门负责人候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:set-leaders",
+    "request": null,
+    "response": "RDepartmentLeaderPage",
+    "execution": "另需部门读取及成员读取；仅当前范围内有效未绑定人员；浏览部门只收窄原范围",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "browseDepartmentId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/departments/{id}/leaders",
+    "method": "patch",
+    "operationId": "tenantUpdateDepartmentLeaders",
+    "summary": "设置部门负责人",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:set-leaders",
+    "request": "DepartmentLeaderUpdateInput",
+    "response": "RCreatedResource",
+    "execution": "组织锁及版本检查；差量原子保存；不授予权限；普通部门限定",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/template",
+    "method": "get",
+    "operationId": "tenantDepartmentWorkbookTemplate",
+    "summary": "下载部门导入模板",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RMemberWorkbookFile",
+    "execution": "空白创建模板，同步返回",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/export",
+    "method": "post",
+    "operationId": "tenantDepartmentWorkbookExport",
+    "summary": "导出部门表格",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:export",
+    "request": "DepartmentWorkbookExportInput",
+    "response": "RCreatedResource",
+    "execution": "登记下载中心任务；空范围表示可见全部部门，服务端展开下级",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/import",
+    "method": "post",
+    "operationId": "tenantDepartmentWorkbookImport",
+    "summary": "导入部门表格",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "multipart file 与 mode；创建要 create，更新要 update",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/history",
+    "method": "get",
+    "operationId": "tenantDepartmentWorkbookHistory",
+    "summary": "部门导入历史",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RListMemberWorkbookHistoryItem",
+    "execution": "当前操作者最近10条导入",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/{id}/status",
+    "method": "get",
+    "operationId": "tenantDepartmentWorkbookStatus",
+    "summary": "查询部门表格任务",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RMemberWorkbookTask",
+    "execution": "仅发起人可见",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/departments/workbook/{id}/file",
+    "method": "get",
+    "operationId": "tenantDepartmentWorkbookFile",
+    "summary": "下载部门表格产物",
+    "domain": "TENANT",
+    "action": "iam-tenant:department:create",
+    "request": null,
+    "response": "RMemberWorkbookFile",
+    "execution": "artifact=WORKBOOK|ERRORS",
+    "implemented": true,
+    "query": [
+      {
+        "name": "artifact",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "WORKBOOK",
+            "ERRORS"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/settings",
+    "method": "get",
+    "operationId": "tenantGetSettings",
+    "summary": "组织设置",
+    "domain": "TENANT",
+    "action": "iam-tenant:settings:read",
+    "request": null,
+    "response": "RResourceDetailTenantRecord",
+    "execution": "所有者转交走独立命令",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/settings",
+    "method": "put",
+    "operationId": "tenantPutSettings",
+    "summary": "更新组织设置",
+    "domain": "TENANT",
+    "action": "iam-tenant:settings:update",
+    "request": "TenantSettingsInput",
+    "response": "RResourceDetailTenantRecord",
+    "execution": "不能通过设置移除最后所有者",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/settings/owner-transfer",
+    "method": "post",
+    "operationId": "tenantTransferOwner",
+    "summary": "转交所有者",
+    "domain": "TENANT",
+    "action": "iam-tenant:settings:transfer-owner",
+    "request": "OwnerTransferInput",
+    "response": "RCreatedResource",
+    "execution": "锁定组织及相关成员并检查版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/applications",
+    "method": "get",
+    "operationId": "tenantListApplications",
+    "summary": "已开通应用",
+    "domain": "TENANT",
+    "action": "iam-tenant:application:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailEntitlementRecord",
+    "execution": "开通不等于业务操作权",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/applications/{id}/audience",
+    "method": "get",
+    "operationId": "tenantGetAudience",
+    "summary": "应用可用人群",
+    "domain": "TENANT",
+    "action": "iam-tenant:application-audience:read",
+    "request": null,
+    "response": "RResourceDetailAudienceDraft",
+    "execution": "停用强于授权",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/applications/{id}/audience",
+    "method": "put",
+    "operationId": "tenantPutAudience",
+    "summary": "更新可用人群",
+    "domain": "TENANT",
+    "action": "iam-tenant:application-audience:update",
+    "request": "AudienceUpdateInput",
+    "response": "RResourceDetailAudienceDraft",
+    "execution": "ALL 不携带选择器或组",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/applications/{id}/actions",
+    "method": "get",
+    "operationId": "tenantListApplicationActions",
+    "summary": "已开通应用操作候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:application:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailActionRecord",
+    "execution": "仅供配置，不授予这些操作",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/groups",
+    "method": "get",
+    "operationId": "tenantListGroups",
+    "summary": "用户组列表",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailGroupRecord",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "view",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CATALOG",
+            "SUMMARY"
+          ],
+          "default": "CATALOG"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/groups",
+    "method": "post",
+    "operationId": "tenantCreateGroup",
+    "summary": "创建用户组",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:create",
+    "request": "GroupDraft",
+    "response": "RCreatedResource",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/groups/{id}",
+    "method": "get",
+    "operationId": "tenantGetGroup",
+    "summary": "用户组详情",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:read",
+    "request": null,
+    "response": "RResourceDetailGroupRecord",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/groups/{id}",
+    "method": "put",
+    "operationId": "tenantPutGroup",
+    "summary": "替换用户组",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:update",
+    "request": "GroupUpdateInput",
+    "response": "RResourceDetailGroupRecord",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/groups/{id}",
+    "method": "delete",
+    "operationId": "tenantDeleteGroup",
+    "summary": "删除未引用用户组",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/groups/{id}/preview",
+    "method": "post",
+    "operationId": "tenantPreviewGroup",
+    "summary": "预览组引用影响",
+    "domain": "TENANT",
+    "action": "iam-tenant:group:preview",
+    "request": "GroupUpdateInput",
+    "response": "RPreviewReferenceImpactPreview",
+    "execution": "可信当前域；组修改重验委派派生授权；平台组不得引用部门",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/assignments",
+    "method": "get",
+    "operationId": "tenantListAssignments",
+    "summary": "授权列表",
+    "domain": "TENANT",
+    "action": "iam-tenant:role-assignment:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailTenantAssignmentRecord",
+    "execution": "原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/assignments",
+    "method": "post",
+    "operationId": "tenantCreateAssignments",
+    "summary": "原子批量分配",
+    "domain": "TENANT",
+    "action": "iam-tenant:role-assignment:create",
+    "request": "TenantAssignmentBatchInput",
+    "response": "RCreatedResource",
+    "execution": "原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/assignments/{id}",
+    "method": "put",
+    "operationId": "tenantPutAssignment",
+    "summary": "调整授权",
+    "domain": "TENANT",
+    "action": "iam-tenant:role-assignment:update",
+    "request": "TenantAssignmentUpdateInput",
+    "response": "RResourceDetailTenantAssignmentRecord",
+    "execution": "原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/assignments/{id}",
+    "method": "delete",
+    "operationId": "tenantDeleteAssignment",
+    "summary": "撤销授权并保留审计",
+    "domain": "TENANT",
+    "action": "iam-tenant:role-assignment:revoke",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/assignments/scope-candidates",
+    "method": "get",
+    "operationId": "tenantAssignmentScopeCandidates",
+    "summary": "租户分配范围对象候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:role-assignment:create",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "分配 CREATE 或 UPDATE 资格；固定版本与参数键重验；只返回当前租户真实对象；未知资源显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "roleId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "parameterKey",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "tree",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "parentId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "delegationGrantId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/assignments/preview",
+    "method": "post",
+    "operationId": "tenantPreviewAssignments",
+    "summary": "预览原子分配批次",
+    "domain": "TENANT",
+    "action": "iam-tenant:role-assignment:create",
+    "request": "TenantAssignmentBatchInput",
+    "response": "RPreviewAssignmentPreviewResult",
+    "execution": "无写入；逐接收者检查角色、范围、委派和时间；平台不得使用部门；同一请求全量重验",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/policies/field-resources",
+    "method": "get",
+    "operationId": "listFieldPolicyResources",
+    "summary": "列出已接入字段策略的资源",
+    "domain": "TENANT",
+    "action": "iam-tenant:field-policy:read",
+    "request": null,
+    "response": "RListFieldPolicyResource",
+    "execution": "只返回当前租户已接入且服务器允许的资源及其字段能力",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/policies/fields/{resourceId}",
+    "method": "get",
+    "operationId": "getFieldPolicy",
+    "summary": "读取字段策略",
+    "domain": "TENANT",
+    "action": "iam-tenant:field-policy:read",
+    "request": null,
+    "response": "RResourceDetailFieldPolicyDraft",
+    "execution": "可信租户；资源必须已接入；尚无策略行时补行并钉住该资源最新修订",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/policies/fields/{resourceId}",
+    "method": "put",
+    "operationId": "putFieldPolicy",
+    "summary": "整体替换字段策略",
+    "domain": "TENANT",
+    "action": "iam-tenant:field-policy:update",
+    "request": "FieldPolicyInput",
+    "response": "RResourceDetailFieldPolicyDraft",
+    "execution": "可信租户；字段、可见性、编辑、筛选和动作必须属于路径中的资源",
+    "implemented": true,
+    "example": "field-policy"
+  },
+  {
+    "path": "/v1/tenant/authorization/diagnose",
+    "method": "post",
+    "operationId": "tenantDiagnose",
+    "summary": "受限授权诊断",
+    "domain": "TENANT",
+    "action": "iam-tenant:authorization-diagnosis:run",
+    "request": "DiagnoseInput",
+    "response": "RDecision",
+    "execution": "可信当前域解析身份；精确应用操作；限制对象及来源披露；无实际操作",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/authorization/diagnose/candidates",
+    "method": "get",
+    "operationId": "tenantDiagnoseCandidates",
+    "summary": "诊断候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:authorization-diagnosis:run",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "精确 DIAGNOSE 操作；成员按成员读取范围、应用为已开通、操作为已启用、对象与诊断目标校验同口径；未接入对象显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "APPLICATION",
+            "ACTION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "applicationId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/authorization/audits",
+    "method": "get",
+    "operationId": "tenantListAudits",
+    "summary": "租户审计",
+    "domain": "TENANT",
+    "action": "iam-tenant:authorization-audit:read",
+    "request": null,
+    "response": "RAuditCursorPage",
+    "execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；(occurred_at,id) 游标无总数；对象名称按查看人权限披露；审计脱敏；不记录凭证明文或敏感原值",
+    "implemented": true,
+    "query": [
+      {
+        "name": "limit",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      {
+        "name": "cursor",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      {
+        "name": "actorMemberId",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      {
+        "name": "targetType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      {
+        "name": "targetId",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      {
+        "name": "changeType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CREATE",
+            "UPDATE",
+            "ENABLE",
+            "DISABLE",
+            "REMOVE",
+            "REVOKE",
+            "PUBLISH",
+            "UPGRADE",
+            "OWNER_TRANSFER"
+          ]
+        }
+      },
+      {
+        "name": "from",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      {
+        "name": "until",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/delegations",
+    "method": "get",
+    "operationId": "tenantListDelegations",
+    "summary": "委派列表",
+    "domain": "TENANT",
+    "action": "iam-tenant:delegation:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailTenantDelegationRecord",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/delegations",
+    "method": "post",
+    "operationId": "tenantCreateDelegation",
+    "summary": "创建委派",
+    "domain": "TENANT",
+    "action": "iam-tenant:delegation:create",
+    "request": "TenantDelegationInput",
+    "response": "RCreatedResource",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/delegations/{id}",
+    "method": "get",
+    "operationId": "tenantGetDelegation",
+    "summary": "委派详情",
+    "domain": "TENANT",
+    "action": "iam-tenant:delegation:read",
+    "request": null,
+    "response": "RResourceDetailTenantDelegationRecord",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/delegations/{id}",
+    "method": "put",
+    "operationId": "tenantPutDelegation",
+    "summary": "调整委派",
+    "domain": "TENANT",
+    "action": "iam-tenant:delegation:update",
+    "request": "TenantDelegationUpdateInput",
+    "response": "RResourceDetailTenantDelegationRecord",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/delegations/{id}",
+    "method": "delete",
+    "operationId": "tenantDeleteDelegation",
+    "summary": "撤销委派",
+    "domain": "TENANT",
+    "action": "iam-tenant:delegation:revoke",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/delegations/{id}/preview",
+    "method": "post",
+    "operationId": "tenantPreviewDelegation",
+    "summary": "预览委派收缩影响",
+    "domain": "TENANT",
+    "action": "iam-tenant:delegation:preview",
+    "request": "TenantDelegationUpdateInput",
+    "response": "RPreviewReferenceImpactPreview",
+    "execution": "治理权限创建委派；收缩取交集；来源撤销使派生授权无效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts",
+    "method": "get",
+    "operationId": "platformListAccounts",
+    "summary": "全局账号列表",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailAccountRecord",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例；excludePlatformMembers=true 需账号查找及平台成员创建权限，按读取和查找范围交集排除已有平台成员资格",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "excludePlatformMembers",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/accounts",
+    "method": "post",
+    "operationId": "platformCreateAccount",
+    "summary": "创建全局账号",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:create",
+    "request": "AccountCreateInput",
+    "response": "RCreatedResource",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/lookup",
+    "method": "post",
+    "operationId": "platformLookupAccount",
+    "summary": "精确查找全局账号",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:lookup",
+    "request": "AccountLookupInput",
+    "response": "RResourceDetailAccountRecord",
+    "execution": "必须声明 purpose；MEMBER_CREATE 只返回 id 与登录名",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/{id}",
+    "method": "get",
+    "operationId": "platformGetAccount",
+    "summary": "全局账号详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:read",
+    "request": null,
+    "response": "RResourceDetailAccountRecord",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/{id}",
+    "method": "patch",
+    "operationId": "platformPatchAccount",
+    "summary": "更新全局账号资料",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:update",
+    "request": "AccountUpdateInput",
+    "response": "RResourceDetailAccountRecord",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteAccount",
+    "summary": "删除全局账号",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:delete",
+    "request": "VersionInput",
+    "response": "RCreatedResource",
+    "execution": "仍有成员资格时 ObjectInUse",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/{id}/enable",
+    "method": "post",
+    "operationId": "platformEnableAccount",
+    "summary": "启用全局账号",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:enable",
+    "request": "VersionInput",
+    "response": "RCreatedResource",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/{id}/disable",
+    "method": "post",
+    "operationId": "platformDisableAccount",
+    "summary": "停用全局账号",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:disable",
+    "request": "VersionInput",
+    "response": "RCreatedResource",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/{id}/lock",
+    "method": "post",
+    "operationId": "platformLockAccount",
+    "summary": "锁定全局账号",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:lock",
+    "request": "AccountLockInput",
+    "response": "RCreatedResource",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/{id}/unlock",
+    "method": "post",
+    "operationId": "platformUnlockAccount",
+    "summary": "解锁全局账号",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:unlock",
+    "request": "VersionInput",
+    "response": "RCreatedResource",
+    "execution": "平台账号与成员分离；不返回组织关系；锁定改密启停复用安全用例",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/accounts/{id}/reset-password",
+    "method": "post",
+    "operationId": "platformResetAccountPassword",
+    "summary": "重置全局账号密码",
+    "domain": "PLATFORM",
+    "action": "iam-platform:account:reset-password",
+    "request": "VersionInput",
+    "response": "RAccountSecret",
+    "execution": "仅重置返回一次性明文初始密码",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/dictionaries",
+    "method": "get",
+    "operationId": "platformListDictionaries",
+    "summary": "平台字典",
+    "domain": "PLATFORM",
+    "action": "iam-platform:dictionary:read",
+    "request": null,
+    "response": "RJson",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true,
+    "query": [
+      {
+        "name": "view",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "tree",
+            "page",
+            "items"
+          ],
+          "default": "page"
+        }
+      },
+      {
+        "name": "code",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "current",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "size",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/dictionaries",
+    "method": "post",
+    "operationId": "platformCreateDictionary",
+    "summary": "创建平台字典",
+    "domain": "PLATFORM",
+    "action": "iam-platform:dictionary:create",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/dictionaries/sort",
+    "method": "put",
+    "operationId": "platformSortDictionaries",
+    "summary": "批量排序字典",
+    "domain": "PLATFORM",
+    "action": "iam-platform:dictionary:update",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/dictionaries/{id}",
+    "method": "put",
+    "operationId": "platformPutDictionary",
+    "summary": "更新平台字典",
+    "domain": "PLATFORM",
+    "action": "iam-platform:dictionary:update",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/dictionaries/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteDictionary",
+    "summary": "删除平台字典",
+    "domain": "PLATFORM",
+    "action": "iam-platform:dictionary:delete",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/dictionaries/{id}/status/{status}",
+    "method": "patch",
+    "operationId": "platformPatchDictionaryStatus",
+    "summary": "切换字典状态",
+    "domain": "PLATFORM",
+    "action": "iam-platform:dictionary:update",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/id-allocations",
+    "method": "get",
+    "operationId": "platformListIdAllocations",
+    "summary": "发号配置列表",
+    "domain": "PLATFORM",
+    "action": "platform-developer:id-allocation:read",
+    "request": null,
+    "response": "RJson",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true,
+    "query": [
+      {
+        "name": "current",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "size",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/id-allocations",
+    "method": "post",
+    "operationId": "platformCreateIdAllocation",
+    "summary": "创建发号配置",
+    "domain": "PLATFORM",
+    "action": "platform-developer:id-allocation:create",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/id-allocations/{id}",
+    "method": "put",
+    "operationId": "platformPutIdAllocation",
+    "summary": "更新发号配置",
+    "domain": "PLATFORM",
+    "action": "platform-developer:id-allocation:update",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/id-allocations/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteIdAllocation",
+    "summary": "删除发号配置",
+    "domain": "PLATFORM",
+    "action": "platform-developer:id-allocation:delete",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/social-configs",
+    "method": "get",
+    "operationId": "platformListSocialConfigs",
+    "summary": "社会化登录配置列表",
+    "domain": "PLATFORM",
+    "action": "platform-developer:social-config:read",
+    "request": null,
+    "response": "RJson",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true,
+    "query": [
+      {
+        "name": "current",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "size",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/social-configs",
+    "method": "post",
+    "operationId": "platformCreateSocialConfig",
+    "summary": "创建社会化登录配置",
+    "domain": "PLATFORM",
+    "action": "platform-developer:social-config:create",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/social-configs/{id}",
+    "method": "put",
+    "operationId": "platformPutSocialConfig",
+    "summary": "更新社会化登录配置",
+    "domain": "PLATFORM",
+    "action": "platform-developer:social-config:update",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/social-configs/{id}",
+    "method": "delete",
+    "operationId": "platformDeleteSocialConfig",
+    "summary": "删除社会化登录配置",
+    "domain": "PLATFORM",
+    "action": "platform-developer:social-config:delete",
+    "request": null,
+    "response": "RVoid",
+    "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/candidates",
+    "method": "get",
+    "operationId": "platformAssignmentCandidates",
+    "summary": "平台授权配置候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:read",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据候选按单条来源筛选；分页搜索及已选回显；未知对象适配器显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "DELEGATION",
+            "ROLE_REVISION",
+            "MEMBER",
+            "GROUP",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "delegationGrantId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "parameterKey",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "tree",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "parentId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/delegations/candidates",
+    "method": "get",
+    "operationId": "platformDelegationCandidates",
+    "summary": "平台授权配置候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:read",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "委派 READ、CREATE、UPDATE 任一独立治理资格；分页搜索及已选回显；未知对象适配器显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ROLE_REVISION",
+            "MEMBER",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "excludeMemberId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "tree",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "parentId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/authorization/diagnose/candidates",
+    "method": "get",
+    "operationId": "platformDiagnoseCandidates",
+    "summary": "平台授权配置候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:authorization-diagnosis:run",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "精确 DIAGNOSE 操作及目标可披露边界；分页搜索及已选回显；未知对象适配器显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "APPLICATION",
+            "ACTION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "applicationId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/assignments/context",
+    "method": "get",
+    "operationId": "platformAssignmentContext",
+    "summary": "平台分配上下文",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:read",
+    "request": null,
+    "response": "RAssignmentContext",
+    "execution": "分配 READ/CREATE/UPDATE/DELETE 任一入口；独立直接资格与有效委派数；入口不计入治理资格",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/{id}",
+    "method": "get",
+    "operationId": "platformAssignmentDetail",
+    "summary": "分配详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:read",
+    "request": null,
+    "response": "RResourceDetailAssignmentRecord",
+    "execution": "同列表的当前可信身份及持有来源边界",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/{id}/preview",
+    "method": "post",
+    "operationId": "platformPreviewAssignmentUpdate",
+    "summary": "预览分配调整",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:update",
+    "request": "AssignmentUpdateInput",
+    "response": "RPreviewAssignmentPreviewResult",
+    "execution": "主体、版本和依据固定；编辑边界及版本校验",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/delegations/preview",
+    "method": "post",
+    "operationId": "platformPreviewDelegationCreate",
+    "summary": "预览创建委派",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:create",
+    "request": "DelegationInput",
+    "response": "RPreviewReferenceImpactPreview",
+    "execution": "完整独立治理资格；全部固定版本操作必须有范围上限",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/role-candidates",
+    "method": "get",
+    "operationId": "platformAssignmentRoleCandidates",
+    "summary": "角色分配两级树候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:read",
+    "request": null,
+    "response": "RAuthorizationRoleCandidatePage",
+    "execution": "分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据按本人单条有效委派过滤；角色及版本分别分页，版本倒序；不合成版本授权",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "delegationGrantId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "roleId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/delegations/role-candidates",
+    "method": "get",
+    "operationId": "platformDelegationRoleCandidates",
+    "summary": "委派管理两级角色树候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:read",
+    "request": null,
+    "response": "RAuthorizationRoleCandidatePage",
+    "execution": "委派 CREATE、UPDATE 或 READ 任一独立治理资格；角色与版本分别分页、版本倒序；不要求分配资格",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "roleId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{id}/members",
+    "method": "get",
+    "operationId": "platformRoleMembers",
+    "summary": "角色有效接收主体",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RRoleSubjectPage",
+    "execution": "角色 READ 对象边界及分配 READ 独立资格；组继承按组 READ 对象过滤；SQL 去重、同条件计数与分页；默认全部固定版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{id}/groups",
+    "method": "get",
+    "operationId": "platformRoleGroups",
+    "summary": "角色有效接收主体",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RRoleSubjectPage",
+    "execution": "角色 READ 对象边界及分配 READ 独立资格；组继承按组 READ 对象过滤；SQL 去重、同条件计数与分页；默认全部固定版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{id}/members/{memberId}/assignments",
+    "method": "get",
+    "operationId": "platformRoleMemberSources",
+    "summary": "角色成员有效分配来源",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailAssignmentRecord",
+    "execution": "同有效成员关系边界；分配来源批量标签及逐条能力；禁止把移出组当成撤权",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/delegations/{id}/selected-candidates",
+    "method": "get",
+    "operationId": "platformDelegationSelectedCandidates",
+    "summary": "委派已选实体关系",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:read",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "独立治理 READ 及委派对象边界；真实关联、候选过滤、同边界计数分页；OBJECT 必填 actionId",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "ROLE_REVISION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "excludeMemberId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/assignments/{id}/selected-candidates",
+    "method": "get",
+    "operationId": "platformAssignmentSelectedCandidates",
+    "summary": "角色分配已选候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:read",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "分配详情相同 READ/来源归属边界；仅返回固定版本和持久化参数绑定关系，OBJECT 与当前来源上限交集；SQL 同边界分页/计数，来源失效明确不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ROLE_REVISION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "parameterKey",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/assignments/upgrade/preview",
+    "method": "post",
+    "operationId": "platformPreviewAssignmentUpgrade",
+    "summary": "预览分配版本升级",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": "AssignmentUpgradeInput",
+    "response": "RPreviewAssignmentUpgradeResult",
+    "execution": "独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/upgrade",
+    "method": "post",
+    "operationId": "platformAssignmentUpgrade",
+    "summary": "升级分配版本",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": "AssignmentUpgradeInput",
+    "response": "RAssignmentUpgradeResult",
+    "execution": "独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效",
+    "implemented": true,
+    "example": "assignment-upgrade"
+  },
+  {
+    "path": "/v1/platform/assignments/upgrade/role-candidates",
+    "method": "get",
+    "operationId": "platformAssignmentUpgradeRoles",
+    "summary": "升级目标角色版本候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": null,
+    "response": "RAuthorizationRoleCandidatePage",
+    "execution": "独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "assignmentId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "roleId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/assignments/upgrade/candidates",
+    "method": "get",
+    "operationId": "platformAssignmentUpgradeCandidates",
+    "summary": "升级版本与对象候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "assignmentId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ROLE_REVISION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "revisionId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "parameterKey",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "tree",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "parentId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/preview",
+    "method": "post",
+    "operationId": "platformPreviewRoleCreate",
+    "summary": "预览平台角色创建与字段权限",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:create",
+    "request": "RoleCreateInput",
+    "response": "RPreviewRoleDefinitionDraft",
+    "execution": "角色字段仅平台自定义；注册资源能力与目录交集；只读预览，发布重验",
+    "implemented": true
+  },
+  {
+    "path": "/v1/me/password",
+    "method": "get",
+    "operationId": "currentPasswordState",
+    "summary": "当前账号改密状态",
+    "domain": "CURRENT",
+    "action": null,
+    "request": null,
+    "response": "RPasswordChangeState",
+    "execution": "AUTHENTICATED_SELF；必须改密期间仅允许密码 GET/PUT；只返回可信当前身份和改密状态，不含业务资料",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/context",
+    "method": "get",
+    "operationId": "platformMemberContext",
+    "summary": "平台成员字段上下文",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RPlatformMemberContext",
+    "execution": "成员 READ/CREATE 任一准入；全局操作与潜在可见列；不替代逐对象校验",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}/bound-roles",
+    "method": "get",
+    "operationId": "platformMemberBoundRoles",
+    "summary": "成员当前有效角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RPageResponseMemberBoundRole",
+    "execution": "成员查看与对象边界；按角色版本聚合有效关联；不披露组名称或ID",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/members/{id}/preview",
+    "method": "post",
+    "operationId": "platformMemberEditPreview",
+    "summary": "成员编辑预览",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:update",
+    "request": "PlatformMemberEditInput",
+    "response": "RPreviewPlatformMemberEditPreview",
+    "execution": "无写入；资料字段与角色差量逐项重验；最终保存重新鉴权",
+    "implemented": true,
+    "example": "member-role-edit"
+  },
+  {
+    "path": "/v1/tenant/members/context",
+    "method": "get",
+    "operationId": "tenantMemberFieldContext",
+    "summary": "租户成员字段能力",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:read",
+    "request": null,
+    "response": "RResourceFieldContext",
+    "execution": "可信身份；全局操作与完整查询范围FULL证明",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/resources/{resourceId}/field-bindings",
+    "method": "get",
+    "operationId": "platformResourceBindings",
+    "summary": "资源字段绑定清单",
+    "domain": "PLATFORM",
+    "action": "iam-platform:resource:read",
+    "request": null,
+    "response": "RFieldBindingManifest",
+    "execution": "固定服务清单；目录读取权；不包含业务原值",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications",
+    "method": "post",
+    "operationId": "platformRoleApplicationPrepare",
+    "summary": "准备版本应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": "RoleVersionApplicationPrepareInput",
+    "response": "RRoleVersionApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/publish",
+    "method": "post",
+    "operationId": "platformRoleApplicationPublish",
+    "summary": "发布并准备应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": "RoleVersionApplicationPublishInput",
+    "response": "RRoleVersionApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications",
+    "method": "get",
+    "operationId": "platformRoleApplicationList",
+    "summary": "版本应用任务记录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": null,
+    "response": "RPageResponseRoleVersionApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/candidates",
+    "method": "get",
+    "operationId": "platformRoleApplicationCandidates",
+    "summary": "角色关联分配候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": null,
+    "response": "RPageResponseResourceDetailAssignmentRecord",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/distribution",
+    "method": "get",
+    "operationId": "platformRoleApplicationDistribution",
+    "summary": "分配版本分布",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": null,
+    "response": "RListRoleRevisionDistribution",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}",
+    "method": "get",
+    "operationId": "platformRoleApplicationGet",
+    "summary": "版本应用计划详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": null,
+    "response": "RRoleVersionApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}/items",
+    "method": "get",
+    "operationId": "platformRoleApplicationItems",
+    "summary": "版本应用分配明细",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": null,
+    "response": "RPageResponseRoleVersionApplicationItem",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}/items",
+    "method": "patch",
+    "operationId": "platformRoleApplicationConfigure",
+    "summary": "配置应用范围及排除集合",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": "RoleVersionApplicationChangeInput",
+    "response": "RRoleVersionApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}/preflight",
+    "method": "post",
+    "operationId": "platformRoleApplicationPreflight",
+    "summary": "重新预检未完成项",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": "RoleVersionApplicationRefreshInput",
+    "response": "RRoleVersionApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}/confirm",
+    "method": "post",
+    "operationId": "platformRoleApplicationConfirm",
+    "summary": "确认执行版本应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role-assignment:apply-version",
+    "request": "RoleVersionApplicationConfirmInput",
+    "response": "RRoleVersionApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles",
+    "method": "get",
+    "operationId": "tenantCurrentListRoles",
+    "summary": "当前角色目录",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailCurrentRoleSummary",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "status",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
+        }
+      },
+      {
+        "name": "kind",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "SHARED",
+            "TENANT_CUSTOM"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/roles",
+    "method": "post",
+    "operationId": "tenantCurrentCreateRole",
+    "summary": "创建当前角色",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:create",
+    "request": "CurrentRoleCreateInput",
+    "response": "RCreatedResource",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/preview",
+    "method": "post",
+    "operationId": "tenantCurrentCreatePreview",
+    "summary": "预览角色创建",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:create",
+    "request": "CurrentRoleCreateInput",
+    "response": "RPreviewCurrentRolePreviewResult",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}",
+    "method": "get",
+    "operationId": "tenantCurrentGetRole",
+    "summary": "当前角色详情",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RResourceDetailCurrentRoleSummary",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}",
+    "method": "patch",
+    "operationId": "tenantCurrentProfileRole",
+    "summary": "保存角色基本信息",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:change-status",
+    "request": "CurrentRoleProfileInput",
+    "response": "RResourceDetailCurrentRoleSummary",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}",
+    "method": "delete",
+    "operationId": "tenantCurrentDeleteRole",
+    "summary": "删除未引用角色",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/grants",
+    "method": "get",
+    "operationId": "tenantCurrentGetGrants",
+    "summary": "当前完整权限",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RCurrentRoleGrantList",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/grants",
+    "method": "put",
+    "operationId": "tenantCurrentSaveGrants",
+    "summary": "保存当前权限并自动生效",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:update",
+    "request": "CurrentRolePermissionInput",
+    "response": "RCurrentRolePermissionResult",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/preview",
+    "method": "post",
+    "operationId": "tenantCurrentPreviewGrants",
+    "summary": "预览当前权限变更",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:preview",
+    "request": "CurrentRolePermissionInput",
+    "response": "RPreviewCurrentRolePreviewResult",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles",
+    "method": "get",
+    "operationId": "sharedCurrentListRoles",
+    "summary": "当前角色目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailCurrentRoleSummary",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "status",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
+        }
+      },
+      {
+        "name": "kind",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "SHARED",
+            "TENANT_CUSTOM"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/shared-roles",
+    "method": "post",
+    "operationId": "sharedCurrentCreateRole",
+    "summary": "创建当前角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:create",
+    "request": "CurrentRoleCreateInput",
+    "response": "RCreatedResource",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/preview",
+    "method": "post",
+    "operationId": "sharedCurrentCreatePreview",
+    "summary": "预览角色创建",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:create",
+    "request": "CurrentRoleCreateInput",
+    "response": "RPreviewCurrentRolePreviewResult",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}",
+    "method": "get",
+    "operationId": "sharedCurrentGetRole",
+    "summary": "当前角色详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:read",
+    "request": null,
+    "response": "RResourceDetailCurrentRoleSummary",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}",
+    "method": "patch",
+    "operationId": "sharedCurrentProfileRole",
+    "summary": "保存角色基本信息",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:change-status",
+    "request": "CurrentRoleProfileInput",
+    "response": "RResourceDetailCurrentRoleSummary",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}",
+    "method": "delete",
+    "operationId": "sharedCurrentDeleteRole",
+    "summary": "删除未引用角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:delete",
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}/grants",
+    "method": "get",
+    "operationId": "sharedCurrentGetGrants",
+    "summary": "当前完整权限",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:read",
+    "request": null,
+    "response": "RCurrentRoleGrantList",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}/grants",
+    "method": "put",
+    "operationId": "sharedCurrentSaveGrants",
+    "summary": "保存当前权限并自动生效",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:update",
+    "request": "CurrentRolePermissionInput",
+    "response": "RCurrentRolePermissionResult",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}/preview",
+    "method": "post",
+    "operationId": "sharedCurrentPreviewGrants",
+    "summary": "预览当前权限变更",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:preview",
+    "request": "CurrentRolePermissionInput",
+    "response": "RPreviewCurrentRolePreviewResult",
+    "execution": "完整当前权限；稳定角色身份；独立治理保存后自动生效；内部快照与配置锁不作为业务版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/grant-catalog",
+    "method": "get",
+    "operationId": "tenantCurrentCatalog",
+    "summary": "租户当前授权候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:create",
+    "request": null,
+    "response": "RListCurrentRoleCatalogAction",
+    "execution": "选定应用后一次返回全部已开通操作",
+    "implemented": true,
+    "query": [
+      {
+        "name": "applicationId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/assignments/options",
+    "method": "get",
+    "operationId": "tenantAssignmentOptions",
+    "summary": "租户当前授权候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:role-assignment:read",
+    "request": null,
+    "response": "RPageResponseTenantAssignmentOption",
+    "execution": "可信当前租户；本人有效来源或独立治理；过滤后分页回显",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "departmentId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ROLE",
+            "MEMBER",
+            "GROUP",
+            "RESOURCE"
+          ]
+        }
+      },
+      {
+        "name": "delegationGrantId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/assignments/roles/{id}",
+    "method": "get",
+    "operationId": "tenantAssignmentRole",
+    "summary": "租户当前授权候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:role-assignment:read",
+    "request": null,
+    "response": "RCurrentRoleGrantList",
+    "execution": "可信当前租户；本人有效来源或独立治理；过滤后分页回显",
+    "implemented": true,
+    "query": [
+      {
+        "name": "delegationGrantId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/delegations/mine",
+    "method": "get",
+    "operationId": "tenantMyDelegations",
+    "summary": "租户当前授权候选",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "RListTenantDelegationMine",
+    "execution": "可信当前租户；本人有效来源或独立治理；过滤后分页回显",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/delegations/scope-candidates",
+    "method": "get",
+    "operationId": "tenantDelegationScopeCandidates",
+    "summary": "租户当前授权候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:delegation:create",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "可信当前租户；本人有效来源或独立治理；过滤后分页回显",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "resourceId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "parameterKey",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/workbench/statistics",
+    "method": "get",
+    "operationId": "tenantWorkbench",
+    "summary": "查看组织工作台",
+    "domain": "TENANT",
+    "action": "iam-tenant:workbench:read",
+    "request": null,
+    "response": "RTenantWorkbenchStatistics",
+    "execution": "可信组织；各项指标沿用资源范围",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/applications/{id}/action-catalog",
+    "method": "get",
+    "operationId": "tenantApplicationActionCatalog",
+    "summary": "已开通应用权限树",
+    "domain": "TENANT",
+    "action": "iam-tenant:application:read",
+    "request": null,
+    "response": "RActionCatalogView",
+    "execution": "当前组织有效开通",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/{id}/rejoin",
+    "method": "post",
+    "operationId": "tenantMemberRejoin",
+    "summary": "重新加入已移出成员",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:create",
+    "request": "TenantMemberRejoinInput",
+    "response": "RTenantMemberCreated",
+    "execution": "目标状态、范围、字段和版本全部复核",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/downloads",
+    "method": "get",
+    "operationId": "tenantDownloadPage",
+    "summary": "我的下载任务",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "RPageResponseDownloadTask",
+    "execution": "可信组织及本人任务",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/downloads/{id}",
+    "method": "get",
+    "operationId": "tenantDownloadDetail",
+    "summary": "我的下载任务详情",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "RDownloadTask",
+    "execution": "可信组织及本人任务",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/downloads/{id}/link",
+    "method": "post",
+    "operationId": "tenantDownloadLink",
+    "summary": "签发下载链接",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "RDownloadLink",
+    "execution": "可信组织、本人任务、有效状态及实时来源操作",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/members",
+    "method": "get",
+    "operationId": "tenantRoleMembers",
+    "summary": "角色有效成员",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RRoleSubjectPage",
+    "execution": "角色与分配读取范围交集",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/groups",
+    "method": "get",
+    "operationId": "tenantRoleGroups",
+    "summary": "角色有效用户组",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RRoleSubjectPage",
+    "execution": "角色与分配及用户组读取范围交集",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/members/{memberId}/assignments",
+    "method": "get",
+    "operationId": "tenantRoleMemberAssignments",
+    "summary": "角色成员有效授权来源",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailTenantAssignmentRecord",
+    "execution": "角色与分配读取范围交集",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/assets/uploads",
+    "method": "post",
+    "operationId": "stageBusinessImage",
+    "summary": "暂存业务图片",
+    "domain": "CURRENT",
+    "action": null,
+    "request": null,
+    "response": "RAssetUpload",
+    "execution": "业务用途、可信域、操作、目标和字段；返回限时凭证",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/workbook/template",
+    "method": "get",
+    "operationId": "tenantMemberWorkbookTemplate",
+    "summary": "下载成员导入模板",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:create",
+    "request": null,
+    "response": "RMemberWorkbookFile",
+    "execution": "创建权限",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/workbook/import",
+    "method": "post",
+    "operationId": "tenantMemberWorkbookImport",
+    "summary": "导入成员表格",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "RCreatedResource",
+    "execution": "按模式和实际字段校验成员 create、update 或 set-departments",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/workbook/export",
+    "method": "post",
+    "operationId": "tenantMemberWorkbookExport",
+    "summary": "导出成员表格",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:export",
+    "request": "MemberWorkbookExportInput",
+    "response": "RCreatedResource",
+    "execution": "登记本人下载任务，复核导出范围",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/workbook/history",
+    "method": "get",
+    "operationId": "tenantMemberWorkbookHistory",
+    "summary": "成员导入历史",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "RListMemberWorkbookHistoryItem",
+    "execution": "仅发起人，按创建或更新、任职操作授权",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/workbook/{id}/status",
+    "method": "get",
+    "operationId": "tenantMemberWorkbookStatus",
+    "summary": "成员表格任务状态",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "RMemberWorkbookTask",
+    "execution": "仅发起人并复核任务来源权限",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/members/workbook/{id}/file",
+    "method": "get",
+    "operationId": "tenantMemberWorkbookFile",
+    "summary": "下载成员表格产物",
+    "domain": "TENANT",
+    "action": null,
+    "request": null,
+    "response": "RMemberWorkbookFile",
+    "execution": "仅发起人并复核任务来源权限，初始密码只允许下载一次",
+    "implemented": true,
+    "query": [
+      {
+        "name": "artifact",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "WORKBOOK",
+            "ERRORS",
+            "PASSWORDS"
+          ]
+        }
+      }
+    ]
+  }
+]

@@ -24,6 +24,8 @@
 
 本次公共字段契约的已有库升级使用 [016_field_access_control.sql](./migrations/016_field_access_control.sql)，保留现有数据，转换字段能力/角色/默认策略JSON并补表结构。单独重跑006不会更新已有JSON；执行前提、旧目标范围编辑的保守转换及回退见 [迁移说明](./migrations/README.md#016-公共字段契约升级)。
 
+已有库发布平台全局社会化配置前执行 [038_social_config_global_scope.sql](./migrations/038_social_config_global_scope.sql)。新库 005 已允许空租户归属。执行与回退见 [038 迁移说明](./migrations/README.md#038-平台全局社会化配置)。
+
 生成及只读检查：
 
 ```sh
@@ -113,7 +115,7 @@ IAM单文件只初始化IAM及其共库框架表。启用Auth、Security或Membe
 
 角色版本字段JSON为非空对象。正式治理版本显式冻结成员字段默认：phone/email脱敏，displayName/avatar完整可见及可编辑；目录和注册能力仍可收窄。字段完整可见须发布并分配角色，治理身份不绕过。未声明字段隐藏，缺失快照拒绝求值；角色发布不自动升级已有分配。租户字段策略与通讯录结构保留。
 
-[人工验收](../../specs/changes/active/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md) 和 [接入样板](../../examples/iam-ops/README.md) 已按唯一角色字段闭环更新。
+[人工验收](../../specs/changes/archive/2026/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md) 和 [接入样板](../../examples/iam-ops/README.md) 已按唯一角色字段闭环更新。
 
 ## 字段字典与主键评估
 

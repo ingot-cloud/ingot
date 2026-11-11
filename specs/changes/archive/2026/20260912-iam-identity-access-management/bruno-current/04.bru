@@ -1,0 +1,33 @@
+meta {
+  name: 研发只读诊断可见成员
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/authorization/diagnose
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{readerToken}}
+  Tenant: {{tenant}}
+}
+
+body:json {
+  {
+    "memberId": "{{readerId}}",
+    "applicationId": "{{tenantApp}}",
+    "actionId": "{{tenantReadAction}}",
+    "targetId": "{{visibleMember}}"
+  }
+}
+
+tests {
+  test("研发只读诊断可见成员", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().code).to.equal("S0200");
+    expect(res.getBody().data.allowed).to.equal(true);
+  });
+}

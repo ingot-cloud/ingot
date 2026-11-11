@@ -1,0 +1,2369 @@
+{
+  "date": "2026-11-11",
+  "baseCommit": "2825431954e1cdf85c0142dbb27e0e9289fe29af",
+  "scope": "已验收 IAM 范围的文件及归档指纹；gitStatus/baseCommit 为归档时快照。随后按用户授权创建实现及文档提交。原验收前清单保留；最终清单排除未纳入本次提交的无关帮助截图。",
+  "commitCreated": false,
+  "files": [
+    {
+      "gitStatus": " M",
+      "path": ".agents/skills/in-framework/references/iam-resource-extension.md",
+      "sha256": "ca6587e5ee3499057005fa3bcbc068f82c61758dce17f2ed07982438c9d1c5ba"
+    },
+    {
+      "gitStatus": " M",
+      "path": "databases/iam/005_auxiliary.sql",
+      "sha256": "3fe09909fefe17d976e1b57e5096f354c6a7d66c121af17d58ba10581c08e369"
+    },
+    {
+      "gitStatus": " M",
+      "path": "databases/iam/README.md",
+      "sha256": "a41d2481f1cd6e2a375aa6f6a28c8222dc113ca9eb19183fe59116e334c8691a"
+    },
+    {
+      "gitStatus": " M",
+      "path": "databases/iam/migrations/README.md",
+      "sha256": "0b183bdb20aa2590dc5a5120c11be27b62cd6778c57fb95be7ae3aed502eee33"
+    },
+    {
+      "gitStatus": " M",
+      "path": "databases/iam/schema_structure.json",
+      "sha256": "16f71e42077466f4392a1f0b9279a08fe0c988cbb852fe6e37612167b1884e6f"
+    },
+    {
+      "gitStatus": " M",
+      "path": "databases/ingot_iam.sql",
+      "sha256": "a1b3bf91189847644e3a73465a9193b907f943d9d9e49d2a0f9451d9c62d0390"
+    },
+    {
+      "gitStatus": " M",
+      "path": "deploy/services/README.md",
+      "sha256": "d71990171766c63e81e6560c9494bf1a6caaade57d65e56fffd5d88b734f4b7f"
+    },
+    {
+      "gitStatus": " M",
+      "path": "docs/modules/iam/DATA-DICTIONARY.md",
+      "sha256": "fbb44c9b48daa705360c83d421adef9be544cbc4ea8d767a268d1293972acc6a"
+    },
+    {
+      "gitStatus": " M",
+      "path": "docs/modules/iam/RESOURCE-MENU-REVIEW.md",
+      "sha256": "37c72ce2056a1325eb9542a4a0c07d870c3ec4966de69a42b356cd6913fa9651"
+    },
+    {
+      "gitStatus": " M",
+      "path": "examples/iam-ops/README.md",
+      "sha256": "74c0abd5891cdac324e9e8d5f3a1d3a522a7f99e49bab1b3eb79771fcf555dba"
+    },
+    {
+      "gitStatus": " M",
+      "path": "examples/iam-ops/build.gradle",
+      "sha256": "a09dd62449c16fc2088dccd2d2a847748dc01c4994cbf8af19364930f4cbe3f0"
+    },
+    {
+      "gitStatus": " M",
+      "path": "examples/iam-ops/resource-registration.example.yml",
+      "sha256": "7a4c1094a85c0fa63399194a80c89bb829d62de7e48eb883a601d639d09b31bd"
+    },
+    {
+      "gitStatus": " M",
+      "path": "examples/iam-ops/src/main/java/com/ingot/example/ops/OpsApplication.java",
+      "sha256": "f28f9aca61fc73f3844e1e4c5a098b47a97652b784b20047d0868af67a0d4abd"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-access-control/build.gradle",
+      "sha256": "c5d0f350753ce23637b995f2044534d936d7368ebcc6cbc0f8b26011fa2220cc"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/AuthorizationSdkConfiguration.java",
+      "sha256": "f5efaf6dd094c327b43c84d38b6c09eb8cb4030d85c6593cdf12851c9ad9f46e"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/RemoteAuthorizationClient.java",
+      "sha256": "f4917db3b180630eaf70776929f9d5f223033359e53397b7b853062481a3bfdd"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/ResourceRpcConfiguration.java",
+      "sha256": "a763145f5cc7bc6a206331c1693077f005d4f3d3deb933f96ac0f73a2744c736"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/ResourceRpcProperties.java",
+      "sha256": "7ab7ef8d0eb5b0b5261e819b0890e5b8b3dd97f694b414dd3b1a9e8688f2ad3e"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/field/FieldManifestEndpoint.java",
+      "sha256": "8d654ed55b73aa55745774693647c6b50ef1219889be977b5b2eb30499dbd5ae"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-access-control/src/test/java/com/ingot/framework/authorization/RemoteAuthorizationTest.java",
+      "sha256": "6a669ad2a623f31b781dd52d00b506ceeef94e6dd30482ae9f8d43c27bc63336"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-commons/src/main/java/com/ingot/framework/commons/model/iam/extension/ResourceDescriptor.java",
+      "sha256": "59e3adb040cddec97d0a5147ae7c6d9c9d3f438309f6f368a2ebb51aa3ecb374"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/java/com/ingot/framework/security/account/adapter/port/DefaultLockStatePortAdapter.java",
+      "sha256": "3a0faa1f254cfd93ed581c88553a6996f900e269dd73620002fb0f433f9ce709"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-sentinel/build.gradle",
+      "sha256": "ed1942b0f2177a8e2c5251815e461b6c9085d361085ebdee3dda719fb4e8ce56"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-framework/ingot-sentinel/src/main/java/com/ingot/framework/sentinel/feign/SentinelFeignBuilder.java",
+      "sha256": "719b00cc7466760301f652f1aaf6468f0c6cf20442302c743f703a44fc7acc32"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-auth/ingot-auth-provider/src/main/java/com/ingot/cloud/auth/service/biz/impl/CachingRemoteUserDetailsService.java",
+      "sha256": "002b1f28dd988093692338f47509b9a7c8718cbbb3931b8af6d424b7fb41df89"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-auth/ingot-auth-provider/src/test/java/com/ingot/cloud/auth/service/biz/impl/CachingRemoteUserDetailsServiceTest.java",
+      "sha256": "d0d420acfc4e5b454514baa584fdd233d2c50e9352ae03c0d29eea892ec0a0e6"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/assignment/PlatformAssignmentOperations.java",
+      "sha256": "e5c10d248811699261ab1864ac283fa57b487c10fbf3bd2edcaaf0054690e08b"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/authorization/candidate/PlatformScopeBindingValidator.java",
+      "sha256": "3023543f4809efdc0d6d15433179bd2b19bd6280634980041d99d230b0164146"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/organization/DepartmentWorkbookService.java",
+      "sha256": "ca1301e7c61e6e8acfddd8cb998dde00be167a22f3830026bdc5d2617ba2a8b9"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/organization/MemberExportService.java",
+      "sha256": "e035a6bf53d1abe03169c1ac3e7edafd280650f3aae05058c31aafbc7c02897a"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/social/SocialConfigService.java",
+      "sha256": "1d8ff17c24c013844c27e6f5db523f4c1bb1a0eb6157835e55b997a33f2751c2"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/social/model/SocialConfigInput.java",
+      "sha256": "783125ad964ab56bf149666c69190d8abcc6f5544c27c02670e22ef2849684af"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/application/social/model/SocialConfigRecord.java",
+      "sha256": "7f1ee9a52afb54fe8d49e4344aba94771e9016c27368b4e45e68b1cf34c48480"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/configuration/AuthorizationCacheConfiguration.java",
+      "sha256": "6aef5c54380eed74b3b9e38178525033746fe21d8401eb89f8332afa3140e6bf"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/AssignmentRepository.java",
+      "sha256": "4344516a5a2f0beae3f6306b4c64443e1031e8966ced9222a36ceaec430d5b97"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/DepartmentWorkbookRepository.java",
+      "sha256": "d6197380c1b5a6a22b2a1cdac7628e3477b5ea9c6704a881f94597339e3737e1"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/MemberExportRepository.java",
+      "sha256": "0b9a4f88a2401fffb18325ec59eb75694dd4b2ce59535efb2f682098e1208c09"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/MemberWorkbookRepository.java",
+      "sha256": "bee7076eb4b09a2044074bda9e3dc4d1ae95606687292c5a47423805787292a3"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/entity/SocialConfigEntity.java",
+      "sha256": "d907f412e7a266c89d087923dd648fa90c547633eee9d15c817523cf4515ce63"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/AuthorizationCandidateSql.java",
+      "sha256": "2c1b2b9712be52c9f30b95774c59293a390ea7ba7af4a52f4da215294ed57f46"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/IamRoleAssignmentMapper.java",
+      "sha256": "665851333bf8575e93a050e7aeb17e18141ee1f0b7942fc2d896d10f5d404eb3"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/infrastructure/persistence/mapper/PlatformAssignmentStateSql.java",
+      "sha256": "0bc6df073a52601a0becfb11eed78ba5ac63bca95ffafb99d6c18933c1e0c03e"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/interfaces/http/IamErrorHandler.java",
+      "sha256": "99b965cf1b9256987320227a20b7c93320175cbc05ec68856ac7e4e2587ab05b"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/test/java/com/ingot/cloud/iam/application/assignment/PlatformObjectResourceResolutionTest.java",
+      "sha256": "9fb1a73635057ffc1a114d2b1a3aad6cec7bef50e0560cffdd9b5e5ff24298c7"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/test/java/com/ingot/cloud/iam/application/live/TenantLiveMySqlHttpTest.java",
+      "sha256": "98f154e4f007b5d03779b9ea96198fa2c124e3c790ace1321fabd9dbb2f24bf0"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/test/java/com/ingot/cloud/iam/application/organization/DepartmentWorkbookServiceTest.java",
+      "sha256": "3a175a29a5f59aa3eb006b22fafc0b7b407552d4a5c3a3008802b0b17f1f1050"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/test/java/com/ingot/cloud/iam/application/organization/MemberExportServiceTest.java",
+      "sha256": "6bc7dfbc49e0ae1fa2c2a31a8ff57afccb6ad50724c8a0b651dfd2a17810632a"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/test/java/com/ingot/cloud/iam/contract/IamAuthorizationContractTest.java",
+      "sha256": "7f03d2d784fe952ae1b48c70a03a8633c482be108c44abada6ef4450920f95ce"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/test/java/com/ingot/cloud/iam/interfaces/http/IamErrorHandlerTest.java",
+      "sha256": "9d498444d0f06bf07669a0a8ac9f0ae64eddbaec67ed566d65a3f6ff971e71d6"
+    },
+    {
+      "gitStatus": " M",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/test/java/com/ingot/cloud/iam/interfaces/http/tenant/TenantMemberPickerAPITest.java",
+      "sha256": "bb500d783761ee0bf2c2844b56a38165cfa183cf9d0d0d327e38d9202f14b603"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/README.md",
+      "sha256": "77524c8c13b5eb95cb3010d365822006ae0befd05b365d8d43e485703824b7f4"
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/ACCEPTANCE.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/ACCESS-CONTROL-MODULE-NAMING.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/API.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/ASSIGNMENT-MULTI-ROLE-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/AUTHORIZATION-AUDIT-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/AUTHORIZATION-REFINEMENT-STATUS.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/AUTHORIZATION-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/BFF-LOGIN.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/DATABASE-SCRIPT-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/DESIGN.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/FORCED-PASSWORD-CHANGE.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/FRONTEND.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/IMPLEMENTATION.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/LEGACY-ENDPOINTS.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/MANUAL-VERIFICATION.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/MENU-ADVANCED-CONFIGURATION.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/MENU-ADVANCED-VERIFICATION.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/MIGRATION.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/PLATFORM-ACCOUNT-PICKER-PAGE.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/PLATFORM-MEMBER-CONTACTS-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/PLATFORM-MEMBER-FIELD-UI-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/PLATFORM-MEMBER-ROLE-EDITOR.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/PLATFORM-MEMBER-TIMES.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/PLATFORM-OBJECT-RESOLUTION-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/README.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/REMEDIATION.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/REQUIREMENTS.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/RESOURCE-EXTENSION-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/ROLE-FIELD-AUTHORIZATION-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/ROLE-PICKER-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/ROLE-WORKSPACE-DELEGATION-REFINEMENT.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/SOURCE-TABLES.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/TASKS.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/TEST-DATA.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/VERIFICATION-GUIDE.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/01-platform-login.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/02-owner-login.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/03-bootstrap-platform.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/04-bootstrap-owner.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/05-tenant-settings.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/06-tenant-departments.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/07-list-platform-apps.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/08-list-tenant-actions.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/00-auth/folder.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/01-create-account-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/02-reset-password-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/03-get-account-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/04-create-platform-member-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/05-get-platform-member-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/06-create-tenant-member-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/07-get-tenant-member-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/08-login-x-tenant.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/09-login-x-platform.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/10-suspend-platform-member-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/11-login-x-tenant-after-suspend.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/12-login-x-platform-after-suspend-expect-fail.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/13-remove-tenant-member-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/14-get-account-x-after-remove.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/15-login-x-tenant-after-remove-expect-fail.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/16-disable-account-x.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/17-login-x-any-expect-fail.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/folder.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/01-create-account-y.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/02-reset-password-y.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/03-create-tenant-member-y.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/04-create-biz-app.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/05-create-biz-resource.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/06-create-biz-action.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/07-list-entitlements.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/08-preview-entitlements.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/09-replace-entitlements.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/10-login-y.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/11-bootstrap-y-before-assign.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/12-diagnose-y-before-assign.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/13-create-biz-shared-role.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/14-list-biz-role-revisions.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/15-preview-assign-y.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/16-assign-y.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/17-login-y-again.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/18-bootstrap-y-after-assign.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/19-diagnose-y-after-assign.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/20-list-audits.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/folder.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/01-create-shared-role.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/02-list-shared-revisions.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/03-assign-shared-to-y.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/04-create-custom-role.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/05-get-custom-role.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/06-list-custom-revisions.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/07-preview-replace-add.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/08-publish-replace-add.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/09-get-custom-role-after-publish.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/10-restore-base.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/11-list-assignments.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/folder.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/01-create-account-z.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/02-reset-password-z.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/03-create-tenant-member-z.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/04-assign-independent-to-owner.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/05-get-settings-before-transfer.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/06-transfer-owner.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/07-login-z.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/08-settings-as-z.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/09-old-owner-settings-expect-fail.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/10-list-assignments-after-transfer.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/11-stale-transfer-expect-fail.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/folder.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/README.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/bruno.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/collection.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/bruno/environments/local.bru",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/README.md",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/assignment-context.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/assignment-multi-role.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/assignment-record.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/assignment-selected-candidates.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/assignment-upgrade.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/assignment.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/audit.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/authorization-candidates.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/authorization-role-candidates.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/authorization-role-versions.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/authorization-snapshot.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/authorization-v2-request.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/bootstrap.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/decision-restricted.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/delegation-unlimited.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/delegation.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/field-policy.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/field-readonly.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/member-bound-roles.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/member-detail.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/member-page.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/member-role-edit.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/password-change-state.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/platform-member-context.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/preview-invalid.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/role-create.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/role-delta.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/role-platform-fields.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/role-publish.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/role-shared.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/role-subject-page.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/role-upgrade.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/tenant-create.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/examples/upgrade-conflict.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/internal-openapi.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/openapi.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/routes.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/contracts/schemas.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " D",
+      "path": "specs/changes/active/20260912-iam-identity-access-management/endpoint-mapping.json",
+      "sha256": null
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/active/20260912-mybatis-data-scope-predicate-scale/README.md",
+      "sha256": "94d5f0bd8aa7594cf8ed64fa9d9b177c582d4d1770b0964ad4c28fd8b8da70eb"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/active/README.md",
+      "sha256": "7829b21654e72dfbf84cf1b592ffed9b87a0b6d5df15dc1950ac54cbada8854e"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261010-iam-role-version-application/API.md",
+      "sha256": "dcf88677c9a1c1043a91268381e65b3fc33501f0a230b98071f018c707b2149c"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261011-iam-role-application-domain-support/README.md",
+      "sha256": "dce34a61a74323dc6ae40c03cb3617f5580385f18864230a020456eb3549918e"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261012-iam-platform-capability-completion/README.md",
+      "sha256": "d8f22779f6838dab511f0a7dbe90952f93dadd235ae838370ba45647091885e4"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261014-iam-tenant-live-authorization/README.md",
+      "sha256": "05761edaa0874c0688600aaa85803584d3c5148f90dc523bbea763fe15413310"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261017-iam-department-member-count/README.md",
+      "sha256": "01cb1efb3de22e62dc25add77192554903a55a77246a98a79798a1c2e9386cb1"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261022-iam-tenant-role-workspace/README.md",
+      "sha256": "22fdc729f302b624f4aa8218ada34602290d25093a3c59d8834909aa376ab5f6"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261024-iam-authorization-audit-readable/README.md",
+      "sha256": "dd924b26574168d4587b47e4c8f8de89b3ee2144dee47500ae639df69f9a8ad0"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261030-iam-tenant-workbench/README.md",
+      "sha256": "3452937143a2c7c48a4d5a1db071c57c1896a5ea1b8075ded58f3a1803edd269"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261031-security-same-origin-login/README.md",
+      "sha256": "3ae25b6b0e49a7447029eefdbe39ea61340af321a66122b3df8b911739bc01dd"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261103-iam-help-center/README.md",
+      "sha256": "48ce40d73cc91fb2112175a5b039da7533772aabba18a84af286851350b9ab55"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261106-iam-resource-catalog/README.md",
+      "sha256": "a1b30bfa429a99bb47e998b8cb0eb689d2681cd11a55323ea50968ab61275c4f"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261106-iam-tenant-live-authorization-release/README.md",
+      "sha256": "269f6731a0b3c23779e845098e6fff565717369a485fca52d222e0f408b4f367"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261107-iam-legacy-cleanup-package-refactor/README.md",
+      "sha256": "4a63cd644326e8beb4be4afada98c4cad1ea8d0ff7dabd48eda0ac9eedc28a45"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/changes/archive/2026/20261109-iam-entitlement-batch-action-catalog-cache/README.md",
+      "sha256": "595a0ba309868a428b6bfa191645328f2f3c24a3050ef7486baf3dbefa842457"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/README.md",
+      "sha256": "bc4c7a9cb4de898157229f57fb8e56a7e30ea928663ee632ca741fc693192fbf"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/framework/layered-cache/SPEC.md",
+      "sha256": "f2ffadd6a2620a3e4458958b025dff9d595fb621d044eeaff39dfa6eb241fac9"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/iam/database-persistence/SPEC.md",
+      "sha256": "fa70cad03c79da22823dee1705c1db206e7dab74414557adfe6004e5f55a8ff7"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/iam/platform-capabilities/README.md",
+      "sha256": "85ff1bd50ec97ddf7295e7596d13623cdd25f5f282b1c36e004073194cbc2420"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/iam/platform-capabilities/SPEC.md",
+      "sha256": "f92fe8436c10f970c33881adaca735384aeccaf405947d0463509379fec6b8fe"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/iam/role-version-application/SPEC.md",
+      "sha256": "39a3cefcd2275664c5f79d2b648ad5bd145540bf11c2eab1c7d7db6290e86b24"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/iam/tenant-departments/SPEC.md",
+      "sha256": "cf690689f99127370c7cea1a2c26e95ac38b865afcf1f447c2f2d78f4226d8cf"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/iam/tenant-members/SPEC.md",
+      "sha256": "9fe9965b2141fa6a6e7a6e9b43c2136b36e1600d9f8ba985a1f07587f145be89"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/pms/application-authorization/README.md",
+      "sha256": "bdb5a863670059d9d5dfef7917b384389327cb2d9f5302cbba5d13acd445a4f0"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/pms/application-authorization/SPEC.md",
+      "sha256": "bdb5a863670059d9d5dfef7917b384389327cb2d9f5302cbba5d13acd445a4f0"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/pms/data-authorization/README.md",
+      "sha256": "046b0c0ef825e4fdb23fe45f4125b86a5428e62feb4cfd2472823bd86bb6cf76"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/pms/data-authorization/SPEC.md",
+      "sha256": "046b0c0ef825e4fdb23fe45f4125b86a5428e62feb4cfd2472823bd86bb6cf76"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/security/session-safety/README.md",
+      "sha256": "0038c0c1fe872299ae5024cf8c090190ab9323e412774d613fa04c1c79183cac"
+    },
+    {
+      "gitStatus": " M",
+      "path": "specs/current/security/session-safety/SPEC.md",
+      "sha256": "0bb68fa91803fea7e76d2e0b5372e2cecf6d125058ff86df68de7617c46db00b"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/build_contract.py",
+      "sha256": "2b0f481c6dd77d1d25210e092af8d5c196b0cff4d0316adcda60a01a436436bc"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/build_internal_contract.py",
+      "sha256": "c0ed3c0fc38e61cfc82331c747444b6dfbb71e3732b5552055fc15738bf310ea"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/generate_bootstrap.py",
+      "sha256": "bbae394341a8c7efeba99df4567e48875b2761248b7d4130f326623643ea7b3d"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/generate_routes.py",
+      "sha256": "bb4b542d84b18099c346d8022b9de3c1dbde720f0ef45a45134d999d716a462d"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test-data/README.md",
+      "sha256": "e6a020ed48b3a6b80cf7b9bec3df393f55b877a246e52ba3d53a0f4f250fb6e6"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test-data/build.py",
+      "sha256": "13250035e017955d2602c949ee19a3b48c106e4e61f597c3aaa1e4a51ef35bc2"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test-data/client.py",
+      "sha256": "3ac595fc529c4ceabf8d0b0e7d99b01639af020ea42ace11f7b90f9949181ead"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test-data/config.example.json",
+      "sha256": "48fe1195099d24a018b9fd033f0ddfe806b65b770c5e7bc5d57ee93836214408"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test-data/lib.py",
+      "sha256": "ce26de7a8e7df8a8f66269b101370dc8116d1b684dc91bcf38ff953af098a35e"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test-data/refinement.py",
+      "sha256": "601f28a1c96cfec47e41a4822c8270e5fd2a4d2d69b4a4bac86327ea9798c9b9"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test-data/scenarios.json",
+      "sha256": "048e45e5219bd08acfda2d295471cfed23cc61ed9371eff19e5063a25230856d"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test-data/test_iam_test_data.py",
+      "sha256": "e913afc7bcfd37254fb303ef1c09f96817836f441e57f1bbe0e644916ff6af17"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test_contract.py",
+      "sha256": "772ed9badad292ac9a19ba4156a30c4ec7fbbbd5b7be656c04937c4db7104fb9"
+    },
+    {
+      "gitStatus": " M",
+      "path": "tools/iam/test_service_naming.py",
+      "sha256": "09bbb48709e388a5fd0080c61727bbba857d4e1065e0267e4e4cd96744bd873b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "databases/iam/migrations/038_social_config_global_scope.sql",
+      "sha256": "05c5ed6a2bbc088ed21ef0dae67eb5c716caa55597446aae998bec0c2750121d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "ingot-framework/ingot-access-control/src/test/java/com/ingot/framework/authorization/AuthorizationSdkConfigurationTest.java",
+      "sha256": "52da2554d8b5945aef1f2498483b1eab3275f433c9f4950fb16f302c1465cfe1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "ingot-framework/ingot-commons/src/test/java/com/ingot/framework/commons/model/iam/extension/ResourceDescriptorTest.java",
+      "sha256": "53bf93b84fafa9f83a7da6baa8e6326da38a6d43d5a4bad6e684e637ce6f6f45"
+    },
+    {
+      "gitStatus": "??",
+      "path": "ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/test/java/com/ingot/framework/security/account/adapter/port/DefaultLockStatePortAdapterTest.java",
+      "sha256": "0077ec59e522baa9505f1e4b13bb5467a46beeb65721e5f6c141e879a63e05e0"
+    },
+    {
+      "gitStatus": "??",
+      "path": "ingot-framework/ingot-sentinel/src/test/java/com/ingot/framework/sentinel/feign/SentinelFeignBuilderTest.java",
+      "sha256": "0fa4492619c6e24eaedf4462ab5dd08f1cc187111b31e346633deae62ebf9046"
+    },
+    {
+      "gitStatus": "??",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/configuration/AuthorizationCacheInvalidationAutoConfiguration.java",
+      "sha256": "33ca6ca93990eb336231133740a21074a2b49db009a5a0b9ff40c3a330aafd72"
+    },
+    {
+      "gitStatus": "??",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports",
+      "sha256": "55e249ca90a3ebde086b06abc6c09a73d34e80196382b0bd67557d6305d6d0ae"
+    },
+    {
+      "gitStatus": "??",
+      "path": "ingot-service/ingot-iam/ingot-iam-provider/src/test/java/com/ingot/cloud/iam/configuration/AuthorizationCacheInvalidationAutoConfigurationTest.java",
+      "sha256": "c44dddde8823d015509a31a80db3e78ac33cbe9aee7c78a9670efdad5bf4a4c2"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/ACCEPTANCE-CLOSEOUT.md",
+      "sha256": "f27306226b0b86e3e31cb030d190bbd1777a09e5c0648aa1982baca1b698f2bb"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/ACCEPTANCE.md",
+      "sha256": "0e5cccdbc8e39c96f090541a58c79deacda1057eb2f0472d56290f3afc7d8c0a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/ACCESS-CONTROL-MODULE-NAMING.md",
+      "sha256": "2e7ca5320289ee6e355ca31c03fa7303f7db846fa6bdc93b51f34ac0c23b391b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/API.md",
+      "sha256": "16b539aba126f06260ce362d8ae538250bac466584391235f31c8f2d7885df4f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/ASSIGNMENT-MULTI-ROLE-REFINEMENT.md",
+      "sha256": "12d7c2fd1c9721da8cc80ee19a028c632322950642ffadd4c2f7bb98ce43d731"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/AUTHORIZATION-AUDIT-REFINEMENT.md",
+      "sha256": "427f7a40a86e48ef837d5ca0a56f8ec4cca9ea51a1033652bad68b057942c1c0"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/AUTHORIZATION-REFINEMENT-STATUS.md",
+      "sha256": "9ba413fe167207ed163626f973ac8d50a07e86728a9f2f4ccf25d3e7697bf4c4"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/AUTHORIZATION-REFINEMENT.md",
+      "sha256": "f71d5846863e674fdd09679c9642134d21862c5ee059d13735502ba4e9557c58"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/BFF-LOGIN.md",
+      "sha256": "902467468ee8d007ab000c41406026b2a4cc2951c79eaa92a68bd4e75fd1468c"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/COLUMN-STATUS-RUNTIME.json",
+      "sha256": "de38767389ce9b279d3e353d66bf43102ec823c0d601218ad7798aa005d957ff"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/DATABASE-SCRIPT-REFINEMENT.md",
+      "sha256": "7db0e0d73e0eda00366624e8d02d463fed9aab930517f1cda3422f85fb4dec52"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/DESIGN.md",
+      "sha256": "c40c506919c858179c903b6769e1fd2507dfd7891793acca9b41105e962cbed1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/FORCED-PASSWORD-CHANGE.md",
+      "sha256": "96e295f737fadb7d3f70c865f76b7833281c45f348239060fa3e488190b5905e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/FRONTEND.md",
+      "sha256": "68dea43284f997b5825b003814e0be04688addcba11cc90dc5fc3e74121108be"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/IMPLEMENTATION.md",
+      "sha256": "2c07bfecc6afb57ff924e0d5e4e88f44af5feac8c60fa1e8cf7bb2b2aa7f5b2e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/LEGACY-ENDPOINTS.md",
+      "sha256": "bdcb8ea65d4e2cb458f9d8dca83e9ea035980a645c5131b9fb112777a465127a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/MANUAL-VERIFICATION.md",
+      "sha256": "9456dda66a8f89490bca03d6edcb18f3f661d85318f5b90223501c527af787ba"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/MENU-ADVANCED-CONFIGURATION.md",
+      "sha256": "32682a524e55ca1ee3527d42d0e56f98b3011cbc0c876941efad2db8b2d89ac1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/MENU-ADVANCED-VERIFICATION.md",
+      "sha256": "c37cb54cffec88edaf7b0dccb9b439a2d39b4b403e46ec966990eb17fe64c4cc"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/MIGRATION.md",
+      "sha256": "a72a6afc456c605f42d4d2b148d5a28a43234fc707f2724755d65ecdbc388c6c"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/NAVIGATION-MENU-RUNTIME.json",
+      "sha256": "6381884fda0dd86020a146a371b28120fbb14802472335a3f935588327071d27"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/NAVIGATION-RECOVERY-RUNTIME.json",
+      "sha256": "febd9a32dd94634f2d513dce82ab7ab29ca3aa0fb5cc42294e7f60904eca0096"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-ACCOUNT-PICKER-PAGE.md",
+      "sha256": "f9ae3e7ad4336606cd3d2a71c770d6bd06a36002c31ddea046ce4993d8e994bf"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-MEMBER-CONTACTS-REFINEMENT.md",
+      "sha256": "1c923f6fc25f92c9da6feb36ea4cf1221bc2d9001bf92e6d349e9e11891c8b7a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-MEMBER-FIELD-UI-REFINEMENT.md",
+      "sha256": "8e91ceef171428c87b6b76973e9e327b6a536ad59d4b7b12559ad4b27e9089e0"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-MEMBER-ROLE-EDITOR.md",
+      "sha256": "01d120ab523654b83e1a85ad4cefa3ab2171aae8e46999f1b46dbb92dc6e22a9"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-MEMBER-RUNTIME.json",
+      "sha256": "18e42039c48b89d3b01dda4052cc38393f968be337414a780556fae1b409f23a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-MEMBER-TIMES.md",
+      "sha256": "4a7ea85b2a6242bbbcebdf20848c5606d43324bf173664d3b3f5f091dc29f9c9"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-OBJECT-RESOLUTION-REFINEMENT.md",
+      "sha256": "dedadb1b07186ed058ebc9d1bb9a84eecf8078723d33d5da72e375a5c2233d4e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION.md",
+      "sha256": "5f5b06b5727972a8ee4b38b4e32530668afc5d26d2b0beaed309668057d5964d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/README.md",
+      "sha256": "6bf51c68b6aadb71eeb3360cf31ca2bbaadcf64712a8d53c08c2ed0f95200b66"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/REMEDIATION.md",
+      "sha256": "2f4a70f0c87950c04ddaec15c8ff3b142387ae14a2bca7580eba2d16ffb9ce9a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/REMOTE-UPGRADE-RUNTIME.json",
+      "sha256": "3883103db6872295a877ed3efbe8cdf8a54076f445dd52dbd60139738785e2ec"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/REQUIREMENTS.md",
+      "sha256": "77168d635faab79050c174e5c8548c779671b4034203a230791a7cbca7cbe392"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/RESOURCE-EXTENSION-REFINEMENT.md",
+      "sha256": "49e6c50a8074c7e36f5e39c9bedf364522bcaf9d6b3ca6a9817c665f3073bbc8"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md",
+      "sha256": "e7c981f031de90f53045cf3cb185d215abcd8ae78ced9ba7005e1ea47edd8601"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/ROLE-FIELD-AUTHORIZATION-REFINEMENT.md",
+      "sha256": "9d6513d97a8b9a1c02b7955f233318bc51aab75e6db15d99c46e5979c8753873"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/ROLE-PICKER-REFINEMENT.md",
+      "sha256": "4ed857e99c7ec2ab70dafa37d1ab85a0a032d73f53439ff331ab4ed255bd41e4"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/ROLE-WORKSPACE-DELEGATION-REFINEMENT.md",
+      "sha256": "4ec48e7fe8f3b5545570a0c84b64d30aef52ccbc0b235e7ee4c857863457a2c0"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/RUNTIME-FAILURE-ANALYSIS.md",
+      "sha256": "a819faaeaacd2b0f0ae6d4aa4ebd3400f396ea89e8a89af686f8aa5c53a1d93b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/SOURCE-TABLES.md",
+      "sha256": "e1215afa9fb2401f2f459f8d5563be6c0687b00bc9540b5c7d784cc2062a8f75"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/TASKS.md",
+      "sha256": "0a36485c49d23deaf8bd2afb8f65c805d8858c5b2b927a2c2aa8062335b3e86f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/TD-OPERATIONS.md",
+      "sha256": "e1c24d54c0d34abc9bf41a2a84d1735ffe71ed9e7c4d9703de8e21ab4bdf9d03"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/TD-RUNTIME-READS.json",
+      "sha256": "b6be682d67bfedbb3f713668dc99678f7c4bcbe4123d933deb2f5bcbd0e03c5c"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/TD-RUNTIME-WRITES.json",
+      "sha256": "8ee2d44218e8dc02a842a90ec414b8b212694269a4b17ec5ce50f7f6698ada14"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/TEST-DATA.md",
+      "sha256": "672648212601b5eaa8950c2d8eb98557db05a8c216ec775b183b6d1204952275"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/USER-ACCEPTANCE.md",
+      "sha256": "6767af2837eb77730759329f01cf73bd0d562579e488546deb412c1038edff5b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/VERIFICATION-GUIDE.md",
+      "sha256": "b3fef3cdeb9cfab49278cd3a747195fe8f0d45dfe09d88d80a0788a083017f5c"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/01.bru",
+      "sha256": "4f184823f117fac945ef56ccd1c476b0e7e251be44ac58e3b6fb9f46137d8bd2"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/02.bru",
+      "sha256": "a0466549d9630445e82f3712d91b9ac3f8eca2c9fd101f5b2e816dd6474066a3"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/03.bru",
+      "sha256": "63a552cd19a196518de52663740eac1d393debecfc37a2ee90906258c97addd5"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/04.bru",
+      "sha256": "45266db96f1b45eef0877ca63c290e2654316882ad10f63cb134b6fffc2093cb"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/05.bru",
+      "sha256": "e79871677d1a434c4b3a282eb3530d751815f4d43bb25c668236363b20b4c522"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/06.bru",
+      "sha256": "ad6cb8e2c12bba1431a58ab265c4e77526ad8df79c7a711c62ed3d29a58419e7"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/README.md",
+      "sha256": "09be4e1479d1140f1db29e867a53954bb87757c7b75a309c1e99fa35553220a5"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/bruno.json",
+      "sha256": "227c1ccfe8e593ca8dacbfb462e4581e4b5c3a37234acbd9ecf885d27c2b75d1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno-current/environments/isolated.bru",
+      "sha256": "612934f027b1d24ca4143e04b3baeb607d9f598b9e5a2404cb888537b2508158"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/01-platform-login.bru",
+      "sha256": "11103c06f81c5223848bb72433786bbacb6684b9900ed4253c6ec1d1e233891a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/02-owner-login.bru",
+      "sha256": "b2c2b4fcf4cd2c9abf317704772700ff226977c66d925d92f1bb1ce61474d810"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/03-bootstrap-platform.bru",
+      "sha256": "b2d6471723cea296f758349dddd1893c1b54b859c58d9b808b96aee6ac91176e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/04-bootstrap-owner.bru",
+      "sha256": "2904e25636e4fd4c1748b9c0dd156a6befc3a39587ab746b049d309df2684d22"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/05-tenant-settings.bru",
+      "sha256": "02ad9ec6a017d47dd502e8cdbcadd6c04e6dd06d86db6f36b94c85023d0a8f1f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/06-tenant-departments.bru",
+      "sha256": "b1ef253954c0beb8e2ff75486c9a3af89468eb5c9ce5401dcc2afa3a7531653a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/07-list-platform-apps.bru",
+      "sha256": "7aad0eb06e3d19281bd579441bc1f0a38f1379ef6ff67c1619af49469a06075e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/08-list-tenant-actions.bru",
+      "sha256": "4e2523410a5ef964099c6be5acef298e4cded8826cdc5545bcab7dfec1d8fe8b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/00-auth/folder.bru",
+      "sha256": "9e6a3e5ccdbc15a49ab934a3cf66a416543717291876770208f6066879aab861"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/01-create-account-x.bru",
+      "sha256": "f5e5b096239cda55ab17598f4ce644aaff711c38816246dc40f7dc13bef0e57d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/02-reset-password-x.bru",
+      "sha256": "3a85190b995dd747c4d52a645d2ab8e0da929c297045a51c5839dedc3e9b124c"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/03-get-account-x.bru",
+      "sha256": "f8e4c8add6bc9fc5578036fc4b4d949dfa8230ff2f21ff5f8de724774c24c819"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/04-create-platform-member-x.bru",
+      "sha256": "7cfb804bd4954b3c5f09f78511dbb0f5a78ab8cd25b98d3a7b3562259d20d654"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/05-get-platform-member-x.bru",
+      "sha256": "19ebed243226b40b9ade36c8238f4482c532a7ca56ab573a21d19be56fb2d835"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/06-create-tenant-member-x.bru",
+      "sha256": "c221620c3bf58b400ff5b2771d9e98f88569868ad609624b755c236d1032d26b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/07-get-tenant-member-x.bru",
+      "sha256": "08ec1e7d8abe40526a51ce2beb968db109f300d6e03909c1076c486a84dc89d6"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/08-login-x-tenant.bru",
+      "sha256": "37272d957e6bd7d58574420abc276e67b004f0d4077f573cca441a3efe858fe4"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/09-login-x-platform.bru",
+      "sha256": "83805a3dc429f17bbaea18794db4353463e1f211285728e15a8a88879e9446d9"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/10-suspend-platform-member-x.bru",
+      "sha256": "aa49bc4e20d624c58490003a728b56edeeb8344858b87914cf8ec7bd40b37c11"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/11-login-x-tenant-after-suspend.bru",
+      "sha256": "ea84db721cf065937b92c47fedab4712b23fe5efe3d332b30990148d0148efba"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/12-login-x-platform-after-suspend-expect-fail.bru",
+      "sha256": "fd725e8aa1fc5a391f2aa87e3bc074b4312815e9c1d0d946dc6224495bdeacf8"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/13-remove-tenant-member-x.bru",
+      "sha256": "32aa39400689c0bf547eb8170583c56b15f9b1035ad97c0ac9fa5123e5e33551"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/14-get-account-x-after-remove.bru",
+      "sha256": "7dd35378c3b828ce166e1781b00846df26eff173fbf6aa9f5fc10b1caba4efeb"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/15-login-x-tenant-after-remove-expect-fail.bru",
+      "sha256": "1d2176ec3054a697a307740578865b7170bb8e1b3cef9a70d50c1e1e6a87970f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/16-disable-account-x.bru",
+      "sha256": "89f1661bff4f450f1380b55e97042a03fc912df8fc51847d6e6c8ca95d7c7423"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/17-login-x-any-expect-fail.bru",
+      "sha256": "3fb34a1d0d8633f37cf1003c8e4933851b0a0d2b4ee531cbf5d585fa4fb7486d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/01-A01b-identity-lifecycle/folder.bru",
+      "sha256": "96673e2440c1d0c0c7aa1afff2d3ec26ee0a038814522cb2923e3508d2dce7d1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/01-create-account-y.bru",
+      "sha256": "f33534c56862789c987738f6ec2bb864da3d0bc8c6982c8cfbcee6b4fda9b271"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/02-reset-password-y.bru",
+      "sha256": "3ad31e2eb28a071af7f5a46aa1e199c012937a149197be6b6d1f8ce8438340dd"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/03-create-tenant-member-y.bru",
+      "sha256": "c2a9b15ec51a46c5cbdd97aab698c0e7d7870ad962488a787815ffff33274773"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/04-create-biz-app.bru",
+      "sha256": "340ffdecc9102f2d04d6935de9f27deab878ad8f2a18ad819c9fd83e14c2d97e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/05-create-biz-resource.bru",
+      "sha256": "08751d8e03f8ebf49f77d5ac0ff1a9ec21a88e1cf84e81839d0f685b3f552dc1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/06-create-biz-action.bru",
+      "sha256": "2999c8817938a292bdca055f803ee66cb8ed39ef27a775d7a89c7220a5377681"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/07-list-entitlements.bru",
+      "sha256": "86e4a852af076ff14339bd813700ab5a45a4748280305243a35f55c538b656ee"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/08-preview-entitlements.bru",
+      "sha256": "0785d0b1db255a21b99da19f6bc807809e6e7f23f07c747661fd27a822c672fd"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/09-replace-entitlements.bru",
+      "sha256": "cfd88e98b8554cabf67230af981fb3cf33561e87e127c6c42a5c39d9c6c79575"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/10-login-y.bru",
+      "sha256": "115c4671910c0402b9da6ff8df3f31c14a36301fa85a8d701c929baf04b71148"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/11-bootstrap-y-before-assign.bru",
+      "sha256": "ac42b6466c8d2d1a972ad7d061a6a0455630ec915ede96128faab40a05ff7f38"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/12-diagnose-y-before-assign.bru",
+      "sha256": "5bbd5d855c770c94a1e7f2b8f427fc6ea207e4c8e558418f348492cefe734f5e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/13-create-biz-shared-role.bru",
+      "sha256": "53e5429dfdc31ac073884b19359a82b523c751d7d4adfb755623363430d3f58f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/14-list-biz-role-revisions.bru",
+      "sha256": "01861f0ef34862143b7a6cbb2cd4d0a7b7586fcfcfe147b18f10a1ac764f8292"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/15-preview-assign-y.bru",
+      "sha256": "22100c06a9790a7525ac15c3c9db8732d353aa42b0217c7d80e3c7eecdcac9ea"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/16-assign-y.bru",
+      "sha256": "f45f1c9a92a95505de139615c85209097bfbab5798bbaf6e3443f7896f9e17d3"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/17-login-y-again.bru",
+      "sha256": "c7cf11add34f46f3e6e4948709db9dd9f01849141e8b3618a28ba35fd9cb2171"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/18-bootstrap-y-after-assign.bru",
+      "sha256": "0b2a3694cf7cd885cc2880618dec4bd484936c6ddb62e70b60344193d05c1845"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/19-diagnose-y-after-assign.bru",
+      "sha256": "89567929651a9339d4c85fab9c28f055df74ca57d2f04bcebcbd75d98743a3f2"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/20-list-audits.bru",
+      "sha256": "b15440edbf1ed53dd884639b331c9bcc15ed930c36425aa6f5dd3610af8ddf14"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/02-A02-entitlement-vs-assignment/folder.bru",
+      "sha256": "a8cc1c0e13f4aa9378732765bde3bab84bdb41f5fb457fd5d9300808e1979d1a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/01-create-shared-role.bru",
+      "sha256": "b17f262ff6990b0d8f109ce00fa91dc3d2b89bb4d72b02a261da2c0307b12c6f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/02-list-shared-revisions.bru",
+      "sha256": "859499e8b63a764deacd38655b486a2989e20e998bd09dd8b99a40773e5dbb66"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/03-assign-shared-to-y.bru",
+      "sha256": "6de9f4283c9b78d48232461c67966cfbb38d9f8e6021ada75035c77851ae42e0"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/04-create-custom-role.bru",
+      "sha256": "930a2374ef31c7b8b3fc91b852678320f9b3f0a9d69368fe0aeb828d5af35cbf"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/05-get-custom-role.bru",
+      "sha256": "f3e84135840f812504df4ed7388b06c38dbc3f0dd70a9ae8b77890e532b531a3"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/06-list-custom-revisions.bru",
+      "sha256": "fa28271ddeacbc1087161227bbe10cc2ee62a24726686e39c3692ab19d883c01"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/07-preview-replace-add.bru",
+      "sha256": "31ed9c359b59af1617abf1285d407f620ec5b4df78dcf1f440ceef6788f96bf0"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/08-publish-replace-add.bru",
+      "sha256": "eba8ec655a6798daf3074c74ab00ba2555c3df292df41062a11319858e4a85a9"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/09-get-custom-role-after-publish.bru",
+      "sha256": "7726973b16b09089e7deb476ef00ae5aa405f58cf8884ca60be5be2adbcff973"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/10-restore-base.bru",
+      "sha256": "db894f1169e10d129542b4ccd005ce8085738daec3e83d63b120ed5677891633"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/11-list-assignments.bru",
+      "sha256": "c97bc21c841143d68930de0a2ae1ef6c5af6eb34f65caabdddde748473d6e1a6"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/03-A04-shared-role-deltas/folder.bru",
+      "sha256": "abb59da94c43830ec325948f9ba1e9f1847f25049d6c865d7b6bc5d9144fd0f9"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/01-create-account-z.bru",
+      "sha256": "d64f6b80730a5b9f830889a2728a31fcb219fef3e3b136e7c91cfc76d85401f7"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/02-reset-password-z.bru",
+      "sha256": "3b5c2ee4ef978f16064d1bb15b79b062b09a0d13a49570b47df517b15da18e8e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/03-create-tenant-member-z.bru",
+      "sha256": "2b8cd8f385ed9a090da914f2d11380d53e789211bbbf49649e01b267704d2ac6"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/04-assign-independent-to-owner.bru",
+      "sha256": "1aae5af554fa1889dc167b36b2e10d518246ade8b60b0f57ce33429d5d68e72b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/05-get-settings-before-transfer.bru",
+      "sha256": "4f528a2355813008bdfd58820095c71cae9aa8220ea3c1958229f43824977681"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/06-transfer-owner.bru",
+      "sha256": "d65a0afa901b17dc02397473cfdec6414a1eaf2f3c07f70ed448bccb1318d98a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/07-login-z.bru",
+      "sha256": "15aed0663edb5615097f158ea9df211b1c39fdf633ca5a63143a99c10e676e00"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/08-settings-as-z.bru",
+      "sha256": "15401b8a441b52d9870bfa5183ae6a74ca218c505c1bee02df47ca00ef705a27"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/09-old-owner-settings-expect-fail.bru",
+      "sha256": "d0b7d103efc536aff3ca55c6a98db80710c19e6310642ae97835769488571d87"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/10-list-assignments-after-transfer.bru",
+      "sha256": "cb8f71d6aec54d2074b963754b5b0be26164057a21e4ded0e99b6d5ebbf50b9b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/11-stale-transfer-expect-fail.bru",
+      "sha256": "0687b6eacd4bbe5083ca21b53848ce08bdb9fcf897e09458370493082598a304"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/04-A26-owner-transfer/folder.bru",
+      "sha256": "c80b93ea9c580dae51ab1bcc512cbd15e8d7607269a8702ac9bfe59a8c30c73f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/README.md",
+      "sha256": "0cdc015d71ec769051efa0ede7c658f373367e572964d1150237ca797e59fa28"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/bruno.json",
+      "sha256": "42d67f350f24b714605708a35623a83c44a3a105b9dd29df6146144beae80649"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/collection.bru",
+      "sha256": "2c03a9819a10a638527f4eb6da8bf49237987d3e4151e1231c1ff317d30c52cd"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/bruno/environments/local.bru",
+      "sha256": "0b1ac68a08cd40b189c531f75fbd91ecc166d54e7b4cf4d61869b6de5a573b93"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/README.md",
+      "sha256": "603d115556c3afe0d03299ce7af9361e5f373f21c05e9145782c565e2b3381df"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/archive-transition.json",
+      "sha256": "b417d25013397ce4ef5173fec464446dda2052020ee803a45e02d33d1229b412"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/baseline-plan.json",
+      "sha256": "86f28c214b82269d8850f662ee0c76d32c290d8e0c5af8e82850cfaeb9dfc54e"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/changes/active/20260912-mybatis-data-scope-predicate-scale/README.md",
+      "sha256": "94d5f0bd8aa7594cf8ed64fa9d9b177c582d4d1770b0964ad4c28fd8b8da70eb"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/README.md",
+      "sha256": "bc4c7a9cb4de898157229f57fb8e56a7e30ea928663ee632ca741fc693192fbf"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/framework/authorization-execution/README.md",
+      "sha256": "6ebfc17ea9fb557e1cd98eb56449d11255b34a17367b38868f49d1b728ba5b8f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/framework/authorization-execution/SPEC.md",
+      "sha256": "4462cd4437bc9b9139774ddbeecd679242399cf1b6896c6c5aab113e4c71a2be"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/framework/layered-cache/SPEC.md",
+      "sha256": "f2ffadd6a2620a3e4458958b025dff9d595fb621d044eeaff39dfa6eb241fac9"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/iam/database-persistence/SPEC.md",
+      "sha256": "fa70cad03c79da22823dee1705c1db206e7dab74414557adfe6004e5f55a8ff7"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/iam/identity-access-management/README.md",
+      "sha256": "6c9838e7f8a87c02aaa14ba7b9a30ecd115cb9ccf76c5dda7675e7e21d1d8118"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/iam/identity-access-management/SPEC.md",
+      "sha256": "94a41ffc0e8212605d7acb679c5342b0a57ce45e6e7635c6537279be80b1282d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/iam/platform-capabilities/SPEC.md",
+      "sha256": "f92fe8436c10f970c33881adaca735384aeccaf405947d0463509379fec6b8fe"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/iam/role-version-application/SPEC.md",
+      "sha256": "39a3cefcd2275664c5f79d2b648ad5bd145540bf11c2eab1c7d7db6290e86b24"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/iam/tenant-departments/SPEC.md",
+      "sha256": "cf690689f99127370c7cea1a2c26e95ac38b865afcf1f447c2f2d78f4226d8cf"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/iam/tenant-members/SPEC.md",
+      "sha256": "9fe9965b2141fa6a6e7a6e9b43c2136b36e1600d9f8ba985a1f07587f145be89"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/pms/application-authorization/README.md",
+      "sha256": "bdb5a863670059d9d5dfef7917b384389327cb2d9f5302cbba5d13acd445a4f0"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/pms/application-authorization/SPEC.md",
+      "sha256": "bdb5a863670059d9d5dfef7917b384389327cb2d9f5302cbba5d13acd445a4f0"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/pms/data-authorization/README.md",
+      "sha256": "046b0c0ef825e4fdb23fe45f4125b86a5428e62feb4cfd2472823bd86bb6cf76"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/pms/data-authorization/SPEC.md",
+      "sha256": "046b0c0ef825e4fdb23fe45f4125b86a5428e62feb4cfd2472823bd86bb6cf76"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/security/session-safety/README.md",
+      "sha256": "0038c0c1fe872299ae5024cf8c090190ab9323e412774d613fa04c1c79183cac"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/candidates/specs/current/security/session-safety/SPEC.md",
+      "sha256": "0bb68fa91803fea7e76d2e0b5372e2cecf6d125058ff86df68de7617c46db00b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/implementation-manifest.json",
+      "sha256": "38987743e5cc036e507b2dea6c854c33001a9395445716fc930742dc9db3863d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/pre-archive-verification.json",
+      "sha256": "ff45e6af8970183af9648d88a0403f21c71d239b1f36d0e7311d534cdc56f90b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/review/conflict-platform-narrow.png",
+      "sha256": "68e240de96fe2cdfabbaaede6ef3814eaf556404195fd4e28bf2a1548a93ce88"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/review/drawer-390.png",
+      "sha256": "a63b40ff94471d75f6563d9c6d08105b2c070c8fc6a58bf78af97e81924cd8a8"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/review/menu-platform-narrow.png",
+      "sha256": "171b0eb9e99040906bdae8abf36e1bf51df54f81053d7648b38283a00427972b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/review/menu-tenant-narrow.png",
+      "sha256": "aa354eabf9c627db046ed441aa2e93566340d83632539810d28b94e02ee9bd01"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/review/qrcode-dark.png",
+      "sha256": "87409605ff45e812efe84341e3f447d66d5e638a5536b982631876ad51565e33"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/review/upgrade-preview.png",
+      "sha256": "0df354d6116a39235af272888e4fb5c85681cd53576beb59cb58fd303a59fda7"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/review/upgrade-remote-picker.png",
+      "sha256": "6bfd890bdb496e5ba3590dd04413a9c745116596961bc81495af31cfad6ea831"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/unchecked-disposition.json",
+      "sha256": "cf55f38384e5c46a5a9c87a311fdbf9e31fdbac7d6aedd06d8b04162cef1f147"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/validation.json",
+      "sha256": "a0ce4391b5a034852a15d41f82a4e5b55ea1cbe5af2716b2c0a1686f9ff4866d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/closeout/verify.py",
+      "sha256": "d09c7207dcc763466bec78927def08d6016fc66e0206a1b6e0375fab1043272f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/README.md",
+      "sha256": "01c9f67129aa6b1c6a7392da7a62d45778847f2c1f18bccaabec5cc42095feed"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/assignment-context.json",
+      "sha256": "f3f8a4690aa00488056b33036b1c7fdaff3a90e93e4ab24de4c1459d40173e24"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/assignment-multi-role.json",
+      "sha256": "4d179982f861974708d6fbe0c34c0b8a522926223bc005636d06d490abe18f0a"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/assignment-record.json",
+      "sha256": "ceb58e46f3e4bb487961a8241100cc4d92cf21064ced0c8a5653ea3dadf86899"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/assignment-selected-candidates.json",
+      "sha256": "cc18ba779fd71bdb03500ea7ca0b6c1734f5247415115da3c7adb57c138a649c"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/assignment-upgrade.json",
+      "sha256": "692ded7fdad3fd63b6fb22c80e58e4f806ba47d2a0e2572ad7b5185076dfff35"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/assignment.json",
+      "sha256": "0534cb7b5dc00abfa9d9c2bedc978860c7c31e84f2cdf6bde0cbc6470b6c57fa"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/audit.json",
+      "sha256": "b12020ba0d27febc71e4a4b64fead0f1a92feb1deae6cb27d0d1f29ad09ad3f1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/authorization-candidates.json",
+      "sha256": "c58b40eefc464fe561a65c00789257dc0d338960172a08854fbb25e1ed6cffc8"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/authorization-role-candidates.json",
+      "sha256": "3002bf2b20aa23025e322a0caa0c46688d6c85312b0f448246f33252ffb01421"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/authorization-role-versions.json",
+      "sha256": "d43205669c3e8b440249b1779a9db822e756dca02e56d72ebcbe13a5ff5f1802"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/authorization-snapshot.json",
+      "sha256": "4921931f10dd6a64ba74a6bad545a4de6526f5991bd08bf2ac841de3440883d8"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/authorization-v2-request.json",
+      "sha256": "167abd84380f4a801ad942b36ec762577b52a61636e3b896cdea8746f1296af1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/bootstrap.json",
+      "sha256": "0cbd924febdbff6dab1f857c241c9593906d6a0dcd9d9ccf9c60f6185aaf6ad4"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/decision-restricted.json",
+      "sha256": "0b33df4ccb9c3adad9434d2a4cc4f0b4e93ebe36e9b83610b6429a8607867ce9"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/delegation-unlimited.json",
+      "sha256": "b70d04b8138fae40556a8f2d0505b60b451b6839ad4f7ab044d5456ad2b24e14"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/delegation.json",
+      "sha256": "f1ff9fd992b75c3525226095802b847d87b64226ed2a5cf8120aaa52392b21ae"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/field-policy.json",
+      "sha256": "cb9ac4b9feb084979dbd2558f4481e1dc3458c8a0b57fb3cb11191061b68d7e1"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/field-readonly.json",
+      "sha256": "fc3e25a2ccb1968b68c14e757528b00472f6b37649e38fb9c7d4d2f5b76c2acf"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/member-bound-roles.json",
+      "sha256": "f13756efb9b4551c676a61cfc07f565b5bcbd6b2cf91bdc8397e52e80f230711"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/member-detail.json",
+      "sha256": "4d834165ab6fc03bd8d51648c58ae9768b5fe39ccd61a298aaebbac7b0a02685"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/member-page.json",
+      "sha256": "6df8ae4f9aa0e49588d6b46b4022f96a7b593f42dae47e81bc92a961265cdf49"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/member-role-edit.json",
+      "sha256": "d360063c8189b334b666178eb9d2f49c5a7bec7dd8921efb8dae527443cf986b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/password-change-state.json",
+      "sha256": "077f2c128c3afb0a78bc63d03da8c115b3281d4e195d99d5f984e09071ae5377"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/platform-member-context.json",
+      "sha256": "4926fe1833c7ce3290f94bfa6e4a79c1dafde4a0ee4c5b727999af7f84cc0bb3"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/preview-invalid.json",
+      "sha256": "594ce7180a49ab5d478d90ee758e1e40512a166f8ae6e46285c338565cb86d53"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/role-create.json",
+      "sha256": "e407fa60b63de59abfc98db91af42a9d23df1903a5340d1361630da4cba3c43d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/role-delta.json",
+      "sha256": "af2f8b4456a4075cd77addebf33db78cdefb38edf633777b6eac5136e9fc7fcf"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/role-platform-fields.json",
+      "sha256": "619daf5e8049c832585d08a730fcc7d499adfa550cd89f9f683be47799be708b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/role-publish.json",
+      "sha256": "161f3c178e679952c5f21a320b30f02eb8ba5b432835b686bf8ac7881abfbdae"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/role-shared.json",
+      "sha256": "a6c0f4f037d83d87245fad242f27cf3b69d7fe78beebd60d6058c87cb6326dba"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/role-subject-page.json",
+      "sha256": "3c16da306274394837943e410d9d7b24f268b990a1a98a7ac2b75e80cc2091ba"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/role-upgrade.json",
+      "sha256": "6bbf746c86a3a96e83ea64108c5ee07070723b1f6aa347c4308ca9ab8876844b"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/tenant-create.json",
+      "sha256": "bce0ddc96c0131ce8e4beb620a23bb88766456d5796c957651e7217ead46f133"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/examples/upgrade-conflict.json",
+      "sha256": "d9a8bb044a0a4ec7f3228dbe253accfd971bfbff5006def695b868fb71751e70"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/internal-openapi.json",
+      "sha256": "08fa2dceee93f86cbde216831fc74d91de130eb39ed5b4c5183fdc40f23268cc"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/openapi.json",
+      "sha256": "cfd03ce18c312ccd2c5fdf5420dacf6ceb5fb4ffb95764bde5c9e9c5838faafe"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/routes.json",
+      "sha256": "572f1b9f0158f53c64a7e9da352629a260224ca8f880a513c008309738e24579"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/schemas.json",
+      "sha256": "2af85586d5be23030930c1ebf4fba8205f345dd756221f5461be7ad3492fd82d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/changes/archive/2026/20260912-iam-identity-access-management/endpoint-mapping.json",
+      "sha256": "6eff4056434a6f307b62bccf4dd2170c013d089943dd7c8461b8da89846a16ec"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/current/framework/authorization-execution/README.md",
+      "sha256": "6ebfc17ea9fb557e1cd98eb56449d11255b34a17367b38868f49d1b728ba5b8f"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/current/framework/authorization-execution/SPEC.md",
+      "sha256": "4462cd4437bc9b9139774ddbeecd679242399cf1b6896c6c5aab113e4c71a2be"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/current/iam/identity-access-management/README.md",
+      "sha256": "6c9838e7f8a87c02aaa14ba7b9a30ecd115cb9ccf76c5dda7675e7e21d1d8118"
+    },
+    {
+      "gitStatus": "??",
+      "path": "specs/current/iam/identity-access-management/SPEC.md",
+      "sha256": "94a41ffc0e8212605d7acb679c5342b0a57ce45e6e7635c6537279be80b1282d"
+    },
+    {
+      "gitStatus": "??",
+      "path": "tools/iam/test-data/operation_matrix.py",
+      "sha256": "c5f170971259d1cc899ec0d487dcb040b838146548759cd12b26cb274c3bf1af"
+    }
+  ],
+  "implementationCommits": [
+    {
+      "group": "iam",
+      "commit": "ca3fd8188369e83e88ad8abef51ce916d811a62a",
+      "subject": "fix(iam): 保证跨节点授权与异步任务登记一致性",
+      "plannedPaths": 29
+    },
+    {
+      "group": "security",
+      "commit": "e0fc259ba872e81adc435a3fdd3623b26e793151",
+      "subject": "fix(security): 保持锁定拒绝语义并补齐首次锁定时间",
+      "plannedPaths": 4
+    },
+    {
+      "group": "remote",
+      "commit": "a6dc9ca9a8dd2a48bd4ca8bb196dabc43243508c",
+      "subject": "fix(iam): 补齐独立对象服务的可信鉴权与故障恢复",
+      "plannedPaths": 18
+    },
+    {
+      "group": "tools",
+      "commit": "b096e4de0b5d2373a9dc6d49ca62f8f20ab31078",
+      "subject": "fix(iam): 让验收工具遵循现行接口及归档契约",
+      "plannedPaths": 14
+    }
+  ]
+}

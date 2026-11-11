@@ -1,0 +1,1956 @@
+{
+  "runId": "closeout-matrix",
+  "fixture": "Gateway and Auth, two IAM instances, isolated MySQL 8.4, Redis and local MinIO",
+  "scope": "Supplemental results for non-GET public IAM operations; successful requests and expected rejections, not cumulative coverage.",
+  "summary": {
+    "publicNonGetOperations": 128,
+    "coveredOperations": 78,
+    "passedRequests": 198
+  },
+  "scenarios": [
+    {
+      "scenario": "平台资源目录",
+      "operations": [
+        {
+          "operationId": "platformCreateApplication",
+          "method": "POST",
+          "path": "/v1/platform/applications",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPutApplication",
+          "method": "PUT",
+          "path": "/v1/platform/applications/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPatchApplicationStatus",
+          "method": "PATCH",
+          "path": "/v1/platform/applications/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateResource",
+          "method": "POST",
+          "path": "/v1/platform/applications/{id}/resources",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPutResource",
+          "method": "PUT",
+          "path": "/v1/platform/applications/{id}/resources/{resourceId}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateAction",
+          "method": "POST",
+          "path": "/v1/platform/applications/{id}/actions",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPutAction",
+          "method": "PUT",
+          "path": "/v1/platform/applications/{id}/actions/{actionId}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPatchActionStatus",
+          "method": "PATCH",
+          "path": "/v1/platform/applications/{id}/actions/{actionId}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformLookupActions",
+          "method": "POST",
+          "path": "/v1/platform/actions/lookup",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateMenu",
+          "method": "POST",
+          "path": "/v1/platform/applications/{id}/menus",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPutMenu",
+          "method": "PUT",
+          "path": "/v1/platform/applications/{id}/menus/{menuId}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteAction",
+          "method": "DELETE",
+          "path": "/v1/platform/applications/{id}/actions/{actionId}",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 400,
+              "code": "ObjectInUse"
+            },
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteApplication",
+          "method": "DELETE",
+          "path": "/v1/platform/applications/{id}",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 400,
+              "code": "ObjectInUse"
+            },
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteMenu",
+          "method": "DELETE",
+          "path": "/v1/platform/applications/{id}/menus/{menuId}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteResource",
+          "method": "DELETE",
+          "path": "/v1/platform/applications/{id}/resources/{resourceId}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateApplicationBundle",
+          "method": "POST",
+          "path": "/v1/platform/applications/bundles",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPurgeApplication",
+          "method": "POST",
+          "path": "/v1/platform/applications/{id}/purge",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 403,
+              "code": "StepUpFailed"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        }
+      ],
+      "requestCount": 39
+    },
+    {
+      "scenario": "账号及双域成员",
+      "operations": [
+        {
+          "operationId": "platformCreateAccount",
+          "method": "POST",
+          "path": "/v1/platform/accounts",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformLookupAccount",
+          "method": "POST",
+          "path": "/v1/platform/accounts/lookup",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPatchAccount",
+          "method": "PATCH",
+          "path": "/v1/platform/accounts/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDisableAccount",
+          "method": "POST",
+          "path": "/v1/platform/accounts/{id}/disable",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformEnableAccount",
+          "method": "POST",
+          "path": "/v1/platform/accounts/{id}/enable",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformResetAccountPassword",
+          "method": "POST",
+          "path": "/v1/platform/accounts/{id}/reset-password",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteAccount",
+          "method": "DELETE",
+          "path": "/v1/platform/accounts/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateMember",
+          "method": "POST",
+          "path": "/v1/platform/members",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantCreateMember",
+          "method": "POST",
+          "path": "/v1/tenant/members",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformMemberEditPreview",
+          "method": "POST",
+          "path": "/v1/platform/members/{id}/preview",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPatchMember",
+          "method": "PATCH",
+          "path": "/v1/platform/members/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPatchMemberStatus",
+          "method": "PATCH",
+          "path": "/v1/platform/members/{id}/status",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformRemoveMember",
+          "method": "POST",
+          "path": "/v1/platform/members/{id}/remove",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantPatchMember",
+          "method": "PATCH",
+          "path": "/v1/tenant/members/{id}",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantPatchMemberStatus",
+          "method": "PATCH",
+          "path": "/v1/tenant/members/{id}/status",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantRemoveMember",
+          "method": "POST",
+          "path": "/v1/tenant/members/{id}/remove",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantMemberRejoin",
+          "method": "POST",
+          "path": "/v1/tenant/members/{id}/rejoin",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        }
+      ],
+      "requestCount": 41
+    },
+    {
+      "scenario": "租户部门与设置",
+      "operations": [
+        {
+          "operationId": "tenantCreateDepartment",
+          "method": "POST",
+          "path": "/v1/tenant/departments",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantDeleteDepartment",
+          "method": "DELETE",
+          "path": "/v1/tenant/departments/{id}",
+          "responses": [
+            {
+              "identity": "tenantOwner",
+              "node": "B",
+              "http": 400,
+              "code": "ObjectInUse"
+            },
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 400,
+              "code": "ObjectInUse"
+            },
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantPutDepartment",
+          "method": "PUT",
+          "path": "/v1/tenant/departments/{id}",
+          "responses": [
+            {
+              "identity": "tenantOwner",
+              "node": "B",
+              "http": 400,
+              "code": "InvalidArgument"
+            },
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantReplaceMemberDepartments",
+          "method": "PUT",
+          "path": "/v1/tenant/members/{id}/departments",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantUpdateDepartmentLeaders",
+          "method": "PATCH",
+          "path": "/v1/tenant/departments/{id}/leaders",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantEditDepartment",
+          "method": "PATCH",
+          "path": "/v1/tenant/departments/{id}",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantPutSettings",
+          "method": "PUT",
+          "path": "/v1/tenant/settings",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        }
+      ],
+      "requestCount": 26
+    },
+    {
+      "scenario": "双域分配及委派",
+      "operations": [
+        {
+          "operationId": "platformCreateAssignments",
+          "method": "POST",
+          "path": "/v1/platform/assignments",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 400,
+              "code": "InvalidArgument"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPreviewAssignments",
+          "method": "POST",
+          "path": "/v1/platform/assignments/preview",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPreviewAssignmentUpdate",
+          "method": "POST",
+          "path": "/v1/platform/assignments/{id}/preview",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPutAssignment",
+          "method": "PUT",
+          "path": "/v1/platform/assignments/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 404,
+              "code": "ObjectNotFound"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteAssignment",
+          "method": "DELETE",
+          "path": "/v1/platform/assignments/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 404,
+              "code": "ObjectNotFound"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPreviewDelegationCreate",
+          "method": "POST",
+          "path": "/v1/platform/delegations/preview",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateDelegation",
+          "method": "POST",
+          "path": "/v1/platform/delegations",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPreviewDelegation",
+          "method": "POST",
+          "path": "/v1/platform/delegations/{id}/preview",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPutDelegation",
+          "method": "PUT",
+          "path": "/v1/platform/delegations/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteDelegation",
+          "method": "DELETE",
+          "path": "/v1/platform/delegations/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantPreviewAssignments",
+          "method": "POST",
+          "path": "/v1/tenant/assignments/preview",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantCreateAssignments",
+          "method": "POST",
+          "path": "/v1/tenant/assignments",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantPutAssignment",
+          "method": "PUT",
+          "path": "/v1/tenant/assignments/{id}",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantDeleteAssignment",
+          "method": "DELETE",
+          "path": "/v1/tenant/assignments/{id}",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantCreateDelegation",
+          "method": "POST",
+          "path": "/v1/tenant/delegations",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantPreviewDelegation",
+          "method": "POST",
+          "path": "/v1/tenant/delegations/{id}/preview",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantPutDelegation",
+          "method": "PUT",
+          "path": "/v1/tenant/delegations/{id}",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "tenantDeleteDelegation",
+          "method": "DELETE",
+          "path": "/v1/tenant/delegations/{id}",
+          "responses": [
+            {
+              "identity": "tenantDepartmentReader",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "tenantOwner",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        }
+      ],
+      "requestCount": 38
+    },
+    {
+      "scenario": "头像资源",
+      "operations": [
+        {
+          "operationId": "stageBusinessImage",
+          "method": "POST",
+          "path": "/v1/assets/uploads",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateApplication",
+          "method": "POST",
+          "path": "/v1/platform/applications",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 404,
+              "code": "ObjectNotFound"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPutApplication",
+          "method": "PUT",
+          "path": "/v1/platform/applications/{id}",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 404,
+              "code": "ObjectNotFound"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteApplication",
+          "method": "DELETE",
+          "path": "/v1/platform/applications/{id}",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        }
+      ],
+      "requestCount": 10
+    },
+    {
+      "scenario": "平台管理租户及应用开通",
+      "operations": [
+        {
+          "operationId": "platformPreviewTenant",
+          "method": "POST",
+          "path": "/v1/platform/tenants/preview",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateTenant",
+          "method": "POST",
+          "path": "/v1/platform/tenants",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPatchTenant",
+          "method": "PATCH",
+          "path": "/v1/platform/tenants/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateApplication",
+          "method": "POST",
+          "path": "/v1/platform/applications",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPreviewEntitlements",
+          "method": "POST",
+          "path": "/v1/platform/tenants/{id}/entitlements/preview",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPutEntitlements",
+          "method": "PUT",
+          "path": "/v1/platform/tenants/{id}/entitlements",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 403,
+              "code": "ApplicationUnavailable"
+            }
+          ]
+        }
+      ],
+      "requestCount": 17
+    },
+    {
+      "scenario": "平台固定角色版本",
+      "operations": [
+        {
+          "operationId": "platformPreviewRoleCreate",
+          "method": "POST",
+          "path": "/v1/platform/roles/preview",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformCreateRole",
+          "method": "POST",
+          "path": "/v1/platform/roles",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPreviewRole",
+          "method": "POST",
+          "path": "/v1/platform/roles/{id}/preview",
+          "responses": [
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPublishRoleRevision",
+          "method": "POST",
+          "path": "/v1/platform/roles/{id}/revisions",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPatchRevisionMetadata",
+          "method": "PATCH",
+          "path": "/v1/platform/roles/{id}/revisions/{revisionId}/metadata",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "platformPatchRoleStatus",
+          "method": "PATCH",
+          "path": "/v1/platform/roles/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "platformDeleteRole",
+          "method": "DELETE",
+          "path": "/v1/platform/roles/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "S0403"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        }
+      ],
+      "requestCount": 14
+    },
+    {
+      "scenario": "共享当前角色",
+      "operations": [
+        {
+          "operationId": "sharedCurrentCreatePreview",
+          "method": "POST",
+          "path": "/v1/platform/shared-roles/preview",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "sharedCurrentCreateRole",
+          "method": "POST",
+          "path": "/v1/platform/shared-roles",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "sharedCurrentPreviewGrants",
+          "method": "POST",
+          "path": "/v1/platform/shared-roles/{id}/preview",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "sharedCurrentSaveGrants",
+          "method": "PUT",
+          "path": "/v1/platform/shared-roles/{id}/grants",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "B",
+              "http": 409,
+              "code": "RevisionConflict"
+            }
+          ]
+        },
+        {
+          "operationId": "sharedCurrentProfileRole",
+          "method": "PATCH",
+          "path": "/v1/platform/shared-roles/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        },
+        {
+          "operationId": "sharedCurrentDeleteRole",
+          "method": "DELETE",
+          "path": "/v1/platform/shared-roles/{id}",
+          "responses": [
+            {
+              "identity": "platformDelegation",
+              "node": "B",
+              "http": 403,
+              "code": "ActionDenied"
+            },
+            {
+              "identity": "platformGovernance",
+              "node": "A",
+              "http": 200,
+              "code": "S0200"
+            }
+          ]
+        }
+      ],
+      "requestCount": 13
+    }
+  ],
+  "crossRunCoverage": {
+    "scope": "Current public non-GET operations with positive runtime evidence across separate acceptance runs. Branch, actor and external-provider evidence is tracked separately.",
+    "uniqueOperationsWithEvidence": 128,
+    "additionalOperationsByScenario": [
+      {
+        "scenario": "本人资料",
+        "evidence": "ACCEPTANCE.md#本机写入与分配列表补验",
+        "operationIds": [
+          "currentPatchProfile"
+        ]
+      },
+      {
+        "scenario": "首登改密",
+        "evidence": "ACCEPTANCE.md#隔离制品复验",
+        "operationIds": [
+          "currentPutPassword"
+        ]
+      },
+      {
+        "scenario": "平台与租户用户组",
+        "evidence": "ACCEPTANCE.md#双节点缓存与写入续验",
+        "operationIds": [
+          "platformCreateGroup",
+          "platformPutGroup",
+          "platformDeleteGroup",
+          "platformPreviewGroup",
+          "tenantCreateGroup",
+          "tenantPutGroup",
+          "tenantDeleteGroup",
+          "tenantPreviewGroup"
+        ]
+      },
+      {
+        "scenario": "平台套餐",
+        "evidence": "ACCEPTANCE.md#双节点缓存与写入续验",
+        "operationIds": [
+          "platformCreatePlan",
+          "platformPutPlan"
+        ]
+      },
+      {
+        "scenario": "平台成员直接角色",
+        "evidence": "ACCEPTANCE.md#本机写入与分配列表补验",
+        "operationIds": [
+          "platformReplaceMemberRoles"
+        ]
+      },
+      {
+        "scenario": "平台与租户诊断",
+        "evidence": "ACCEPTANCE.md#现行逐入口补验",
+        "operationIds": [
+          "platformDiagnose",
+          "tenantDiagnose"
+        ]
+      },
+      {
+        "scenario": "成员与部门工作簿、JSON 导出和取件",
+        "evidence": "ACCEPTANCE.md#本机写入与分配列表补验",
+        "operationIds": [
+          "tenantExportMembers",
+          "tenantDepartmentWorkbookExport",
+          "tenantDepartmentWorkbookImport",
+          "tenantDownloadLink",
+          "tenantMemberWorkbookImport",
+          "tenantMemberWorkbookExport"
+        ]
+      },
+      {
+        "scenario": "所有者转交",
+        "evidence": "ACCEPTANCE.md#验收条款处置",
+        "operationIds": [
+          "tenantTransferOwner"
+        ]
+      },
+      {
+        "scenario": "应用人群与字段策略",
+        "evidence": "TASKS.md#逐入口与页面补验",
+        "operationIds": [
+          "tenantPutAudience",
+          "putFieldPolicy"
+        ]
+      },
+      {
+        "scenario": "平台账号锁定与解锁",
+        "evidence": "TASKS.md#本地验收边界",
+        "operationIds": [
+          "platformLockAccount",
+          "platformUnlockAccount"
+        ]
+      },
+      {
+        "scenario": "字典、发号与社会化配置",
+        "evidence": "ACCEPTANCE.md#现行逐入口补验",
+        "operationIds": [
+          "platformCreateDictionary",
+          "platformSortDictionaries",
+          "platformPutDictionary",
+          "platformDeleteDictionary",
+          "platformPatchDictionaryStatus",
+          "platformCreateIdAllocation",
+          "platformPutIdAllocation",
+          "platformDeleteIdAllocation",
+          "platformCreateSocialConfig",
+          "platformPutSocialConfig",
+          "platformDeleteSocialConfig"
+        ]
+      },
+      {
+        "scenario": "平台固定版本应用与单独升级",
+        "evidence": "ACCEPTANCE.md#本机写入与分配列表补验",
+        "operationIds": [
+          "platformPreviewAssignmentUpgrade",
+          "platformAssignmentUpgrade",
+          "platformRoleApplicationPrepare",
+          "platformRoleApplicationPublish",
+          "platformRoleApplicationConfigure",
+          "platformRoleApplicationPreflight",
+          "platformRoleApplicationConfirm"
+        ]
+      },
+      {
+        "scenario": "租户当前角色",
+        "evidence": "ACCEPTANCE.md#双节点缓存与写入续验",
+        "operationIds": [
+          "tenantCurrentCreateRole",
+          "tenantCurrentCreatePreview",
+          "tenantCurrentProfileRole",
+          "tenantCurrentDeleteRole",
+          "tenantCurrentSaveGrants",
+          "tenantCurrentPreviewGrants"
+        ]
+      }
+    ]
+  }
+}

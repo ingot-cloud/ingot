@@ -1,0 +1,31 @@
+meta {
+  name: 纯委派不能创建字典
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{gateway}}/iam/v1/platform/dictionaries
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{limitedToken}}
+}
+
+body:json {
+  {
+    "code": "iam.closeout.denied",
+    "name": "IAM closeout denied",
+    "type": "0",
+    "scopeType": "0"
+  }
+}
+
+tests {
+  test("纯委派不能创建字典", function () {
+    expect(res.getStatus()).to.equal(403);
+    expect(res.getBody().code).to.equal("S0403");
+  });
+}

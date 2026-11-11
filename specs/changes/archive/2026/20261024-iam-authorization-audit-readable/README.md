@@ -35,7 +35,7 @@
 
 ## 关联变更
 
-- 部分替代 [IAM 主变更 · 授权审计收敛](../../../active/20260912-iam-identity-access-management/AUTHORIZATION-AUDIT-REFINEMENT.md) 的页码分页及仅展示对象 ID 的约定。筛选参数、域边界、时间半开区间和字符串差异值契约继续沿用。
+- 部分替代 [IAM 主变更 · 授权审计收敛](../20260912-iam-identity-access-management/AUTHORIZATION-AUDIT-REFINEMENT.md) 的页码分页及仅展示对象 ID 的约定。筛选参数、域边界、时间半开区间和字符串差异值契约继续沿用。
 
 ## 工件
 

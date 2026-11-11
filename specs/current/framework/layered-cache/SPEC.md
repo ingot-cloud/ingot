@@ -76,4 +76,4 @@ L2 自定义 `l2(...)` 键映射，按 code 失效走 `evictMatching`。
 
 ### 4.5 授权快照
 
-装配 L1+L2，**关闭** Resilient/LKG/地板。空授权不写热缓存。TTL cap 到 30s。写路径事务提交后本节点 `evictAll` 并广播 `authorization.invalidate`。过期刷新失败 fail-closed（503），不以旧授权放行。配置键归属 `ingot.mybatis.scope`，见 [data-authorization](../../pms/data-authorization/SPEC.md)。
+装配 L1+L2，**关闭** Resilient/LKG/地板。空授权不写热缓存。TTL cap 到 30s。写路径事务提交后本节点 `evictAll` 并广播 `authorization.invalidate`。过期刷新失败 fail-closed（503），不以旧授权放行。配置键归属 `ingot.mybatis.scope`，见 [data-authorization](../authorization-execution/SPEC.md)。

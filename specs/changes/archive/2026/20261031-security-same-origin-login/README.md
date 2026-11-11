@@ -29,7 +29,7 @@
 ## 基线与并行变更
 
 - [SDD 工作流](../../../../README.md)。
-- [既有 BFF 契约](../../../active/20260912-iam-identity-access-management/BFF-LOGIN.md)：当前四站流程与本 change 的目标不同；本 change 批准实施并验收前，不改写其历史设计。
+- [既有 BFF 契约](../20260912-iam-identity-access-management/BFF-LOGIN.md)：当前四站流程与本 change 的目标不同；本 change 批准实施并验收前，不改写其历史设计。
 - [会话安全](../../../../current/security/session-safety/SPEC.md)、[挑战验证](../../../../current/security/challenge-verification/SPEC.md)、[传输加密](../../../../current/security/transport-crypto/SPEC.md)、[凭证安全](../../../../current/security/credential-security/SPEC.md)。
 - 制定 Spec 时核对的旧行为：事务与绑定默认 600 秒；CSRF 重签会轮换绑定；complete 校验 adminBindingId；ticket 读取与删除分离。旧行为已由本 change 的同源流程替代，本地验证见 VALIDATION.md。
 - 不接管 IAM 主 change 的业务验收、租户工作台或前端外观 change 的剩余验收。复用已完成登录外观，迁移其运行宿主。

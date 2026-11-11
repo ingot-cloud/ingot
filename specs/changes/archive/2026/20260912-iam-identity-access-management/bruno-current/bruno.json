@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "IAM 现行验收",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

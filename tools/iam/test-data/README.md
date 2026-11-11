@@ -1,8 +1,8 @@
 # IAM 独立测试数据工具
 
-对应 change `20260912-iam-identity-access-management` 的 **测试数据 D01/D02**。正式冷启动仍走权威 DDL 与 `006_bootstrap.sql`；本目录只编排已登记的独立测试环境，不写入生产种子。
+对应 IAM 主 change 的测试数据 D01/D02。首次部署使用正式单文件 `databases/ingot_iam.sql`，本工具通过现行 API 准备独立环境的联调数据。
 
-联调点击步骤与功能说明见 [VERIFICATION-GUIDE](../../../specs/changes/active/20260912-iam-identity-access-management/VERIFICATION-GUIDE.md)。场景卡见 [TEST-DATA](../../../specs/changes/active/20260912-iam-identity-access-management/TEST-DATA.md)。
+联调点击步骤与功能说明见 [VERIFICATION-GUIDE](../../../specs/changes/archive/2026/20260912-iam-identity-access-management/VERIFICATION-GUIDE.md)。场景卡见 [TEST-DATA](../../../specs/changes/archive/2026/20260912-iam-identity-access-management/TEST-DATA.md)。
 
 ## 命令
 
@@ -16,20 +16,16 @@ python3 tools/iam/test-data/iam_test_data.py reset   --config tools/iam/test-dat
 
 ## 导入前
 
-1. 目标必须是**已登记的独立测试库**。使用下文的 IAM 启动器创建测试治理账号时，从空库按 manifest 分片导入 001–005、框架 CREATE 和 006。分片与完整文件的区别见 [数据库初始化说明](../../../databases/iam/README.md)。
-2. **不要**再执行 `seed-manual-verification.sql`（那是历史 Bruno 的 `platform`/`owner` + `password`，与 `iam-test-*` 不是一套数据）。
-3. IAM 打开 `ingot.iam.bootstrap.enabled=true` 启动一次，用 WARN 日志中的初始口令登录 `platform`（不传 `org`），立刻改密。把改密后的口令放到环境变量 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR`。
-4. 复制 `config.example.json` 为未入库的 `config.local.json`：`registered`/`independent` 必须为 true；填独立库、Redis 命名空间和租户/平台两个管理入口 origin（`tenantAdmin`、`platformAdmin`）。登录页分别为这些 origin 下的 `/login/`，不再配置独立登录站。配置缺失会失败，不会猜测开发库。
-5. **不要**预先 export `IAM_TEST_PASSWORD_OWNER_A` / `OWNER_B`。未设置时 `build` 生成一次性口令，写入同目录 `runs/<environmentId>/<run-id>.secrets.json`（已 gitignore）。报告不打印密码、token。
-6. 浏览器联调启动 Auth / BFF / Gateway / IAM 和两个管理前端。`build` 用 Auth password grant 登录平台账号，再调 `/iam/v1`。
-
-组织所有者登录 `S0400`：先确认 OWNER 环境变量未设置；删除对应 `*.secrets.json`（可保留 inventory）后重跑 `build`，让工具重新 resetPassword。不要用 SQL dump 代替本工具。
+1. 在已登记的独立 MySQL 实例执行 [ingot_iam.sql](../../../databases/ingot_iam.sql)。脚本会重建固定名称的 `ingot_iam`。IAM 与联调配置须指向同一独立实例。
+2. 启动 Auth、BFF、Gateway、IAM 和两个管理台。用默认平台账号完成首次改密，将改密后的口令通过 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR` 提供给工具。
+3. 从 `config.example.json` 创建本地配置，填写独立服务地址、数据库、Redis 命名空间与两个管理台 origin。`registered` 与 `independent` 都须为 true。浏览器登录页位于各自 origin 的 `/login/`。
+4. 安装 Python `cryptography`。工具使用独立环境的 Auth password grant，走 Gateway 获取 HYBRID 公钥并调用 `/iam/v1`。浏览器另行验证同源登录。工具创建的所有者首次改密后，将新口令留在本地忽略的 secrets 文件。其他身份的一次性口令供后续验收。
 
 ## 行为
 
 - `prepare`：校验配置，写入 runId、UTC t0、指纹和对象映射。同一 runId 复用清单，不覆盖已有 `objects`。
-- `build`：通过真实 `/iam/v1` 创建账号、A/B 组织、部门、成员、组、共享角色和一条分配。先 `lookup` 已有登录名再创建；组织按名称复用，所有者成员取自租户详情的 `ownerMemberId`，平台/租户成员按显示名复用。共享角色使用租户域 `iam-tenant` 的成员读写操作，不引用平台域应用。重置口令后回写账号版本；停用账号/暂停成员前提取当前版本，409 则重读再提交。中途失败会写入已成功对象。不覆盖 250+ 成员（D03）和动态期限。`reset` 只清清单，不 DROP 库。
-- 配置或 DDL 指纹漂移：拒绝静默改回，需 `reset` 后重建。旧配置迁移到双入口时删除独立登录站字段，按现有 reset 流程重新准备清单；工具不会改写本地配置或清除既有业务数据。
+- `build` 创建或复用账号、A/B 组织、部门、成员、组、共享角色及分配。平台成员用账号 ID，租户成员按夹具手机号关联账号。部门从正式部门树读取，租户分配引用当前 `roleId`，字段策略按成员资源读取。规模、并发和动态期限见 D03。
+- 指纹覆盖环境配置和单文件初始化内容。旧清单或内容漂移时，可用新的 runId 或显式重置原清单。重置仅删除运行清单。
 - `verify`：核对清单与当前配置、DDL 文件存在；列出 TD 场景编号。不是业务验收。
 - `reset`：必须 `--confirm-reset`，只清除该环境该 runId 的清单，不对任意开发库执行 DROP。
 
@@ -39,11 +35,14 @@ python3 tools/iam/test-data/iam_test_data.py reset   --config tools/iam/test-dat
 
 ```bash
 python3 tools/iam/test-data/test_iam_test_data.py
+python3 tools/iam/test-data/operation_matrix.py --check
 ```
+
+更新公开或内部 IAM 契约后，用 `operation_matrix.py` 重新生成 TD 与页面对应表。真实 HTTP 与浏览器结果分别登记在主变更验收矩阵。
 
 ## 平台角色分配增量
 
-先让已登记测试环境的 IAM 进程加载本轮后端，并执行 `databases/iam/migrations/010_assignment_audit_index.sql`（可重复运行）。治理账号改密后的口令从 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR` 或既有忽略的 secrets 文件读取，不写进配置、Spec 或报告。
+在已按正式单文件初始化的独立环境运行。治理账号改密后的口令来自环境变量或本地忽略的 secrets 文件。
 
 ```bash
 python3 tools/iam/test-data/iam_test_data.py refinement-build --config tools/iam/test-data/config.local.json --run-id platform-refinement-20260928
@@ -54,4 +53,4 @@ python3 tools/iam/test-data/iam_test_data.py refinement-verify --config tools/ia
 
 `refinement-verify` 检查独立资格、入口及业务范围、候选边界、来源与授权时间、伪造来源/成员/组/对象/期限、多来源拼接、委派收窄拒绝及无部分保存、他人分配不可读/撤销、人员快捷角色门禁和真实诊断来源。HTTP 报告通过只代表列出的子集；浏览器、多时区、并发锁竞争、委派撤销/到期及组变化仍须执行 PR-A01–PR-A07。
 
-当前导入和 HTTP 运行尚未通过验收，不把夹具工具开发完成作为实际测试数据已导入。
+基础构建器已在一次性新库经真实 IAM、Gateway、Auth 和 BFF 验证，包含首次构建、重复构建和清单核对。平台 `refinement-build` 会为执行断言的身份完成首次改密并把新口令保留在本地 secrets 文件。真实新库的重复构建及 `refinement-verify` 27 项 HTTP 断言通过。数据验收与页面证据见[收尾实施记录](../../../specs/changes/archive/2026/20260912-iam-identity-access-management/TASKS.md#本地验收边界)。

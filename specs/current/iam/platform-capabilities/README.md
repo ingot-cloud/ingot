@@ -12,7 +12,7 @@
 - [App 用户管理归档](../../../changes/archive/2026/20261106-member-platform-application/README.md)
 - [IAM 功能目录与授权补齐](../../../changes/archive/2026/20261106-iam-resource-catalog/README.md)
 - [授权审计游标分页与可读展示](../../../changes/archive/2026/20261024-iam-authorization-audit-readable/README.md)
-- [平台成员创建候选分页](../../../changes/active/20260912-iam-identity-access-management/PLATFORM-ACCOUNT-PICKER-PAGE.md)
+- [平台成员创建候选分页](../../../changes/archive/2026/20260912-iam-identity-access-management/PLATFORM-ACCOUNT-PICKER-PAGE.md)
 
 - [组织资源字段策略](../tenant-field-policy/README.md)
 - [普通通讯录下线验收](../../../changes/archive/2026/20261024-iam-remove-directory-browse/README.md)

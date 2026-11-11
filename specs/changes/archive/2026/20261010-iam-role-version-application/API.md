@@ -1,6 +1,6 @@
 # 接口
 
-权威来源为 Java DTO 导出及控制器路由，生成在 [IAM 契约](../../../active/20260912-iam-identity-access-management/contracts/openapi.json)，前端镜像在 `20260913-base-iam-admin/sources/contracts/`。以下路径是 IAM 服务路径，管理台通过 `/api/iam` 网关前缀调用。所有响应沿用 R、ResourceDetail 和 PageResponse；ID、版本锁及大计数字段沿用字符串契约，时间为 UTC ISO-8601。
+权威来源为 Java DTO 导出及控制器路由，生成在 [IAM 契约](../20260912-iam-identity-access-management/contracts/openapi.json)，前端镜像在 `20260913-base-iam-admin/sources/contracts/`。以下路径是 IAM 服务路径，管理台通过 `/api/iam` 网关前缀调用。所有响应沿用 R、ResourceDetail 和 PageResponse；ID、版本锁及大计数字段沿用字符串契约，时间为 UTC ISO-8601。
 
 ## 版本信息
 

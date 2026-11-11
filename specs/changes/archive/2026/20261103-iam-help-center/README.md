@@ -52,7 +52,7 @@
 - [双入口同源登录](../../../../current/security/same-origin-login/SPEC.md)：不同 origin、固定应用域、Cookie/BFF 和身份纪元；不另建认证链。
 - [平台能力归属](../../../../current/iam/platform-capabilities/SPEC.md)：租户不装配平台安全中心，不能凭账号或 URL 获得跨域资格。
 - [租户成员](../../../../current/iam/tenant-members/SPEC.md)、[租户部门](../../../../current/iam/tenant-departments/SPEC.md)、[下载中心](../../../../current/framework/download-center/SPEC.md)：首批内容的重要依据。
-- [IAM 主变更](../../../active/20260912-iam-identity-access-management/README.md)、[租户工作台](../../../active/20261030-iam-tenant-workbench/README.md)、[字段策略](../../../active/20261027-iam-resource-field-policy/README.md)、[移除通讯录浏览](../../../active/20261024-iam-remove-directory-browse/README.md)、[授权审计](../../../active/20261024-iam-authorization-audit-readable/README.md)：文档按实际发布状态核实，不将其待验收项宣称为上线事实，不改变这些变更的状态。
+- [IAM 主变更](../20260912-iam-identity-access-management/README.md)、[租户工作台](../../../active/20261030-iam-tenant-workbench/README.md)、[字段策略](../../../active/20261027-iam-resource-field-policy/README.md)、[移除通讯录浏览](../../../active/20261024-iam-remove-directory-browse/README.md)、[授权审计](../../../active/20261024-iam-authorization-audit-readable/README.md)：文档按实际发布状态核实，不将其待验收项宣称为上线事实，不改变这些变更的状态。
 
 ## 完成记录
 

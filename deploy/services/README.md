@@ -361,9 +361,8 @@ docker network inspect ingot-overlay
 **维护者：** Ingot Cloud Team
 
 
-### IAM 重构期间的目标库配置
+### IAM 首次部署
 
-IAM 使用显式 `IAM_DATABASE`，必须填写已经完成迁移与校验的独立目标库；缺失时 Compose 配置检查拒绝继续。三环境 Nacos 的 IAM 数据源统一采用 UTC 连接与会话时区。旧源库 `MYSQL_DATABASE` 不作为 IAM 默认值。当前重构尚未完成认证/授权切换及迁移演练，不因源码可构建而部署替换现有服务。
+首次部署在目标新库实例执行 [ingot_iam.sql](../../databases/ingot_iam.sql)。脚本会重建 `ingot_iam`，并写入正式目录和强制改密的默认平台账号。Compose 通过 `IAM_DATABASE=ingot_iam` 明确选择数据库，缺失时拒绝继续。三环境 Nacos 数据源统一使用 UTC。旧库迁移按[发布范围处置记录](../../specs/changes/archive/2026/20261106-iam-tenant-live-authorization-release/README.md)退出本次首次部署。
 
-
-IAM 的 CI 组装产物位于 `output/ingot-iam-provider/`，通过本流水线 artifacts 传给镜像构建，不从旧 output 缓存或 `output/ingot-iam/<version>` 目录读取。IAM build/run 使用同一 `IAM_IMAGE_NAME`，并分别依赖本流水线的组装和镜像构建作业。这里只修改配置，正式运行仍须完成 IAM 重构和迁移门禁。
+IAM 镜像由 Provider 的 `dockerBuildDev`、`dockerBuildTest` 或 `dockerBuildProd` 构建，Compose 用 `IAM_VERSION` 选择 `ingot/iam` 的版本。构建和发布入口见[组装插件](../../ingot-plugin/ingot-assemble-plugin/README.md)，双入口配置见[同源登录部署](./SAME-ORIGIN-LOGIN.md)。

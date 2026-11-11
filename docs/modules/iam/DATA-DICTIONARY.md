@@ -1480,7 +1480,7 @@ KEY `idx_dict_scope` (`scope_type`,`tenant_id`,`app_id`) USING BTREE
 | 字段 | 定义 | 说明 |
 |---|---|---|
 | `id` | ```id` bigint unsigned NOT NULL`` | 社交登录渠道配置记录标识 |
-| `tenant_id` | ```tenant_id` bigint unsigned NOT NULL`` | 租户ID |
+| `tenant_id` | ```tenant_id` bigint unsigned DEFAULT NULL`` | 租户归属；NULL 表示平台全局配置 |
 | `app_id` | ```app_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL`` | 第三方平台分配的客户端App ID，不是IAM应用目录数字ID |
 | `app_secret` | ```app_secret` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL`` | 第三方应用密钥，可空；禁止在审计及字典示例中泄露 |
 | `redirect_url` | ```redirect_url` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL`` | 重定向地址 |

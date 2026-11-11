@@ -1,0 +1,194 @@
+{
+  "date": "2026-11-11",
+  "environment": {
+    "isolatedMySql": true,
+    "twoIamNodes": true,
+    "realGatewayAndAuth": true,
+    "productionBothFrontends": true,
+    "controlledBffSession": true,
+    "externalServicesIntegrationBoundaryUnchanged": true
+  },
+  "results": {
+    "navigation": {
+      "navigation": {
+        "topAtMostTwo": true,
+        "moreApplications": true,
+        "currentAppSidebar": true,
+        "deepLinkAndReload": true,
+        "noExtraApplicationCatalogRead": true
+      },
+      "qrcode": {
+        "svgDownloaded": true,
+        "imageDownloaded": true,
+        "noDuplicateConfigHeading": true,
+        "wideAndNarrowNoConfigOverflow": true
+      },
+      "limited": {
+        "noDeveloperNavigation": true,
+        "noEmptyApplicationEntry": true,
+        "platformDirectory403": true
+      },
+      "owner-a": {
+        "noDeveloperNavigation": true,
+        "noEmptyApplicationEntry": true,
+        "platformDirectory403": true
+      }
+    },
+    "menuApi": {
+      "platform": {
+        "roundTripTwoNodes": true,
+        "omittedAdvancedPreserved": true,
+        "stale409": true,
+        "invalidVisibleParams400NoWrite": true,
+        "explicitFalseAndEmptyClear": true,
+        "restored": true
+      },
+      "tenant": {
+        "roundTripTwoNodes": true,
+        "omittedAdvancedPreserved": true,
+        "stale409": true,
+        "invalidVisibleParams400NoWrite": true,
+        "explicitFalseAndEmptyClear": true,
+        "restored": true
+      },
+      "bundle": {
+        "invalidParent400": true,
+        "originalNameFilterProbeExcluded": true,
+        "zeroRowsVerifiedBySupplementalMySqlHttpRegression": true
+      }
+    },
+    "menuBrowser": {
+      "platform": {
+        "realDetails": true,
+        "orderedParameterRemarks": true,
+        "cancelNoWrite": true,
+        "narrowNoHorizontalOverflow": true,
+        "realSave": true,
+        "otherNodeReadback": true,
+        "bootstrapRefreshed": true,
+        "activeDrawersRetained": true
+      },
+      "tenant": {
+        "realDetails": true,
+        "orderedParameterRemarks": true,
+        "cancelNoWrite": true,
+        "narrowNoHorizontalOverflow": true,
+        "realSave": true,
+        "otherNodeReadback": true,
+        "bootstrapRefreshed": true,
+        "activeDrawersRetained": true
+      },
+      "platformHiddenRoute": {
+        "registeredForAuthorizedIdentity": true,
+        "absentFromSidebar": true,
+        "pathParametersPassedToRealPage": true
+      },
+      "tenantHiddenRoute": {
+        "registeredForOwner": true,
+        "absentFromSidebar": true,
+        "pathParameterPassedToRealPage": true
+      }
+    },
+    "appearance": [
+      {
+        "scheme": "light",
+        "actualThemeClass": true,
+        "qrcodeWhitePreviewSurface": true,
+        "watermarkUsesOnlyAvailableProfile": true,
+        "noUndefinedOrDanglingSeparator": true,
+        "narrowConfigurationNoOverflow": true
+      },
+      {
+        "scheme": "dark",
+        "actualThemeClass": true,
+        "qrcodeWhitePreviewSurface": true,
+        "watermarkUsesOnlyAvailableProfile": true,
+        "noUndefinedOrDanglingSeparator": true,
+        "narrowConfigurationNoOverflow": true
+      }
+    ],
+    "hiddenAndCache": {
+      "ungrantedHidden": {
+        "filteredFromBootstrap": true,
+        "directNavigation404": true,
+        "noPageRendered": true
+      },
+      "cache": {
+        "sameComponentDifferentParamsIndependent": true,
+        "backRestoresCorrectDraft": true,
+        "queryAndHashReuseSameRecord": true,
+        "differentMenuSeparateState": true
+      },
+      "revocation": {
+        "realRevokeOtherNode": true,
+        "permissionRefreshRemovesActivePage": true,
+        "noCachedUnauthorizedPage": true,
+        "regrantStartsWithFreshState": true
+      },
+      "emptyApplication": {
+        "noNavigationEntry": true
+      }
+    },
+    "lru": {
+      "productionPage": true,
+      "twentyOneDistinctRecordPaths": true,
+      "oldestDraftEvictedAtLimitTwenty": true,
+      "qrcodeWhitePreview": true,
+      "svgAndPngDownloadsStillValid": true
+    },
+    "roleWorkspace": {
+      "roleReadOnly": {
+        "directoryVisible": true,
+        "noAssignmentPanelOrRequests": true,
+        "associatedMembers403": true
+      },
+      "dedupAndPagination": {
+        "roleSearch21AcrossTwoPages": true,
+        "sameMemberDeduplicated": true,
+        "twoDirectAndTwoGroupSources": true,
+        "inactiveGroupsNotFetched": true
+      },
+      "versionAndSources": {
+        "defaultAllVersions": true,
+        "fourSourcesVisible": true,
+        "newVersionOnlyOneMemberThreeSources": true,
+        "sourceDialogRespectsVersion": true
+      },
+      "groupTab": {
+        "loadedOnlyWhenActivated": true,
+        "twoGroups": true
+      }
+    },
+    "bundleReadback": {
+      "http400": true,
+      "otherNodeApplicationNameFilterFindsZero": true,
+      "mysqlApplicationAndMenuCountsUnchanged": true
+    }
+  },
+  "checks": {
+    "targetedFrontendTests": 38,
+    "coreAndBothHostsTypeChecks": true,
+    "readOnlyLint": true,
+    "bothProductionBuilds": true,
+    "userBrowserPreferencesUntouched": true,
+    "targetedBackendTests": 4
+  },
+  "supplementalEnvironment": {
+    "freshMySql": true,
+    "twoHttpNodes": true,
+    "trustedIdentityFixture": true,
+    "realControllersTransactionsAndSql": true
+  },
+  "unresolved": {},
+  "historicalFailures": {
+    "duplicateRouteStartupFeedback": {
+      "originalObservation": {
+        "bootstrap200": true,
+        "conflictingRoutesRejected": true,
+        "blankInitialPage": true,
+        "readableRecoveryFeedbackNeeded": true
+      },
+      "resolvedBy": "./NAVIGATION-RECOVERY-RUNTIME.json"
+    }
+  }
+}

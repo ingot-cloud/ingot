@@ -28,7 +28,7 @@
 - [当前角色应用基线](../../../../current/iam/role-version-application/SPEC.md)
 - [已归档的版本应用](../20261010-iam-role-version-application/README.md)
 - [已归档的调度优化](../20261011-iam-role-application-scheduling/README.md)
-- [仍在实施的 IAM 总体变更](../../../active/20260912-iam-identity-access-management/README.md)：本 change 不替代其状态或修改其接口契约。
+- [仍在实施的 IAM 总体变更](../20260912-iam-identity-access-management/README.md)：本 change 不替代其状态或修改其接口契约。
 
 ## 完成记录
 

@@ -1,0 +1,23 @@
+meta {
+  name: 成员工作簿缺必填产物参数
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/members/workbook/{{memberWorkbookId}}/file
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{ownerToken}}
+  Tenant: {{tenant}}
+}
+
+tests {
+  test("成员工作簿缺必填产物参数", function () {
+    expect(res.getStatus()).to.equal(400);
+    expect(res.getBody().code).to.equal("InvalidArgument");
+  });
+}

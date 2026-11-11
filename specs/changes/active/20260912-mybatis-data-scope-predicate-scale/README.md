@@ -30,7 +30,7 @@
 
 ## 相关变更
 
-- 父 change [`20260910-pms-rbac-data-authorization`](../../archive/2026/20260910-pms-rbac-data-authorization/DESIGN.md) §4.6.1：已交付默认谓词；规模升级路径从该节拆出，以本 change 为准。当前默认谓词见 [data-authorization](../../../current/pms/data-authorization/SPEC.md)。
+- 父 change [`20260910-pms-rbac-data-authorization`](../../archive/2026/20260910-pms-rbac-data-authorization/DESIGN.md) §4.6.1：已交付默认谓词；规模升级路径从该节拆出，以本 change 为准。当前默认谓词见 [data-authorization](../../../current/framework/authorization-execution/SPEC.md)。
 - 当前部门模型仅为邻接表（`tenant_dept.pid`），无 path / 闭包表。
 
 ## 完成记录
@@ -40,3 +40,5 @@
 - 更新的 current capability：
 - 与原设计的差异：
 - 取消原因：
+
+IAM 主变更结项后，旧 PMS 表和规则组装模型不再是实施依据；本 draft 保留，后续按当前 IAM/SDK 和实际负载重新评估。此处仅迁移参考入口，不批准或实施谓词重构。

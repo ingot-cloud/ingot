@@ -1,0 +1,23 @@
+meta {
+  name: 纯委派不能直接分配
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/assignments/context
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{limitedToken}}
+}
+
+tests {
+  test("纯委派不能直接分配", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().code).to.equal("S0200");
+    expect(res.getBody().data.directCreate).to.equal(false);
+  });
+}

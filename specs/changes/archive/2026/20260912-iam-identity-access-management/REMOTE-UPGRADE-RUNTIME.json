@@ -1,0 +1,458 @@
+{
+  "date": "2026-11-11",
+  "environment": {
+    "freshOwnedMySqlRedisMinio": true,
+    "twoIamBootJars": true,
+    "twoIndependentExampleBootJars": true,
+    "realAuthGatewayAndSessions": true,
+    "staticLocalDiscoveryInsteadOfExternalNacos": true,
+    "additionalShadowNamespace": "Isolated deployment bean delegates the production IncidentProvider and real business SQL; distinct registered ResourceKey; no identity substitute",
+    "productionUpgradePageControlledBff": true,
+    "sourceWorkspaceAndUserBrowserStoragePreserved": true
+  },
+  "results": {
+    "remote": {
+      "scopeAndFields": {
+        "nodes": 2,
+        "pageCountConsistent": true,
+        "range125Of250": true,
+        "listAndAliasDetailMasked": true,
+        "outsideTargetRejected": true,
+        "exportScopeAndProjection": true
+      },
+      "localAndRemote": {
+        "sameResourceKeyAndContext": true,
+        "twoIamActionDecisionsEqual": true,
+        "remoteProjectionMatchesLocalMaskedScope": true
+      },
+      "rpcRejection": {
+        "badSignature": {
+          "status": 403,
+          "code": "ActionDenied"
+        },
+        "replacedActor": {
+          "status": 403,
+          "code": "ActionDenied"
+        },
+        "missingInside": {
+          "status": 403,
+          "code": null
+        },
+        "insideWithoutBearer": {
+          "status": 401,
+          "code": "S0401"
+        },
+        "otherTenant": {
+          "status": 403,
+          "code": "ActionDenied"
+        },
+        "sameResourceOtherApplication": {
+          "status": 400,
+          "code": "InvalidArgument"
+        }
+      },
+      "objectRpc": {
+        "signedCandidateAndExistence": true,
+        "emptyAllowedIdsRemainEmpty": true
+      },
+      "writes": {
+        "freshTitleWriteAndOtherNodeRead": true,
+        "maskedNullWriteRejected": true,
+        "outsideScopeWriteRejected": true
+      },
+      "exportAllPages": {
+        "nodes": 2,
+        "sizes": [
+          100,
+          25,
+          0
+        ],
+        "exact125Ids": true,
+        "maskedGroupActorOnlyOneObject": true
+      }
+    },
+    "faults": {
+      "objectsStopped": {
+        "http": {
+          "status": 503,
+          "code": "AuthorizationUnavailable"
+        },
+        "noAssignmentOrAuditWrite": true
+      },
+      "objectsRecovered": {
+        "sameSessionWriteAndOtherNodeRead": true
+      },
+      "iamStopped": {
+        "nodes": 2,
+        "warmReadDidNotAllowWrites": true,
+        "writes503NoDataChange": true
+      },
+      "iamRecovered": {
+        "sameSessionWriteAndOtherNodeRead": true
+      },
+      "revocationAndRegrant": {
+        "nextReadDeniedBothSdkNodes": true,
+        "regrantRestoredSameSession": true
+      }
+    },
+    "namespace": {
+      "twoRegisteredApplicationsSameResourceCode": true,
+      "productionObjectProviderAndRealMysql": true,
+      "sameObjectIdsIntentionallyCollide": true,
+      "candidate10000UnderCorrectKey": true,
+      "originalActionCannotAuthorizeOtherApplication": true,
+      "separateAssignedScopesDoNotMerge": true,
+      "unassignedActorStillDenied": true
+    },
+    "lifecycle": {
+      "absoluteExpiry": {
+        "twoWarmNodesStopAtOriginalDeadline": true,
+        "sameIdentityNoExtraRevokeEvent": true
+      },
+      "groupMembershipChange": {
+        "otherIamNodeRemoveDeniedBothWarmSdkNodes": true,
+        "readdRestoredSameSession": true,
+        "rangeOnlyAssignedObject": true
+      }
+    },
+    "upgrade": {
+      "fixedTargetAndFieldUpgrade": {
+        "laterRevisionDoesNotRetargetExplicitTarget": true,
+        "identityScopeSourceAndDatesPreserved": true,
+        "bothSdkNodesFullOnlyAfterExplicitUpgrade": true,
+        "explicitNullAllowedAfterFullAndEditable": true
+      },
+      "staleBatchAtomic": {
+        "response": {
+          "status": 409,
+          "code": "RevisionConflict"
+        },
+        "zeroAssignmentOrAuditWrite": true
+      },
+      "revokedBatchNotRestored": {
+        "response": {
+          "status": 409,
+          "code": "RevisionConflict"
+        },
+        "zeroAssignmentOrAuditWrite": true
+      },
+      "expiredBatchNotRestored": {
+        "response": {
+          "status": 400,
+          "code": "InvalidArgument"
+        },
+        "zeroAssignmentOrAuditWrite": true
+      },
+      "pendingPreservesInterval": true,
+      "delegatedVersionNotWhitelisted": {
+        "response": {
+          "status": 400,
+          "code": "InvalidArgument"
+        },
+        "zeroAssignmentOrAuditWrite": true
+      },
+      "delegatedExplicitWhitelistUpgrade": true,
+      "limitedCannotUpgradeDirect": {
+        "response": {
+          "status": 404,
+          "code": "ObjectNotFound"
+        },
+        "zeroAssignmentOrAuditWrite": true
+      },
+      "sourceRevokedAfterPreview": {
+        "response": {
+          "status": 409,
+          "code": "RevisionConflict"
+        },
+        "zeroAssignmentOrAuditWrite": true
+      },
+      "hundredRecordUpgrade": {
+        "count": 100,
+        "previewMs": 1327.73,
+        "saveMs": 1206.03,
+        "otherNodeAllTarget": true,
+        "existingFactsPreserved": true,
+        "oneAuditEach": true
+      },
+      "sourceNarrowedAfterPreview": {
+        "response": {
+          "status": 400,
+          "code": "InvalidArgument"
+        },
+        "zeroAssignmentOrAuditWrite": true
+      },
+      "groupExpansionUsesCurrentGate": {
+        "updateResponse": {
+          "status": 400,
+          "code": "PolicyConflict"
+        },
+        "groupVersionSelectionAndAuditUnchanged": true,
+        "oldPreviewValidBecauseGroupDidNotChange": true
+      }
+    },
+    "performance": {
+      "environment": "local isolated final boot jars; not production SLA",
+      "objectRows": 10000,
+      "authorizedSubset": 125,
+      "cacheInvalidation": "real authorization event before each cycle; ordered cold/warm means per-path first/repeat, not simultaneous full-system cold boot",
+      "latency": {
+        "remoteObjects": {
+          "cold": {
+            "samples": 20,
+            "medianMs": 45.94,
+            "p95Ms": 59.55,
+            "minMs": 33.92,
+            "maxMs": 63.38
+          },
+          "warm": {
+            "samples": 20,
+            "medianMs": 33.36,
+            "p95Ms": 47.37,
+            "minMs": 25.71,
+            "maxMs": 58.49
+          }
+        },
+        "roleFieldSnapshot": {
+          "cold": {
+            "samples": 20,
+            "medianMs": 31.52,
+            "p95Ms": 38.14,
+            "minMs": 26.32,
+            "maxMs": 44.8
+          },
+          "warm": {
+            "samples": 20,
+            "medianMs": 24.59,
+            "p95Ms": 31.54,
+            "minMs": 20.68,
+            "maxMs": 33.78
+          }
+        },
+        "executionSnapshot": {
+          "cold": {
+            "samples": 20,
+            "medianMs": 18.44,
+            "p95Ms": 26.5,
+            "minMs": 14.97,
+            "maxMs": 30.4
+          },
+          "warm": {
+            "samples": 20,
+            "medianMs": 6.22,
+            "p95Ms": 8.58,
+            "minMs": 5.22,
+            "maxMs": 8.72
+          }
+        },
+        "sdkIncidentPage20": {
+          "cold": {
+            "samples": 20,
+            "medianMs": 37.84,
+            "p95Ms": 55.96,
+            "minMs": 30.62,
+            "maxMs": 61.2
+          },
+          "warm": {
+            "samples": 20,
+            "medianMs": 27.84,
+            "p95Ms": 44.77,
+            "minMs": 23.37,
+            "maxMs": 61.68
+          }
+        },
+        "sdkIncidentPage100": {
+          "cold": {
+            "samples": 20,
+            "medianMs": 27.33,
+            "p95Ms": 45.1,
+            "minMs": 22.72,
+            "maxMs": 53.57
+          },
+          "warm": {
+            "samples": 20,
+            "medianMs": 28.29,
+            "p95Ms": 45.94,
+            "minMs": 23.46,
+            "maxMs": 48.71
+          }
+        }
+      },
+      "pageBudgets": [
+        {
+          "pageSize": 20,
+          "databaseStatements": {
+            "ingot_iam": 13,
+            "ingot_ops": 2
+          },
+          "authorizationRpc": {
+            "/inner/authorization/snapshot": 1,
+            "/inner/authorization/v2/evaluate": 0
+          },
+          "elapsedMs": 30.99
+        },
+        {
+          "pageSize": 100,
+          "databaseStatements": {
+            "ingot_iam": 13,
+            "ingot_ops": 2
+          },
+          "authorizationRpc": {
+            "/inner/authorization/snapshot": 1,
+            "/inner/authorization/v2/evaluate": 0
+          },
+          "elapsedMs": 30.62
+        }
+      ],
+      "listSqlAndRpcDoNotScalePerRow": true,
+      "rpcMeasurementCorrection": "Old restarted access logs contained method only due to argv parsing; zero-RPC figures excluded. Corrected frozen-process logger records full paths and asserts positive RPC count.",
+      "platformMemberPage": {
+        "rows": 1013,
+        "syntheticMembers": 1000,
+        "syntheticAccountsDisabled": true,
+        "nodes": "write A/read B",
+        "latency": {
+          "20": {
+            "first": {
+              "samples": 20,
+              "medianMs": 36.8,
+              "p95Ms": 46.36
+            },
+            "repeat": {
+              "samples": 20,
+              "medianMs": 24.08,
+              "p95Ms": 38.86
+            }
+          },
+          "100": {
+            "first": {
+              "samples": 20,
+              "medianMs": 35.97,
+              "p95Ms": 41.25
+            },
+            "repeat": {
+              "samples": 20,
+              "medianMs": 25.38,
+              "p95Ms": 30.99
+            }
+          }
+        },
+        "queryBudgets": [
+          {
+            "pageSize": 20,
+            "iamStatements": 12
+          },
+          {
+            "pageSize": 100,
+            "iamStatements": 12
+          }
+        ],
+        "noPerRowQueryGrowth": true
+      },
+      "hundredAssignmentUpgrade": {
+        "batches": 20,
+        "recordsPerBatch": 100,
+        "totalCommitted": 2000,
+        "allFactsPreserved": true,
+        "exactlyOneAuditPerRecord": true,
+        "writesAlwaysFresh": true,
+        "latency": {
+          "firstPreview": {
+            "samples": 20,
+            "medianMs": 979.04,
+            "p95Ms": 1213.71
+          },
+          "repeatPreview": {
+            "samples": 20,
+            "medianMs": 996.52,
+            "p95Ms": 1212.08
+          },
+          "freshSave": {
+            "samples": 20,
+            "medianMs": 790.44,
+            "p95Ms": 1065.09
+          }
+        },
+        "firstBatchCounts": {
+          "firstPreview": {
+            "iamStatements": 1031,
+            "objectRpc": 100
+          },
+          "repeatPreview": {
+            "iamStatements": 1031,
+            "objectRpc": 100
+          },
+          "freshSave": {
+            "iamStatements": 639,
+            "objectRpc": 100
+          }
+        },
+        "writeBudgetNote": "Object existence is intentionally revalidated for each assignment; write/preview counts reported, not mislabeled as list N+1."
+      }
+    },
+    "upgradePage": {
+      "productionPage": true,
+      "controlledBffRealIam": true,
+      "realRemoteObjectPicker": true,
+      "pickerCancelKeeps24Bindings": true,
+      "previewAndConfirm": true,
+      "otherNodeReadback": true,
+      "originalSubjectAndScopePreserved": true
+    }
+  },
+  "checks": {
+    "ingot-framework/ingot-commons": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ingot-framework/ingot-access-control": {
+      "tests": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ingot-framework/ingot-sentinel": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ingot-service/ingot-iam/ingot-iam-provider": {
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "contract": {
+    "publicPaths": 175,
+    "publicOperations": 246,
+    "internalOperations": 5,
+    "controllerRouteTests": 8,
+    "currentSnapshotsVerified": true,
+    "noPublicPathOrDdlChange": true
+  },
+  "cleanup": {
+    "ownedServicesAndContainersStopped": true,
+    "privateMetadataKeysAndCredentialsRemoved": true
+  },
+  "remaining": [
+    "specified user subjective visual/product acceptance in S05",
+    "S06 current baseline reconciliation and archive after complete acceptance",
+    "external target publication and natural-traffic observations remain independent per existing scope"
+  ],
+  "sourceSha256": {
+    "examples/iam-ops/build.gradle": "a09dd62449c16fc2088dccd2d2a847748dc01c4994cbf8af19364930f4cbe3f0",
+    "examples/iam-ops/src/main/java/com/ingot/example/ops/OpsApplication.java": "f28f9aca61fc73f3844e1e4c5a098b47a97652b784b20047d0868af67a0d4abd",
+    "examples/iam-ops/resource-registration.example.yml": "7a4c1094a85c0fa63399194a80c89bb829d62de7e48eb883a601d639d09b31bd",
+    "ingot-framework/ingot-sentinel/src/main/java/com/ingot/framework/sentinel/feign/SentinelFeignBuilder.java": "719b00cc7466760301f652f1aaf6468f0c6cf20442302c743f703a44fc7acc32",
+    "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/AuthorizationSdkConfiguration.java": "f5efaf6dd094c327b43c84d38b6c09eb8cb4030d85c6593cdf12851c9ad9f46e",
+    "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/ResourceRpcConfiguration.java": "a763145f5cc7bc6a206331c1693077f005d4f3d3deb933f96ac0f73a2744c736",
+    "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/ResourceRpcProperties.java": "7ab7ef8d0eb5b0b5261e819b0890e5b8b3dd97f694b414dd3b1a9e8688f2ad3e",
+    "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/RemoteAuthorizationClient.java": "f4917db3b180630eaf70776929f9d5f223033359e53397b7b853062481a3bfdd",
+    "ingot-framework/ingot-access-control/src/main/java/com/ingot/framework/authorization/field/FieldManifestEndpoint.java": "8d654ed55b73aa55745774693647c6b50ef1219889be977b5b2eb30499dbd5ae",
+    "ingot-framework/ingot-commons/src/main/java/com/ingot/framework/commons/model/iam/extension/ResourceDescriptor.java": "59e3adb040cddec97d0a5147ae7c6d9c9d3f438309f6f368a2ebb51aa3ecb374",
+    "ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/interfaces/http/IamErrorHandler.java": "99b965cf1b9256987320227a20b7c93320175cbc05ec68856ac7e4e2587ab05b"
+  }
+}

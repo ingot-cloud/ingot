@@ -1,0 +1,1776 @@
+{
+  "runId": "closeout-matrix",
+  "fixture": "isolated MySQL 8.4, Redis, local MinIO, two IAM instances",
+  "operations": [
+    {
+      "operationId": "currentBootstrap",
+      "method": "GET",
+      "path": "/v1/me/bootstrap",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "currentCapabilities",
+      "method": "GET",
+      "path": "/v1/me/capabilities",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "currentGetProfile",
+      "method": "GET",
+      "path": "/v1/me/profile",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "currentPasswordState",
+      "method": "GET",
+      "path": "/v1/me/password",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "getFieldPolicy",
+      "method": "GET",
+      "path": "/v1/tenant/policies/fields/{resourceId}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "listFieldPolicyResources",
+      "method": "GET",
+      "path": "/v1/tenant/policies/field-resources",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformActionCatalog",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}/action-catalog",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformAssignmentCandidates",
+      "method": "GET",
+      "path": "/v1/platform/assignments/candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformAssignmentContext",
+      "method": "GET",
+      "path": "/v1/platform/assignments/context",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "platformAssignmentDetail",
+      "method": "GET",
+      "path": "/v1/platform/assignments/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "platformAssignmentRoleCandidates",
+      "method": "GET",
+      "path": "/v1/platform/assignments/role-candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformAssignmentSelectedCandidates",
+      "method": "GET",
+      "path": "/v1/platform/assignments/{id}/selected-candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "platformAssignmentUpgradeCandidates",
+      "method": "GET",
+      "path": "/v1/platform/assignments/upgrade/candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 404,
+          "code": "ObjectNotFound"
+        }
+      }
+    },
+    {
+      "operationId": "platformAssignmentUpgradeRoles",
+      "method": "GET",
+      "path": "/v1/platform/assignments/upgrade/role-candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 404,
+          "code": "ObjectNotFound"
+        }
+      }
+    },
+    {
+      "operationId": "platformDelegationCandidates",
+      "method": "GET",
+      "path": "/v1/platform/delegations/candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformDelegationRoleCandidates",
+      "method": "GET",
+      "path": "/v1/platform/delegations/role-candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformDelegationSelectedCandidates",
+      "method": "GET",
+      "path": "/v1/platform/delegations/{id}/selected-candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformDiagnoseCandidates",
+      "method": "GET",
+      "path": "/v1/platform/authorization/diagnose/candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetAccount",
+      "method": "GET",
+      "path": "/v1/platform/accounts/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetApplication",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetDelegation",
+      "method": "GET",
+      "path": "/v1/platform/delegations/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetGroup",
+      "method": "GET",
+      "path": "/v1/platform/groups/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetMember",
+      "method": "GET",
+      "path": "/v1/platform/members/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetPlan",
+      "method": "GET",
+      "path": "/v1/platform/plans/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetRole",
+      "method": "GET",
+      "path": "/v1/platform/roles/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetRoleRevision",
+      "method": "GET",
+      "path": "/v1/platform/roles/{id}/revisions/{revisionId}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGetTenant",
+      "method": "GET",
+      "path": "/v1/platform/tenants/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGrantCatalog",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}/grant-catalog",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformGroupMembers",
+      "method": "GET",
+      "path": "/v1/platform/groups/{id}/members",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListAccounts",
+      "method": "GET",
+      "path": "/v1/platform/accounts",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListActions",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}/actions",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListApplications",
+      "method": "GET",
+      "path": "/v1/platform/applications",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListAssignments",
+      "method": "GET",
+      "path": "/v1/platform/assignments",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "platformListAudits",
+      "method": "GET",
+      "path": "/v1/platform/authorization/audits",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListDelegations",
+      "method": "GET",
+      "path": "/v1/platform/delegations",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListDictionaries",
+      "method": "GET",
+      "path": "/v1/platform/dictionaries",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListEntitlements",
+      "method": "GET",
+      "path": "/v1/platform/tenants/{id}/entitlements",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListGroups",
+      "method": "GET",
+      "path": "/v1/platform/groups",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListIdAllocations",
+      "method": "GET",
+      "path": "/v1/platform/id-allocations",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListMembers",
+      "method": "GET",
+      "path": "/v1/platform/members",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListMenus",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}/menus",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListPlans",
+      "method": "GET",
+      "path": "/v1/platform/plans",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListResources",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}/resources",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListRevisionGrants",
+      "method": "GET",
+      "path": "/v1/platform/roles/{id}/revisions/{revisionId}/grants",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformListRoleGrants",
+      "method": "GET",
+      "path": "/v1/platform/roles/{id}/grants",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListRoleRevisions",
+      "method": "GET",
+      "path": "/v1/platform/roles/{id}/revisions",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListRoles",
+      "method": "GET",
+      "path": "/v1/platform/roles",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListSocialConfigs",
+      "method": "GET",
+      "path": "/v1/platform/social-configs",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformListTenants",
+      "method": "GET",
+      "path": "/v1/platform/tenants",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformMemberAssignments",
+      "method": "GET",
+      "path": "/v1/platform/members/{id}/assignments",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformMemberBoundRoles",
+      "method": "GET",
+      "path": "/v1/platform/members/{id}/bound-roles",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformMemberContext",
+      "method": "GET",
+      "path": "/v1/platform/members/context",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformMemberGroups",
+      "method": "GET",
+      "path": "/v1/platform/members/{id}/groups",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformMemberRoles",
+      "method": "GET",
+      "path": "/v1/platform/members/{id}/roles",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformMenuActions",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}/menus/{menuId}/actions",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformResourceActions",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}/resources/{resourceId}/actions",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformResourceBindings",
+      "method": "GET",
+      "path": "/v1/platform/applications/{id}/resources/{resourceId}/field-bindings",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformRoleApplicationCandidates",
+      "method": "GET",
+      "path": "/v1/platform/roles/{roleId}/version-applications/candidates",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformRoleApplicationDistribution",
+      "method": "GET",
+      "path": "/v1/platform/roles/{roleId}/version-applications/distribution",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformRoleApplicationGet",
+      "method": "GET",
+      "path": "/v1/platform/roles/{roleId}/version-applications/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformRoleApplicationItems",
+      "method": "GET",
+      "path": "/v1/platform/roles/{roleId}/version-applications/{id}/items",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformRoleApplicationList",
+      "method": "GET",
+      "path": "/v1/platform/roles/{roleId}/version-applications",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "platformRoleGroups",
+      "method": "GET",
+      "path": "/v1/platform/roles/{id}/groups",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformRoleMemberSources",
+      "method": "GET",
+      "path": "/v1/platform/roles/{id}/members/{memberId}/assignments",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "platformRoleMembers",
+      "method": "GET",
+      "path": "/v1/platform/roles/{id}/members",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "S0403"
+        }
+      }
+    },
+    {
+      "operationId": "sharedCurrentGetGrants",
+      "method": "GET",
+      "path": "/v1/platform/shared-roles/{id}/grants",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "sharedCurrentGetRole",
+      "method": "GET",
+      "path": "/v1/platform/shared-roles/{id}",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "sharedCurrentListRoles",
+      "method": "GET",
+      "path": "/v1/platform/shared-roles",
+      "responses": {
+        "platformGovernance": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "platformDelegation": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantApplicationActionCatalog",
+      "method": "GET",
+      "path": "/v1/tenant/applications/{id}/action-catalog",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantAssignmentOptions",
+      "method": "GET",
+      "path": "/v1/tenant/assignments/options",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantAssignmentRole",
+      "method": "GET",
+      "path": "/v1/tenant/assignments/roles/{id}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantAssignmentScopeCandidates",
+      "method": "GET",
+      "path": "/v1/tenant/assignments/scope-candidates",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantCurrentCatalog",
+      "method": "GET",
+      "path": "/v1/tenant/roles/grant-catalog",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantCurrentGetGrants",
+      "method": "GET",
+      "path": "/v1/tenant/roles/{id}/grants",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantCurrentGetRole",
+      "method": "GET",
+      "path": "/v1/tenant/roles/{id}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantCurrentListRoles",
+      "method": "GET",
+      "path": "/v1/tenant/roles",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDelegationScopeCandidates",
+      "method": "GET",
+      "path": "/v1/tenant/delegations/scope-candidates",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDepartmentLeaderCandidates",
+      "method": "GET",
+      "path": "/v1/tenant/departments/{id}/leader-candidates",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDepartmentWorkbookFile",
+      "method": "GET",
+      "path": "/v1/tenant/departments/workbook/{id}/file",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 404,
+          "code": "ObjectNotFound"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDepartmentWorkbookHistory",
+      "method": "GET",
+      "path": "/v1/tenant/departments/workbook/history",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDepartmentWorkbookStatus",
+      "method": "GET",
+      "path": "/v1/tenant/departments/workbook/{id}/status",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 404,
+          "code": "ObjectNotFound"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDepartmentWorkbookTemplate",
+      "method": "GET",
+      "path": "/v1/tenant/departments/workbook/template",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDiagnoseCandidates",
+      "method": "GET",
+      "path": "/v1/tenant/authorization/diagnose/candidates",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDownloadDetail",
+      "method": "GET",
+      "path": "/v1/tenant/downloads/{id}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 404,
+          "code": "ObjectNotFound"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDownloadMemberExport",
+      "method": "GET",
+      "path": "/v1/tenant/members/export/{id}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantDownloadPage",
+      "method": "GET",
+      "path": "/v1/tenant/downloads",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGetAudience",
+      "method": "GET",
+      "path": "/v1/tenant/applications/{id}/audience",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGetDelegation",
+      "method": "GET",
+      "path": "/v1/tenant/delegations/{id}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGetDepartment",
+      "method": "GET",
+      "path": "/v1/tenant/departments/{id}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGetGroup",
+      "method": "GET",
+      "path": "/v1/tenant/groups/{id}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGetMember",
+      "method": "GET",
+      "path": "/v1/tenant/members/{id}",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGetMemberExportStatus",
+      "method": "GET",
+      "path": "/v1/tenant/members/export/{id}/status",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGetSettings",
+      "method": "GET",
+      "path": "/v1/tenant/settings",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGroupEffectiveMembers",
+      "method": "GET",
+      "path": "/v1/tenant/groups/{id}/effective-members",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantGroupMemberPickerBound",
+      "method": "GET",
+      "path": "/v1/tenant/groups/{id}/members",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListApplicationActions",
+      "method": "GET",
+      "path": "/v1/tenant/applications/{id}/actions",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListApplications",
+      "method": "GET",
+      "path": "/v1/tenant/applications",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListAssignments",
+      "method": "GET",
+      "path": "/v1/tenant/assignments",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListAudits",
+      "method": "GET",
+      "path": "/v1/tenant/authorization/audits",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListDelegations",
+      "method": "GET",
+      "path": "/v1/tenant/delegations",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListDepartmentLeaders",
+      "method": "GET",
+      "path": "/v1/tenant/departments/{id}/leaders",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListDepartments",
+      "method": "GET",
+      "path": "/v1/tenant/departments",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListGroups",
+      "method": "GET",
+      "path": "/v1/tenant/groups",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantListMembers",
+      "method": "GET",
+      "path": "/v1/tenant/members",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberFieldContext",
+      "method": "GET",
+      "path": "/v1/tenant/members/context",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberGroups",
+      "method": "GET",
+      "path": "/v1/tenant/members/{id}/groups",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberPickerBrowse",
+      "method": "GET",
+      "path": "/v1/tenant/member-picker/browse",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberPickerCandidates",
+      "method": "GET",
+      "path": "/v1/tenant/members/picker",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberPickerNavigation",
+      "method": "GET",
+      "path": "/v1/tenant/departments/member-picker-navigation",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberWorkbookFile",
+      "method": "GET",
+      "path": "/v1/tenant/members/workbook/{id}/file",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 404,
+          "code": "ObjectNotFound"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberWorkbookHistory",
+      "method": "GET",
+      "path": "/v1/tenant/members/workbook/history",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberWorkbookStatus",
+      "method": "GET",
+      "path": "/v1/tenant/members/workbook/{id}/status",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 404,
+          "code": "ObjectNotFound"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMemberWorkbookTemplate",
+      "method": "GET",
+      "path": "/v1/tenant/members/workbook/template",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantMyDelegations",
+      "method": "GET",
+      "path": "/v1/tenant/delegations/mine",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 200,
+          "code": "S0200"
+        }
+      }
+    },
+    {
+      "operationId": "tenantRoleGroups",
+      "method": "GET",
+      "path": "/v1/tenant/roles/{id}/groups",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantRoleMemberAssignments",
+      "method": "GET",
+      "path": "/v1/tenant/roles/{id}/members/{memberId}/assignments",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantRoleMembers",
+      "method": "GET",
+      "path": "/v1/tenant/roles/{id}/members",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    },
+    {
+      "operationId": "tenantWorkbench",
+      "method": "GET",
+      "path": "/v1/tenant/workbench/statistics",
+      "responses": {
+        "tenantOwner": {
+          "http": 200,
+          "code": "S0200"
+        },
+        "tenantRdReadOnly": {
+          "http": 403,
+          "code": "ActionDenied"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "status": "applied-and-archived",
+  "generatedDate": "2026-11-11",
+  "applyAfter": [
+    "H01",
+    "H02",
+    "H03",
+    "H04"
+  ],
+  "currentNotApplied": false,
+  "files": [
+    {
+      "target": "specs/current/iam/identity-access-management/README.md",
+      "candidate": "closeout/candidates/specs/current/iam/identity-access-management/README.md",
+      "beforeSha256": null,
+      "afterSha256": "6c9838e7f8a87c02aaa14ba7b9a30ecd115cb9ccf76c5dda7675e7e21d1d8118",
+      "appliedSha256": "6c9838e7f8a87c02aaa14ba7b9a30ecd115cb9ccf76c5dda7675e7e21d1d8118"
+    },
+    {
+      "target": "specs/current/iam/identity-access-management/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/iam/identity-access-management/SPEC.md",
+      "beforeSha256": null,
+      "afterSha256": "94a41ffc0e8212605d7acb679c5342b0a57ce45e6e7635c6537279be80b1282d",
+      "appliedSha256": "94a41ffc0e8212605d7acb679c5342b0a57ce45e6e7635c6537279be80b1282d"
+    },
+    {
+      "target": "specs/current/framework/authorization-execution/README.md",
+      "candidate": "closeout/candidates/specs/current/framework/authorization-execution/README.md",
+      "beforeSha256": null,
+      "afterSha256": "6ebfc17ea9fb557e1cd98eb56449d11255b34a17367b38868f49d1b728ba5b8f",
+      "appliedSha256": "6ebfc17ea9fb557e1cd98eb56449d11255b34a17367b38868f49d1b728ba5b8f"
+    },
+    {
+      "target": "specs/current/framework/authorization-execution/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/framework/authorization-execution/SPEC.md",
+      "beforeSha256": null,
+      "afterSha256": "4462cd4437bc9b9139774ddbeecd679242399cf1b6896c6c5aab113e4c71a2be",
+      "appliedSha256": "4462cd4437bc9b9139774ddbeecd679242399cf1b6896c6c5aab113e4c71a2be"
+    },
+    {
+      "target": "specs/current/pms/application-authorization/README.md",
+      "candidate": "closeout/candidates/specs/current/pms/application-authorization/README.md",
+      "beforeSha256": "1767bd73e0b2d2bc336ce7cd9535a1131ff9c181ab2b03c3f22de2e31e734a55",
+      "afterSha256": "bdb5a863670059d9d5dfef7917b384389327cb2d9f5302cbba5d13acd445a4f0",
+      "appliedSha256": "bdb5a863670059d9d5dfef7917b384389327cb2d9f5302cbba5d13acd445a4f0"
+    },
+    {
+      "target": "specs/current/pms/application-authorization/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/pms/application-authorization/SPEC.md",
+      "beforeSha256": "6c195e9288ccab897bd547a2c07fc1d4b07e5384625a0d08223308d55f0e474f",
+      "afterSha256": "bdb5a863670059d9d5dfef7917b384389327cb2d9f5302cbba5d13acd445a4f0",
+      "appliedSha256": "bdb5a863670059d9d5dfef7917b384389327cb2d9f5302cbba5d13acd445a4f0"
+    },
+    {
+      "target": "specs/current/pms/data-authorization/README.md",
+      "candidate": "closeout/candidates/specs/current/pms/data-authorization/README.md",
+      "beforeSha256": "1e20f16c68c92175fef1a357b0551aca1731b74d924146b59cc81dafd57335f3",
+      "afterSha256": "046b0c0ef825e4fdb23fe45f4125b86a5428e62feb4cfd2472823bd86bb6cf76",
+      "appliedSha256": "046b0c0ef825e4fdb23fe45f4125b86a5428e62feb4cfd2472823bd86bb6cf76"
+    },
+    {
+      "target": "specs/current/pms/data-authorization/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/pms/data-authorization/SPEC.md",
+      "beforeSha256": "b45bcfe175d810f62e18e9de1d427a29368ae6785ca563670f3397fb4196fd65",
+      "afterSha256": "046b0c0ef825e4fdb23fe45f4125b86a5428e62feb4cfd2472823bd86bb6cf76",
+      "appliedSha256": "046b0c0ef825e4fdb23fe45f4125b86a5428e62feb4cfd2472823bd86bb6cf76"
+    },
+    {
+      "target": "specs/current/iam/platform-capabilities/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/iam/platform-capabilities/SPEC.md",
+      "beforeSha256": "c7c4876a26573946681d4c5170cc950fe24e42a0db95540869fd721663de3152",
+      "afterSha256": "f92fe8436c10f970c33881adaca735384aeccaf405947d0463509379fec6b8fe",
+      "appliedSha256": "f92fe8436c10f970c33881adaca735384aeccaf405947d0463509379fec6b8fe"
+    },
+    {
+      "target": "specs/current/iam/role-version-application/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/iam/role-version-application/SPEC.md",
+      "beforeSha256": "cfb5d04d1a87f16dc754754f0a36e69526151685e3ca74a25276f7eceed2a243",
+      "afterSha256": "39a3cefcd2275664c5f79d2b648ad5bd145540bf11c2eab1c7d7db6290e86b24",
+      "appliedSha256": "39a3cefcd2275664c5f79d2b648ad5bd145540bf11c2eab1c7d7db6290e86b24"
+    },
+    {
+      "target": "specs/current/iam/database-persistence/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/iam/database-persistence/SPEC.md",
+      "beforeSha256": "fc85a7823335f068f6b29c2bf64d6369f05bda155a110c2a926584c61aff4490",
+      "afterSha256": "fa70cad03c79da22823dee1705c1db206e7dab74414557adfe6004e5f55a8ff7",
+      "appliedSha256": "fa70cad03c79da22823dee1705c1db206e7dab74414557adfe6004e5f55a8ff7"
+    },
+    {
+      "target": "specs/current/iam/tenant-members/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/iam/tenant-members/SPEC.md",
+      "beforeSha256": "58c9d3653a14d333f66b48ba33851148f33f70718c538164a27e5265ce2d1dab",
+      "afterSha256": "9fe9965b2141fa6a6e7a6e9b43c2136b36e1600d9f8ba985a1f07587f145be89",
+      "appliedSha256": "9fe9965b2141fa6a6e7a6e9b43c2136b36e1600d9f8ba985a1f07587f145be89"
+    },
+    {
+      "target": "specs/current/iam/tenant-departments/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/iam/tenant-departments/SPEC.md",
+      "beforeSha256": "a45431f9e100755985ff01c13f0cf237750d935b3cc633f8a057a09c24db8421",
+      "afterSha256": "cf690689f99127370c7cea1a2c26e95ac38b865afcf1f447c2f2d78f4226d8cf",
+      "appliedSha256": "cf690689f99127370c7cea1a2c26e95ac38b865afcf1f447c2f2d78f4226d8cf"
+    },
+    {
+      "target": "specs/current/README.md",
+      "candidate": "closeout/candidates/specs/current/README.md",
+      "beforeSha256": "ff4a1e60aee42525830ff128380840a15ee9327c44817fd2873f8add34d1d13f",
+      "afterSha256": "bc4c7a9cb4de898157229f57fb8e56a7e30ea928663ee632ca741fc693192fbf",
+      "appliedSha256": "bc4c7a9cb4de898157229f57fb8e56a7e30ea928663ee632ca741fc693192fbf"
+    },
+    {
+      "target": "specs/current/security/session-safety/README.md",
+      "candidate": "closeout/candidates/specs/current/security/session-safety/README.md",
+      "beforeSha256": "5281fba09e9ad916c9692a79730468c7f364a87237645e3aeb3e41e62a035c14",
+      "afterSha256": "0038c0c1fe872299ae5024cf8c090190ab9323e412774d613fa04c1c79183cac",
+      "appliedSha256": "0038c0c1fe872299ae5024cf8c090190ab9323e412774d613fa04c1c79183cac"
+    },
+    {
+      "target": "specs/current/security/session-safety/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/security/session-safety/SPEC.md",
+      "beforeSha256": "16c7f8cec81ecc098912594af4ad09484c25a742267ac408de762f3deaa97b23",
+      "afterSha256": "0bb68fa91803fea7e76d2e0b5372e2cecf6d125058ff86df68de7617c46db00b",
+      "appliedSha256": "0bb68fa91803fea7e76d2e0b5372e2cecf6d125058ff86df68de7617c46db00b"
+    },
+    {
+      "target": "specs/current/framework/layered-cache/SPEC.md",
+      "candidate": "closeout/candidates/specs/current/framework/layered-cache/SPEC.md",
+      "beforeSha256": "260112c766583689ce10313ceba07650209bf43c975e73dd628f1e4d70af5ba6",
+      "afterSha256": "f2ffadd6a2620a3e4458958b025dff9d595fb621d044eeaff39dfa6eb241fac9",
+      "appliedSha256": "f2ffadd6a2620a3e4458958b025dff9d595fb621d044eeaff39dfa6eb241fac9"
+    },
+    {
+      "target": "specs/changes/active/20260912-mybatis-data-scope-predicate-scale/README.md",
+      "candidate": "closeout/candidates/specs/changes/active/20260912-mybatis-data-scope-predicate-scale/README.md",
+      "beforeSha256": "198baaeddd58c404cb0672d9108851e628e750ada1f6307f609370390ce72ec9",
+      "afterSha256": "94d5f0bd8aa7594cf8ed64fa9d9b177c582d4d1770b0964ad4c28fd8b8da70eb",
+      "appliedSha256": "94d5f0bd8aa7594cf8ed64fa9d9b177c582d4d1770b0964ad4c28fd8b8da70eb"
+    }
+  ],
+  "appliedDate": "2026-11-11",
+  "userAcceptance": {
+    "H01": "passed",
+    "H02": "passed",
+    "H03": "passed",
+    "H04": "passed"
+  },
+  "confirmationMessage": "确认通过",
+  "archivedDate": "2026-11-11",
+  "archivePath": "specs/changes/archive/2026/20260912-iam-identity-access-management"
+}

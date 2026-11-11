@@ -44,4 +44,4 @@
 - 完成日期：2026-11-06（用户确认产品验收通过并要求归档）。
 - 关联实现提交：657c41c2、b2db102c、4f3295ba。
 - 更新的 current：[iam/tenant-live-authorization](../../../../current/iam/tenant-live-authorization/README.md)。
-- 最终交付：包含当前角色字段快照、按应用读取权限目录及候选式权限诊断。主 IAM 路由快照的全量一致性缺口由 [主变更](../../../active/20260912-iam-identity-access-management/TASKS.md) 继续跟踪。
+- 最终交付：包含当前角色字段快照、按应用读取权限目录及候选式权限诊断。主 IAM 路由快照的全量一致性缺口由 [主变更](../20260912-iam-identity-access-management/TASKS.md) 继续跟踪。

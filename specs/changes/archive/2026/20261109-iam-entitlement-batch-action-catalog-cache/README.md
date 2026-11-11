@@ -28,7 +28,7 @@
 - [租户即时授权与角色工作区](../../../../current/iam/tenant-live-authorization/SPEC.md)
 - [平台管理读取性能](../../../../current/iam/platform-read-performance/SPEC.md)
 - [平台能力](../../../../current/iam/platform-capabilities/SPEC.md)
-- [IAM 重构](../../../active/20260912-iam-identity-access-management/README.md)约束现有授权入口。首期目录缓存只作为展示读取的优化。
+- [IAM 重构](../20260912-iam-identity-access-management/README.md)约束现有授权入口。首期目录缓存只作为展示读取的优化。
 - [旧库迁移发布验收](../20261106-iam-tenant-live-authorization-release/README.md)因改用新库首次部署已取消归档。
 
 ## 评审记录

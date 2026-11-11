@@ -47,7 +47,7 @@
 
 ## 相关基线与变更归属
 
-- [IAM 主变更](../../../active/20260912-iam-identity-access-management/README.md)：保留其状态、历史任务和已完成证据。本变更批准后，接管租户 R01/R03/R04/R05 中与拥有者、固定版本、差异和委派相关的条款；其他 IAM 功能继续由主变更维护。
+- [IAM 主变更](../20260912-iam-identity-access-management/README.md)：保留其状态、历史任务和已完成证据。本变更批准后，接管租户 R01/R03/R04/R05 中与拥有者、固定版本、差异和委派相关的条款；其他 IAM 功能继续由主变更维护。
 - [角色版本基线](../../../../current/iam/role-version-application/SPEC.md)：平台自有角色继续遵守；租户及共享角色的业务版本行为在本变更验收后调整基线，当前不得提前改写。
 - [平台读取基线](../../../../current/iam/platform-read-performance/SPEC.md)：平台性能和只读请求复用必须回归。
 - [统一分层缓存](../../../../current/framework/layered-cache/SPEC.md)：复用框架，不引入自建 L1/L2/LKG 放行。

@@ -23,7 +23,6 @@
 - [security / security-event-center](./security/security-event-center/README.md)：统一安全事件模型、中心入库与跨模块上报接入。
 - [security / session-safety](./security/session-safety/README.md)：sid 会话模型、强制下线、安全中心会话管理面与可降级并发策略。
 - [gateway / header-conventions](./gateway/header-conventions/README.md)：网关自定义 Header 命名与内部头安全约定。
-- [pms / application-authorization](./pms/application-authorization/README.md)：应用中心化授权（应用、菜单、权限归属与租户授权、权限匹配语义；菜单 `view_path` 为页面注册键）。
 - [framework / oss](./framework/oss/README.md)：对象访问 URL 预签名与失败回退原始路径。
 - [framework / download-center](./framework/download-center/README.md)：导出任务异步生成、按人隔离保存，并在保留期内签发下载链接。
 
@@ -39,3 +38,6 @@
 - [iam / tenant-live-authorization](./iam/tenant-live-authorization/README.md)：拥有者、当前角色、分配、委派与角色工作区。
 - [iam / tenant-field-policy](./iam/tenant-field-policy/README.md)：按资源配置及求值的组织字段策略。
 - [iam / tenant-workbench](./iam/tenant-workbench/README.md)：工作台统计与导航排序。
+
+- [iam / identity-access-management](./iam/identity-access-management/README.md)：双域身份、平台角色/字段、分配委派、SYSTEM 与跨能力边界。
+- [framework / authorization-execution](./framework/authorization-execution/README.md)：SDK、MyBatis 范围及独立资源 RPC。

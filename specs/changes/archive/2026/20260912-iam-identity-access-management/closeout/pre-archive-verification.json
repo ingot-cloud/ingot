@@ -1,0 +1,12 @@
+{
+  "counts": {
+    "candidates": 25,
+    "dispositionRecords": 218,
+    "manifestFiles": 185,
+    "localLinks": 171,
+    "sourceCopies": 47,
+    "remoteSourceFingerprints": 11
+  },
+  "errors": [],
+  "passed": true
+}

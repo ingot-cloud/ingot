@@ -23,7 +23,7 @@
 
 IAM侧只从服务器白名单注册固定服务发现名和完整描述，不能接受客户端URL。资源对象RPC使用专用HMAC密钥及短时间窗，并校验原始认证身份与签名中的AuthorizationContext完全一致；内部header不替代签名。候选仅返回配置所需最小信息，不返回敏感字段。远程故障明确503，合法空结果不可当故障或ALL。
 
-参考 [可编译样板](../../../../examples/iam-ops/README.md) 和 [部署/验收](../../../../specs/changes/active/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md)。接入至少验证命名空间隔离、范围SQL的page/count一致、详情和写入真实目标、字段隐藏/脱敏/显式清空、身份变化、到期和RPC故障。
+参考 [可编译样板](../../../../examples/iam-ops/README.md) 和 [部署/验收](../../../../specs/changes/archive/2026/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md)。接入至少验证命名空间隔离、范围SQL的page/count一致、详情和写入真实目标、字段隐藏/脱敏/显式清空、身份变化、到期和RPC故障。
 
 ## 平台角色字段闭环
 

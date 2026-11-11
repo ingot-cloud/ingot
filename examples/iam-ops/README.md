@@ -1,14 +1,14 @@
 # 独立平台应用接入示例
 
-此模块是可编译的 Spring 服务样板，未部署、未写入现有业务数据库或菜单。业务库只需自己的 `schema.sql`；不复制 IAM 的角色、分配和字段策略表。
+此模块是可编译的 Spring 服务样板，使用标准数据库、Redis 与安全装配。业务库只需自己的 `schema.sql`；不复制 IAM 的角色、分配和字段策略表。本机隔离接入验收见下方记录，不代表已部署业务环境。
 
 ## 接入步骤
 
 1. 在应用目录创建 PLATFORM 应用 `iam-ops`、资源 `incident`、三个精确操作 `iam-ops:incident:read/update/export`（每项是完整编码，目录关联决定归属）。配置资源能力 ALL/SELF/OBJECT_SET；字段 title/contact 能力与 IncidentProvider 一致。
-2. 业务服务依赖 `ingot-access-control`、`ingot-iam-api`、框架 Feign、安全与标准 Web 启动配置。注册 `IncidentProvider` Bean。启用 `RemoteIamAuthorizationService` Feign，并沿用项目线上认证恢复、Feign 原始身份头转发、服务发现和异常转换；不能匿名启用示例接口。
+2. 业务服务依赖 `ingot-access-control`、`ingot-iam-api`、框架 Feign、安全与标准 Web 启动配置。注册 `IncidentProvider` Bean。IAM API 自动装配 `RemoteIamAuthorizationService`，不要重复声明 `@EnableFeignClients`。示例已启用标准安全和数据库装配；沿用线上认证恢复、Feign 原始身份头转发、服务发现和异常转换，不能匿名启用示例接口。
 3. IAM 端以受控配置白名单注册完整 descriptor 和服务发现名 `iam-ops`，业务端配置同一专用密钥（环境变量/密钥系统提供，不提交值）。模板见 [resource-registration.example.yml](resource-registration.example.yml)。不得由请求提交 URL 或服务名。
 4. 创建平台角色并显式分配固定版本；指定对象使用业务 UUID。角色字段权限步骤选择 incident 的 title/contact 可见性和可编辑性；字段随该固定版本和其操作范围继承，不另设查看者覆盖。
-5. 编译：`./gradlew :examples:iam-ops:compileJava`。启动前由业务部署环境补齐数据源、服务发现、安全和 Redis/失效总线配置；本模块不提供绕过登录的演示模式。
+5. 编译：`./gradlew :examples:iam-ops:compileJava`；制品：`./gradlew :examples:iam-ops:bootJar`。启动前由业务部署环境补齐数据源、服务发现、安全和 Redis/失效总线配置；本模块不提供绕过登录的演示模式。IAM 超时配置使用 Feign contextId `iamAuthorizationService`，服务发现名仍为 `in-service-iam`。
 
 ## 执行方式
 
@@ -18,8 +18,10 @@
 
 `HasAnyAuthority` 仍用于旧安全框架的 authority 门禁。`IamAccess` 是 IAM 服务内门面，包含在线身份、完整治理/委派准入和发号等 IAM 能力。新业务服务使用 `AuthorizationAccess` / `@RequireIamAction`；注解只证明精确操作准入，SQL/对象范围和字段读写仍必须显式执行，不会由注解自动完成。
 
-验收清单见 [资源扩展验收](../../specs/changes/active/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md)。
+验收清单见 [资源扩展验收](../../specs/changes/archive/2026/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md)。
 
 字段执行通过 `IncidentViews` 的声明统一接入。详情 JSON `contactPhone`（Java `aphone`）和列表 `contact` 共用逻辑键 `contact`，使用资源当前 `MaskSpec`。PATCH 保留实际 JSON 键，缺键不改、null 清空，在锁定记录后的事务中调用 `FieldWriteExecutor`；标题筛选在分页和 count 前验证完整范围。`/context` 提供全局交互能力。
 
 跨服务纯清单需要独立 `IAM_OPS_FIELD_MANIFEST_SECRET`（至少32字符），两端分别配置 `manifest-secret` 与 `field-manifest.secret`；不能复用资源候选查询密钥。启动清单不需要用户登录。
+
+对象查询同时要求内部来源、真实在线 Bearer、专用签名和签名中的身份一致；纯字段清单仍只要求服务签名。SDK 订阅在事件总线之后装配，读热缓存最长 30 秒，写操作实时重验，无授权降级放行。本机双 IAM、双示例 Boot Jar 的范围、字段、故障恢复、撤权与到期结果见 [远程接入与性能验收](../../specs/changes/archive/2026/20260912-iam-identity-access-management/ACCEPTANCE.md#独立对象服务性能与升级组合续验)。

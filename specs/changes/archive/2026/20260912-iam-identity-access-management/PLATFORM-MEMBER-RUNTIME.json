@@ -1,0 +1,135 @@
+{
+  "verifiedOn": "2026-11-11",
+  "environment": {
+    "independentMySql": true,
+    "iamNodes": 2,
+    "realGatewayAndAuth": true,
+    "realMinio": true,
+    "productionFrontend": true,
+    "controlledBffEntry": true
+  },
+  "results": {
+    "member-fields": {
+      "defaultColumns": {
+        "permittedPhoneInitiallyMissing": true,
+        "visibleAfterToggle": false
+      },
+      "fields": {
+        "hiddenEmail": true,
+        "maskedEmptyDisabledPhone": true,
+        "readonlyName": true,
+        "noOpSaveNoPatch": true,
+        "avatarUploadOnlyPatch": true,
+        "oppositeNode": true,
+        "avatarStoredObjectPath": true
+      },
+      "create": {
+        "lookupProjected": true,
+        "hiddenEmail": true,
+        "defaultNameNotSubmitted": true,
+        "serverInitialContactCopy": true,
+        "oppositeNode": true
+      }
+    },
+    "member-roles": {
+      "pageAndCancel": {
+        "pageOne": 20,
+        "pageTwo": 3,
+        "cancelNoMutation": true,
+        "inheritedReadOnly": true
+      },
+      "readback": {
+        "reads": 6
+      },
+      "roleOnlyAtomicSave": {
+        "noProfileFields": true,
+        "explicitOlderVersionAdded": true,
+        "changedRecords": 2,
+        "unmodifiedRecords": 22,
+        "unloadedLastPagePreserved": true,
+        "oppositeNode": true
+      }
+    },
+    "member-contacts": {
+      "contacts": {
+        "memberEditAndClear": true,
+        "accountAndTenantUnchanged": true,
+        "noFallbackAfterClear": true,
+        "joinedTimeStable": true,
+        "updatedTimeAdvanced": true,
+        "oppositeNode": true
+      },
+      "statusTimes": {
+        "joinedTimeSurvivesSuspendAndRestore": true,
+        "oppositeNode": true
+      }
+    },
+    "member-times": {
+      "Asia/Shanghai": {
+        "utcInstants": true,
+        "localDisplayExact": true,
+        "neverLoggedInLabel": true,
+        "readonly": true
+      },
+      "America/New_York": {
+        "utcInstants": true,
+        "localDisplayExact": true,
+        "neverLoggedInLabel": true,
+        "readonly": true
+      }
+    },
+    "ordinary-times": {
+      "ordinaryReadAllowed": true,
+      "fields": [
+        {
+          "key": "joinedAt",
+          "ordinaryVisibility": "HIDDEN",
+          "ordinaryUiAbsent": true,
+          "governanceFieldFull": true
+        },
+        {
+          "key": "lastLoginAt",
+          "ordinaryVisibility": "HIDDEN",
+          "ordinaryUiAbsent": true,
+          "governanceFieldFull": true
+        },
+        {
+          "key": "updatedAt",
+          "ordinaryVisibility": "HIDDEN",
+          "ordinaryUiAbsent": true,
+          "governanceFieldFull": true
+        }
+      ]
+    },
+    "member-refresh": {
+      "liveCapabilityRefresh": true,
+      "newlyPermittedEmailNotShown": true,
+      "emailColumnStillMissing": true,
+      "targetFullContacts": true,
+      "otherTargetStillHidden": true,
+      "noPerRowCapabilityRequests": true
+    },
+    "fractional-status": {
+      "alreadyStartedWithinSameSecond": true,
+      "twoNodes": [
+        {
+          "detailStatus": "ACTIVE",
+          "includedInActivePage": false
+        },
+        {
+          "detailStatus": "ACTIVE",
+          "includedInActivePage": false
+        }
+      ],
+      "includedAfterNextSecond": [
+        true,
+        true
+      ]
+    },
+    "account-time": {
+      "tenantLoginUpdatesPlatformLastLogin": true,
+      "joinedAndUpdatedTimesUnchanged": true,
+      "clearedPlatformContactUnchanged": true
+    }
+  }
+}

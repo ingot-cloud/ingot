@@ -24,7 +24,7 @@
 - 完成日期：2026-11-06（用户确认产品验收通过并要求归档）。
 - 关联实现提交：710e4919。
 - 更新的 current：[iam/tenant-workbench](../../../../current/iam/tenant-workbench/README.md)。
-- 最终交付：增加导航置顶和 035，统计与菜单均消费可信授权。主 IAM 路由快照的全量一致性缺口由 [主变更](../../../active/20260912-iam-identity-access-management/TASKS.md) 继续跟踪。
+- 最终交付：增加导航置顶和 035，统计与菜单均消费可信授权。主 IAM 路由快照的全量一致性缺口由 [主变更](../20260912-iam-identity-access-management/TASKS.md) 继续跟踪。
 
 ## 开工确认
 

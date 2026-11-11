@@ -191,10 +191,13 @@ current/<domain>/<capability>/
 
 - [同源双入口目标环境发布验收](./changes/active/20261031-security-same-origin-release-acceptance/README.md)（draft；仅跟踪CA/真实休眠/生产演练等未确认环境证据）
 
-- [IAM 多租户身份与访问管理重构](./changes/active/20260912-iam-identity-access-management/README.md)（implementing；全新系统授权补齐、框架复用与平台登录契约，历史迁移退出范围）
 - [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
 已归档（2026）：
+
+### 2026-11-11 归档
+
+- [IAM 多租户身份与访问管理重构](./changes/archive/2026/20260912-iam-identity-access-management/README.md)（completed；用户确认 H01–H04 全部通过，current 与两仓归档完成）
 
 ### 2026-11-10 归档
 
@@ -307,8 +310,8 @@ current/<domain>/<capability>/
 - [security/credential-security](./current/security/credential-security/README.md)
 - [security/jwk-management](./current/security/jwk-management/README.md)
 - [security/transport-crypto](./current/security/transport-crypto/README.md)
-- [pms/application-authorization](./current/pms/application-authorization/README.md)
-- [pms/data-authorization](./current/pms/data-authorization/README.md)
+- [iam/identity-access-management](./current/iam/identity-access-management/README.md)
+- [framework/authorization-execution](./current/framework/authorization-execution/README.md)
 
 - [角色版本信息与批量应用](./changes/archive/2026/20261010-iam-role-version-application/README.md)（completed，2026-10-11 人工验收完成并归档）；[当前能力](./current/iam/role-version-application/README.md)
 

@@ -17,6 +17,7 @@
 | 035_tenant_workbench_first.sql | 租户工作台仍在一级导航末尾；仅将工作台根目录排序设为0并递增版本，可重复执行。完成后重新加载菜单；回退时恢复留存的原sort_order并递增当前version。 | 006 |
 | 036_member_platform_application.sql | 新增 App 用户管理应用、三资源、二十操作及菜单。停写备份并在执行脚本的连接中选中 IAM 库，见 [036 执行方式](#036-app-用户管理应用)。完成后同批发布 IAM、Member 和平台前端并刷新授权与路由缓存。回退执行对应 rollback SQL，保留授权引用。 | 006 |
 | 037_tenant_assignment_list_index.sql | 执行脚本的连接选中 IAM 库。在发布分配列表后端前在线添加覆盖索引，支持重复执行。回退用 037_tenant_assignment_list_index.rollback.sql，保留分配数据。 | 003 |
+| 038_social_config_global_scope.sql | 已有 IAM 库的社会化配置租户列为非空。先放开列约束，再部署新 IAM，保留现有记录。见 [038 执行方式](#038-平台全局社会化配置)。 | 005 |
 | 011_delegation_duration_mode.sql | 委派表仍是旧LIMITED结构、尚无assignment_duration_mode列；一次ALTER。 | 003 |
 | 015_menu_advanced_configuration.sql | iam_menu 尚无 hidden/is_cache/props/route_params 列；一次 ALTER，保留现有数据。 | 002 |
 | 014_platform_member_contacts.sql | 平台成员尚无phone/email列；停IAM写入后一次增加并从账号回填，后续不再同步。 | 001 |
@@ -45,6 +46,16 @@ mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migra
 ```
 
 使用图形客户端时，在执行文件的连接中选择 IAM 库，或在文件首行加入 `USE ingot_iam;`。用 `SELECT DATABASE();` 核对目标库，返回 `NULL` 时首个 `DROP PROCEDURE` 会报 1046。选中目标库后从头执行。预演在同一连接先执行 `SET @iam_member_dry_run=TRUE;`，同一连接正式重跑前设置为 `FALSE`。
+
+## 038 平台全局社会化配置
+
+备份并在维护窗口中显式选定已有 IAM 库。用 `SHOW CREATE TABLE iam_social_config` 核对现有结构，租户列须为原版 `bigint unsigned NOT NULL` 或已升级的同类型可空列。发现其他结构漂移时先停止升级并核对。然后执行：
+
+```sh
+mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migrations/038_social_config_global_scope.sql
+```
+
+DDL 自动提交，仅放开列约束，可重复执行。先执行增量，再发布 IAM。现有非空租户值不变，新建的平台全局配置保存为 NULL。应用回退时保留可空列。若还需恢复非空约束，先在停写状态下确认没有 NULL 记录；若已有全局配置，保留该列约束以保留记录。新库直接使用正式初始化文件。
 
 ## 平台字段模型直接替换
 

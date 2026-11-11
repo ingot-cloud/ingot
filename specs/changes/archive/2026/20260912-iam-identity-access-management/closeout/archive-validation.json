@@ -1,0 +1,217 @@
+{
+  "date": "2026-11-11",
+  "status": "completed",
+  "userConfirmation": {
+    "message": "确认通过",
+    "accepted": [
+      "H01",
+      "H02",
+      "H03",
+      "H04"
+    ]
+  },
+  "archivePaths": {
+    "backend": "specs/changes/archive/2026/20260912-iam-identity-access-management",
+    "frontend": "specs/changes/archive/2026/20260913-base-iam-admin"
+  },
+  "applied": {
+    "candidateFiles": 25,
+    "currentFiles": 24,
+    "otherReferenceFiles": 1,
+    "beforeFingerprintChecked": true,
+    "currentUpdatedBeforeArchive": true
+  },
+  "backendChecks": [
+    {
+      "command": [
+        "python3",
+        "tools/iam/build_contract.py",
+        "--check"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "175 paths, 246 operations verified"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "tools/iam/build_internal_contract.py",
+        "--check"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "5 internal operations verified"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/iam",
+        "-p",
+        "test_contract.py"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "........",
+        "----------------------------------------------------------------------",
+        "Ran 8 tests in 0.033s",
+        "",
+        "OK"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/iam/test-data",
+        "-p",
+        "test_iam_test_data.py"
+      ],
+      "exitCode": 0,
+      "tail": [
+        ".",
+        "----------------------------------------------------------------------",
+        "Ran 22 tests in 0.198s",
+        "",
+        "OK"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "tools/iam/test_service_naming.py"
+      ],
+      "exitCode": 0,
+      "tail": [
+        "......",
+        "----------------------------------------------------------------------",
+        "Ran 6 tests in 0.873s",
+        "",
+        "OK"
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "tools/iam/generate_bootstrap.py",
+        "--check"
+      ],
+      "exitCode": 0,
+      "output": "5 applications, 44 resources, 181 actions, 41 menus, 80 menu actions, 181 grants"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/iam/test-data/operation_matrix.py",
+        "--check"
+      ],
+      "exitCode": 0,
+      "output": ""
+    }
+  ],
+  "frontendChecks": [
+    {
+      "command": "pnpm lint:check",
+      "exitCode": 0,
+      "errors": 0,
+      "existingWarnings": 119
+    },
+    {
+      "command": "pnpm check:docs",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm check:boundaries",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm --filter @ingot/dev-portal build",
+      "exitCode": 0,
+      "deadLinkCheckEnabled": true
+    }
+  ],
+  "integrity": {
+    "counts": {
+      "candidates": 25,
+      "dispositionRecords": 218,
+      "manifestFiles": 754,
+      "localLinks": 1394,
+      "sourceCopies": 49,
+      "remoteSourceFingerprints": 11
+    },
+    "errors": [],
+    "passed": true
+  },
+  "externalReferences": {
+    "targetedReferences": 37,
+    "errors": [],
+    "passed": true
+  },
+  "commitCreated": true,
+  "pullRequestCreated": false,
+  "externalDeploymentClaimed": false,
+  "scope": "用户确认后完成基线、引用和归档；本轮复跑工具、静态/构建与来源校验，实际业务/双节点/远程性能按既有验收及源码指纹保留，不冒称再次全部运行。",
+  "userRequestedCommitAndPush": true,
+  "implementationCommits": {
+    "backend": [
+      {
+        "group": "iam",
+        "commit": "ca3fd8188369e83e88ad8abef51ce916d811a62a",
+        "subject": "fix(iam): 保证跨节点授权与异步任务登记一致性",
+        "plannedPaths": 29
+      },
+      {
+        "group": "security",
+        "commit": "e0fc259ba872e81adc435a3fdd3623b26e793151",
+        "subject": "fix(security): 保持锁定拒绝语义并补齐首次锁定时间",
+        "plannedPaths": 4
+      },
+      {
+        "group": "remote",
+        "commit": "a6dc9ca9a8dd2a48bd4ca8bb196dabc43243508c",
+        "subject": "fix(iam): 补齐独立对象服务的可信鉴权与故障恢复",
+        "plannedPaths": 18
+      },
+      {
+        "group": "tools",
+        "commit": "b096e4de0b5d2373a9dc6d49ca62f8f20ab31078",
+        "subject": "fix(iam): 让验收工具遵循现行接口及归档契约",
+        "plannedPaths": 14
+      }
+    ],
+    "frontend": [
+      {
+        "group": "draft",
+        "commit": "32a71b18d02ed3809daf619cb9d5bc222816689d",
+        "subject": "fix: 保留授权草稿并同步字段列偏好",
+        "plannedPaths": 9
+      },
+      {
+        "group": "navigation",
+        "commit": "70d079bab0ec3b2f83c538a2c38730d49eb74af3",
+        "subject": "fix: 为导航冲突提供恢复并修正窄屏展示",
+        "plannedPaths": 25
+      },
+      {
+        "group": "build",
+        "commit": "66cf04eaee19e419b1523eaaf503b5a46281f0db",
+        "subject": "build: 让文档站静态检查与生产构建通过",
+        "plannedPaths": 3
+      },
+      {
+        "group": "tests",
+        "commit": "c29fe899fa1913b21b08f81a5950ba2a4741ee4c",
+        "subject": "test: 对齐 IAM 现行浏览器与组件验收夹具",
+        "plannedPaths": 7
+      }
+    ]
+  }
+}

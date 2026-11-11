@@ -225,7 +225,7 @@
 | 3 | `GET /v1/tenant/downloads`、`GET /v1/tenant/downloads/{id}`、`POST /v1/tenant/downloads/{id}/link` | 当前租户、本人任务，签发前复核来源。 |
 | 1 | `GET /v1/tenant/workbench/statistics` | 当前租户身份及指标各自的可见范围。 |
 
-另有 23 项已匹配方法映射的契约标记为 `implemented: false`，涉及组织角色、平台共享角色、组织角色权限目录、分配候选和委派。组织角色的旧版本、升级入口是另有明确退役行为的兼容路径，应继续区分。[公开路由契约](../../../specs/changes/active/20260912-iam-identity-access-management/contracts/routes.json) · [核对程序](../../../tools/iam/test_contract.py)
+另有 23 项已匹配方法映射的契约标记为 `implemented: false`，涉及组织角色、平台共享角色、组织角色权限目录、分配候选和委派。组织角色的旧版本、升级入口是另有明确退役行为的兼容路径，应继续区分。[公开路由契约](../../../specs/changes/archive/2026/20260912-iam-identity-access-management/contracts/routes.json) · [核对程序](../../../tools/iam/test_contract.py)
 
 ### 可单独分配的操作
 

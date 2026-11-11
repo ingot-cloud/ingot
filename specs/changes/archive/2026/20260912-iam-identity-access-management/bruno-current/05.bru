@@ -1,0 +1,23 @@
+meta {
+  name: 研发只读不可查看范围外成员
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/members/{{outsideMember}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{readerToken}}
+  Tenant: {{tenant}}
+}
+
+tests {
+  test("研发只读不可查看范围外成员", function () {
+    expect(res.getStatus()).to.equal(404);
+    expect(res.getBody().code).to.equal("ObjectNotFound");
+  });
+}

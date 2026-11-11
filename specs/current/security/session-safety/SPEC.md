@@ -7,7 +7,7 @@
 - 会话主键 **`sid`** = `OAuth2Authorization.id`，登录时写入 JWT claim `sid`（`InJwtClaimNames.SID`），此后 refresh 不换 sid。
 - 自定义 grant 在签发前预生成 authorizationId，写入 stub `OAuth2Authorization`，保证 Customizer 能取到 sid。
 - 运行时类型名仍为 `OnlineToken` / `OnlineTokenService`；主键与查询入口是 sid（`getBySid` / `removeBySid` / `isOnlineSid`）。`jti` 仅表示当前 Access Token，供管理面展示，不再建 Redis 索引。
-- JWT 仍为瘦身形态：定位字段（`sid` / userId / tenantId / 客户端 OAuth scope）。`JwtInUserConverter` 按 sid 读 `token:sid:{sid}`，合并会话中的**角色码**、`userType`、`deptIds` 构建 `InUser`。业务权限码不进 JWT，也不以 `OnlineToken.authorities` 为 RBAC 事实来源；请求期由 `AuthorizationSnapshotFilter` 把快照 `permissionCodes` 合并进 `Authentication`，见 [data-authorization](../../pms/data-authorization/SPEC.md)。会话存储宽限不延长业务授权期限。
+- JWT 仍为瘦身形态：定位字段（`sid` / userId / tenantId / 客户端 OAuth scope）。`JwtInUserConverter` 按 sid 读 `token:sid:{sid}`，合并会话中的**角色码**、`userType`、`deptIds` 构建 `InUser`。业务权限码不进 JWT，也不以 `OnlineToken.authorities` 为 RBAC 事实来源；请求期由 `AuthorizationSnapshotFilter` 把快照 `permissionCodes` 合并进 `Authentication`，见 [data-authorization](../../framework/authorization-execution/SPEC.md)。会话存储宽限不延长业务授权期限。
 
 ## 2. Redis 会话 schema
 

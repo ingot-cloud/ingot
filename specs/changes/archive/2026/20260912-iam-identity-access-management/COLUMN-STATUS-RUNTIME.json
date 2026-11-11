@@ -1,0 +1,177 @@
+{
+  "date": "2026-11-11",
+  "environment": {
+    "isolatedMySql": true,
+    "twoIamNodes": true,
+    "realGatewayAndAuth": true,
+    "productionFrontend": true,
+    "controlledBffSession": true,
+    "userBrowserPreferencesUntouched": true
+  },
+  "results": {
+    "columns": [
+      {
+        "node": "A",
+        "cleanDefaults": true,
+        "noAutomaticPreferenceWrite": true,
+        "hiddenEmail": true,
+        "savedHideAndOrder": true,
+        "manualToggle": true,
+        "oldPartialOrderRecovered": true,
+        "emptyListRetainsColumns": true
+      },
+      {
+        "node": "B",
+        "cleanDefaults": true,
+        "noAutomaticPreferenceWrite": true,
+        "hiddenEmail": true,
+        "savedHideAndOrder": true,
+        "manualToggle": true,
+        "oldPartialOrderRecovered": true,
+        "emptyListRetainsColumns": true
+      }
+    ],
+    "fieldRefresh": {
+      "liveCapabilityRefresh": true,
+      "userPhoneHiddenPreserved": true,
+      "revokedEmailRemoved": true,
+      "revocationPreservesPreferences": true,
+      "newlyPermittedEmailNotShown": false,
+      "emailColumnStillMissing": false,
+      "targetFullContacts": true,
+      "otherTargetStillHidden": true,
+      "noPerRowCapabilityRequests": true
+    },
+    "fractionalStatus": [
+      {
+        "case": "started",
+        "beforeNextBoundary": true,
+        "twoNodes": [
+          {
+            "node": "A",
+            "detailStatus": "ACTIVE",
+            "exactFilterMembershipAndTotal": true
+          },
+          {
+            "node": "B",
+            "detailStatus": "ACTIVE",
+            "exactFilterMembershipAndTotal": true
+          }
+        ],
+        "transitionRechecked": false
+      },
+      {
+        "case": "pending",
+        "beforeNextBoundary": true,
+        "twoNodes": [
+          {
+            "node": "A",
+            "detailStatus": "PENDING",
+            "exactFilterMembershipAndTotal": true
+          },
+          {
+            "node": "B",
+            "detailStatus": "PENDING",
+            "exactFilterMembershipAndTotal": true
+          }
+        ],
+        "transitionRechecked": true
+      },
+      {
+        "case": "expired",
+        "beforeNextBoundary": true,
+        "twoNodes": [
+          {
+            "node": "A",
+            "detailStatus": "EXPIRED",
+            "exactFilterMembershipAndTotal": true
+          },
+          {
+            "node": "B",
+            "detailStatus": "EXPIRED",
+            "exactFilterMembershipAndTotal": true
+          }
+        ],
+        "transitionRechecked": false
+      },
+      {
+        "case": "unexpired",
+        "beforeNextBoundary": true,
+        "twoNodes": [
+          {
+            "node": "A",
+            "detailStatus": "ACTIVE",
+            "exactFilterMembershipAndTotal": true
+          },
+          {
+            "node": "B",
+            "detailStatus": "ACTIVE",
+            "exactFilterMembershipAndTotal": true
+          }
+        ],
+        "transitionRechecked": true
+      }
+    ],
+    "boundSummary": {
+      "twoNodes": true,
+      "emptyBefore": true,
+      "newRoleIncludedWithinSameSecond": true,
+      "fixedVersionUnchanged": true
+    },
+    "roles": {
+      "pageAndCancel": {
+        "pageOne": 20,
+        "pageTwo": 3,
+        "cancelNoMutation": true,
+        "inheritedReadOnly": true
+      },
+      "readback": {
+        "reads": 1
+      },
+      "roleOnlyAtomicSave": {
+        "noProfileFields": true,
+        "explicitOlderVersionAdded": true,
+        "changedRecords": 2,
+        "unmodifiedRecords": 22,
+        "unloadedLastPagePreserved": true,
+        "oppositeNode": true
+      }
+    },
+    "roleConflict": {
+      "realPreview": true,
+      "oppositeNodeConcurrentWrite": true,
+      "staleSave409": true,
+      "draftPreservedForRetry": true,
+      "retryPreview409": true,
+      "noPartialRoleChanges": true,
+      "all24AssignmentsUnchanged": true,
+      "concurrentProfilePreserved": true
+    },
+    "memberFields": {
+      "fields": {
+        "hiddenEmail": true,
+        "maskedEmptyDisabledPhone": true,
+        "readonlyName": true,
+        "noOpSaveNoPatch": true,
+        "avatarUploadOnlyPatch": true,
+        "oppositeNode": true,
+        "avatarStoredObjectPath": true
+      },
+      "create": {
+        "lookupProjected": true,
+        "hiddenEmail": true,
+        "defaultNameNotSubmitted": true,
+        "serverInitialContactCopy": true,
+        "oppositeNode": true
+      }
+    }
+  },
+  "checks": {
+    "frontendTests": 20,
+    "backendTests": 6,
+    "realMySqlFixedClock": true,
+    "frontendTypesAndLint": true,
+    "platformProductionBuild": true,
+    "iamBootJar": true
+  }
+}

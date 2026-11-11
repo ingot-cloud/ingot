@@ -65,7 +65,7 @@
 
 ## 相关基线
 
-- [IAM 主变更](../../../active/20260912-iam-identity-access-management/README.md) 保留状态；本变更只扩展 `DepartmentRecord` 的列表可选字段。
+- [IAM 主变更](../20260912-iam-identity-access-management/README.md) 保留状态；本变更只扩展 `DepartmentRecord` 的列表可选字段。
 - 前端 UI03 布局由 `ingot-admin/specs/changes/archive/2026/20261017-org-members-dept-tabs/` 接管。
 
 ## 完成记录

@@ -1,0 +1,22 @@
+meta {
+  name: 目录显式指定平台域
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/applications?domain=PLATFORM
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{governorToken}}
+}
+
+tests {
+  test("目录显式指定平台域", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().code).to.equal("S0200");
+  });
+}
